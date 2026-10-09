@@ -681,3 +681,5 @@
 .emblem-sizes figcaption { font-family: var(--font-mono); font-size: 11px; color: var(--text-2); white-space: nowrap; }
 .logo-reserve { padding: 28px; margin-top: 16px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 24px; align-items: center; }
 @media (max-width: 560px) { .logo-reserve { grid-template-columns: 1fr; } }
+/* Dasbor transparansi: baris filter menggulir di dalam panel, tidak melebarkan halaman (< 360px) */
+.dash > *, .dash__head > * { min-width: 0; }

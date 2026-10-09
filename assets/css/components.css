@@ -114,7 +114,7 @@
 }
 @media (min-width: 921px) { .mobile-menu { display: none !important; } }
 @media (max-width: 920px) { .nav__toggle { margin-left: 0; } }
-@media (max-width: 420px) { .nav .nav__cta { display: none; } .nav__toggle { margin-left: auto; } }
+@media (max-width: 460px) { .nav .nav__cta { display: none; } .nav__toggle { margin-left: auto; } }
 
 /* ---------- Tombol ---------- */
 .btn {
@@ -440,6 +440,9 @@
 .nav__emblem { height: 31px; }
 .brand-name { display: grid; line-height: 1.15; }
 .brand-name strong { font-size: 13.5px; font-weight: 650; letter-spacing: .08em; }
-.brand-name small { font-size: 10.5px; color: var(--night-muted); letter-spacing: .01em; }
+.brand-name small { font-size: 10.5px; color: var(--night-muted); letter-spacing: .01em; white-space: nowrap; }
 .footer__brand .emblem { height: 44px; }
 .nav { padding-left: 12px; }
+/* Tabel ringkas yang boleh membungkus angka di layar sempit */
+.table--fluid .num { white-space: normal; }
+@media (max-width: 400px) { .table--fluid td { padding: 12px 8px; } }
