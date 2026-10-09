@@ -14,7 +14,7 @@
   --surface: #FFFFFF;        /* kartu putih (harga, formulir) */
   --ink: #0F1319;            /* teks utama, tombol hitam, nav */
   --ink-2: #2A2F37;          /* teks utama sekunder */
-  --gray: #8A8F96;           /* nada kedua headline (≥ 24px saja) */
+  --gray: #82878E;           /* nada kedua headline, ≥ 24px saja (3,35:1 di --paper, 3,09:1 di --paper-2) */
   --text-2: #646A72;         /* teks pendukung — 5.05:1 di atas --paper */
   --line: #E7E4DC;           /* garis rambut */
   --line-2: #D9D5CA;         /* garis tegas (input, pemisah tabel) */
@@ -35,8 +35,8 @@
   --night-accent: #7FA4FF;   /* aksen di permukaan gelap */
 
   /* ---------- Status (selalu dengan ikon + label, bukan warna saja) ---------- */
-  --ok: #1E7F52;       --ok-soft: #E3F2EA;
-  --warn: #9A6200;     --warn-soft: #F8EED9;
+  --ok: #1A7349;       --ok-soft: #E3F2EA;   /* 5,05:1 di atas ok-soft */
+  --warn: #8C5900;     --warn-soft: #F8EED9; /* 5,14:1 di atas warn-soft */
   --danger: #B93A28;   --danger-soft: #F9E4DF;
   --ok-night: #5FD39B; --danger-night: #FF8F7E;
 
@@ -51,10 +51,10 @@
   --font-mono: var(--font-sans);          /* angka tabular (tnum), bukan font monospace */
   --fw-display: 600;                      /* semibold untuk semua headline */
 
-  --fs-hero: clamp(40px, 7vw, 80px);      /* H1 beranda */
+  --fs-hero: clamp(36px, 4.6vw + 22px, 80px); /* H1 beranda: 36px di 320, 80px di ≥ 1260 */
   --fs-display: clamp(36px, 5.2vw, 64px); /* H1 halaman turunan */
   --fs-h2: clamp(30px, 4vw, 48px);        /* headline seksi */
-  --fs-h3: clamp(22px, 2.2vw, 28px);      /* sub-headline */
+  --fs-h3: clamp(24px, 2.2vw, 28px);      /* sub-headline; min 24px agar nada abu-abu tetap teks besar */
   --fs-metric: clamp(28px, 3vw, 40px);    /* angka tile metrik */
   --fs-lead: 18px;
   --fs-body: 16px;

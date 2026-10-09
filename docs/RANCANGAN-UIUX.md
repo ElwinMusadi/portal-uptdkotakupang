@@ -138,17 +138,18 @@ Sumber kebenaran: `assets/css/tokens.css`. Panduan visual hidup: `design-system.
 | `--surface` | `#FFFFFF` | Kartu putih, formulir |
 | `--ink` | `#0F1319` | Teks utama, tombol hitam, navbar (17,2:1) |
 | `--text-2` | `#646A72` | Teks pendukung (5,05:1) |
-| `--gray` | `#8A8F96` | Nada kedua headline, hanya ≥ 24px (3,0:1) |
+| `--gray` | `#82878E` | Nada kedua headline, hanya ≥ 24px (3,35:1 di kertas; 3,09:1 di kartu krem) |
 | `--line` | `#E7E4DC` | Garis rambut |
 | `--accent` | `#2B63F6` | **Hanya** tautan, status aktif, garis bawah (4,6:1) |
 | `--night` / `--night-2` | `#0A0A0C` / `#17181B` | Panel dan tile mockup gelap |
-| `--ok` / `--warn` / `--danger` | `#1E7F52` / `#9A6200` / `#B93A28` | Status, selalu dengan ikon + label |
+| `--ok` / `--warn` / `--danger` | `#1A7349` / `#8C5900` / `#B93A28` | Status, selalu dengan ikon + label (≥ 4,6:1 di atas latar tag) |
 
 ### 6.2 Tipografi
 
-- **SF Pro Display** (semibold 600) untuk headline dan angka ≥ 20px: hero `clamp(40px, 7vw, 80px)`, lh 1.05, tracking −0.022em; H1 halaman 36–64px; H2 30–48px; H3 22–28px; angka metrik 28–40px.
+- **SF Pro Display** (semibold 600) untuk headline dan angka ≥ 20px: hero `clamp(36px, 4.6vw + 22px, 80px)`, lh 1.05, tracking −0.022em; H1 halaman 36–64px; H2 30–48px; H3 24–28px; angka metrik 28–40px.
 - **SF Pro Text** untuk teks, UI, dan label di bawah 20px.
-- **Angka tabular** (`font-variant-numeric: tabular-nums`) dengan SF Pro Text untuk nomor tab (01/02/03), jam, dan hitung mundur. Tidak ada font monospace.
+- **Angka tabular** (`font-variant-numeric: tabular-nums`) dengan SF Pro Text untuk nomor tab (01/02/03), jam, dan hitung mundur kecil; hitung mundur besar (≥ 20px) memakai SF Pro Display. Tidak ada font monospace.
+- Semua headline memakai `text-wrap: balance`. Angka dan satuannya dipisah spasi tak-putus (`5&nbsp;tahun`). Angka di simulasi mengecil otomatis bila tidak muat di tile (minimum 14px); bila tetap tidak muat, tile kecil memakai format ringkas (mis. `Rp660 jt`) dengan angka lengkap di rincian dan tooltip.
 - SF Pro adalah font sistem Apple dan **tidak di-host** di situs (lisensi Apple tidak mengizinkan distribusi web). Urutan font: `"SF Pro Display"/"SF Pro Text", -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif`. Artinya perangkat Apple menampilkan SF Pro, Windows menampilkan Segoe UI, dan Android menampilkan Roboto.
 - Body 16px / 1.6, lebar maks. ±38ch. Eyebrow 11px uppercase, tracking 0.12em.
 - **Aturan dua nada**: kalimat pertama tinta, lanjutan abu-abu (`<span class="tone">`). Semua headline berupa kalimat lengkap dan diakhiri titik.
@@ -180,8 +181,8 @@ Navbar pil mengambang + dropdown gelap · bilah situs resmi · tombol (dark, lig
 | Referensi | PINTU | Alasan |
 |---|---|---|
 | Serif editorial kontras tinggi + grotesk netral | SF Pro Display + SF Pro Text (font sistem) | Permintaan pengguna. Karakter editorial dipertahankan lewat ukuran besar, bobot semibold, tracking rapat, dan aturan dua nada. |
-| Semua teks pendukung `#8A8F96` | Teks kecil memakai `#646A72`; `#8A8F96` hanya untuk headline ≥ 24px | `#8A8F96` di atas kertas hanya 3,0:1 — gagal WCAG AA untuk teks kecil. Situs pemerintah wajib mudah dibaca semua warga. |
-| Hero minimal 56px | Minimal 46px di layar sempit | Kata bahasa Indonesia lebih panjang; mencegah gulir horizontal di 360px. |
+| Semua teks pendukung `#8A8F96` | Teks kecil memakai `#646A72`; nada kedua headline memakai `#82878E` dan hanya untuk teks ≥ 24px | `#8A8F96` di atas kertas hanya 3,0:1 (dan 2,8:1 di kartu krem) — gagal WCAG AA. Situs pemerintah wajib mudah dibaca semua warga. |
+| Hero minimal 56px | Minimal 36px di layar sempit (skala cair `4.6vw + 22px`) | Kata bahasa Indonesia lebih panjang; headline tetap tiga baris di 320px dan tanpa gulir horizontal. |
 | Angka metrik tabular | Proporsional untuk angka besar, tabular untuk kolom | Angka besar tabular terlihat renggang; kolom tetap rata. |
 | Tidak ada warna status | Hijau/kuning/merah dengan ikon + label | Dibutuhkan untuk status loket, jatuh tempo, cek fisik. |
 | Maskot | **Lambang Provinsi NTT** sebagai logo utama (navbar, hero, footer, login, ruang pegawai, favicon). Logo PINTU disimpan sebagai logo cadangan. | Instansi pemerintah memakai lambang resmi; nama portal PINTU cukup ditulis sebagai teks di sebelah lambang. |

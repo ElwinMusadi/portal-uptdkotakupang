@@ -9,6 +9,7 @@
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
   const fmt = new Intl.NumberFormat("id-ID");
   const rupiah = (n) => "Rp" + fmt.format(Math.round(n));
+  const compact = new Intl.NumberFormat("id-ID", { notation: "compact", maximumFractionDigits: 1 });
   const pad = (n) => String(n).padStart(2, "0");
 
   /* ------------------------------------------------------------------
@@ -260,7 +261,7 @@
   const DASH = {
     transaksi: {
       sub: "Transaksi pelayanan · UPTD Kota Kupang", chart: "Transaksi per bulan", unit: "transaksi",
-      tiles: [["Total transaksi", 12480, "", 4.2, true], ["Pajak tahunan", 9316, "", 3.1, true], ["Perpanjangan 5 tahun", 2104, "", 6.8, true], ["Mutasi & BBN", 1060, "", -2.4, true]],
+      tiles: [["Total transaksi", 12480, "", 4.2, true], ["Pajak tahunan", 9316, "", 3.1, true], ["Perpanjangan 5\u00a0tahun", 2104, "", 6.8, true], ["Mutasi & BBN", 1060, "", -2.4, true]],
       series: [880, 910, 1020, 960, 1040, 1100, 990, 1080, 1150, 1120, 1060, 1160],
     },
     penerimaan: {
@@ -360,6 +361,27 @@
     render();
   }
 
+  /* ---------- Teks angka yang menyesuaikan lebar wadah ----------
+     Angka rupiah tidak boleh terpotong. Bila lebih lebar dari wadahnya
+     (nilai besar, layar sempit, atau font sistem yang lebih lebar),
+     ukuran huruf dikecilkan bertahap sampai muat, dengan batas bawah. */
+  function overflows(el) {
+    const cs = getComputedStyle(el);
+    const avail = el.getBoundingClientRect().width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    return range.getBoundingClientRect().width > avail + 0.25;
+  }
+  function fitText(el, min = 14) {
+    el.style.fontSize = "";
+    if (!el.clientWidth) return;
+    let size = parseFloat(getComputedStyle(el).fontSize);
+    while (overflows(el) && size - 1 >= min) {
+      size -= 1;
+      el.style.fontSize = `${size}px`;
+    }
+  }
+
   /* ---------- Simulasi PKB ---------- */
   function initSim() {
     $$("[data-sim]").forEach((root) => {
@@ -369,7 +391,10 @@
       const outTelat = $("[data-sim-telat]", root);
       const putih = $("[data-sim-putih]", root);
       const out = (k) => $$(`[data-sim-out="${k}"]`, root);
-      const set = (k, v) => out(k).forEach((el) => (el.textContent = v));
+      const set = (k, v, raw) => out(k).forEach((el) => {
+        el.textContent = v; el.dataset.full = v; el.removeAttribute("title");
+        if (raw == null) delete el.dataset.raw; else el.dataset.raw = raw;
+      });
 
       const parse = (s) => Number(String(s).replace(/[^\d]/g, "")) || 0;
       const render = () => {
@@ -378,15 +403,41 @@
         const swd = S.swdkllj[state.jenis];
         const total = state.pokok + opsen + denda + swd;
         set("pokok", rupiah(state.pokok));
-        set("opsen", rupiah(opsen)); set("opsen2", rupiah(opsen));
-        set("denda", state.putih ? "Rp0 · dihapus" : rupiah(denda)); set("denda2", rupiah(denda));
-        set("swd", rupiah(swd)); set("swd2", rupiah(swd));
-        set("total", rupiah(total));
+        set("opsen", rupiah(opsen), opsen); set("opsen2", rupiah(opsen));
+        set("denda", state.putih ? "Rp0 · dihapus" : rupiah(denda), state.putih ? null : denda); set("denda2", rupiah(denda));
+        set("swd", rupiah(swd), swd); set("swd2", rupiah(swd));
+        set("total", rupiah(total)); // total tidak pernah diringkas: angka lengkap hanya ada di sini
         if (outTelat) outTelat.textContent = state.telat;
         $$("[data-sim-jenis] [role=radio]", root).forEach((b) => b.setAttribute("aria-checked", String(b.dataset.val === state.jenis)));
         if (putih) putih.checked = state.putih;
         if (inPokok && document.activeElement !== inPokok) inPokok.value = fmt.format(state.pokok);
+        fitAll();
       };
+      // Angka dikecilkan sampai muat. Bila di ukuran minimum tetap tidak muat (tile 1×1 yang sempit),
+      // tampilkan format ringkas ("Rp660 jt"); angka lengkap tetap ada di rincian dan di tooltip.
+      const fitAll = () => $$(".bento__val, .bento__total-val, .mini-sim__out strong", root).forEach((el) => {
+        const min = el.matches(".bento__total-val") ? 18 : 14;
+        if (el.dataset.full) { el.textContent = el.dataset.full; el.removeAttribute("title"); }
+        el.style.whiteSpace = "";
+        fitText(el, min);
+        if (el.dataset.raw && overflows(el)) {
+          el.title = el.dataset.full;
+          el.textContent = "Rp" + compact.format(Number(el.dataset.raw));
+          fitText(el, min);
+        }
+        // Pengaman terakhir untuk font sistem yang sangat lebar: boleh membungkus, tidak pernah terpotong
+        if (overflows(el)) el.style.whiteSpace = "normal";
+      });
+      // Hitung ulang saat lebar kanvas berubah (rotasi layar, ubah ukuran jendela) dan setelah font termuat
+      if ("ResizeObserver" in window) {
+        let lastW = 0;
+        new ResizeObserver(([entry]) => {
+          const w = Math.round(entry.contentRect.width);
+          if (w !== lastW) { lastW = w; fitAll(); }
+        }).observe(root);
+      }
+      document.fonts?.ready.then(fitAll);
+      document.fonts?.addEventListener?.("loadingdone", fitAll);
 
       inPokok?.addEventListener("input", () => {
         state.pokok = Math.min(parse(inPokok.value), 999999999);

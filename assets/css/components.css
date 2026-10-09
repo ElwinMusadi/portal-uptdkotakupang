@@ -114,7 +114,7 @@
 }
 @media (min-width: 921px) { .mobile-menu { display: none !important; } }
 @media (max-width: 920px) { .nav__toggle { margin-left: 0; } }
-@media (max-width: 460px) { .nav .nav__cta { display: none; } .nav__toggle { margin-left: auto; } }
+@media (max-width: 480px) { .nav .nav__cta { display: none; } .nav__toggle { margin-left: auto; } }
 
 /* ---------- Tombol ---------- */
 .btn {
@@ -198,8 +198,8 @@
   transition: color var(--dur-2) var(--ease);
 }
 .numtab:last-child { border-bottom: 0; }
-.numtab__num { font-family: var(--font-mono); font-size: 12px; letter-spacing: .04em; font-variant-numeric: tabular-nums; }
-.numtab__label { font-family: var(--font-display); font-weight: var(--fw-display); font-size: clamp(22px, 2.4vw, 28px); line-height: 1.15; letter-spacing: -0.02em; position: relative; justify-self: start; padding-bottom: 6px; }
+.numtab__num { font-family: var(--font-mono); font-size: 12px; letter-spacing: .04em; font-variant-numeric: tabular-nums; color: var(--text-2); }
+.numtab__label { font-family: var(--font-display); font-weight: var(--fw-display); font-size: clamp(24px, 2.4vw, 28px); line-height: 1.15; letter-spacing: -0.02em; text-wrap: balance; position: relative; justify-self: start; padding-bottom: 6px; }
 .numtab__label::after { content: ""; position: absolute; left: 0; bottom: 0; height: 2px; width: 0; background: var(--accent); border-radius: 2px; transition: width var(--dur-3) var(--ease); }
 .numtab:hover { color: var(--text-2); }
 .numtab[aria-selected="true"] { color: var(--ink); }
@@ -207,20 +207,20 @@
 
 .numtabs--row { flex-direction: row; gap: 28px; flex-wrap: wrap; }
 .numtabs--row .numtab { border-bottom: 0; grid-template-columns: auto auto; gap: 10px; padding: 6px 0; width: auto; }
-.numtabs--row .numtab__label { font-size: clamp(20px, 2vw, 24px); }
+.numtabs--row .numtab__label { font-size: 24px; }
 
 /* ---------- Daftar kategori aktif (biru + garis bawah + panah) ---------- */
 .catlist { list-style: none; display: grid; gap: 2px; }
 .catlist button, .catlist a {
   display: inline-flex; align-items: center; gap: 10px;
-  padding: 8px 0; font-size: 19px; font-weight: 500; letter-spacing: -0.01em; color: var(--gray);
+  padding: 8px 0; font-size: 19px; font-weight: 500; letter-spacing: -0.01em; color: var(--text-2);
   transition: color var(--dur-2) var(--ease);
   text-align: left;
 }
 .catlist .catlist__txt { position: relative; }
 .catlist .catlist__txt::after { content: ""; position: absolute; left: 0; right: 0; bottom: -3px; height: 1.5px; background: currentColor; transform: scaleX(0); transform-origin: left; transition: transform var(--dur-3) var(--ease); }
 .catlist .i { width: 16px; height: 16px; opacity: 0; transform: translateX(-6px); transition: opacity var(--dur-2) var(--ease), transform var(--dur-2) var(--ease); }
-.catlist button:hover, .catlist a:hover { color: var(--text-2); }
+.catlist button:hover, .catlist a:hover { color: var(--ink); }
 .catlist [aria-selected="true"], .catlist [aria-current="true"] { color: var(--accent); }
 .catlist [aria-selected="true"] .catlist__txt::after, .catlist [aria-current="true"] .catlist__txt::after { transform: scaleX(1); }
 .catlist [aria-selected="true"] .i, .catlist [aria-current="true"] .i { opacity: 1; transform: none; }
@@ -243,7 +243,7 @@
   background: var(--surface); border: var(--hairline);
   font-size: 13.5px; font-weight: 500; color: var(--ink);
 }
-.badge__dot { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 10.5px; font-weight: 650; letter-spacing: .02em; background: var(--paper-2); color: var(--ink-2); border: var(--hairline); }
+.badge__dot { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 650; letter-spacing: .02em; background: var(--paper-2); color: var(--ink-2); border: var(--hairline); }
 
 .chip {
   display: inline-flex; align-items: center; gap: 6px; min-height: 34px;
@@ -291,7 +291,7 @@
 .tile { background: var(--night-2); border-radius: var(--r-md); padding: 16px 18px; position: relative; min-width: 0; }
 .tile__label { font-size: 12.5px; color: var(--night-muted); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .tile__value { font-size: var(--fs-metric); font-weight: 600; letter-spacing: -0.03em; line-height: 1.1; margin-top: 10px; color: #fff; }
-.tile__value small { font-size: .45em; font-weight: 500; color: var(--night-muted); letter-spacing: 0; margin-left: 4px; }
+.tile__value small { font-family: var(--font-sans); font-size: .45em; font-weight: 500; color: var(--night-muted); letter-spacing: 0; margin-left: 4px; }
 .tile__meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; font-size: 12px; color: var(--night-muted); }
 .delta { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .delta--up { color: var(--ok-night); }
@@ -440,7 +440,7 @@
 .nav__emblem { height: 31px; }
 .brand-name { display: grid; line-height: 1.15; }
 .brand-name strong { font-size: 13.5px; font-weight: 650; letter-spacing: .08em; }
-.brand-name small { font-size: 10.5px; color: var(--night-muted); letter-spacing: .01em; white-space: nowrap; }
+.brand-name small { font-size: 11px; color: var(--night-muted); letter-spacing: 0; white-space: nowrap; }
 .footer__brand .emblem { height: 44px; }
 .nav { padding-left: 12px; }
 /* Tabel ringkas yang boleh membungkus angka di layar sempit */
