@@ -91,7 +91,7 @@ PINTU
 │   └── Regulasi & Unduhan (unduhan.html)
 ├── Kontak & Pengaduan (kontak.html)
 ├── Ruang Pegawai
-│   ├── Masuk Pegawai (login.html)
+│   ├── Login Pegawai (login.html)
 │   └── Ringkasan / dasbor (dashboard-pegawai.html)
 │       ├── Alur persetujuan (kanban)
 │       ├── Konten: berita, persyaratan, jadwal, dokumentasi, unduhan
@@ -101,7 +101,7 @@ PINTU
 └── Design System (design-system.html)
 ```
 
-Navigasi utama dibatasi **lima** tautan (Profil, Layanan, Jadwal, Informasi, Kontak) sesuai pola navbar pil referensi; turunan muncul sebagai dropdown gelap. Akses pegawai sengaja dijauhkan dari navigasi publik: berada di bilah "situs resmi" kanan atas dan footer.
+Navigasi utama dibatasi **lima** tautan (Profil, Layanan, Jadwal, Informasi, Kontak & Pengaduan) sesuai pola navbar pil referensi; turunan muncul sebagai dropdown gelap. Lebar navbar mengikuti isinya. Akses pegawai dibuat ringkas: ikon **Login Pegawai** di navbar (berlabel untuk pembaca layar dan tooltip), tombol di menu seluler, dan tautan di footer. Navbar desktop tampil mulai 1001px; di bawahnya dipakai menu seluler.
 
 ---
 
@@ -170,7 +170,7 @@ Sumber kebenaran: `assets/css/tokens.css`. Panduan visual hidup: `design-system.
 
 ### 6.5 Komponen
 
-Navbar pil mengambang + dropdown gelap · bilah situs resmi · tombol (dark, light, ghost, night; 48/38/30px) · tautan garis bawah animasi · eyebrow · headline dua nada · media + baris keterangan · strip tiga fitur · tab bernomor · daftar kategori aktif · lencana mitra · chip filter · tag status · akordeon · tile metrik + sparkline · baris filter waktu · pil notch · kanvas bento · kartu biaya · formulir (input, select, textarea, sakelar, radio-chip) · tabel · remah roti · placeholder foto · dialog/lightbox · toast · bagan organisasi · kanban.
+Navbar pil mengambang + dropdown gelap + ikon Login Pegawai · tombol (dark, light, ghost, night; 48/38/30px) · tautan garis bawah animasi · eyebrow · headline dua nada · media + baris keterangan · strip tiga fitur · tab bernomor · daftar kategori aktif · lencana mitra · chip filter · tag status · akordeon · tile metrik + sparkline · baris filter waktu · pil notch · kanvas bento · kartu biaya · formulir (input, select, textarea, sakelar, radio-chip) · tabel · remah roti · placeholder foto · dialog/lightbox · toast · bagan organisasi · kanban.
 
 ### 6.6 Gerak
 
@@ -193,7 +193,7 @@ Navbar pil mengambang + dropdown gelap · bilah situs resmi · tombol (dark, lig
 
 | # | Seksi referensi | Adaptasi PINTU |
 |---|---|---|
-| 1 | Navbar pil gelap | Lambang + "PINTU / Samsat Kota Kupang", 5 menu + "Cek Persyaratan"; ditambah bilah *situs resmi* (pola masthead pemerintah) |
+| 1 | Navbar pil gelap | Lambang + "PINTU / Samsat Kota Kupang", 5 menu (termasuk "Kontak & Pengaduan"), ikon Login Pegawai, dan "Cek Persyaratan"; lebar mengikuti isi |
 | 2 | Hero maskot | Lambang Provinsi NTT di tengah, eyebrow nama UPTD, "Semua informasi Samsat. *Lewat satu pintu.*", CTA hitam, mikrokopi gembok "Gratis dan tanpa perantara." |
 | 3 | Media produk + caption | **Papan layanan hari ini** (antrean, waktu tunggu, Samsat Keliling, pengumuman, status loket) + tombol video profil |
 | 4 | Strip tiga fitur | "Persyaratan jelas." · "Jadwal terbaru." · "Tanpa perantara." |
@@ -206,7 +206,7 @@ Navbar pil mengambang + dropdown gelap · bilah situs resmi · tombol (dark, lig
 | 11 | Pricing | **Biaya**: cek fisik Rp0 + hitung mundur jam loket langsung |
 | 12 | FAQ | "Perlu diketahui. *Sebelum ke loket.*" 7 pertanyaan |
 | 13 | Outro jenaka | "Map apa saja boleh. *Asal jangan lupa dibawa.*" + kontrol "Cek lagi" |
-| 14 | Footer | Logo, alamat, jam loket, kontak, 5 tautan, kembali ke atas, © + Masuk Pegawai + kebijakan |
+| 14 | Footer | Logo, alamat, jam loket, kontak, 5 tautan, kembali ke atas, © + Login Pegawai + kebijakan |
 
 Tidak ada nama, logo, salinan, harga, atau tangkapan layar TinyKPI yang dipakai.
 
@@ -217,7 +217,7 @@ Tidak ada nama, logo, salinan, harga, atau tangkapan layar TinyKPI yang dipakai.
 | Referensi | Pola yang diadopsi |
 |---|---|
 | GOV.UK | Tugas lebih dulu (CTA utama langsung ke persyaratan), bahasa sederhana, tanggal "terakhir diperbarui" |
-| gov.sg / Singapore Government Design System | Masthead "situs resmi" di atas navigasi untuk mencegah situs tiruan |
+| gov.sg / Singapore Government Design System | Penanda situs resmi; diwujudkan lewat lambang daerah di navbar dan footer (bilah masthead terpisah dihapus agar header lebih ringkas) |
 | IRAS (otoritas pajak Singapura) | Portal pajak yang menekankan aksesibilitas (Best Accessibility Award, GovTech Digital Services Awards 2024) → target WCAG 2.2 AA |
 | Pemerintah Belanda (DICTU, Splash Awards 2025) | Situs dasar berbasis templat yang memenuhi pedoman aksesibilitas dan konten → design system + partial header/footer |
 | Ombudsman RI Perwakilan NTT | Catatan bahwa gesek nomor rangka/mesin di Samsat Kota Kupang tidak dipungut biaya → kartu "Rp0", pernyataan integritas, kanal pengaduan |

@@ -3,7 +3,7 @@
    ========================================================================== */
 
 /* ================= 1 · Hero ================= */
-.hero { padding-top: clamp(56px, 9vw, 112px); padding-bottom: clamp(56px, 7vw, 88px); }
+.hero { padding-top: clamp(28px, 4vw, 56px); padding-bottom: clamp(56px, 7vw, 88px); }
 .hero__mark { margin: 0 auto 28px; }
 .hero__eyebrow { margin-bottom: 22px; }
 .hero__title { max-width: 22ch; margin-inline: auto; }

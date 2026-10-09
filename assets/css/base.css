@@ -3,7 +3,7 @@
    ========================================================================== */
 
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 112px; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 96px; }
 body {
   margin: 0;
   background: var(--paper);
@@ -145,7 +145,7 @@ table { border-collapse: collapse; width: 100%; }
 }
 
 @media print {
-  .site-top, .nav-wrap, .footer, .no-print { display: none !important; }
+  .nav-wrap, .footer, .no-print { display: none !important; }
   body { background: #fff; }
   .section { padding-block: 24px; }
 }

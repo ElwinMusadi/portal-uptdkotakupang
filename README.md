@@ -16,7 +16,7 @@ Tangkapan layar lain ada di [`docs/preview/`](docs/preview/).
 
 | Publik | Internal & panduan |
 |---|---|
-| `index.html` — Beranda (landing profil) | `login.html` — Masuk pegawai |
+| `index.html` — Beranda (landing profil) | `login.html` — Login pegawai |
 | `profil.html` — Tentang UPTD | `dashboard-pegawai.html` — Ruang pegawai |
 | `visi-misi.html` — Visi, misi, nilai, maklumat | `design-system.html` — Panduan design system |
 | `struktur-organisasi.html` — Bagan & uraian tugas | `kebijakan-privasi.html`, `syarat-ketentuan.html` |
