@@ -108,10 +108,13 @@
 .mobile-menu__cta .btn { justify-content: center; }
 
 @media (max-width: 920px) {
-  .nav__links, .nav__cta { display: none; }
+  .nav__links { display: none; }
+  .nav .nav__cta { margin-left: auto; }
   .nav__toggle { display: inline-flex; }
 }
 @media (min-width: 921px) { .mobile-menu { display: none !important; } }
+@media (max-width: 920px) { .nav__toggle { margin-left: 0; } }
+@media (max-width: 420px) { .nav .nav__cta { display: none; } .nav__toggle { margin-left: auto; } }
 
 /* ---------- Tombol ---------- */
 .btn {
