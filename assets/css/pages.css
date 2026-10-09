@@ -668,3 +668,15 @@
 .kcard__foot { flex-wrap: wrap; }
 .status-card .status-card__cd span { font-size: inherit; color: #fff; }
 .stop__time .tag { font-family: var(--font-sans); }
+
+/* ---------- Lambang pada pola halaman ---------- */
+.hero__emblem { height: clamp(92px, 10vw, 116px); margin: 0 auto 30px; }
+.board__emblem { height: 21px; }
+.kanal__ic--brand .emblem { height: 18px; }
+.auth__emblem { height: 40px; }
+.side__emblem { height: 30px; }
+.emblem-sizes { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 20px; }
+.emblem-sizes figure { display: grid; justify-items: center; gap: 8px; }
+.emblem-sizes figcaption { font-family: var(--font-mono); font-size: 11px; color: var(--text-2); white-space: nowrap; }
+.logo-reserve { padding: 28px; margin-top: 16px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 24px; align-items: center; }
+@media (max-width: 560px) { .logo-reserve { grid-template-columns: 1fr; } }

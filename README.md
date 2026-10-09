@@ -47,6 +47,12 @@ node scripts/sync-partials.mjs
 
 Jam loket, rotasi Samsat Keliling, dan parameter simulasi PKB ada di objek `CONFIG` pada `assets/js/main.js`. Semua nilai yang ditandai titik kuning di halaman adalah **data contoh** dan wajib diverifikasi petugas sebelum terbit (daftar lengkap di §10 dokumen rancangan).
 
+## Logo
+
+Logo utama adalah **Lambang Provinsi Nusa Tenggara Timur** (`assets/img/lambang-ntt.png` dan turunan `lambang-ntt-*.webp`). Aturan pemakaian ada di seksi *Logo & lambang* pada `design-system.html`.
+
+Logo PINTU (pintu terbuka) **disimpan sebagai logo cadangan** dan tidak tampil saat ini: simbol `#logo-pintu` di `partials/icons.html`, berkas `assets/img/logo-pintu.svg` dan `assets/img/favicon.svg`. Untuk memakainya lagi di navbar, lihat komentar di `partials/header.html`.
+
 ## Lisensi aset
 
 Font Instrument Serif dan Geist dilisensikan SIL Open Font License (lihat `assets/fonts/`). Lambang Provinsi NTT adalah milik Pemerintah Provinsi NTT dan dipakai sesuai ketentuan lambang daerah.

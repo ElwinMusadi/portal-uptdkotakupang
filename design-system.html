@@ -6,7 +6,8 @@
   <title>Design System — PINTU UPTD Pendapatan Daerah Wilayah Kota Kupang</title>
   <meta name="description" content="Panduan hidup design system PINTU: prinsip, token warna, tipografi, spasi, komponen, gerak, dan aksesibilitas.">
   <meta name="theme-color" content="#F7F6F2">
-  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/img/favicon-32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
   <link rel="stylesheet" href="assets/css/tokens.css">
   <link rel="stylesheet" href="assets/css/base.css">
   <link rel="stylesheet" href="assets/css/components.css">
@@ -109,7 +110,7 @@
 <div class="site-top">
   <div class="container site-top__inner">
     <p class="site-top__id">
-      <img src="assets/img/lambang-ntt.png" alt="Lambang Provinsi Nusa Tenggara Timur" width="16" height="17">
+      <svg class="i i--sm" aria-hidden="true"><use href="#i-shield"/></svg>
       <span>Situs resmi UPTD Pendapatan Daerah Wilayah Kota Kupang<span class="site-top__hide-sm"> · Badan Pendapatan dan Aset Daerah Provinsi NTT</span></span>
     </p>
     <div class="site-top__links">
@@ -121,9 +122,10 @@
 
 <header class="nav-wrap">
   <nav class="nav" aria-label="Navigasi utama">
-    <a class="nav__brand" href="index.html" aria-label="PINTU — Beranda">
-      <svg class="mark" aria-hidden="true"><use href="#logo-pintu"/></svg>
-      <span class="wordmark">PINTU</span>
+    <a class="nav__brand" href="index.html" aria-label="PINTU Samsat Kota Kupang — Beranda">
+      <img class="emblem nav__emblem" src="assets/img/lambang-ntt-96.webp" alt="" width="29" height="31">
+      <span class="brand-name"><strong>PINTU</strong><small>Samsat Kota Kupang</small></span>
+      <!-- Logo cadangan PINTU (simpan): <svg class="mark" aria-hidden="true"><use href="#logo-pintu"/></svg> -->
     </a>
     <ul class="nav__links">
       <li class="nav__item has-menu" data-group="profil">
@@ -205,7 +207,7 @@
       <p class="lead">Bahasa desain editorial yang hangat: serif kontras tinggi untuk headline, grotesk netral untuk semua yang lain, dan satu warna aksen untuk aksi.</p>
     </div>
     <nav class="ds-nav" aria-label="Isi panduan" style="margin-top:40px">
-      <a class="chip" href="#prinsip">Prinsip</a><a class="chip" href="#warna">Warna</a><a class="chip" href="#tipografi">Tipografi</a><a class="chip" href="#ruang">Spasi &amp; sudut</a><a class="chip" href="#komponen">Komponen</a><a class="chip" href="#pola">Pola halaman</a><a class="chip" href="#gerak">Gerak</a><a class="chip" href="#aksesibilitas">Aksesibilitas</a>
+      <a class="chip" href="#prinsip">Prinsip</a><a class="chip" href="#logo">Logo</a><a class="chip" href="#warna">Warna</a><a class="chip" href="#tipografi">Tipografi</a><a class="chip" href="#ruang">Spasi &amp; sudut</a><a class="chip" href="#komponen">Komponen</a><a class="chip" href="#pola">Pola halaman</a><a class="chip" href="#gerak">Gerak</a><a class="chip" href="#aksesibilitas">Aksesibilitas</a>
     </nav>
   </section>
 
@@ -222,10 +224,52 @@
     </div>
   </section>
 
+  <!-- Logo & lambang -->
+  <section class="ds-section" id="logo">
+    <div class="container">
+      <div class="ds-head"><div><p class="eyebrow">02 · Logo &amp; lambang</p><h2 class="h2" style="margin-top:16px">Lambang daerah di depan. <span class="tone">Nama portal di sampingnya.</span></h2></div><p class="body">Logo utama adalah Lambang Provinsi Nusa Tenggara Timur. Nama portal PINTU ditulis sebagai teks di sebelahnya, tidak dilebur menjadi satu gambar.</p></div>
+      <div class="specimen-grid specimen-grid--3">
+        <div class="specimen specimen--paper center">
+          <p class="specimen__label">Logo utama</p>
+          <img class="emblem" src="assets/img/lambang-ntt-360.webp" alt="Lambang Provinsi Nusa Tenggara Timur" width="151" height="160" style="height:160px;margin:8px auto">
+          <p class="micro muted">Lambang Provinsi NTT · PNG transparan 1020×1081<br><code class="ds-code">assets/img/lambang-ntt.png</code></p>
+        </div>
+        <div class="specimen specimen--paper">
+          <p class="specimen__label">Lockup navbar (latar gelap)</p>
+          <span class="nav nav--static" style="max-width:240px;margin:0"><span class="nav__brand"><img class="emblem nav__emblem" src="assets/img/lambang-ntt-96.webp" alt="" width="29" height="31"><span class="brand-name"><strong>PINTU</strong><small>Samsat Kota Kupang</small></span></span></span>
+          <p class="specimen__label" style="margin-top:8px">Lockup footer (latar terang)</p>
+          <span class="footer__brand"><img class="emblem" src="assets/img/lambang-ntt-192.webp" alt="" width="42" height="44" style="height:44px"><span><strong>PINTU</strong><span>Portal Informasi dan Pelayanan<br>UPTD Pendapatan Daerah Wilayah Kota Kupang</span></span></span>
+        </div>
+        <div class="specimen specimen--paper">
+          <p class="specimen__label">Ukuran di layar</p>
+          <div class="emblem-sizes">
+            <figure><img class="emblem" src="assets/img/lambang-ntt-360.webp" alt="" width="109" height="116" style="height:116px"><figcaption>Hero · 92–116</figcaption></figure>
+            <figure><img class="emblem" src="assets/img/lambang-ntt-192.webp" alt="" width="42" height="44" style="height:44px"><figcaption>Footer · 44</figcaption></figure>
+            <figure><img class="emblem" src="assets/img/lambang-ntt-96.webp" alt="" width="29" height="31" style="height:31px"><figcaption>Navbar · 31</figcaption></figure>
+            <figure><img class="emblem" src="assets/img/lambang-ntt-96.webp" alt="" width="23" height="24" style="height:24px"><figcaption>Minimum · 24</figcaption></figure>
+          </div>
+          <p class="micro muted">Atur tinggi saja; lebar mengikuti proporsi asli.</p>
+        </div>
+      </div>
+      <div class="do-dont" style="margin-top:16px">
+        <div class="is-do"><h3><svg class="i" aria-hidden="true"><use href="#i-check-circle"/></svg>Lakukan</h3><ul><li>Pakai berkas asli <code class="ds-code">lambang-ntt*.webp/png</code> dari folder <code class="ds-code">assets/img</code>.</li><li>Jaga proporsi: atur tinggi, biarkan lebar otomatis.</li><li>Sisakan ruang kosong minimal ¼ lebar lambang di sekelilingnya.</li><li>Letakkan di atas kertas, putih, atau tinta. Bingkai putih lambang menjaga keterbacaan di latar gelap.</li><li>Tinggi minimal 24px di layar.</li></ul></div>
+        <div class="is-dont"><h3><svg class="i" aria-hidden="true"><use href="#i-x"/></svg>Jangan</h3><ul><li>Mengubah warna atau membuatnya monokrom tanpa ketentuan resmi.</li><li>Memotong, memutar, memiringkan, atau meregangkan.</li><li>Menambah bayangan, garis tepi, efek, atau animasi.</li><li>Menaruhnya di atas foto ramai atau di dalam bentuk lain.</li><li>Melebur lambang dengan logo lain menjadi satu gambar.</li></ul></div>
+      </div>
+      <div class="card--sunken logo-reserve">
+        <span class="app-tile"><svg class="mark" aria-hidden="true"><use href="#logo-pintu"/></svg></span>
+        <div>
+          <p class="smallcaps">Logo cadangan · tidak dipakai saat ini</p>
+          <h3 class="h3" style="margin-top:10px">PINTU. <span class="tone">Pintu yang terbuka.</span></h3>
+          <p class="small muted" style="margin-top:8px;max-width:62ch">Disimpan untuk penggunaan mendatang, misalnya aplikasi atau materi sosialisasi. Tersedia sebagai simbol <code class="ds-code">#logo-pintu</code> di <code class="ds-code">partials/icons.html</code> dan berkas <code class="ds-code">assets/img/logo-pintu.svg</code>. Cara memasangnya kembali di navbar tertulis sebagai komentar di <code class="ds-code">partials/header.html</code>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Warna -->
   <section class="ds-section" id="warna">
     <div class="container">
-      <div class="ds-head"><div><p class="eyebrow">02 · Warna</p><h2 class="h2" style="margin-top:16px">Kertas hangat. <span class="tone">Tinta biru-hitam.</span></h2></div><p class="body">Chrome halaman selalu terang. Blok gelap hanya muncul di dalam mockup produk dan papan informasi.</p></div>
+      <div class="ds-head"><div><p class="eyebrow">03 · Warna</p><h2 class="h2" style="margin-top:16px">Kertas hangat. <span class="tone">Tinta biru-hitam.</span></h2></div><p class="body">Chrome halaman selalu terang. Blok gelap hanya muncul di dalam mockup produk dan papan informasi.</p></div>
       <p class="smallcaps" style="margin-bottom:12px">Kertas &amp; tinta</p>
       <div class="swatches">
         <div class="swatch"><div class="swatch__chip" style="background:#F7F6F2">Aa</div><div class="swatch__body"><strong>Paper</strong><code>--paper · #F7F6F2</code><span>Latar halaman</span></div></div>
@@ -257,7 +301,7 @@
   <!-- Tipografi -->
   <section class="ds-section" id="tipografi">
     <div class="container">
-      <div class="ds-head"><div><p class="eyebrow">03 · Tipografi</p><h2 class="h2" style="margin-top:16px">Serif untuk suara. <span class="tone">Grotesk untuk isi.</span></h2></div><p class="body">Instrument Serif (headline) dan Geist (teks, UI, angka). Keduanya disimpan lokal di <code class="ds-code">assets/fonts</code> dengan lisensi OFL.</p></div>
+      <div class="ds-head"><div><p class="eyebrow">04 · Tipografi</p><h2 class="h2" style="margin-top:16px">Serif untuk suara. <span class="tone">Grotesk untuk isi.</span></h2></div><p class="body">Instrument Serif (headline) dan Geist (teks, UI, angka). Keduanya disimpan lokal di <code class="ds-code">assets/fonts</code> dengan lisensi OFL.</p></div>
       <div>
         <div class="type-row"><p class="type-row__meta"><strong>Hero</strong>Instrument Serif · clamp(46–92px) · 1.02 · −0.02em</p><p class="h-hero" style="font-size:clamp(40px,6vw,80px)">Semua informasi. <span class="tone">Satu pintu.</span></p></div>
         <div class="type-row"><p class="type-row__meta"><strong>Display / H1</strong>clamp(44–76px) · 1.02</p><p class="h-display" style="font-size:clamp(36px,4.6vw,60px)">Kabar dari loket.</p></div>
@@ -280,7 +324,7 @@
   <!-- Spasi & sudut -->
   <section class="ds-section" id="ruang">
     <div class="container">
-      <div class="ds-head"><div><p class="eyebrow">04 · Spasi, sudut, garis</p><h2 class="h2" style="margin-top:16px">Banyak ruang. <span class="tone">Sedikit bayangan.</span></h2></div><p class="body">Basis 4px. Jarak antar-seksi 96–160px, di dalam seksi 64px. Pisahkan dengan garis rambut, bukan bayangan.</p></div>
+      <div class="ds-head"><div><p class="eyebrow">05 · Spasi, sudut, garis</p><h2 class="h2" style="margin-top:16px">Banyak ruang. <span class="tone">Sedikit bayangan.</span></h2></div><p class="body">Basis 4px. Jarak antar-seksi 96–160px, di dalam seksi 64px. Pisahkan dengan garis rambut, bukan bayangan.</p></div>
       <div class="specimen-grid">
         <div class="specimen specimen--paper">
           <p class="specimen__label">Skala spasi</p>
@@ -301,12 +345,12 @@
   <!-- Komponen -->
   <section class="ds-section" id="komponen">
     <div class="container">
-      <div class="ds-head"><div><p class="eyebrow">05 · Komponen</p><h2 class="h2" style="margin-top:16px">Sedikit bagian. <span class="tone">Banyak kombinasi.</span></h2></div><p class="body">Semua komponen di bawah adalah kode produksi dari <code class="ds-code">components.css</code>, bukan gambar.</p></div>
+      <div class="ds-head"><div><p class="eyebrow">06 · Komponen</p><h2 class="h2" style="margin-top:16px">Sedikit bagian. <span class="tone">Banyak kombinasi.</span></h2></div><p class="body">Semua komponen di bawah adalah kode produksi dari <code class="ds-code">components.css</code>, bukan gambar.</p></div>
 
       <div class="specimen specimen--sunken" style="margin-bottom:16px">
         <p class="specimen__label">Navbar pil mengambang</p>
         <nav class="nav nav--static" aria-label="Contoh navbar">
-          <span class="nav__brand"><svg class="mark" aria-hidden="true"><use href="#logo-pintu"/></svg><span class="wordmark">PINTU</span></span>
+          <span class="nav__brand"><img class="emblem nav__emblem" src="assets/img/lambang-ntt-96.webp" alt="" width="29" height="31"><span class="brand-name"><strong>PINTU</strong><small>Samsat Kota Kupang</small></span></span>
           <ul class="nav__links"><li><span class="nav__link">Profil</span></li><li><span class="nav__link">Layanan</span></li><li><span class="nav__link">Jadwal</span></li><li><span class="nav__link">Informasi</span></li><li><span class="nav__link">Kontak</span></li></ul>
           <span class="btn btn--light btn--sm nav__cta">Cek Persyaratan</span>
         </nav>
@@ -380,13 +424,13 @@
   <!-- Pola halaman -->
   <section class="ds-section" id="pola">
     <div class="container">
-      <div class="ds-head"><div><p class="eyebrow">06 · Pola halaman</p><h2 class="h2" style="margin-top:16px">Ritme bergantian. <span class="tone">Tengah, lalu terbelah.</span></h2></div><p class="body">Pernyataan terpusat (hero, integritas, FAQ, kanal) bergantian dengan seksi editorial terbelah 40/60.</p></div>
+      <div class="ds-head"><div><p class="eyebrow">07 · Pola halaman</p><h2 class="h2" style="margin-top:16px">Ritme bergantian. <span class="tone">Tengah, lalu terbelah.</span></h2></div><p class="body">Pernyataan terpusat (hero, integritas, FAQ, kanal) bergantian dengan seksi editorial terbelah 40/60.</p></div>
       <div class="table-wrap">
         <table class="table">
           <thead><tr><th scope="col">Pola referensi</th><th scope="col">Adaptasi PINTU</th><th scope="col">Halaman</th></tr></thead>
           <tbody>
-            <tr><td>Navbar pil mengambang</td><td>5 menu + CTA “Cek Persyaratan” + bilah situs resmi</td><td>Semua</td></tr>
-            <tr><td>Hero maskot + 2 baris headline</td><td>Logo PINTU (pintu terbuka), headline dua nada, mikrokopi “tanpa perantara”</td><td>Beranda</td></tr>
+            <tr><td>Navbar pil mengambang</td><td>Lambang + “PINTU / Samsat Kota Kupang”, 5 menu, CTA “Cek Persyaratan”, bilah situs resmi</td><td>Semua</td></tr>
+            <tr><td>Hero maskot + 2 baris headline</td><td>Lambang Provinsi NTT di tengah, headline dua nada, mikrokopi “tanpa perantara”</td><td>Beranda</td></tr>
             <tr><td>Media produk besar + caption</td><td>Papan layanan hari ini: antrean, Samsat Keliling, status loket langsung</td><td>Beranda</td></tr>
             <tr><td>Tab bernomor + kartu tangkapan layar</td><td>Layanan utama dengan checklist berkas interaktif</td><td>Beranda</td></tr>
             <tr><td>Dasbor gelap + daftar kategori</td><td>Transparansi kinerja layanan dengan rentang waktu</td><td>Beranda</td></tr>
@@ -404,7 +448,7 @@
   <!-- Gerak -->
   <section class="ds-section" id="gerak">
     <div class="container split">
-      <div><p class="eyebrow">07 · Gerak</p><h2 class="h2" style="margin-top:16px">Tenang. <span class="tone">Hanya bila berguna.</span></h2><p class="body" style="margin-top:16px">Tidak ada paralaks atau animasi dekoratif. Semua gerak dimatikan bila pengguna memilih <code class="ds-code">prefers-reduced-motion</code>.</p></div>
+      <div><p class="eyebrow">08 · Gerak</p><h2 class="h2" style="margin-top:16px">Tenang. <span class="tone">Hanya bila berguna.</span></h2><p class="body" style="margin-top:16px">Tidak ada paralaks atau animasi dekoratif. Semua gerak dimatikan bila pengguna memilih <code class="ds-code">prefers-reduced-motion</code>.</p></div>
       <table class="table">
         <thead><tr><th scope="col">Token</th><th scope="col">Nilai</th><th scope="col">Dipakai untuk</th></tr></thead>
         <tbody>
@@ -420,7 +464,7 @@
   <!-- Aksesibilitas -->
   <section class="ds-section" id="aksesibilitas">
     <div class="container">
-      <div class="ds-head"><div><p class="eyebrow">08 · Aksesibilitas &amp; larangan</p><h2 class="h2" style="margin-top:16px">Bisa dibaca semua orang. <span class="tone">Di layar apa pun.</span></h2></div><p class="body">Target WCAG 2.2 AA. Teks pendukung memakai <code class="ds-code">--text-2</code>, bukan abu-abu referensi, agar lolos kontras 4,5:1.</p></div>
+      <div class="ds-head"><div><p class="eyebrow">09 · Aksesibilitas &amp; larangan</p><h2 class="h2" style="margin-top:16px">Bisa dibaca semua orang. <span class="tone">Di layar apa pun.</span></h2></div><p class="body">Target WCAG 2.2 AA. Teks pendukung memakai <code class="ds-code">--text-2</code>, bukan abu-abu referensi, agar lolos kontras 4,5:1.</p></div>
       <div class="do-dont">
         <div class="is-do"><h3><svg class="i" aria-hidden="true"><use href="#i-check-circle"/></svg>Lakukan</h3><ul><li>Gunakan bahasa Indonesia baku yang singkat; satu kalimat, satu gagasan.</li><li>Sertakan ikon + label pada setiap status.</li><li>Pastikan semua kontrol bisa dipakai dengan papan ketik dan terlihat fokusnya.</li><li>Cantumkan tanggal pemutakhiran dan sumber informasi.</li><li>Uji di lebar 360px tanpa gulir horizontal.</li></ul></div>
         <div class="is-dont"><h3><svg class="i" aria-hidden="true"><use href="#i-x"/></svg>Jangan</h3><ul><li>Memakai biru untuk latar atau dekorasi.</li><li>Menaruh blok gelap besar di chrome halaman di luar mockup.</li><li>Memakai abu-abu <code class="ds-code">--gray</code> untuk teks di bawah 24px.</li><li>Mengubah atau menempelkan efek pada lambang daerah.</li><li>Menerbitkan data contoh tanpa verifikasi petugas.</li></ul></div>
@@ -435,7 +479,7 @@
     <div class="footer__info">
       <div>
         <a class="footer__brand" href="index.html" aria-label="PINTU — Beranda">
-          <svg class="mark" aria-hidden="true"><use href="#logo-pintu"/></svg>
+          <img class="emblem footer__emblem-img" src="assets/img/lambang-ntt-192.webp" alt="" width="42" height="44">
           <span><strong>PINTU</strong><span>Portal Informasi dan Pelayanan<br>UPTD Pendapatan Daerah Wilayah Kota Kupang</span></span>
         </a>
         <p class="micro muted" style="margin-top:16px;max-width:34ch">Unit Pelaksana Teknis Daerah pada Badan Pendapatan dan Aset Daerah Provinsi Nusa Tenggara Timur. Kantor bersama Samsat Kota Kupang.</p>
@@ -474,7 +518,7 @@
     </div>
 
     <div class="footer__bottom">
-      <p class="footer__emblem"><img src="assets/img/lambang-ntt.png" alt="" width="18" height="19">© 2026 UPTD Pendapatan Daerah Wilayah Kota Kupang · BPAD Provinsi NTT</p>
+      <p>© 2026 UPTD Pendapatan Daerah Wilayah Kota Kupang · BPAD Provinsi NTT</p>
       <ul role="list">
         <li><a href="login.html">Masuk Pegawai</a></li>
         <li><a href="kebijakan-privasi.html">Kebijakan Privasi</a></li>

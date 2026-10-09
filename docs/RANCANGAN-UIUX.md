@@ -158,15 +158,23 @@ Sumber kebenaran: `assets/css/tokens.css`. Panduan visual hidup: `design-system.
 - Radius: pil 999 (nav, tombol, notch), 32 (media/kartu seksi), 24 (kartu), 16 (tile), 12 (input).
 - Bayangan jarang dan lembut; pemisahan memakai garis rambut dan kontras terang/gelap.
 
-### 6.4 Komponen
+### 6.4 Logo & lambang
+
+- **Logo utama:** Lambang Provinsi Nusa Tenggara Timur (`assets/img/lambang-ntt.png`, PNG transparan 1020×1081; turunan web `lambang-ntt-96/192/360.webp`; favicon `favicon-32.png`, `apple-touch-icon.png`).
+- **Lockup:** lambang + teks "PINTU / Samsat Kota Kupang" (navbar) atau "PINTU / Portal Informasi dan Pelayanan / UPTD …" (footer). Lambang dan teks tidak dilebur menjadi satu gambar.
+- **Ukuran:** hero 92–116px, footer 44px, navbar 31px, minimum 24px. Atur tinggi; lebar mengikuti proporsi asli.
+- **Larangan:** mengubah warna, memotong, memutar, meregangkan, menambah bayangan/efek, atau menaruhnya di atas foto ramai.
+- **Logo cadangan PINTU** (kusen pintu + daun pintu terbuka) tidak dipakai saat ini, tetapi disimpan: simbol `#logo-pintu` di `partials/icons.html`, berkas `assets/img/logo-pintu.svg`, dan `assets/img/favicon.svg`. Cara memasangnya kembali ada sebagai komentar di `partials/header.html`.
+
+### 6.5 Komponen
 
 Navbar pil mengambang + dropdown gelap · bilah situs resmi · tombol (dark, light, ghost, night; 48/38/30px) · tautan garis bawah animasi · eyebrow · headline dua nada · media + baris keterangan · strip tiga fitur · tab bernomor · daftar kategori aktif · lencana mitra · chip filter · tag status · akordeon · tile metrik + sparkline · baris filter waktu · pil notch · kanvas bento · kartu biaya · formulir (input, select, textarea, sakelar, radio-chip) · tabel · remah roti · placeholder foto · dialog/lightbox · toast · bagan organisasi · kanban.
 
-### 6.5 Gerak
+### 6.6 Gerak
 
 `--dur-1` 160ms (hover), `--dur-2` 240ms (dropdown, akordeon), `--dur-3` 600ms (fade-up, garis tab). Easing `cubic-bezier(.2,.7,.2,1)`. Tanpa paralaks. Semua dimatikan pada `prefers-reduced-motion`.
 
-### 6.6 Deviasi sadar dari referensi
+### 6.7 Deviasi sadar dari referensi
 
 | Referensi | PINTU | Alasan |
 |---|---|---|
@@ -174,7 +182,7 @@ Navbar pil mengambang + dropdown gelap · bilah situs resmi · tombol (dark, lig
 | Hero minimal 56px | Minimal 46px di layar sempit | Kata bahasa Indonesia lebih panjang; mencegah gulir horizontal di 360px. |
 | Angka metrik tabular | Proporsional untuk angka besar, tabular untuk kolom | Angka besar tabular terlihat renggang; kolom tetap rata. |
 | Tidak ada warna status | Hijau/kuning/merah dengan ikon + label | Dibutuhkan untuk status loket, jatuh tempo, cek fisik. |
-| Maskot | Logo PINTU (kusen pintu + daun pintu terbuka) + lambang Provinsi NTT di bilah situs resmi dan footer | Instansi pemerintah memakai lambang resmi; logo produk tidak menyaingi lambang. |
+| Maskot | **Lambang Provinsi NTT** sebagai logo utama (navbar, hero, footer, login, ruang pegawai, favicon). Logo PINTU disimpan sebagai logo cadangan. | Instansi pemerintah memakai lambang resmi; nama portal PINTU cukup ditulis sebagai teks di sebelah lambang. |
 
 ---
 
@@ -182,8 +190,8 @@ Navbar pil mengambang + dropdown gelap · bilah situs resmi · tombol (dark, lig
 
 | # | Seksi referensi | Adaptasi PINTU |
 |---|---|---|
-| 1 | Navbar pil gelap | Navbar pil 5 menu + "Cek Persyaratan"; ditambah bilah *situs resmi* (pola masthead pemerintah) |
-| 2 | Hero maskot | Ubin logo PINTU, eyebrow nama UPTD, "Semua informasi Samsat. *Lewat satu pintu.*", CTA hitam, mikrokopi gembok "Gratis dan tanpa perantara." |
+| 1 | Navbar pil gelap | Lambang + "PINTU / Samsat Kota Kupang", 5 menu + "Cek Persyaratan"; ditambah bilah *situs resmi* (pola masthead pemerintah) |
+| 2 | Hero maskot | Lambang Provinsi NTT di tengah, eyebrow nama UPTD, "Semua informasi Samsat. *Lewat satu pintu.*", CTA hitam, mikrokopi gembok "Gratis dan tanpa perantara." |
 | 3 | Media produk + caption | **Papan layanan hari ini** (antrean, waktu tunggu, Samsat Keliling, pengumuman, status loket) + tombol video profil |
 | 4 | Strip tiga fitur | "Persyaratan jelas." · "Jadwal terbaru." · "Tanpa perantara." |
 | 5 | Views 01/02/03 | Layanan utama 01 Pajak tahunan / 02 Perpanjangan 5 tahun / 03 Mutasi; kartu berisi checklist berkas interaktif |
@@ -255,7 +263,7 @@ Semua elemen bertanda titik kuning "proto-note" di prototipe adalah contoh. Daft
 - [ ] Angka dasbor transparansi (saat ini data ilustrasi)
 - [ ] Foto gedung, kegiatan, dan video profil (saat ini placeholder ilustrasi)
 - [ ] Kebijakan privasi dan syarat & ketentuan (draf, perlu tinjauan hukum)
-- [ ] Lambang Provinsi NTT resolusi tinggi/SVG dari sumber resmi (saat ini diekstrak dari dokumen Rancangan)
+- [x] Lambang Provinsi NTT resolusi tinggi (PNG transparan 1020×1081, diberikan pengguna). Versi SVG resmi dari Biro Organisasi/BPAD tetap disarankan bila tersedia.
 
 Data persyaratan lima layanan diambil dari foto papan persyaratan loket dalam dokumen Rancangan.
 
@@ -273,7 +281,7 @@ Data persyaratan lima layanan diambil dari foto papan persyaratan loket dalam do
 │   ├── css/pages.css       ← pola halaman & ruang pegawai
 │   ├── js/main.js          ← interaksi + CONFIG konten dinamis
 │   ├── fonts/              ← Instrument Serif, Geist, Geist Mono (OFL)
-│   └── img/                ← favicon, lambang NTT
+│   └── img/                ← lambang NTT (logo utama), favicon, logo cadangan PINTU
 ├── partials/               ← header, footer, sprite ikon (sumber tunggal)
 ├── scripts/sync-partials.mjs
 └── docs/RANCANGAN-UIUX.md
