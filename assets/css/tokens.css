@@ -1,0 +1,127 @@
+/* ==========================================================================
+   PINTU Design System — Tokens
+   Portal Informasi dan Pelayanan · UPTD Pendapatan Daerah Wilayah Kota Kupang
+   Bahasa desain: editorial tenang (serif kontras tinggi + grotesk netral),
+   kertas hangat, tinta biru-hitam, satu aksen biru untuk tautan & status aktif.
+   ========================================================================== */
+
+@font-face {
+  font-family: "Instrument Serif";
+  src: url("../fonts/instrument-serif-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Instrument Serif";
+  src: url("../fonts/instrument-serif-latin-400-italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist";
+  src: url("../fonts/geist-latin-wght-normal.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("../fonts/geist-mono-latin-wght-normal.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ---------- Warna: kertas & tinta (chrome halaman selalu terang) ---------- */
+  --paper: #F7F6F2;          /* latar halaman */
+  --paper-2: #EFEDE6;        /* kanvas kartu media / area tenggelam */
+  --paper-3: #E9E6DD;        /* hover pada area tenggelam */
+  --surface: #FFFFFF;        /* kartu putih (harga, formulir) */
+  --ink: #0F1319;            /* teks utama, tombol hitam, nav */
+  --ink-2: #2A2F37;          /* teks utama sekunder */
+  --gray: #8A8F96;           /* nada kedua headline (≥ 24px saja) */
+  --text-2: #646A72;         /* teks pendukung — 5.05:1 di atas --paper */
+  --line: #E7E4DC;           /* garis rambut */
+  --line-2: #D9D5CA;         /* garis tegas (input, pemisah tabel) */
+
+  /* ---------- Aksen: hanya untuk tautan, status aktif, garis bawah ---------- */
+  --accent: #2B63F6;
+  --accent-ink: #2457E0;     /* hover / teks kecil */
+  --accent-soft: #E8EEFE;    /* latar fokus lembut */
+
+  /* ---------- Mockup gelap (hanya di dalam media/mockup) ---------- */
+  --night: #0A0A0C;          /* panel */
+  --night-2: #17181B;        /* tile */
+  --night-3: #202125;        /* tile hover / input */
+  --night-line: #2A2B30;
+  --night-text: #FFFFFF;
+  --night-muted: #9BA0A8;    /* 6.75:1 di atas tile */
+  --night-faint: #5C6068;    /* sparkline de-emphasis */
+  --night-accent: #7FA4FF;   /* aksen di permukaan gelap */
+
+  /* ---------- Status (selalu dengan ikon + label, bukan warna saja) ---------- */
+  --ok: #1E7F52;       --ok-soft: #E3F2EA;
+  --warn: #9A6200;     --warn-soft: #F8EED9;
+  --danger: #B93A28;   --danger-soft: #F9E4DF;
+  --ok-night: #5FD39B; --danger-night: #FF8F7E;
+
+  /* ---------- Tipografi ---------- */
+  --font-display: "Instrument Serif", "Iowan Old Style", "Times New Roman", serif;
+  --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --fs-hero: clamp(46px, 8vw, 92px);      /* H1 beranda */
+  --fs-display: clamp(44px, 6.4vw, 76px); /* H1 halaman turunan */
+  --fs-h2: clamp(36px, 4.6vw, 56px);      /* headline seksi */
+  --fs-h3: clamp(26px, 2.6vw, 32px);      /* sub-headline serif */
+  --fs-metric: clamp(28px, 3vw, 40px);    /* angka tile metrik */
+  --fs-lead: 18px;
+  --fs-body: 16px;
+  --fs-small: 14px;
+  --fs-micro: 12.5px;
+  --fs-eyebrow: 11px;
+
+  --lh-tight: 1.02;
+  --lh-head: 1.06;
+  --lh-body: 1.6;
+  --track-tight: -0.02em;
+  --track-eyebrow: 0.12em;
+  --measure: 38ch;
+
+  /* ---------- Spasi (basis 4px) ---------- */
+  --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px; --s-5: 20px;
+  --s-6: 24px; --s-8: 32px; --s-10: 40px; --s-12: 48px; --s-16: 64px;
+  --s-20: 80px; --s-24: 96px;
+  --section-y: clamp(96px, 12vw, 160px);  /* jarak antar-seksi */
+  --inner-y: 64px;                        /* jarak di dalam seksi */
+  --gutter: clamp(16px, 4vw, 40px);
+  --container: 1200px;
+  --container-narrow: 760px;
+
+  /* ---------- Sudut & garis ---------- */
+  --r-pill: 999px;
+  --r-xl: 32px;   /* kartu seksi / media */
+  --r-lg: 24px;
+  --r-md: 16px;   /* tile UI dalam */
+  --r-sm: 12px;
+  --r-xs: 8px;
+  --hairline: 1px solid var(--line);
+
+  /* ---------- Bayangan (jarang & lembut) ---------- */
+  --shadow-soft: 0 1px 2px rgba(15, 19, 25, .04), 0 12px 32px -16px rgba(15, 19, 25, .16);
+  --shadow-nav: 0 10px 30px -12px rgba(15, 19, 25, .45);
+  --shadow-pop: 0 24px 60px -20px rgba(15, 19, 25, .35);
+
+  /* ---------- Gerak (tenang & fungsional) ---------- */
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  --dur-1: 160ms;
+  --dur-2: 240ms;
+  --dur-3: 600ms;
+
+  --z-nav: 50;
+  --z-pop: 60;
+  --z-modal: 80;
+}

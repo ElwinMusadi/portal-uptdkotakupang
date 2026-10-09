@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="id" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PINTU — Portal Informasi dan Pelayanan UPTD Pendapatan Daerah Wilayah Kota Kupang</title>
+  <meta name="description" content="Portal resmi informasi dan pelayanan Samsat Kota Kupang: persyaratan layanan, jadwal loket, Samsat Keliling, berita, dan pengaduan.">
+  <meta name="theme-color" content="#F7F6F2">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/fonts/instrument-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/geist-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/css/tokens.css">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/pages.css">
+  <script>document.documentElement.classList.replace("no-js", "js");</script>
+</head>
+<body id="top" data-page="beranda">
+<!-- @icons --><!-- /@icons -->
+<!-- @header --><!-- /@header -->
+
+<main id="main">
+
+  <!-- 1 · Hero -->
+  <section class="hero">
+    <div class="container center">
+      <div class="app-tile hero__mark" data-reveal><svg class="mark" aria-hidden="true"><use href="#logo-pintu"/></svg></div>
+      <p class="eyebrow hero__eyebrow" data-reveal>UPTD Pendapatan Daerah Wilayah Kota Kupang · Samsat Kota Kupang</p>
+      <h1 class="h-hero hero__title" data-reveal>Semua informasi Samsat.<br><span class="tone">Lewat satu pintu.</span></h1>
+      <p class="lead hero__lead" data-reveal>PINTU adalah portal resmi informasi dan pelayanan pajak kendaraan di Kota Kupang. Cek persyaratan, jadwal, dan lokasi layanan sebelum Anda berangkat.</p>
+      <div class="hero__actions" data-reveal>
+        <a class="btn btn--dark" href="layanan.html">Cek Persyaratan Layanan<svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+      </div>
+      <p class="trust hero__trust" data-reveal><svg class="i" aria-hidden="true"><use href="#i-lock"/></svg>Gratis dan tanpa perantara. Setiap informasi diverifikasi petugas UPTD.</p>
+    </div>
+  </section>
+
+  <!-- 2 · Media produk dalam konteks: papan layanan hari ini -->
+  <section class="media-section" aria-label="Pratinjau papan layanan">
+    <div class="container container--wide">
+      <figure data-reveal>
+        <div class="media board">
+          <div class="board__bar">
+            <p class="board__brand"><svg class="mark" aria-hidden="true"><use href="#logo-pintu"/></svg>PINTU <span>· Papan layanan hari ini</span></p>
+            <p class="board__status" data-open-pill><span class="live-dot" aria-hidden="true"></span><span data-status-text>Loket buka · tutup 15.00</span></p>
+          </div>
+          <div class="board__grid">
+            <div class="tile board__queue">
+              <p class="tile__label">Nomor antrean dilayani <svg class="i i--sm" aria-hidden="true"><use href="#i-ticket"/></svg></p>
+              <p class="tile__value board__big">A-042</p>
+              <p class="tile__meta"><span>Loket 1 · Pajak tahunan</span></p>
+            </div>
+            <div class="tile board__wait">
+              <p class="tile__label">Perkiraan waktu tunggu <svg class="i i--sm" aria-hidden="true"><use href="#i-clock"/></svg></p>
+              <p class="tile__value board__big">18<small>menit</small></p>
+              <p class="tile__meta"><span class="delta delta--up"><svg class="i" aria-hidden="true"><use href="#i-trend-down"/></svg>6 mnt</span><span>lebih cepat dari kemarin</span></p>
+            </div>
+            <div class="tile board__keliling">
+              <p class="tile__label">Samsat Keliling hari ini <svg class="i i--sm" aria-hidden="true"><use href="#i-truck"/></svg></p>
+              <ul class="board__stops" role="list" data-keliling-today>
+                <li><span class="board__time mono">08.00–12.00</span><span><strong>Kantor Kelurahan Oesapa</strong><small>Kec. Kelapa Lima</small></span></li>
+                <li><span class="board__time mono">13.00–15.00</span><span><strong>Kantor Kelurahan Sikumana</strong><small>Kec. Maulafa</small></span></li>
+              </ul>
+              <a class="board__link" href="jadwal.html#keliling">Lihat jadwal minggu ini<svg class="i i--sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+            </div>
+            <div class="tile board__notice">
+              <p class="tile__label">Pengumuman <span class="board__new">Baru</span></p>
+              <p class="board__notice-title">Program pemutihan denda PKB diperpanjang.</p>
+              <p class="board__notice-text">Berlaku untuk keterlambatan pajak tahunan. Bawa notis terakhir ke loket pajak tahunan.</p>
+            </div>
+            <div class="tile board__loket">
+              <ul class="board__counters" role="list">
+                <li><span class="board__lnum mono">L1</span><span>Pajak tahunan</span><span class="board__ok">Buka</span></li>
+                <li><span class="board__lnum mono">L2</span><span>Perpanjangan 5 tahun</span><span class="board__ok">Buka</span></li>
+                <li><span class="board__lnum mono">L3</span><span>Mutasi &amp; balik nama</span><span class="board__ok">Buka</span></li>
+                <li><span class="board__lnum mono">L4</span><span>Kasir non-tunai</span><span class="board__ok">Buka</span></li>
+              </ul>
+            </div>
+          </div>
+          <button class="play-pill" type="button" data-open-dialog="dlg-video"><span class="play-pill__btn"><svg aria-hidden="true"><use href="#i-play"/></svg></span>Tonton alur pelayanan <small>2:14</small></button>
+          <span class="board__tag">Pratinjau · data contoh</span>
+        </div>
+        <figcaption class="caption-row">
+          <p>Dari kertas di kaca loket ke satu layar yang selalu terbaru.</p>
+          <p>Diperbarui petugas setiap hari kerja · 07.45 WITA</p>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 3 · Strip tiga fitur -->
+  <section class="section section--tight">
+    <div class="container">
+      <div class="features">
+        <div class="feature" data-reveal>
+          <svg class="i" aria-hidden="true"><use href="#i-list-check"/></svg>
+          <h2 class="title">Persyaratan jelas.</h2>
+          <p>Daftar berkas setiap layanan, lengkap dengan jumlah lembar fotokopi yang perlu dibawa.</p>
+        </div>
+        <div class="feature" data-reveal>
+          <svg class="i" aria-hidden="true"><use href="#i-calendar"/></svg>
+          <h2 class="title">Jadwal terbaru.</h2>
+          <p>Jam loket dan lokasi Samsat Keliling diperbarui petugas setiap hari kerja.</p>
+        </div>
+        <div class="feature" data-reveal>
+          <svg class="i" aria-hidden="true"><use href="#i-shield"/></svg>
+          <h2 class="title">Tanpa perantara.</h2>
+          <p>Semua biaya mengikuti notis pajak resmi. Urus sendiri dengan mudah, tanpa calo.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · Layanan utama (tab bernomor + kartu tangkapan layar) -->
+  <section class="section section--flush-top views" id="layanan-utama">
+    <div class="container">
+      <div class="split split--middle views__head">
+        <div data-reveal>
+          <p class="eyebrow">Layanan utama</p>
+          <h2 class="h2" style="margin-top:20px">Dibuat untuk wajib pajak. <span class="tone">Dirancang agar cukup sekali datang.</span></h2>
+          <p class="body" style="margin-top:20px">Pilih layanan, siapkan berkas dari rumah, lalu datang ke loket yang tepat.</p>
+        </div>
+        <div class="numtabs" role="tablist" aria-label="Layanan utama" data-tabs data-reveal>
+          <button class="numtab" role="tab" id="vt-1" aria-controls="vp-1" aria-selected="true"><span class="numtab__num">01</span><span class="numtab__label">Pajak tahunan</span></button>
+          <button class="numtab" role="tab" id="vt-2" aria-controls="vp-2" aria-selected="false" tabindex="-1"><span class="numtab__num">02</span><span class="numtab__label">Perpanjangan STNK 5 tahun</span></button>
+          <button class="numtab" role="tab" id="vt-3" aria-controls="vp-3" aria-selected="false" tabindex="-1"><span class="numtab__num">03</span><span class="numtab__label">Mutasi keluar daerah</span></button>
+        </div>
+      </div>
+
+      <div class="card--sunken views__card" data-reveal>
+        <div class="views__panel" role="tabpanel" id="vp-1" aria-labelledby="vt-1">
+          <p class="smallcaps views__label">Bawa saat datang</p>
+          <div class="checklist" data-checklist>
+            <div class="checklist__head">
+              <p><strong>Persyaratan</strong> · Pajak tahunan</p>
+              <p class="checklist__progress"><span data-check-count>0</span> dari 4 siap</p>
+            </div>
+            <ul role="list">
+              <li><label><input type="checkbox"><span>Fotokopi STNK dan notis pajak <em>lampirkan asli</em></span><b>2 lembar</b></label></li>
+              <li><label><input type="checkbox"><span>Fotokopi BPKB halaman 2–3</span><b>2 lembar</b></label></li>
+              <li><label><input type="checkbox"><span>Fotokopi KTP pemilik <em>sesuai alamat di STNK &amp; BPKB</em></span><b>2 lembar</b></label></li>
+              <li><label><input type="checkbox"><span>Map</span><b>1 buah</b></label></li>
+            </ul>
+            <div class="checklist__foot"><span class="tag tag--ok"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Tanpa cek fisik</span><span class="tag tag--line">Loket 1</span><span class="tag tag--line">Bisa non-tunai</span></div>
+          </div>
+          <div class="views__foot">
+            <p class="views__caption"><strong>Pajak tahunan.</strong> Pengesahan STNK setiap tahun.<br>Cukup bawa dokumen asli beserta fotokopinya.</p>
+            <p class="micro muted">Sumber: papan persyaratan loket · diverifikasi Okt 2026</p>
+          </div>
+        </div>
+
+        <div class="views__panel" role="tabpanel" id="vp-2" aria-labelledby="vt-2" hidden>
+          <p class="smallcaps views__label">Bawa saat datang</p>
+          <div class="checklist" data-checklist>
+            <div class="checklist__head">
+              <p><strong>Persyaratan</strong> · Perpanjangan STNK 5 tahun</p>
+              <p class="checklist__progress"><span data-check-count>0</span> dari 5 siap</p>
+            </div>
+            <ul role="list">
+              <li><label><input type="checkbox"><span>Fotokopi STNK dan notis pajak <em>lampirkan asli</em></span><b>2 lembar</b></label></li>
+              <li><label><input type="checkbox"><span>Fotokopi BPKB halaman 2–3</span><b>2 lembar</b></label></li>
+              <li><label><input type="checkbox"><span>Fotokopi KTP pemilik <em>sesuai alamat di STNK &amp; BPKB</em></span><b>2 lembar</b></label></li>
+              <li><label><input type="checkbox"><span>Map</span><b>1 buah</b></label></li>
+              <li><label><input type="checkbox"><span>Kendaraan untuk cek fisik</span><b>Wajib</b></label></li>
+            </ul>
+            <div class="checklist__foot"><span class="tag tag--warn"><svg class="i" aria-hidden="true"><use href="#i-alert"/></svg>Wajib cek fisik</span><span class="tag tag--line">Loket 2</span><span class="tag tag--line">Kuasa: meterai Rp10.000</span></div>
+          </div>
+          <div class="views__foot">
+            <p class="views__caption"><strong>Perpanjangan 5 tahun.</strong> STNK dan pelat baru.<br>Kendaraan wajib dibawa untuk gesek nomor rangka.</p>
+            <p class="micro muted">Sumber: papan persyaratan loket · diverifikasi Okt 2026</p>
+          </div>
+        </div>
+
+        <div class="views__panel" role="tabpanel" id="vp-3" aria-labelledby="vt-3" hidden>
+          <p class="smallcaps views__label">Bawa saat datang</p>
+          <div class="checklist" data-checklist>
+            <div class="checklist__head">
+              <p><strong>Persyaratan</strong> · Mutasi keluar, pemilik tetap</p>
+              <p class="checklist__progress"><span data-check-count>0</span> dari 4 siap</p>
+            </div>
+            <ul role="list">
+              <li><label><input type="checkbox"><span>Fotokopi KTP alamat tujuan yang baru</span><b>2 lembar</b></label></li>
+              <li><label><input type="checkbox"><span>Fotokopi STNK &amp; BPKB <em>lampirkan yang asli</em></span><b>2 lembar</b></label></li>
+              <li><label><input type="checkbox"><span>Kendaraan untuk cek fisik</span><b>Wajib</b></label></li>
+              <li><label><input type="checkbox"><span>Map</span><b>1 buah</b></label></li>
+            </ul>
+            <div class="checklist__foot"><span class="tag tag--warn"><svg class="i" aria-hidden="true"><use href="#i-alert"/></svg>Wajib cek fisik</span><span class="tag tag--line">Loket 3</span><span class="tag tag--line">Ganti pemilik: lihat BBN</span></div>
+          </div>
+          <div class="views__foot">
+            <p class="views__caption"><strong>Mutasi keluar.</strong> Pindah alamat ke luar daerah.<br>Ganti pemilik sekaligus? Siapkan kuitansi bermeterai.</p>
+            <p class="micro muted">Sumber: papan persyaratan loket · diverifikasi Okt 2026</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · Jembatan: mitra satu atap -->
+  <section class="mitra" aria-labelledby="mitra-title">
+    <div class="container center">
+      <p class="eyebrow" id="mitra-title">Satu atap bersama</p>
+      <ul class="badges" role="list" data-reveal>
+        <li class="badge"><span class="badge__dot">BP</span>BPAD Provinsi NTT</li>
+        <li class="badge"><span class="badge__dot">PL</span>Polri · Satlantas</li>
+        <li class="badge"><span class="badge__dot">JR</span>Jasa Raharja</li>
+        <li class="badge"><span class="badge__dot">BN</span>Bank NTT</li>
+        <li class="badge"><span class="badge__dot">QR</span>QRIS</li>
+        <li class="badge"><span class="badge__dot">SG</span>SIGNAL</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 6 · Transparansi: satu tampilan data layanan -->
+  <section class="section transparansi" id="transparansi">
+    <div class="container split">
+      <div class="split__sticky" data-reveal>
+        <p class="eyebrow">Transparansi layanan</p>
+        <h2 class="h2" style="margin-top:20px">Kinerja layanan. <span class="tone">Terbuka untuk publik.</span></h2>
+        <p class="body" style="margin-top:20px">Capaian pelayanan kami tampilkan berkala, agar masyarakat ikut mengawasi.</p>
+        <div class="catlist" role="tablist" aria-label="Kategori data" style="margin-top:32px" data-dash-tabs>
+          <button role="tab" aria-selected="true" data-set="transaksi"><span class="catlist__txt">Transaksi pelayanan</span><svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+          <button role="tab" aria-selected="false" data-set="penerimaan" tabindex="-1"><span class="catlist__txt">Penerimaan pajak</span><svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+          <button role="tab" aria-selected="false" data-set="keliling" tabindex="-1"><span class="catlist__txt">Samsat Keliling</span><svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+          <button role="tab" aria-selected="false" data-set="kepuasan" tabindex="-1"><span class="catlist__txt">Kepuasan masyarakat</span><svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+        </div>
+      </div>
+      <div data-reveal>
+        <div class="night-panel dash" data-dash role="tabpanel" aria-live="polite">
+          <div class="dash__head">
+            <div>
+              <p class="dash__title">Dasbor layanan</p>
+              <p class="dash__sub" data-dash-sub>Transaksi pelayanan · UPTD Kota Kupang</p>
+            </div>
+            <div class="filter-row" role="group" aria-label="Rentang waktu" data-dash-range>
+              <button type="button" aria-pressed="true" data-range="ytd">Tahun ini</button>
+              <button type="button" aria-pressed="false" data-range="12m">12 bln</button>
+              <button type="button" aria-pressed="false" data-range="3m">3 bln</button>
+              <button type="button" aria-pressed="false" data-range="30d">30 hari</button>
+              <button type="button" aria-pressed="false" data-range="today">Hari ini</button>
+            </div>
+          </div>
+          <div class="dash__tiles" data-dash-tiles>
+            <!-- diisi oleh assets/js/main.js; isi statis di bawah sebagai cadangan tanpa JS -->
+            <div class="tile"><p class="tile__label">Total transaksi</p><p class="tile__value">12.480</p><p class="tile__meta"><span class="delta delta--up">+4,2%</span><span>vs periode lalu</span></p></div>
+            <div class="tile"><p class="tile__label">Pajak tahunan</p><p class="tile__value">9.316</p></div>
+            <div class="tile"><p class="tile__label">Perpanjangan 5 tahun</p><p class="tile__value">2.104</p></div>
+            <div class="tile"><p class="tile__label">Mutasi &amp; BBN</p><p class="tile__value">1.060</p></div>
+          </div>
+          <div class="tile dash__chart">
+            <div class="tile__label"><span data-chart-title>Transaksi per bulan</span><span class="dash__legend" data-chart-unit>transaksi</span></div>
+            <div class="bars" data-bars role="img" aria-label="Grafik batang transaksi per bulan"></div>
+          </div>
+        </div>
+        <p class="micro muted dash__note"><span class="proto-note">Data ilustrasi untuk keperluan desain.</span> Angka resmi tampil setelah diverifikasi dan disetujui.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · Peta kanal layanan -->
+  <section class="section kanal" id="kanal">
+    <div class="container center">
+      <div data-reveal>
+        <p class="eyebrow">Kanal layanan</p>
+        <h2 class="h2" style="margin-top:20px">Satu kantor. <span class="tone">Banyak jalan masuk.</span></h2>
+        <p class="lead" style="margin-top:20px">Urus di loket, temui Samsat Keliling, atau bayar lewat kanal digital resmi.</p>
+      </div>
+      <div class="notch" data-reveal>
+        <div class="notch__item"><span class="live-dot notch__dot" data-open-dot aria-hidden="true"></span><span><small>Loket kantor</small><strong data-status-short>Buka · s.d. 15.00</strong></span></div>
+        <span class="notch__sep" aria-hidden="true"></span>
+        <div class="notch__item"><svg class="i" aria-hidden="true"><use href="#i-truck"/></svg><span><small>Samsat Keliling hari ini</small><strong data-keliling-count>2 titik</strong></span></div>
+      </div>
+      <svg class="kanal__lines" viewBox="0 0 1000 110" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M500 0 C500 60 100 50 100 110"/>
+        <path d="M500 0 C500 60 300 50 300 110"/>
+        <path d="M500 0 L500 110"/>
+        <path d="M500 0 C500 60 700 50 700 110"/>
+        <path d="M500 0 C500 60 900 50 900 110"/>
+      </svg>
+      <div class="kanal__cols" data-reveal>
+        <div class="kanal__col">
+          <p class="eyebrow">Kantor</p>
+          <ul role="list">
+            <li><span class="kanal__ic"><svg class="i" aria-hidden="true"><use href="#i-ticket"/></svg></span>Loket pajak tahunan</li>
+            <li><span class="kanal__ic"><svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg></span>Loket 5 tahunan</li>
+            <li><span class="kanal__ic"><svg class="i" aria-hidden="true"><use href="#i-arrow-up-right"/></svg></span>Loket mutasi &amp; BBN</li>
+            <li><span class="kanal__ic"><svg class="i" aria-hidden="true"><use href="#i-search"/></svg></span>Cek fisik kendaraan</li>
+          </ul>
+        </div>
+        <div class="kanal__col">
+          <p class="eyebrow">Keliling</p>
+          <ul role="list">
+            <li><span class="kanal__ic"><svg class="i" aria-hidden="true"><use href="#i-truck"/></svg></span>Samsat Keliling</li>
+            <li><span class="kanal__ic"><svg class="i" aria-hidden="true"><use href="#i-map-pin"/></svg></span>Layanan jemput bola</li>
+          </ul>
+        </div>
+        <div class="kanal__col">
+          <p class="eyebrow">Digital</p>
+          <ul role="list">
+            <li><span class="kanal__ic"><svg class="i" aria-hidden="true"><use href="#i-qr"/></svg></span>QRIS di kasir</li>
+            <li><span class="kanal__ic"><svg class="i" aria-hidden="true"><use href="#i-card"/></svg></span>Bank NTT</li>
+            <li><span class="kanal__ic"><svg class="i" aria-hidden="true"><use href="#i-globe"/></svg></span>SIGNAL</li>
+          </ul>
+        </div>
+        <div class="kanal__col">
+          <p class="eyebrow">Informasi</p>
+          <ul role="list">
+            <li><span class="kanal__ic kanal__ic--brand"><svg class="mark" aria-hidden="true"><use href="#logo-pintu"/></svg></span>Portal PINTU</li>
+            <li><span class="kanal__ic"><svg class="i" aria-hidden="true"><use href="#i-instagram"/></svg></span>Media sosial</li>
+            <li><span class="kanal__ic"><svg class="i" aria-hidden="true"><use href="#i-message"/></svg></span>WhatsApp layanan</li>
+          </ul>
+        </div>
+        <div class="kanal__col">
+          <p class="eyebrow">Pengaduan</p>
+          <ul role="list">
+            <li><span class="kanal__ic"><svg class="i" aria-hidden="true"><use href="#i-megaphone"/></svg></span>SP4N-LAPOR!</li>
+            <li><span class="kanal__ic"><svg class="i" aria-hidden="true"><use href="#i-inbox"/></svg></span>Kotak saran</li>
+            <li><span class="kanal__ic"><svg class="i" aria-hidden="true"><use href="#i-scale"/></svg></span>Ombudsman NTT</li>
+          </ul>
+        </div>
+      </div>
+      <p class="kanal__more" data-reveal>Ada kanal yang belum tercantum? <a class="link-arrow" href="kontak.html#masukan">Sampaikan masukan<svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></a></p>
+    </div>
+  </section>
+
+  <!-- 8 · Simulasi pajak (kanvas bento) -->
+  <section class="section section--flush-top simulasi" id="simulasi">
+    <div class="container split split--middle">
+      <div data-reveal>
+        <p class="eyebrow">Simulasi pajak</p>
+        <h2 class="h2" style="margin-top:20px">Hitung dulu. <span class="tone">Datang dengan tenang.</span></h2>
+        <p class="body" style="margin-top:20px">Perkirakan total pembayaran dari nilai pokok di notis pajak Anda, termasuk denda keterlambatan dan program pemutihan.</p>
+        <p style="margin-top:28px"><a class="link-arrow" href="layanan.html#simulasi">Coba simulasi lengkap<svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></a></p>
+      </div>
+      <div data-reveal>
+        <div class="canvas" data-sim>
+          <div class="canvas__bar">
+            <p class="smallcaps">Simulasi PKB · nilai contoh</p>
+            <button class="btn btn--ghost btn--xs" type="button" data-sim-reset><svg class="i i--sm" aria-hidden="true"><use href="#i-refresh"/></svg>Reset</button>
+          </div>
+          <div class="bento">
+            <div class="tile bento__pokok">
+              <span class="size-chip">2×1</span>
+              <label class="tile__label" for="sim-pokok">Pokok PKB di notis</label>
+              <div class="bento__money"><span>Rp</span><input class="bento__input" id="sim-pokok" type="text" inputmode="numeric" value="285.000" data-sim-pokok autocomplete="off"></div>
+            </div>
+            <div class="tile bento__jenis">
+              <span class="size-chip">1×1</span>
+              <p class="tile__label" id="sim-jenis-l">Jenis</p>
+              <div class="seg" role="radiogroup" aria-labelledby="sim-jenis-l" data-sim-jenis>
+                <button type="button" role="radio" aria-checked="true" data-val="motor"><svg class="i" aria-hidden="true"><use href="#i-motor"/></svg>Motor</button>
+                <button type="button" role="radio" aria-checked="false" data-val="mobil"><svg class="i" aria-hidden="true"><use href="#i-car"/></svg>Mobil</button>
+              </div>
+            </div>
+            <div class="tile bento__telat">
+              <span class="size-chip">1×1</span>
+              <p class="tile__label" id="sim-telat-l">Terlambat</p>
+              <div class="stepper" role="group" aria-labelledby="sim-telat-l">
+                <button type="button" data-sim-step="-1" aria-label="Kurangi satu bulan"><svg class="i i--sm" aria-hidden="true"><use href="#i-minus"/></svg></button>
+                <output data-sim-telat aria-live="polite">3</output>
+                <button type="button" data-sim-step="1" aria-label="Tambah satu bulan"><svg class="i i--sm" aria-hidden="true"><use href="#i-plus"/></svg></button>
+              </div>
+              <p class="tile__meta"><span>bulan</span><span>maks. 24</span></p>
+            </div>
+            <div class="tile bento__opsen">
+              <span class="size-chip">1×1</span>
+              <p class="tile__label">Opsen PKB 66%</p>
+              <p class="tile__value bento__val" data-sim-out="opsen">Rp188.100</p>
+            </div>
+            <div class="tile bento__denda">
+              <span class="size-chip">1×1</span>
+              <p class="tile__label">Denda 1%/bulan</p>
+              <p class="tile__value bento__val" data-sim-out="denda">Rp14.200</p>
+            </div>
+            <div class="tile bento__total">
+              <span class="size-chip">2×2</span>
+              <p class="tile__label">Estimasi total bayar</p>
+              <p class="bento__total-val" data-sim-out="total">Rp522.300</p>
+              <ul class="bento__rows" role="list">
+                <li><span>Pokok PKB</span><span data-sim-out="pokok">Rp285.000</span></li>
+                <li><span>Opsen PKB</span><span data-sim-out="opsen2">Rp188.100</span></li>
+                <li><span>Denda</span><span data-sim-out="denda2">Rp14.200</span></li>
+                <li><span>SWDKLLJ</span><span data-sim-out="swd2">Rp35.000</span></li>
+              </ul>
+              <label class="switch on-night"><input type="checkbox" data-sim-putih><span class="switch__track" aria-hidden="true"></span>Program pemutihan denda</label>
+            </div>
+            <div class="tile bento__swd">
+              <span class="size-chip">2×1</span>
+              <p class="tile__label">SWDKLLJ · Jasa Raharja</p>
+              <p class="tile__value bento__val" data-sim-out="swd">Rp35.000</p>
+            </div>
+          </div>
+        </div>
+        <p class="micro muted canvas__note">Pratinjau interaktif dengan nilai contoh. Tagihan resmi mengikuti notis pajak di loket.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 · Pernyataan integritas (jeda napas) -->
+  <section class="section statement">
+    <div class="container container--narrow center" data-reveal>
+      <svg class="i statement__icon" aria-hidden="true"><use href="#i-lock"/></svg>
+      <p class="eyebrow">Integritas</p>
+      <h2 class="h-giant statement__title">Bayar sesuai notis. <span class="tone">Tidak lebih sepeser pun.</span></h2>
+      <p class="lead statement__lead">Seluruh pembayaran tercatat di sistem dan dapat dilakukan non-tunai. Petugas kami tidak pernah meminta uang atau data pribadi lewat pesan pribadi.</p>
+    </div>
+  </section>
+
+  <!-- 10 · Biaya layanan -->
+  <section class="section section--flush-top biaya" id="biaya">
+    <div class="container split split--middle">
+      <div data-reveal>
+        <p class="eyebrow">Biaya layanan</p>
+        <h2 class="h2" style="margin-top:20px">Biaya jelas. <span class="tone">Tanpa kejutan.</span></h2>
+        <p class="body" style="margin-top:20px">Pajak kendaraan dihitung sistem dan tercetak di notis. Layanan pendukung di kantor ini tidak dipungut biaya.</p>
+        <p class="small" style="margin-top:24px"><strong>Bayar sesuai notis.</strong> Tunai di kasir atau non-tunai lewat QRIS.</p>
+        <p class="micro muted" style="margin-top:8px">Wajib dibawa: KTP asli dan STNK asli pemilik kendaraan.</p>
+      </div>
+      <div class="price card card--xl" data-reveal>
+        <p class="smallcaps">Cek fisik kendaraan</p>
+        <p class="price__fig"><sup>Rp</sup>0</p>
+        <p class="price__was"><s>Biaya perantara</s> <s>Uang jasa</s></p>
+        <p class="micro muted">Gesek nomor rangka &amp; mesin · Tidak dipungut biaya</p>
+        <a class="btn btn--dark btn--block price__cta" href="unduhan.html">Lihat standar pelayanan resmi</a>
+        <ul class="price__bullets" role="list">
+          <li><svg class="i i--sm" aria-hidden="true"><use href="#i-check"/></svg>Bukti bayar resmi</li>
+          <li><svg class="i i--sm" aria-hidden="true"><use href="#i-check"/></svg>Bisa non-tunai</li>
+          <li><svg class="i i--sm" aria-hidden="true"><use href="#i-check"/></svg>Tercatat di sistem</li>
+        </ul>
+        <p class="small price__report">Diminta membayar di luar ketentuan? <a class="link" href="kontak.html#pengaduan">Laporkan di sini</a>.</p>
+        <p class="price__timer"><span class="live-dot" data-open-dot aria-hidden="true"></span><span data-countdown-label>Loket tutup dalam</span><strong class="mono" data-countdown>--:--:--</strong></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 · FAQ -->
+  <section class="section section--flush-top faq" id="faq">
+    <div class="container container--narrow">
+      <div class="center" data-reveal>
+        <p class="eyebrow">Tanya jawab</p>
+        <h2 class="h2" style="margin-top:20px">Perlu diketahui. <span class="tone">Sebelum ke loket.</span></h2>
+      </div>
+      <div class="accordion faq__list" data-reveal>
+        <details class="acc">
+          <summary>Apakah pembayaran pajak tahunan bisa diwakilkan?<span class="acc__plus" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></summary>
+          <div class="acc__body"><div><p>Bisa. Bawa berkas lengkap atas nama pemilik. Untuk perpanjangan STNK 5 tahun dan duplikat STNK, sertakan surat kuasa bermeterai Rp10.000.</p></div></div>
+        </details>
+        <details class="acc">
+          <summary>Kapan kendaraan harus dibawa untuk cek fisik?<span class="acc__plus" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></summary>
+          <div class="acc__body"><div><p>Untuk perpanjangan STNK 5 tahun, mutasi keluar, balik nama, dan duplikat STNK. Pajak tahunan tidak memerlukan cek fisik.</p></div></div>
+        </details>
+        <details class="acc">
+          <summary>Berapa lembar fotokopi yang perlu disiapkan?<span class="acc__plus" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></summary>
+          <div class="acc__body"><div><p>Umumnya dua lembar untuk setiap dokumen. Jumlah pasti untuk tiap layanan tercantum di <a class="link" href="layanan.html">halaman persyaratan</a>.</p></div></div>
+        </details>
+        <details class="acc">
+          <summary>Apakah saya bisa membayar tanpa uang tunai?<span class="acc__plus" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></summary>
+          <div class="acc__body"><div><p>Bisa. Ikuti <a class="link" href="layanan.html#alur">alur pembayaran non-tunai</a> di kasir. Simpan bukti transaksi sampai STNK selesai disahkan.</p></div></div>
+        </details>
+        <details class="acc">
+          <summary>STNK saya hilang. Apa yang harus disiapkan?<span class="acc__plus" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></summary>
+          <div class="acc__body"><div><p>Surat keterangan kehilangan asli dari kepolisian, surat pernyataan bermeterai, fotokopi KTP dan BPKB, serta kendaraan untuk cek fisik. Badan hukum menambahkan dokumen perusahaan.</p></div></div>
+        </details>
+        <details class="acc">
+          <summary>Di mana jadwal Samsat Keliling diumumkan?<span class="acc__plus" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></summary>
+          <div class="acc__body"><div><p>Di <a class="link" href="jadwal.html#keliling">halaman jadwal</a>. Petugas memperbarui lokasi setiap Jumat untuk minggu berikutnya.</p></div></div>
+        </details>
+        <details class="acc">
+          <summary>Bagaimana cara menyampaikan pengaduan?<span class="acc__plus" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></summary>
+          <div class="acc__body"><div><p>Lewat <a class="link" href="kontak.html#pengaduan">formulir kontak</a>, kotak saran di kantor, atau SP4N-LAPOR!. Identitas pelapor kami jaga kerahasiaannya.</p></div></div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 · Penutup -->
+  <section class="section section--flush-top outro">
+    <div class="container outro__inner" data-reveal>
+      <div>
+        <h2 class="h-giant">Map apa saja boleh. <span class="tone">Asal jangan lupa dibawa.</span></h2>
+        <p class="lead outro__kicker">Hampir setiap layanan meminta satu map. Kami hanya mengingatkan.</p>
+      </div>
+      <div class="gag">
+        <span class="gag__icon"><svg class="i" aria-hidden="true"><use href="#i-folder"/></svg></span>
+        <div>
+          <button class="gag__btn" type="button" data-gag>Cek lagi</button>
+          <p class="micro muted" data-gag-text aria-live="polite">Sudah bawa map?</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<dialog class="dialog" id="dlg-video" aria-labelledby="dlg-video-title">
+  <div class="dialog__body">
+    <button class="dialog__close" type="button" data-close aria-label="Tutup"><svg class="i i--sm" aria-hidden="true"><use href="#i-x"/></svg></button>
+    <div class="ph ph--slate dialog__media"><span class="ph__label">Video profil · 2:14</span></div>
+    <h3 class="title" id="dlg-video-title" style="margin-top:20px">Video alur pelayanan sedang disiapkan.</h3>
+    <p class="small muted" style="margin-top:6px">Video akan tayang setelah melalui verifikasi dan persetujuan atasan, sesuai alur publikasi PINTU.</p>
+  </div>
+</dialog>
+
+<!-- @footer --><!-- /@footer -->
+<script src="assets/js/main.js" defer></script>
+</body>
+</html>
