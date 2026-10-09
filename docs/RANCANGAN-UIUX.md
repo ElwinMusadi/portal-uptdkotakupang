@@ -160,9 +160,9 @@ Sumber kebenaran: `assets/css/tokens.css`. Panduan visual hidup: `design-system.
 
 ### 6.4 Logo & lambang
 
-- **Logo utama:** Lambang Provinsi Nusa Tenggara Timur (`assets/img/lambang-ntt.png`, PNG transparan 1020×1081; turunan web `lambang-ntt-96/192/360.webp`; favicon `favicon-32.png`, `apple-touch-icon.png`).
+- **Logo utama:** Lambang Provinsi Nusa Tenggara Timur (`assets/img/lambang-ntt.png`, PNG transparan 1020×1081; turunan web `lambang-ntt-96/192/360.webp`; favicon `favicon-32.png`, `icon-192.png`, `apple-touch-icon.png`).
 - **Lockup:** lambang + teks "PINTU / Samsat Kota Kupang" (navbar) atau "PINTU / Portal Informasi dan Pelayanan / UPTD …" (footer). Lambang dan teks tidak dilebur menjadi satu gambar.
-- **Ukuran:** hero 92–116px, footer 44px, navbar 31px, minimum 24px. Atur tinggi; lebar mengikuti proporsi asli.
+- **Ukuran:** hero 92–116px, footer 44px, navbar 31px, ikon kanal 26px, papan layanan 24px (minimum). Lambang tidak diletakkan di dalam bentuk lain dan tidak dianimasikan. Atur tinggi; lebar mengikuti proporsi asli.
 - **Larangan:** mengubah warna, memotong, memutar, meregangkan, menambah bayangan/efek, atau menaruhnya di atas foto ramai.
 - **Logo cadangan PINTU** (kusen pintu + daun pintu terbuka) tidak dipakai saat ini, tetapi disimpan: simbol `#logo-pintu` di `partials/icons.html`, berkas `assets/img/logo-pintu.svg`, dan `assets/img/favicon.svg`. Cara memasangnya kembali ada sebagai komentar di `partials/header.html`.
 

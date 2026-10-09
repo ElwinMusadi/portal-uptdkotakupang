@@ -671,8 +671,9 @@
 
 /* ---------- Lambang pada pola halaman ---------- */
 .hero__emblem { height: clamp(92px, 10vw, 116px); margin: 0 auto 30px; }
-.board__emblem { height: 21px; }
-.kanal__ic--brand .emblem { height: 18px; }
+.board__emblem { height: 24px; }
+.kanal__ic--brand { background: none; border: 0; border-radius: 0; }
+.kanal__ic--brand .emblem { height: 26px; }
 .auth__emblem { height: 40px; }
 .side__emblem { height: 30px; }
 .emblem-sizes { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 20px; }
