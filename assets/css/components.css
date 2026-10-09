@@ -253,7 +253,7 @@
   transition: all var(--dur-1) var(--ease);
 }
 .chip:hover { color: var(--ink); border-color: var(--ink); }
-.chip[aria-pressed="true"], .chip[aria-selected="true"], .chip.is-active { background: var(--ink); color: #fff; border-color: var(--ink); }
+.chip[aria-pressed="true"], .chip[aria-selected="true"], .chip[aria-checked="true"], .chip.is-active { background: var(--ink); color: #fff; border-color: var(--ink); }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .tag { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: var(--r-pill); font-size: 12px; font-weight: 550; line-height: 1.5; background: var(--paper-2); color: var(--ink-2); white-space: nowrap; }

@@ -235,13 +235,15 @@
     const week = $("[data-keliling-week]");
     if (!week) return;
     const base = new Date(Date.UTC(t.y, t.mo - 1, t.d));
+    const weekend = t.wd === 0 || t.wd === 6;
     const monday = new Date(base);
-    monday.setUTCDate(base.getUTCDate() - ((t.wd + 6) % 7));
+    // Akhir pekan: tampilkan jadwal minggu depan
+    monday.setUTCDate(base.getUTCDate() + (weekend ? (8 - t.wd) % 7 || 1 : -((t.wd + 6) % 7)));
     let html = "";
     for (let i = 0; i < 5; i++) {
       const d = new Date(monday); d.setUTCDate(monday.getUTCDate() + i);
       const wd = i + 1;
-      const state = wd === t.wd ? "is-today" : wd < t.wd || t.wd === 0 || t.wd === 6 ? "is-past" : "";
+      const state = weekend ? "" : wd === t.wd ? "is-today" : wd < t.wd ? "is-past" : "";
       const label = state === "is-today" ? '<span class="tag tag--accent">Hari ini</span>' : state === "is-past" ? '<span class="tag">Selesai</span>' : '<span class="tag tag--line">Terjadwal</span>';
       const stops = kelilingFor(wd).map(([time, place, kec]) => `
         <div class="stop">

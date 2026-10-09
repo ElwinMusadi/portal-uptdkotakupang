@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="id" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kontak &amp; Pengaduan — PINTU UPTD Pendapatan Daerah Wilayah Kota Kupang</title>
+  <meta name="description" content="Alamat, telepon, peta lokasi, formulir masukan, dan kanal pengaduan resmi Samsat Kota Kupang.">
+  <meta name="theme-color" content="#F7F6F2">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/tokens.css">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/pages.css">
+  <script>document.documentElement.classList.replace("no-js", "js");</script>
+</head>
+<body id="top" data-page="kontak" data-group="kontak">
+<!-- @icons -->
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <!-- Logo PINTU: kusen pintu melengkung + daun pintu terbuka (cahaya informasi) -->
+  <symbol id="logo-pintu" viewBox="0 0 32 32">
+    <path fill="currentColor" fill-rule="evenodd" d="M5 30V14.5C5 8.15 9.92 3 16 3s11 5.15 11 11.5V30H5Zm4.5 0V14.75c0-3.73 2.91-6.75 6.5-6.75s6.5 3.02 6.5 6.75V30h-13Z"/>
+    <path style="fill: var(--mark-leaf, #2B63F6)" d="M9.5 15.2 17.2 18v13.4L9.5 30V15.2Z"/>
+  </symbol>
+  <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></symbol>
+  <symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+  <symbol id="i-arrow-up-right" viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></symbol>
+  <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-list-check" viewBox="0 0 24 24"><path d="M11 6h10M11 12h10M11 18h10M3 6l1.5 1.5L7 5M3 12l1.5 1.5L7 11M3 18l1.5 1.5L7 17"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 7v5l3.5 2"/></symbol>
+  <symbol id="i-map-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+  <symbol id="i-printer" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7.5"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.9.6 2.8.7a2 2 0 0 1 1.7 2Z"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></symbol>
+  <symbol id="i-message" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></symbol>
+  <symbol id="i-car" viewBox="0 0 24 24"><path d="M5 17H3v-4l2.4-5.2A2 2 0 0 1 7.2 6.6h9.6a2 2 0 0 1 1.8 1.2L21 13v4h-2M9 17h6M3 13h18"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></symbol>
+  <symbol id="i-motor" viewBox="0 0 24 24"><circle cx="5.5" cy="16.5" r="3.5"/><circle cx="18.5" cy="16.5" r="3.5"/><path d="M5.5 16.5 9 10h5l4.5 6.5M14 10l1.5-4H18M9 10 7.5 7H5"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></symbol>
+  <symbol id="i-building" viewBox="0 0 24 24"><path d="M3 22h18M6 18v-7M10 18v-7M14 18v-7M18 18v-7M12 2l9 6H3l9-6Z"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="1.5"/></symbol>
+  <symbol id="i-sitemap" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="5" rx="1"/><rect x="2" y="17" width="6" height="5" rx="1"/><rect x="16" y="17" width="6" height="5" rx="1"/><path d="M5 17v-3h14v3M12 7v7"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></symbol>
+  <symbol id="i-news" viewBox="0 0 24 24"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2h2M18 14h-8M15 18h-5M10 6h8v4h-8Z"/></symbol>
+  <symbol id="i-megaphone" viewBox="0 0 24 24"><path d="m3 11 18-5v12L3 14v-3ZM11.6 16.8a3 3 0 1 1-5.8-1.6"/></symbol>
+  <symbol id="i-calculator" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M16 14v4M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M8 18h.01M12 18h.01"/></symbol>
+  <symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></symbol>
+  <symbol id="i-qr" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4M20 17v3"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="m8.5 12 2.5 2.5 4.5-5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 16v-4M12 8h.01"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0ZM12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M9.9 9.9a3 3 0 1 0 4.2 4.2M10.7 5.1A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a13.2 13.2 0 0 1-1.7 2.7M6.6 6.6A13.5 13.5 0 0 0 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6M2 2l20 20"/></symbol>
+  <symbol id="i-log-in" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></symbol>
+  <symbol id="i-log-out" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1Z"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7l10-5ZM2 17l10 5 10-5M2 12l10 5 10-5"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a2 2 0 0 0 3.4 0"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-trend-up" viewBox="0 0 24 24"><path d="M22 7 13.5 15.5l-5-5L2 17M16 7h6v6"/></symbol>
+  <symbol id="i-trend-down" viewBox="0 0 24 24"><path d="m22 17-8.5-8.5-5 5L2 7M16 17h6v-6"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></symbol>
+  <symbol id="i-external" viewBox="0 0 24 24"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5L7 4.5Z"/></symbol>
+  <symbol id="i-ticket" viewBox="0 0 24 24"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2ZM13 5v2M13 17v2M13 11v2"/></symbol>
+  <symbol id="i-truck" viewBox="0 0 24 24"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2M15 18H9M19 18h2a1 1 0 0 0 1-1v-3.6a1 1 0 0 0-.2-.6l-3.5-4.4a1 1 0 0 0-.8-.4H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19M12 2.5a14.5 14.5 0 0 1 0 19 14.5 14.5 0 0 1 0-19Z"/></symbol>
+  <symbol id="i-instagram" viewBox="0 0 24 24"><rect x="2.5" y="2.5" width="19" height="19" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.5 6.5h.01"/></symbol>
+  <symbol id="i-facebook" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3Z"/></symbol>
+  <symbol id="i-youtube" viewBox="0 0 24 24"><path d="M2.5 17a24 24 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.6 49.6 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24 24 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.6 49.6 0 0 1-16.2 0A2 2 0 0 1 2.5 17Z"/><path d="m10 15 5-3-5-3Z"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/></symbol>
+  <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.8 9.8 0 0 0-6.7 2.7L3 8M3 3v5h5M12 7v5l4 2"/></symbol>
+  <symbol id="i-kanban" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 7v7M12 7v4M16 7v9"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1Z"/></symbol>
+  <symbol id="i-crosshair" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M22 12h-4M6 12H2M12 6V2M12 22v-4"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7"/></symbol>
+  <symbol id="i-heart-hand" viewBox="0 0 24 24"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7Z"/></symbol>
+  <symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.5 13 17 22l-5-3-5 3 1.5-9"/></symbol>
+  <symbol id="i-scale" viewBox="0 0 24 24"><path d="m16 16 3-8 3 8c-.9.7-1.9 1-3 1s-2.1-.3-3-1ZM2 16l3-8 3 8c-.9.7-1.9 1-3 1s-2.1-.3-3-1ZM7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></symbol>
+  <!-- Ilustrasi garis untuk placeholder foto -->
+  <symbol id="ill-building" viewBox="0 0 400 200"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M30 200V112h340v88M14 112h372L200 36 14 112Z"/><path d="M70 200v-72M110 200v-72M150 200v-72M250 200v-72M290 200v-72M330 200v-72M182 200v-52h36v52M0 200h400"/><circle cx="200" cy="84" r="12"/></g></symbol>
+  <symbol id="ill-car" viewBox="0 0 400 200"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M40 168h-14v-40l34-12 40-46h170l52 46 46 12v40h-16M96 168h176M0 196h400"/><circle cx="76" cy="168" r="22"/><circle cx="294" cy="168" r="22"/><path d="M112 76 92 116h86V76ZM196 76v40h104l-38-40Z"/></g></symbol>
+  <symbol id="ill-crowd" viewBox="0 0 400 200"><g fill="none" stroke="currentColor" stroke-width="2"><circle cx="80" cy="96" r="20"/><path d="M40 200v-36a40 40 0 0 1 80 0v36"/><circle cx="200" cy="80" r="24"/><path d="M150 200v-40a50 50 0 0 1 100 0v40"/><circle cx="320" cy="96" r="20"/><path d="M280 200v-36a40 40 0 0 1 80 0v36"/></g></symbol>
+  <symbol id="ill-desk" viewBox="0 0 400 200"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M20 120h360v80M20 120v80M60 120V40h120v80M220 120V40h120v80M80 60h80M80 80h56M240 60h80M240 80h56M0 200h400"/></g></symbol>
+  <symbol id="ill-tent" viewBox="0 0 400 200"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M40 200V100L200 40l160 60v100M40 100h320M120 200v-60h160v60M0 200h400"/><path d="M200 40V20l24 8-24 8"/></g></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/></symbol>
+</svg>
+<!-- /@icons -->
+<!-- @header -->
+<a class="skip-link" href="#main">Lewati ke konten utama</a>
+<div class="site-top">
+  <div class="container site-top__inner">
+    <p class="site-top__id">
+      <img src="assets/img/lambang-ntt.png" alt="Lambang Provinsi Nusa Tenggara Timur" width="16" height="17">
+      <span>Situs resmi UPTD Pendapatan Daerah Wilayah Kota Kupang<span class="site-top__hide-sm"> · Badan Pendapatan dan Aset Daerah Provinsi NTT</span></span>
+    </p>
+    <div class="site-top__links">
+      <a class="site-top__hide-sm" href="kontak.html#pengaduan">Pengaduan</a>
+      <a class="site-top__login" href="login.html"><svg class="i i--sm" aria-hidden="true"><use href="#i-lock"/></svg>Masuk Pegawai</a>
+    </div>
+  </div>
+</div>
+
+<header class="nav-wrap">
+  <nav class="nav" aria-label="Navigasi utama">
+    <a class="nav__brand" href="index.html" aria-label="PINTU — Beranda">
+      <svg class="mark" aria-hidden="true"><use href="#logo-pintu"/></svg>
+      <span class="wordmark">PINTU</span>
+    </a>
+    <ul class="nav__links">
+      <li class="nav__item has-menu" data-group="profil">
+        <button class="nav__link" type="button" aria-expanded="false" aria-controls="menu-profil">Profil<svg class="i" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+        <div class="nav__menu" id="menu-profil">
+          <a class="nav__menu-link" data-nav="profil" href="profil.html"><span class="nav__menu-icon"><svg class="i i--sm" aria-hidden="true"><use href="#i-building"/></svg></span><strong>Tentang UPTD</strong><span>Kedudukan, tugas, dan wilayah kerja.</span></a>
+          <a class="nav__menu-link" data-nav="visi-misi" href="visi-misi.html"><span class="nav__menu-icon"><svg class="i i--sm" aria-hidden="true"><use href="#i-target"/></svg></span><strong>Visi &amp; Misi</strong><span>Arah, nilai, dan maklumat pelayanan.</span></a>
+          <a class="nav__menu-link" data-nav="struktur" href="struktur-organisasi.html"><span class="nav__menu-icon"><svg class="i i--sm" aria-hidden="true"><use href="#i-sitemap"/></svg></span><strong>Struktur Organisasi</strong><span>Susunan unit dan uraian tugas.</span></a>
+        </div>
+      </li>
+      <li class="nav__item has-menu" data-group="layanan">
+        <button class="nav__link" type="button" aria-expanded="false" aria-controls="menu-layanan">Layanan<svg class="i" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+        <div class="nav__menu" id="menu-layanan">
+          <a class="nav__menu-link" data-nav="layanan" href="layanan.html"><span class="nav__menu-icon"><svg class="i i--sm" aria-hidden="true"><use href="#i-list-check"/></svg></span><strong>Persyaratan Layanan</strong><span>Berkas untuk setiap jenis layanan.</span></a>
+          <a class="nav__menu-link" href="layanan.html#alur"><span class="nav__menu-icon"><svg class="i i--sm" aria-hidden="true"><use href="#i-qr"/></svg></span><strong>Alur Non-Tunai</strong><span>Langkah bayar tanpa uang tunai.</span></a>
+          <a class="nav__menu-link" href="layanan.html#simulasi"><span class="nav__menu-icon"><svg class="i i--sm" aria-hidden="true"><use href="#i-calculator"/></svg></span><strong>Simulasi Pajak</strong><span>Perkiraan total sebelum datang.</span></a>
+        </div>
+      </li>
+      <li class="nav__item has-menu" data-group="jadwal">
+        <button class="nav__link" type="button" aria-expanded="false" aria-controls="menu-jadwal">Jadwal<svg class="i" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+        <div class="nav__menu" id="menu-jadwal">
+          <a class="nav__menu-link" data-nav="jadwal" href="jadwal.html"><span class="nav__menu-icon"><svg class="i i--sm" aria-hidden="true"><use href="#i-clock"/></svg></span><strong>Jam Pelayanan</strong><span>Jam loket dan status hari ini.</span></a>
+          <a class="nav__menu-link" href="jadwal.html#keliling"><span class="nav__menu-icon"><svg class="i i--sm" aria-hidden="true"><use href="#i-truck"/></svg></span><strong>Samsat Keliling</strong><span>Lokasi dan waktu minggu ini.</span></a>
+        </div>
+      </li>
+      <li class="nav__item has-menu" data-group="informasi">
+        <button class="nav__link" type="button" aria-expanded="false" aria-controls="menu-informasi">Informasi<svg class="i" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+        <div class="nav__menu" id="menu-informasi">
+          <a class="nav__menu-link" data-nav="informasi" href="informasi.html"><span class="nav__menu-icon"><svg class="i i--sm" aria-hidden="true"><use href="#i-news"/></svg></span><strong>Berita &amp; Pengumuman</strong><span>Kabar resmi dari UPTD.</span></a>
+          <a class="nav__menu-link" data-nav="dokumentasi" href="dokumentasi.html"><span class="nav__menu-icon"><svg class="i i--sm" aria-hidden="true"><use href="#i-image"/></svg></span><strong>Dokumentasi Kegiatan</strong><span>Galeri foto kegiatan lapangan.</span></a>
+          <a class="nav__menu-link" data-nav="unduhan" href="unduhan.html"><span class="nav__menu-icon"><svg class="i i--sm" aria-hidden="true"><use href="#i-file"/></svg></span><strong>Regulasi &amp; Unduhan</strong><span>Dasar hukum, SOP, dan formulir.</span></a>
+        </div>
+      </li>
+      <li class="nav__item" data-group="kontak" data-current>
+        <a class="nav__link" data-nav="kontak" aria-current="page" href="kontak.html">Kontak</a>
+      </li>
+    </ul>
+    <a class="btn btn--light btn--sm nav__cta" href="layanan.html">Cek Persyaratan</a>
+    <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="mobile-menu"><span class="bars" aria-hidden="true"></span>Menu</button>
+  </nav>
+
+  <div class="mobile-menu" id="mobile-menu" hidden>
+    <div class="mobile-menu__group">
+      <p class="mobile-menu__label">Profil</p>
+      <a data-nav="profil" href="profil.html">Tentang UPTD</a>
+      <a data-nav="visi-misi" href="visi-misi.html">Visi &amp; Misi</a>
+      <a data-nav="struktur" href="struktur-organisasi.html">Struktur Organisasi</a>
+    </div>
+    <div class="mobile-menu__group">
+      <p class="mobile-menu__label">Layanan &amp; Jadwal</p>
+      <a data-nav="layanan" href="layanan.html">Persyaratan Layanan</a>
+      <a href="layanan.html#simulasi">Simulasi Pajak</a>
+      <a data-nav="jadwal" href="jadwal.html">Jam Pelayanan</a>
+      <a href="jadwal.html#keliling">Samsat Keliling</a>
+    </div>
+    <div class="mobile-menu__group">
+      <p class="mobile-menu__label">Informasi</p>
+      <a data-nav="informasi" href="informasi.html">Berita &amp; Pengumuman</a>
+      <a data-nav="dokumentasi" href="dokumentasi.html">Dokumentasi Kegiatan</a>
+      <a data-nav="unduhan" href="unduhan.html">Regulasi &amp; Unduhan</a>
+      <a data-nav="kontak" aria-current="page" href="kontak.html">Kontak &amp; Pengaduan</a>
+    </div>
+    <div class="mobile-menu__cta">
+      <a class="btn btn--light btn--sm" href="layanan.html">Cek Persyaratan</a>
+      <a class="btn btn--night btn--sm" href="login.html">Masuk Pegawai</a>
+    </div>
+  </div>
+</header>
+<!-- /@header -->
+
+<main id="main">
+  <section class="container page-hero">
+    <ol class="crumbs" role="list"><li><a href="index.html">Beranda</a></li><li aria-current="page">Kontak &amp; Pengaduan</li></ol>
+    <div class="page-hero--split">
+      <div>
+        <p class="eyebrow">Kontak &amp; pengaduan</p>
+        <h1 class="h-display" data-reveal>Tanya dulu boleh. <span class="tone">Mengadu juga boleh.</span></h1>
+      </div>
+      <p class="lead" data-reveal>Setiap pesan kami catat dan jawab pada hari kerja. Identitas pelapor dijaga kerahasiaannya.</p>
+    </div>
+  </section>
+
+  <section class="container contact-grid">
+    <div data-reveal>
+      <ul class="contact-list" role="list">
+        <li><svg class="i" aria-hidden="true"><use href="#i-map-pin"/></svg><span><strong>Kantor Bersama Samsat Kota Kupang</strong><span>Jl. [alamat kantor], Kota Kupang, Nusa Tenggara Timur</span></span></li>
+        <li><svg class="i" aria-hidden="true"><use href="#i-clock"/></svg><span><strong data-status-text>Loket buka · tutup 15.00 WITA</strong><span>Senin–Kamis 08.00–15.00 · Jumat 08.00–11.30 · Sabtu 08.00–12.00</span></span></li>
+        <li><svg class="i" aria-hidden="true"><use href="#i-phone"/></svg><span><strong>Telepon</strong><a href="tel:+620000000000">(0380) 000 000</a></span></li>
+        <li><svg class="i" aria-hidden="true"><use href="#i-message"/></svg><span><strong>WhatsApp layanan</strong><a href="#">+62 8xx-xxxx-xxxx · hanya pesan teks, hari kerja</a></span></li>
+        <li><svg class="i" aria-hidden="true"><use href="#i-mail"/></svg><span><strong>Surel</strong><a href="mailto:uptd.kotakupang@example.go.id">uptd.kotakupang@…go.id</a></span></li>
+        <li><svg class="i" aria-hidden="true"><use href="#i-instagram"/></svg><span><strong>Media sosial</strong><span>@samsatkotakupang · contoh akun</span></span></li>
+      </ul>
+      <p class="proto-note" style="margin-top:16px">Alamat dan nomor kontak diisi setelah verifikasi.</p>
+    </div>
+    <div data-reveal>
+      <div class="map">
+        <svg viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Peta ilustrasi Kota Kupang">
+          <rect width="800" height="500" fill="#ECE9E1"/>
+          <path d="M0 0H800V96C700 70 640 130 540 112 430 92 380 150 280 128 170 104 90 150 0 120Z" fill="#D9E3EF"/>
+          <g fill="none" stroke="#fff" stroke-linecap="round">
+            <path d="M40 210C200 200 320 230 470 220S700 240 800 230" stroke-width="12"/>
+            <path d="M380 140C390 240 410 330 400 500" stroke-width="12"/>
+            <path d="M120 140C160 260 230 360 260 500" stroke-width="8"/>
+            <path d="M600 120C590 230 640 330 700 500" stroke-width="8"/>
+            <path d="M0 360C200 340 420 380 800 350" stroke-width="8"/>
+            <path d="M250 220 520 420M520 230 300 420" stroke-width="5"/>
+          </g>
+          <g font-family="Geist, sans-serif" font-size="13" fill="#8A8F96" letter-spacing="1.5">
+            <text x="330" y="52">TELUK KUPANG</text>
+            <text x="40" y="190">ALAK</text>
+            <text x="250" y="190">KOTA LAMA</text>
+            <text x="620" y="190">KELAPA LIMA</text>
+            <text x="180" y="300">KOTA RAJA</text>
+            <text x="470" y="300">OEBOBO</text>
+            <text x="470" y="450">MAULAFA</text>
+          </g>
+        </svg>
+        <div class="map__pin"><span>Samsat Kota Kupang</span><i aria-hidden="true"></i></div>
+        <a class="btn btn--light btn--sm map__open" href="https://maps.google.com/?q=Samsat+Kota+Kupang" target="_blank" rel="noopener"><svg class="i" aria-hidden="true"><use href="#i-external"/></svg>Buka di Google Maps</a>
+      </div>
+      <div class="caption-row"><p>Peta ilustrasi. Gunakan tautan untuk petunjuk arah.</p><p>Parkir tersedia di halaman kantor</p></div>
+    </div>
+  </section>
+
+  <section class="section" id="masukan">
+    <div class="container split">
+      <div class="split__sticky" data-reveal>
+        <p class="eyebrow">Formulir masukan</p>
+        <h2 class="h2" style="margin-top:20px">Ceritakan singkat. <span class="tone">Kami tindak lanjuti.</span></h2>
+        <p class="body" style="margin-top:20px">Masukan Anda menjadi bahan evaluasi dan pemutakhiran portal serta layanan. Kami membalas paling lambat tiga hari kerja.</p>
+      </div>
+      <form class="card card--xl form-card" data-demo-form novalidate data-reveal>
+        <fieldset style="border:0;padding:0;margin:0">
+          <legend class="label" style="margin-bottom:10px">Jenis pesan</legend>
+          <div class="radio-chips">
+            <label><input type="radio" name="jenis" value="pertanyaan" checked><span class="chip">Pertanyaan</span></label>
+            <label><input type="radio" name="jenis" value="masukan"><span class="chip">Masukan</span></label>
+            <label><input type="radio" name="jenis" value="pengaduan"><span class="chip">Pengaduan</span></label>
+          </div>
+        </fieldset>
+        <div class="form-row" style="margin-top:22px">
+          <div class="field"><label class="label" for="f-nama">Nama <small>opsional</small></label><input class="input" id="f-nama" name="nama" autocomplete="name" placeholder="Nama Anda"></div>
+          <div class="field"><label class="label" for="f-kontak">Email atau WhatsApp</label><input class="input" id="f-kontak" name="kontak" required autocomplete="email" placeholder="Agar kami bisa membalas"></div>
+        </div>
+        <div class="field" style="margin-top:18px"><label class="label" for="f-layanan">Terkait layanan</label>
+          <select class="select" id="f-layanan" name="layanan">
+            <option>Umum / portal PINTU</option><option>Pajak tahunan</option><option>Perpanjangan STNK 5 tahun</option><option>Mutasi &amp; balik nama</option><option>Duplikat STNK</option><option>Samsat Keliling</option>
+          </select>
+        </div>
+        <div class="field"><label class="label" for="f-pesan">Pesan</label><textarea class="textarea" id="f-pesan" name="pesan" required minlength="10" placeholder="Tuliskan pertanyaan, masukan, atau kronologi pengaduan."></textarea><p class="help">Jangan cantumkan nomor rekening, PIN, atau kata sandi.</p></div>
+        <label class="check" style="margin-top:18px"><input type="checkbox" required> Saya setuju data ini digunakan untuk menindaklanjuti pesan.</label>
+        <button class="btn btn--dark btn--block" type="submit" style="margin-top:24px">Kirim pesan<svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+        <p class="trust" style="margin-top:14px"><svg class="i" aria-hidden="true"><use href="#i-lock"/></svg>Data Anda hanya dibaca petugas yang berwenang.</p>
+      </form>
+    </div>
+  </section>
+
+  <section class="section section--flush-top" id="pengaduan">
+    <div class="container">
+      <div class="center" style="margin-bottom: var(--inner-y)" data-reveal>
+        <p class="eyebrow">Kanal pengaduan resmi</p>
+        <h2 class="h2" style="margin-top:20px">Pilih yang paling nyaman. <span class="tone">Semuanya dicatat.</span></h2>
+      </div>
+      <div class="channels" data-reveal>
+        <article class="card channel"><svg class="i" aria-hidden="true"><use href="#i-megaphone"/></svg><h3>SP4N-LAPOR!</h3><p>Sistem pengaduan pelayanan publik nasional. Aduan diteruskan ke unit kami.</p><a class="link-arrow" href="https://www.lapor.go.id" target="_blank" rel="noopener">Buka lapor.go.id<svg class="i" aria-hidden="true"><use href="#i-arrow-up-right"/></svg></a></article>
+        <article class="card channel"><svg class="i" aria-hidden="true"><use href="#i-inbox"/></svg><h3>Kotak saran di kantor.</h3><p>Tersedia di ruang tunggu. Dibuka dan direkap setiap Jumat oleh Sub Bagian Tata Usaha.</p><a class="link-arrow" href="jadwal.html">Lihat jam kantor<svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></a></article>
+        <article class="card channel"><svg class="i" aria-hidden="true"><use href="#i-scale"/></svg><h3>Ombudsman RI Perwakilan NTT.</h3><p>Bila pengaduan Anda tidak ditanggapi atau ada dugaan maladministrasi.</p><a class="link-arrow" href="https://ombudsman.go.id" target="_blank" rel="noopener">Buka ombudsman.go.id<svg class="i" aria-hidden="true"><use href="#i-arrow-up-right"/></svg></a></article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- @footer -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer__info">
+      <div>
+        <a class="footer__brand" href="index.html" aria-label="PINTU — Beranda">
+          <svg class="mark" aria-hidden="true"><use href="#logo-pintu"/></svg>
+          <span><strong>PINTU</strong><span>Portal Informasi dan Pelayanan<br>UPTD Pendapatan Daerah Wilayah Kota Kupang</span></span>
+        </a>
+        <p class="micro muted" style="margin-top:16px;max-width:34ch">Unit Pelaksana Teknis Daerah pada Badan Pendapatan dan Aset Daerah Provinsi Nusa Tenggara Timur. Kantor bersama Samsat Kota Kupang.</p>
+      </div>
+      <div>
+        <h3>Alamat</h3>
+        <p>Kantor Bersama Samsat Kota Kupang<br>Jl. [alamat kantor], Kota Kupang<br>Nusa Tenggara Timur</p>
+      </div>
+      <div>
+        <h3>Jam loket</h3>
+        <ul role="list">
+          <li>Senin–Kamis · 08.00–15.00</li>
+          <li>Jumat · 08.00–11.30</li>
+          <li>Sabtu · 08.00–12.00</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Hubungi</h3>
+        <ul role="list">
+          <li><a href="tel:+620000000000">(0380) 000 000</a></li>
+          <li><a href="mailto:uptd.kotakupang@example.go.id">uptd.kotakupang@…go.id</a></li>
+          <li><a href="kontak.html#pengaduan">Kanal pengaduan</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer__nav">
+      <ul class="footer__links" role="list">
+        <li><a href="profil.html">Profil</a></li>
+        <li><a href="layanan.html">Layanan</a></li>
+        <li><a href="jadwal.html">Jadwal</a></li>
+        <li><a href="informasi.html">Informasi</a></li>
+        <li><a href="kontak.html">Kontak</a></li>
+      </ul>
+      <a class="footer__top" href="#top">Kembali ke atas <svg class="i i--sm" aria-hidden="true"><use href="#i-arrow-up"/></svg></a>
+    </div>
+
+    <div class="footer__bottom">
+      <p class="footer__emblem"><img src="assets/img/lambang-ntt.png" alt="" width="18" height="19">© 2026 UPTD Pendapatan Daerah Wilayah Kota Kupang · BPAD Provinsi NTT</p>
+      <ul role="list">
+        <li><a href="login.html">Masuk Pegawai</a></li>
+        <li><a href="kebijakan-privasi.html">Kebijakan Privasi</a></li>
+        <li><a href="syarat-ketentuan.html">Syarat &amp; Ketentuan</a></li>
+        <li><a href="design-system.html">Design System</a></li>
+      </ul>
+    </div>
+  </div>
+</footer>
+<div class="toast" role="status" aria-live="polite" id="toast"></div>
+<!-- /@footer -->
+<script src="assets/js/main.js" defer></script>
+</body>
+</html>
