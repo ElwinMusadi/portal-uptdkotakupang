@@ -53,6 +53,12 @@ Logo utama adalah **Lambang Provinsi Nusa Tenggara Timur** (`assets/img/lambang-
 
 Logo PINTU (pintu terbuka) **disimpan sebagai logo cadangan** dan tidak tampil saat ini: simbol `#logo-pintu` di `partials/icons.html`, berkas `assets/img/logo-pintu.svg` dan `assets/img/favicon.svg`. Untuk memakainya lagi di navbar, lihat komentar di `partials/header.html`.
 
+## Tipografi
+
+Situs memakai **SF Pro Display** (headline dan angka besar) dan **SF Pro Text** (isi dan UI) sebagai font sistem. Berkas font tidak disertakan di repo karena lisensi Apple tidak mengizinkan distribusi lewat web. Perangkat Apple menampilkan SF Pro, sedangkan perangkat lain otomatis memakai font sistemnya (Segoe UI di Windows, Roboto di Android). Token ada di `assets/css/tokens.css` (`--font-display`, `--font-sans`).
+
+Gambar di `docs/preview/` dirender di server Linux tanpa SF Pro, memakai Inter sebagai pengganti terdekat.
+
 ## Lisensi aset
 
-Font Instrument Serif dan Geist dilisensikan SIL Open Font License (lihat `assets/fonts/`). Lambang Provinsi NTT adalah milik Pemerintah Provinsi NTT dan dipakai sesuai ketentuan lambang daerah.
+Lambang Provinsi NTT adalah milik Pemerintah Provinsi NTT dan dipakai sesuai ketentuan lambang daerah.

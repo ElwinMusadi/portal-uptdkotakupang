@@ -198,8 +198,8 @@
   transition: color var(--dur-2) var(--ease);
 }
 .numtab:last-child { border-bottom: 0; }
-.numtab__num { font-family: var(--font-mono); font-size: 12px; letter-spacing: .04em; }
-.numtab__label { font-family: var(--font-display); font-size: clamp(26px, 2.8vw, 34px); line-height: 1.1; letter-spacing: -0.01em; position: relative; justify-self: start; padding-bottom: 6px; }
+.numtab__num { font-family: var(--font-mono); font-size: 12px; letter-spacing: .04em; font-variant-numeric: tabular-nums; }
+.numtab__label { font-family: var(--font-display); font-weight: var(--fw-display); font-size: clamp(22px, 2.4vw, 28px); line-height: 1.15; letter-spacing: -0.02em; position: relative; justify-self: start; padding-bottom: 6px; }
 .numtab__label::after { content: ""; position: absolute; left: 0; bottom: 0; height: 2px; width: 0; background: var(--accent); border-radius: 2px; transition: width var(--dur-3) var(--ease); }
 .numtab:hover { color: var(--text-2); }
 .numtab[aria-selected="true"] { color: var(--ink); }
@@ -207,7 +207,7 @@
 
 .numtabs--row { flex-direction: row; gap: 28px; flex-wrap: wrap; }
 .numtabs--row .numtab { border-bottom: 0; grid-template-columns: auto auto; gap: 10px; padding: 6px 0; width: auto; }
-.numtabs--row .numtab__label { font-size: clamp(22px, 2.2vw, 28px); }
+.numtabs--row .numtab__label { font-size: clamp(20px, 2vw, 24px); }
 
 /* ---------- Daftar kategori aktif (biru + garis bawah + panah) ---------- */
 .catlist { list-style: none; display: grid; gap: 2px; }

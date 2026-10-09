@@ -13,7 +13,7 @@ Dokumen ini menerjemahkan *Rancangan Aktualisasi* (Elwin Musadi Bessie Sura, S.K
 |---|---|
 | Masalah utama | Belum ada website profil dan pelayanan informasi. Informasi persyaratan masih ditempel di kertas pada meja dan kaca loket, tersebar di berbagai kanal, dan mudah rusak. |
 | Gagasan | Satu portal resmi yang terintegrasi, terverifikasi, dan mudah diakses: **PINTU**. |
-| Bahasa desain | Editorial tenang ala referensi *TinyKPI* (Kage): kertas hangat, serif kontras tinggi untuk headline dua nada, grotesk netral untuk isi, satu aksen biru, mockup gelap hanya di dalam media. |
+| Bahasa desain | Editorial tenang ala referensi *TinyKPI* (Kage): kertas hangat, SF Pro Display semibold untuk headline dua nada, SF Pro Text untuk isi, satu aksen biru, mockup gelap hanya di dalam media. |
 | Cakupan prototipe | 15 halaman publik + login pegawai + dasbor ruang pegawai + halaman design system. |
 | Prinsip konten | Tugas lebih dulu (cek persyaratan), bahasa baku yang singkat, setiap informasi bertanggal dan bersumber. |
 
@@ -37,7 +37,7 @@ Isu peringkat 2 dan 3 tidak dikerjakan penuh dalam aktualisasi, tetapi ruang ant
 |---|---|---|
 | Environment / tata kelola | Kebutuhan portal belum masuk tata kelola; peran penyedia, pemeriksa, dan pengelola publikasi belum jelas; monitoring pemutakhiran belum sistematis | Empat peran dan alur publikasi ditampilkan di halaman *Struktur Organisasi*, *Login*, dan papan **Alur publikasi** (kanban) di ruang pegawai. Tabel **Jadwal pemutakhiran konten** dengan status jatuh tempo. |
 | Material / konten | Informasi tersebar; belum ada basis konten terstruktur untuk profil, layanan, jadwal, lokasi, berita, pengumuman; dokumentasi belum dihimpun | Arsitektur informasi lima menu (Profil, Layanan, Jadwal, Informasi, Kontak). Data persyaratan disalin dari papan loket menjadi tabel terstruktur. Halaman *Dokumentasi Kegiatan*. |
-| Money / modal | Belum ada anggaran khusus | Situs statis tanpa dependensi berbayar: HTML/CSS/JS murni, font self-hosted (lisensi OFL), bisa di-hosting gratis (mis. GitHub Pages) atau di server Pemprov. |
+| Money / modal | Belum ada anggaran khusus | Situs statis tanpa dependensi berbayar: HTML/CSS/JS murni, font sistem (SF Pro di perangkat Apple) tanpa berkas font yang perlu di-hosting, bisa di-hosting gratis (mis. GitHub Pages) atau di server Pemprov. |
 | Method / prosedur | Belum ada alur baku pengumpulan, verifikasi, persetujuan, publikasi; belum ada standar frekuensi dan klasifikasi | Alur 4 langkah dan standar frekuensi dijadikan bagian UI (lihat §9). Metadata "Diterbitkan / Diperbarui / Diverifikasi oleh" di setiap artikel. |
 | Machine / teknologi | Belum ada portal resmi; belum ada pengelolaan konten terpusat; belum terintegrasi dengan kanal lain | Portal + ruang pegawai sebagai CMS. Peta **Kanal layanan** menautkan media sosial, WhatsApp, SP4N-LAPOR!, QRIS, SIGNAL. |
 | Manusia / SDM | Belum ada penanggung jawab konten; kemampuan pengelolaan konten digital belum seragam; publikasi bergantung pada pegawai tertentu | Antarmuka admin sederhana (kanban, tabel jatuh tempo), peran yang tertulis, dan design system yang terdokumentasi agar siapa pun bisa meneruskan. |
@@ -146,9 +146,10 @@ Sumber kebenaran: `assets/css/tokens.css`. Panduan visual hidup: `design-system.
 
 ### 6.2 Tipografi
 
-- **Instrument Serif** untuk headline (hero `clamp(46px, 8vw, 92px)`, lh 1.02, tracking −0.02em; H2 36–56px).
-- **Geist** untuk teks, UI, dan angka metrik (28–40px, semibold).
-- **Geist Mono** untuk nomor tab (01/02/03), jam, hitung mundur.
+- **SF Pro Display** (semibold 600) untuk headline dan angka ≥ 20px: hero `clamp(40px, 7vw, 80px)`, lh 1.05, tracking −0.022em; H1 halaman 36–64px; H2 30–48px; H3 22–28px; angka metrik 28–40px.
+- **SF Pro Text** untuk teks, UI, dan label di bawah 20px.
+- **Angka tabular** (`font-variant-numeric: tabular-nums`) dengan SF Pro Text untuk nomor tab (01/02/03), jam, dan hitung mundur. Tidak ada font monospace.
+- SF Pro adalah font sistem Apple dan **tidak di-host** di situs (lisensi Apple tidak mengizinkan distribusi web). Urutan font: `"SF Pro Display"/"SF Pro Text", -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif`. Artinya perangkat Apple menampilkan SF Pro, Windows menampilkan Segoe UI, dan Android menampilkan Roboto.
 - Body 16px / 1.6, lebar maks. ±38ch. Eyebrow 11px uppercase, tracking 0.12em.
 - **Aturan dua nada**: kalimat pertama tinta, lanjutan abu-abu (`<span class="tone">`). Semua headline berupa kalimat lengkap dan diakhiri titik.
 
@@ -178,6 +179,7 @@ Navbar pil mengambang + dropdown gelap · bilah situs resmi · tombol (dark, lig
 
 | Referensi | PINTU | Alasan |
 |---|---|---|
+| Serif editorial kontras tinggi + grotesk netral | SF Pro Display + SF Pro Text (font sistem) | Permintaan pengguna. Karakter editorial dipertahankan lewat ukuran besar, bobot semibold, tracking rapat, dan aturan dua nada. |
 | Semua teks pendukung `#8A8F96` | Teks kecil memakai `#646A72`; `#8A8F96` hanya untuk headline ≥ 24px | `#8A8F96` di atas kertas hanya 3,0:1 — gagal WCAG AA untuk teks kecil. Situs pemerintah wajib mudah dibaca semua warga. |
 | Hero minimal 56px | Minimal 46px di layar sempit | Kata bahasa Indonesia lebih panjang; mencegah gulir horizontal di 360px. |
 | Angka metrik tabular | Proporsional untuk angka besar, tabular untuk kolom | Angka besar tabular terlihat renggang; kolom tetap rata. |
@@ -280,7 +282,6 @@ Data persyaratan lima layanan diambil dari foto papan persyaratan loket dalam do
 │   ├── css/components.css  ← komponen
 │   ├── css/pages.css       ← pola halaman & ruang pegawai
 │   ├── js/main.js          ← interaksi + CONFIG konten dinamis
-│   ├── fonts/              ← Instrument Serif, Geist, Geist Mono (OFL)
 │   └── img/                ← lambang NTT (logo utama), favicon, logo cadangan PINTU
 ├── partials/               ← header, footer, sprite ikon (sumber tunggal)
 ├── scripts/sync-partials.mjs

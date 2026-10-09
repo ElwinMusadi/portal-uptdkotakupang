@@ -1,38 +1,10 @@
 /* ==========================================================================
    PINTU Design System — Tokens
    Portal Informasi dan Pelayanan · UPTD Pendapatan Daerah Wilayah Kota Kupang
-   Bahasa desain: editorial tenang (serif kontras tinggi + grotesk netral),
-   kertas hangat, tinta biru-hitam, satu aksen biru untuk tautan & status aktif.
+   Bahasa desain: editorial tenang (SF Pro Display untuk headline, SF Pro Text
+   untuk isi), kertas hangat, tinta biru-hitam, satu aksen biru untuk tautan
+   & status aktif.
    ========================================================================== */
-
-@font-face {
-  font-family: "Instrument Serif";
-  src: url("../fonts/instrument-serif-latin-400-normal.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Instrument Serif";
-  src: url("../fonts/instrument-serif-latin-400-italic.woff2") format("woff2");
-  font-weight: 400;
-  font-style: italic;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Geist";
-  src: url("../fonts/geist-latin-wght-normal.woff2") format("woff2-variations");
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Geist Mono";
-  src: url("../fonts/geist-mono-latin-wght-normal.woff2") format("woff2-variations");
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
 
 :root {
   /* ---------- Warna: kertas & tinta (chrome halaman selalu terang) ---------- */
@@ -69,14 +41,20 @@
   --ok-night: #5FD39B; --danger-night: #FF8F7E;
 
   /* ---------- Tipografi ---------- */
-  --font-display: "Instrument Serif", "Iowan Old Style", "Times New Roman", serif;
-  --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  /* SF Pro adalah font sistem Apple. Berkasnya TIDAK di-host di situs karena
+     lisensi Apple tidak mengizinkan distribusi web. Perangkat Apple menampilkan
+     SF Pro (lewat -apple-system / BlinkMacSystemFont); perangkat lain memakai
+     font sistemnya: Segoe UI (Windows), Roboto (Android), dst.
+     Display untuk teks >= 20px, Text untuk teks di bawahnya. */
+  --font-display: "SF Pro Display", -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "SF Pro Text", -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-sans);          /* angka tabular (tnum), bukan font monospace */
+  --fw-display: 600;                      /* semibold untuk semua headline */
 
-  --fs-hero: clamp(46px, 8vw, 92px);      /* H1 beranda */
-  --fs-display: clamp(44px, 6.4vw, 76px); /* H1 halaman turunan */
-  --fs-h2: clamp(36px, 4.6vw, 56px);      /* headline seksi */
-  --fs-h3: clamp(26px, 2.6vw, 32px);      /* sub-headline serif */
+  --fs-hero: clamp(40px, 7vw, 80px);      /* H1 beranda */
+  --fs-display: clamp(36px, 5.2vw, 64px); /* H1 halaman turunan */
+  --fs-h2: clamp(30px, 4vw, 48px);        /* headline seksi */
+  --fs-h3: clamp(22px, 2.2vw, 28px);      /* sub-headline */
   --fs-metric: clamp(28px, 3vw, 40px);    /* angka tile metrik */
   --fs-lead: 18px;
   --fs-body: 16px;
@@ -84,10 +62,10 @@
   --fs-micro: 12.5px;
   --fs-eyebrow: 11px;
 
-  --lh-tight: 1.02;
-  --lh-head: 1.06;
+  --lh-tight: 1.05;
+  --lh-head: 1.08;
   --lh-body: 1.6;
-  --track-tight: -0.02em;
+  --track-tight: -0.022em;
   --track-eyebrow: 0.12em;
   --measure: 38ch;
 
