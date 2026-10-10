@@ -1,0 +1,7 @@
+# Dependensi dashboard (pasang ulang dengan `npm install` di dashboard-app/)
+node_modules/
+
+# Log & berkas sistem
+*.log
+.DS_Store
+Thumbs.db

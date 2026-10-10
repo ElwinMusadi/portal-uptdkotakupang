@@ -45,6 +45,15 @@
       swdkllj: { motor: 35000, mobil: 143000 },
       default: { pokok: 285000, jenis: "motor", telat: 3, putih: false },
     },
+    // Akun Login Pegawai (PROTOTIPE). Kredensial statis ini hanya untuk uji coba:
+    // pemeriksaan dilakukan di peramban sehingga tidak aman untuk produksi.
+    // Ganti dengan autentikasi server (lihat dashboard-app/README.md) sebelum terbit.
+    auth: {
+      nip: "199707162026061002",
+      sandi: "password123",
+      sesiJam: 8,       // sesi biasa, berakhir saat tab ditutup
+      ingatHari: 7,     // bila "Ingat perangkat ini" dicentang
+    },
   };
 
   const HARI = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
@@ -415,7 +424,7 @@
       };
       // Angka dikecilkan sampai muat. Bila di ukuran minimum tetap tidak muat (tile 1×1 yang sempit),
       // tampilkan format ringkas ("Rp660 jt"); angka lengkap tetap ada di rincian dan di tooltip.
-      const fitAll = () => $$(".bento__val, .bento__total-val, .mini-sim__out strong", root).forEach((el) => {
+      const fitAll = () => $$(".bento__val, .bento__total-val", root).forEach((el) => {
         const min = el.matches(".bento__total-val") ? 18 : 14;
         if (el.dataset.full) { el.textContent = el.dataset.full; el.removeAttribute("title"); }
         el.style.whiteSpace = "";
@@ -552,33 +561,85 @@
     });
   }
 
-  /* ---------- Formulir (demo, tanpa backend) ---------- */
+  /* ---------- Sesi Login Pegawai ----------
+     Format sesi sama dengan yang dibaca dashboard (dashboard-app/src/lib/auth.ts). */
+  const KUNCI_SESI = "pintu.sesi";
+
+  function bacaSesi() {
+    for (const ambil of [() => sessionStorage, () => localStorage]) {
+      try {
+        const sesi = JSON.parse(ambil().getItem(KUNCI_SESI) || "null");
+        if (sesi && sesi.nip && Date.parse(sesi.kedaluwarsa) > Date.now()) return sesi;
+      } catch { /* penyimpanan diblokir atau rusak */ }
+    }
+    return null;
+  }
+
+  function simpanSesi(nip, ingat) {
+    const kini = Date.now();
+    const durasi = ingat ? CONFIG.auth.ingatHari * 864e5 : CONFIG.auth.sesiJam * 36e5;
+    const sesi = { nip, masuk: new Date(kini).toISOString(), kedaluwarsa: new Date(kini + durasi).toISOString(), ingat: !!ingat };
+    try {
+      localStorage.removeItem(KUNCI_SESI);
+      sessionStorage.removeItem(KUNCI_SESI);
+      (ingat ? localStorage : sessionStorage).setItem(KUNCI_SESI, JSON.stringify(sesi));
+      return true;
+    } catch { return false; }
+  }
+
+  /** Tujuan setelah login: hanya halaman di dalam folder dashboard (cegah pengalihan ke situs lain) */
+  function tujuanDashboard() {
+    const lanjut = new URLSearchParams(location.search).get("lanjut") || "";
+    return /^dashboard\/(#\/[\w\-\/?=&%.]*)?$/.test(lanjut) ? lanjut : "dashboard/";
+  }
+
+  /* ---------- Formulir ---------- */
   function initForms() {
     const login = $("[data-login-form]");
     if (login) {
-      const nip = $("#nip", login), pass = $("#sandi", login), alert = $("[data-login-alert]");
+      const params = new URLSearchParams(location.search);
+      if (!params.has("keluar") && bacaSesi()) {
+        location.replace(tujuanDashboard());
+        return;
+      }
+      const nip = $("#nip", login), pass = $("#sandi", login), alert = $("[data-login-alert]"), info = $("[data-login-info]");
+      const tampilInfo = (teks) => { $("[data-login-info-msg]").textContent = teks; info.classList.add("is-on"); };
+      if (params.has("keluar")) tampilInfo("Anda sudah keluar dari dashboard. Sampai jumpa.");
+      else if (params.get("sesi") === "berakhir") tampilInfo("Sesi Anda berakhir. Silakan masuk kembali.");
+
+      const galat = (teks, el) => {
+        info.classList.remove("is-on");
+        $("[data-login-msg]").textContent = teks;
+        alert.classList.add("is-on");
+        [nip, pass].forEach((x) => x.removeAttribute("aria-invalid"));
+        if (el) { el.setAttribute("aria-invalid", "true"); el.focus(); }
+      };
+
       $("[data-toggle-pass]", login)?.addEventListener("click", (e) => {
         const show = pass.type === "password";
         pass.type = show ? "text" : "password";
         e.currentTarget.setAttribute("aria-label", show ? "Sembunyikan kata sandi" : "Tampilkan kata sandi");
         $("use", e.currentTarget).setAttribute("href", show ? "#i-eye-off" : "#i-eye");
       });
-      nip.addEventListener("input", () => { nip.value = nip.value.replace(/\D/g, "").slice(0, 18); nip.removeAttribute("aria-invalid"); alert.classList.remove("is-on"); });
+      [nip, pass].forEach((el) => el.addEventListener("input", () => { el.removeAttribute("aria-invalid"); alert.classList.remove("is-on"); }));
+      nip.addEventListener("input", () => { nip.value = nip.value.replace(/\D/g, "").slice(0, 18); });
+      $("[data-sso]", login)?.addEventListener("click", () => toast("SSO Pemprov belum tersedia. Masuk dengan NIP dan kata sandi."));
+
       login.addEventListener("submit", (e) => {
         e.preventDefault();
-        const okNip = /^\d{18}$/.test(nip.value);
-        const okPass = pass.value.length >= 8;
-        nip.toggleAttribute("aria-invalid", !okNip);
-        if (!okNip) nip.setAttribute("aria-invalid", "true");
-        if (!okNip || !okPass) {
-          $("[data-login-msg]").textContent = !okNip ? "NIP harus 18 digit angka." : "Kata sandi minimal 8 karakter.";
-          alert.classList.add("is-on");
-          return;
+        if (!/^\d{18}$/.test(nip.value)) return galat("NIP harus 18 digit angka.", nip);
+        if (!pass.value) return galat("Kata sandi wajib diisi.", pass);
+        if (nip.value !== CONFIG.auth.nip || pass.value !== CONFIG.auth.sandi) {
+          pass.value = "";
+          return galat("NIP atau kata sandi belum sesuai.", pass);
+        }
+        if (!simpanSesi(nip.value, login.elements.ingat?.checked)) {
+          return galat("Peramban menolak menyimpan sesi. Matikan mode privat lalu coba lagi.");
         }
         const btn = $("button[type=submit]", login);
         btn.setAttribute("aria-disabled", "true");
-        btn.textContent = "Memeriksa…";
-        setTimeout(() => (window.location.href = "dashboard-pegawai.html"), 700);
+        btn.textContent = "Membuka dashboard…";
+        location.href = tujuanDashboard();
       });
     }
 

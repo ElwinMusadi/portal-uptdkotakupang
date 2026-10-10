@@ -14,7 +14,7 @@ Dokumen ini menerjemahkan *Rancangan Aktualisasi* (Elwin Musadi Bessie Sura, S.K
 | Masalah utama | Belum ada website profil dan pelayanan informasi. Informasi persyaratan masih ditempel di kertas pada meja dan kaca loket, tersebar di berbagai kanal, dan mudah rusak. |
 | Gagasan | Satu portal resmi yang terintegrasi, terverifikasi, dan mudah diakses: **PINTU**. |
 | Bahasa desain | Editorial tenang ala referensi *TinyKPI* (Kage): kertas hangat, SF Pro Display semibold untuk headline dua nada, SF Pro Text untuk isi, satu aksen biru, mockup gelap hanya di dalam media. |
-| Cakupan prototipe | 15 halaman publik + login pegawai + dasbor ruang pegawai + halaman design system. |
+| Cakupan prototipe | 15 halaman publik + login pegawai + dashboard pengelolaan konten (`dashboard/`) + halaman design system. |
 | Prinsip konten | Tugas lebih dulu (cek persyaratan), bahasa baku yang singkat, setiap informasi bertanggal dan bersumber. |
 
 ---
@@ -26,20 +26,20 @@ Dokumen ini menerjemahkan *Rancangan Aktualisasi* (Elwin Musadi Bessie Sura, S.K
 | No | Isu | Skor | Peringkat | Respons di PINTU |
 |---|---|---|---|---|
 | 1 | Belum tersedia website profil dan pelayanan informasi | 20 | **1** | Seluruh portal publik |
-| 3 | Belum ada aplikasi internal perhitungan PKB, khususnya masa amnesti | 19 | 2 | **Simulasi PKB** (publik) dan **Kalkulator PKB amnesti** (ruang pegawai) |
-| 2 | Belum ada absensi online berbasis foto dan lokasi untuk kegiatan lapangan | 17 | 3 | Modul **Absensi lapangan** (foto + GPS) di ruang pegawai |
+| 3 | Belum ada aplikasi internal perhitungan PKB, khususnya masa amnesti | 19 | 2 | **Simulasi PKB** (publik) dan **Kalkulator PKB** dengan mode amnesti (dashboard) |
+| 2 | Belum ada absensi online berbasis foto dan lokasi untuk kegiatan lapangan | 17 | 3 | Modul **Absensi lapangan** (foto + GPS) di dashboard |
 
-Isu peringkat 2 dan 3 tidak dikerjakan penuh dalam aktualisasi, tetapi ruang antarmukanya sudah disiapkan agar portal bisa tumbuh tanpa dirombak.
+Isu peringkat 2 dan 3 tidak dikerjakan penuh dalam aktualisasi, tetapi modulnya sudah berjalan di dashboard (menu *Alat Bantu*): absensi merekam foto dan titik GPS, kalkulator memakai rumus yang sama dengan simulasi portal. Keduanya tinggal disambungkan ke server agar portal bisa tumbuh tanpa dirombak.
 
 ### 2.2 Penyebab (fishbone) → respons desain
 
 | Kategori | Penyebab dalam Rancangan | Respons desain/fitur |
 |---|---|---|
-| Environment / tata kelola | Kebutuhan portal belum masuk tata kelola; peran penyedia, pemeriksa, dan pengelola publikasi belum jelas; monitoring pemutakhiran belum sistematis | Empat peran dan alur publikasi ditampilkan di halaman *Struktur Organisasi*, *Login*, dan papan **Alur publikasi** (kanban) di ruang pegawai. Tabel **Jadwal pemutakhiran konten** dengan status jatuh tempo. |
+| Environment / tata kelola | Kebutuhan portal belum masuk tata kelola; peran penyedia, pemeriksa, dan pengelola publikasi belum jelas; monitoring pemutakhiran belum sistematis | Empat peran dan alur publikasi ditampilkan di halaman *Struktur Organisasi*, *Login*, dan papan **Alur publikasi** (kanban) di dashboard. Tabel **Jadwal pemutakhiran konten** dengan status jatuh tempo. |
 | Material / konten | Informasi tersebar; belum ada basis konten terstruktur untuk profil, layanan, jadwal, lokasi, berita, pengumuman; dokumentasi belum dihimpun | Arsitektur informasi lima menu (Profil, Layanan, Jadwal, Informasi, Kontak). Data persyaratan disalin dari papan loket menjadi tabel terstruktur. Halaman *Dokumentasi Kegiatan*. |
 | Money / modal | Belum ada anggaran khusus | Situs statis tanpa dependensi berbayar: HTML/CSS/JS murni, font sistem (SF Pro di perangkat Apple) tanpa berkas font yang perlu di-hosting, bisa di-hosting gratis (mis. GitHub Pages) atau di server Pemprov. |
 | Method / prosedur | Belum ada alur baku pengumpulan, verifikasi, persetujuan, publikasi; belum ada standar frekuensi dan klasifikasi | Alur 4 langkah dan standar frekuensi dijadikan bagian UI (lihat §9). Metadata "Diterbitkan / Diperbarui / Diverifikasi oleh" di setiap artikel. |
-| Machine / teknologi | Belum ada portal resmi; belum ada pengelolaan konten terpusat; belum terintegrasi dengan kanal lain | Portal + ruang pegawai sebagai CMS. Peta **Kanal layanan** menautkan media sosial, WhatsApp, SP4N-LAPOR!, QRIS, SIGNAL. |
+| Machine / teknologi | Belum ada portal resmi; belum ada pengelolaan konten terpusat; belum terintegrasi dengan kanal lain | Portal + dashboard sebagai CMS, siap disambungkan ke REST API. Peta **Kanal layanan** menautkan media sosial, WhatsApp, SP4N-LAPOR!, QRIS, SIGNAL. |
 | Manusia / SDM | Belum ada penanggung jawab konten; kemampuan pengelolaan konten digital belum seragam; publikasi bergantung pada pegawai tertentu | Antarmuka admin sederhana (kanban, tabel jatuh tempo), peran yang tertulis, dan design system yang terdokumentasi agar siapa pun bisa meneruskan. |
 
 ### 2.3 Dampak yang ingin dicegah → indikator yang bisa diukur
@@ -92,11 +92,14 @@ PINTU
 ├── Kontak & Pengaduan (kontak.html)
 ├── Ruang Pegawai
 │   ├── Login Pegawai (login.html)
-│   └── Ringkasan / dasbor (dashboard-pegawai.html)
-│       ├── Alur persetujuan (kanban)
-│       ├── Konten: berita, persyaratan, jadwal, dokumentasi, unduhan
-│       ├── Alat: absensi lapangan, kalkulator PKB, masukan publik
-│       └── Administrasi: pengguna & peran, log aktivitas
+│   └── Dashboard pengelolaan konten (dashboard/, sumber di dashboard-app/)
+│       ├── Ringkasan · Alur publikasi (kanban) · Pesan & pengaduan · Statistik layanan
+│       ├── Konten: berita & pengumuman, dokumentasi, regulasi & unduhan, tanya jawab
+│       ├── Layanan: persyaratan, jam pelayanan, Samsat Keliling, papan layanan, tarif & simulasi
+│       ├── Profil instansi: tentang UPTD, visi & misi, struktur organisasi, kontak & kanal
+│       ├── Situs: beranda, halaman statis, jadwal pemutakhiran
+│       ├── Alat bantu: absensi lapangan (foto + GPS), kalkulator PKB amnesti
+│       └── Pengaturan (situs, akun, cadangan data) · Panduan
 ├── Kebijakan Privasi · Syarat & Ketentuan · 404
 └── Design System (design-system.html)
 ```
@@ -120,8 +123,8 @@ Navigasi utama dibatasi **lima** tautan (Profil, Layanan, Jadwal, Informasi, Kon
 | Dokumentasi | Kerja lapangan tercatat | Galeri bento, filter, lightbox dengan navigasi keyboard |
 | Regulasi & Unduhan | Dasar hukum terbuka | Daftar dokumen dengan filter & pencarian |
 | Kontak & Pengaduan | Tanya dan mengadu | Daftar kontak, peta, formulir masukan, 3 kanal pengaduan |
-| Login pegawai | Akses internal aman | Split editorial + kartu formulir NIP, tampilkan sandi, SSO, catatan keamanan |
-| Ruang pegawai | Apa yang perlu saya kerjakan hari ini | KPI, kanban publikasi, jadwal pemutakhiran, absensi lapangan, kalkulator, masukan publik, aktivitas |
+| Login pegawai | Akses internal aman | Split editorial + kartu formulir NIP, tampilkan sandi, SSO, catatan keamanan; akun prototipe statis, sesi 8 jam atau 7 hari |
+| Dashboard | Apa yang perlu saya kerjakan hari ini | Template shadcn/ui *dashboard-01*: sidebar, 4 kartu KPI, grafik pesan masuk, tabel antrean kerja. Modul untuk semua konten portal, alur publikasi, pesan & pengaduan, absensi lapangan, kalkulator PKB, cadangan data |
 
 ---
 
@@ -185,7 +188,7 @@ Navbar pil mengambang + dropdown gelap + ikon Login Pegawai · tombol (dark, lig
 | Hero minimal 56px | Minimal 36px di layar sempit (skala cair `4.6vw + 22px`) | Kata bahasa Indonesia lebih panjang; headline tetap tiga baris di 320px dan tanpa gulir horizontal. |
 | Angka metrik tabular | Proporsional untuk angka besar, tabular untuk kolom | Angka besar tabular terlihat renggang; kolom tetap rata. |
 | Tidak ada warna status | Hijau/kuning/merah dengan ikon + label | Dibutuhkan untuk status loket, jatuh tempo, cek fisik. |
-| Maskot | **Lambang Provinsi NTT** sebagai logo utama (navbar, hero, footer, login, ruang pegawai, favicon). Logo PINTU disimpan sebagai logo cadangan. | Instansi pemerintah memakai lambang resmi; nama portal PINTU cukup ditulis sebagai teks di sebelah lambang. |
+| Maskot | **Lambang Provinsi NTT** sebagai logo utama (navbar, hero, footer, login, dashboard, favicon). Logo PINTU disimpan sebagai logo cadangan. | Instansi pemerintah memakai lambang resmi; nama portal PINTU cukup ditulis sebagai teks di sebelah lambang. |
 
 ---
 
@@ -281,19 +284,22 @@ Data persyaratan lima layanan diambil dari foto papan persyaratan loket dalam do
 │   ├── css/tokens.css      ← token design system
 │   ├── css/base.css        ← reset, tipografi, tata letak
 │   ├── css/components.css  ← komponen
-│   ├── css/pages.css       ← pola halaman & ruang pegawai
-│   ├── js/main.js          ← interaksi + CONFIG konten dinamis
+│   ├── css/pages.css       ← pola halaman
+│   ├── js/main.js          ← interaksi, login pegawai + CONFIG konten dinamis
 │   └── img/                ← lambang NTT (logo utama), favicon, logo cadangan PINTU
 ├── partials/               ← header, footer, sprite ikon (sumber tunggal)
+├── dashboard/              ← hasil build dashboard (siap dibuka dari server statis)
+├── dashboard-app/          ← sumber dashboard: React + TypeScript + Tailwind CSS + shadcn/ui
 ├── scripts/sync-partials.mjs
 └── docs/RANCANGAN-UIUX.md
 ```
 
 - **Mengubah header/footer/ikon:** edit `partials/*.html`, lalu jalankan `node scripts/sync-partials.mjs`. Skrip menyalin isi partial ke semua halaman dan menandai menu aktif dari atribut `data-page`/`data-group` pada `<body>`.
-- **Menjalankan lokal:** buka `index.html` langsung, atau `npx http-server .` lalu kunjungi `http://localhost:8080`.
+- **Menjalankan lokal:** buka `index.html` langsung, atau `npx http-server .` lalu kunjungi `http://localhost:8080`. Dashboard (`/dashboard/`) harus dibuka lewat server.
+- **Dashboard:** dibangun dari template shadcn/ui *dashboard-01* dengan Vite, React, TypeScript, dan Tailwind CSS. Data disimpan di IndexedDB peramban (mode lokal) sampai `VITE_API_URL` diisi; model data, kontrak REST API, dan format cadangan ada di `dashboard-app/README.md`. Login memakai akun prototipe statis yang diperiksa di peramban, jadi belum aman untuk produksi.
 - **Status loket** dihitung dari zona waktu `Asia/Makassar` (WITA), jadi tetap benar meski pengunjung berada di zona lain.
 - **Tanpa JavaScript** semua konten tetap terbaca (akordeon memakai `<details>`, navigasi berupa tautan biasa).
-- **Tahap berikut (pasca-aktualisasi):** sambungkan ruang pegawai ke backend/CMS (mis. Laravel atau headless CMS) dengan otentikasi NIP/SSO, peran berbasis 4 peran di atas, log audit, dan penyimpanan foto absensi dengan koordinat.
+- **Tahap berikut (pasca-aktualisasi):** sediakan backend (mis. Laravel) yang memenuhi kontrak REST di `dashboard-app/README.md`, pindahkan login ke server (NIP/SSO) dengan akun per pegawai sesuai 4 peran di atas, simpan log audit dan foto absensi beserta koordinat di server, lalu ubah halaman portal agar membaca konten dari API yang sama.
 
 ### Checklist aksesibilitas
 
@@ -313,7 +319,7 @@ Data persyaratan lima layanan diambil dari foto papan persyaratan loket dalam do
 |---|---|---|
 | 1. Konsultasi kebutuhan, peran, alur | Okt I–II | §3, §9.1 |
 | 2. Inventarisasi & verifikasi konten | Okt II | §10, data persyaratan di `layanan.html` |
-| 3. Alur/prosedur pengelolaan informasi | Okt III | §9, halaman Struktur Organisasi, kanban ruang pegawai |
+| 3. Alur/prosedur pengelolaan informasi | Okt III | §9, halaman Struktur Organisasi, papan Alur Publikasi di dashboard |
 | 4. Pengembangan & pengisian website | Okt III–IV | Seluruh halaman + design system |
 | 5. Uji coba, sosialisasi, evaluasi | Nov I–II | Formulir masukan, tabel pemutakhiran |
 | 6. Implementasi & operasionalisasi | Nov III–IV | Deploy, pengisian data resmi |

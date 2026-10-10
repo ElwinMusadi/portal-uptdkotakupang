@@ -117,7 +117,7 @@
     <div class="auth__copy">
       <p class="eyebrow">Ruang pegawai</p>
       <h1 class="h-display" style="margin-top:20px">Kelola informasi.<br><span class="tone">Jaga keakuratannya.</span></h1>
-      <p class="body" style="margin-top:20px">Akses internal untuk mengelola konten portal, absensi lapangan, dan alat bantu pelayanan.</p>
+      <p class="body" style="margin-top:20px">Akses internal untuk mengelola seluruh konten dan informasi portal PINTU, dari draf sampai terbit.</p>
       <ul class="auth__roles" role="list">
         <li><span class="numtab__num">01</span><span><strong>Penyedia</strong> menyiapkan bahan informasi dari unit.</span></li>
         <li><span class="numtab__num">02</span><span><strong>Pemeriksa</strong> mencocokkan isi dengan sumber resmi.</span></li>
@@ -135,6 +135,7 @@
       <p class="small muted" style="margin-top:8px">Gunakan NIP dan kata sandi akun PINTU Anda.</p>
 
       <div class="auth__alert" role="alert" data-login-alert><svg class="i i--sm" aria-hidden="true" style="margin-top:2px"><use href="#i-alert"/></svg><span data-login-msg>NIP atau kata sandi belum sesuai.</span></div>
+      <div class="auth__alert auth__alert--info" role="status" data-login-info><svg class="i i--sm" aria-hidden="true" style="margin-top:2px"><use href="#i-info"/></svg><span data-login-info-msg></span></div>
 
       <div class="field" style="margin-top:26px">
         <label class="label" for="nip">NIP <small>18 digit</small></label>
@@ -143,7 +144,7 @@
       <div class="field">
         <label class="label" for="sandi">Kata sandi <a class="link small" href="#lupa" style="font-weight:450">Lupa?</a></label>
         <div class="input-wrap">
-          <input class="input" id="sandi" name="sandi" type="password" autocomplete="current-password" placeholder="Minimal 8 karakter" required>
+          <input class="input" id="sandi" name="sandi" type="password" autocomplete="current-password" placeholder="Kata sandi akun PINTU" required>
           <button class="input-wrap__btn" type="button" data-toggle-pass aria-label="Tampilkan kata sandi"><svg class="i i--sm" aria-hidden="true"><use href="#i-eye"/></svg></button>
         </div>
       </div>
@@ -152,11 +153,11 @@
       <button class="btn btn--dark btn--block" type="submit" style="margin-top:24px">Masuk<svg class="i" aria-hidden="true"><use href="#i-log-in"/></svg></button>
 
       <div class="auth__divider">atau</div>
-      <a class="btn btn--ghost btn--block" href="#sso"><svg class="i" aria-hidden="true"><use href="#i-key"/></svg>Masuk dengan SSO Pemprov</a>
+      <button class="btn btn--ghost btn--block" type="button" data-sso><svg class="i" aria-hidden="true"><use href="#i-key"/></svg>Masuk dengan SSO Pemprov</button>
 
       <p class="small muted" id="lupa" style="margin-top:20px">Lupa kata sandi atau akun terkunci? Hubungi admin di Sub Bagian Tata Usaha.</p>
       <p class="auth__security"><svg class="i" aria-hidden="true"><use href="#i-shield"/></svg><span>Setiap akses dicatat. Jangan bagikan kata sandi, termasuk kepada rekan kerja.</span></p>
-      <p class="proto-note" style="margin-top:14px">Prototipe: isi NIP 18 digit dan sandi 8 karakter untuk melihat dasbor.</p>
+      <p class="proto-note" style="margin-top:14px">Prototipe: akun statis di peramban. Autentikasi server menyusul sebelum dipakai publik.</p>
     </form>
   </section>
 </main>

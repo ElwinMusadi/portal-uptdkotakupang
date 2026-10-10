@@ -1,0 +1,1 @@
+import{u as e}from"./dist-7Qs2Do88.js";import{t}from"./not-found-DlWeRsFg.js";var n=e();function r(){return(0,n.jsx)(t,{judul:`Halaman tidak ditemukan`,deskripsi:`Alamat ini tidak ada di dashboard. Pilih menu di samping atau kembali ke Ringkasan.`,kembali:`/`,labelKembali:`Kembali ke Ringkasan`})}export{r as default};

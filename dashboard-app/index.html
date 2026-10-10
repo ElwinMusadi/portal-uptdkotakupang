@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="description" content="Dashboard pengelolaan konten PINTU — UPTD Pendapatan Daerah Wilayah Kota Kupang." />
+    <meta name="theme-color" content="#F7F6F2" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0A0A0C" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./brand/favicon-32.png" />
+    <link rel="apple-touch-icon" href="./brand/apple-touch-icon.png" />
+    <title>Dashboard PINTU — UPTD Pendapatan Daerah Wilayah Kota Kupang</title>
+    <script>
+      // Terapkan tema sebelum aplikasi dimuat agar tidak berkedip
+      try {
+        var t = localStorage.getItem("pintu.tema") || "system"
+        var dark = t === "dark" || (t === "system" && matchMedia("(prefers-color-scheme: dark)").matches)
+        if (dark) document.documentElement.classList.add("dark")
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <noscript>Dashboard PINTU memerlukan JavaScript.</noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

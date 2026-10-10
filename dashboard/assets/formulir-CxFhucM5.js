@@ -1,0 +1,1 @@
+function e(e){return new Promise(t=>{e.handleSubmit(()=>t(!0),()=>t(!1))()})}export{e as t};
