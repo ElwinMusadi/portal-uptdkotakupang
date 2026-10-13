@@ -27,22 +27,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="lg" className="data-[slot=sidebar-menu-button]:p-1.5!">
-              <Link to="/">
+              <Link to="/" aria-label={`${situs?.namaPortal ?? "PINTU"} — beranda dashboard`}>
                 <img
-                  src="/assets/img/lambang-ntt-96.webp"
+                  src="/assets/img/logo-pintu-nav.png"
                   alt=""
-                  width={28}
-                  height={30}
-                  className="h-[30px] w-auto shrink-0"
+                  width={1107}
+                  height={361}
+                  className="h-7 w-auto shrink-0 dark:hidden"
                 />
-                <span className="grid leading-tight">
-                  <span className="text-base font-semibold tracking-tight">
-                    {situs?.namaPortal ?? "PINTU"}
-                  </span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    {situs?.namaSingkat ?? "Samsat Kota Kupang"}
-                  </span>
-                </span>
+                <img
+                  src="/assets/img/logo-pintu-nav-putih.png"
+                  alt=""
+                  width={1107}
+                  height={361}
+                  className="hidden h-7 w-auto shrink-0 dark:block"
+                />
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

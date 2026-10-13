@@ -18,8 +18,8 @@
 <main id="main" class="auth">
   <section class="auth__side">
     <a class="auth__brand" href="{{ url('/') }}">
-      <img class="emblem auth__emblem" src="{{ asset('assets/img/lambang-ntt-192.webp') }}" alt="" width="38" height="40">
-      <span><strong>PINTU</strong><span>Ruang Pegawai · UPTD Kota Kupang</span></span>
+      <img class="auth__logo" src="{{ asset('assets/img/logo-pintu-nav.png') }}" alt="PINTU" width="1107" height="361">
+      <span>Ruang Pegawai · UPTD Kota Kupang</span>
     </a>
     <div class="auth__copy">
       <p class="eyebrow">Ruang pegawai</p>

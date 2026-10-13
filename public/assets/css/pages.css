@@ -636,6 +636,7 @@
 .kanal__ic--brand { background: none; border: 0; border-radius: 0; }
 .kanal__ic--brand .emblem { height: 26px; }
 .auth__emblem { height: 40px; }
+.auth__logo { display: block; flex: none; width: auto; height: 36px; }
 .emblem-sizes { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 20px; }
 .emblem-sizes figure { display: grid; justify-items: center; gap: 8px; }
 .emblem-sizes figcaption { font-family: var(--font-mono); font-size: 11px; color: var(--text-2); white-space: nowrap; }

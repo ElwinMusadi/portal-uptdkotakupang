@@ -16,7 +16,7 @@
 </head>
 <body>
   <main id="main" class="container" style="min-height:100svh;display:grid;place-content:center;text-align:center;gap:16px">
-    <img src="assets/img/lambang-ntt-96.webp" alt="" width="48" height="51" style="margin-inline:auto">
+    <img src="assets/img/icon-192.png" alt="" width="48" height="48" style="margin-inline:auto">
     <p class="body" style="margin-inline:auto">Ruang pegawai sudah pindah ke dashboard baru.</p>
     <p><a class="link" href="dashboard/">Buka Dashboard PINTU</a></p>
   </main>

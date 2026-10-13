@@ -18,7 +18,7 @@ function MemuatAwal() {
   return (
     <div className="flex min-h-svh items-center justify-center" role="status">
       <span className="sr-only">Memuat dashboard…</span>
-      <img src="/assets/img/lambang-ntt-96.webp" alt="" width={44} height={47} className="h-[47px] w-auto animate-pulse" />
+      <img src="/assets/img/icon-192.png" alt="" width={48} height={48} className="size-12 animate-pulse" />
     </div>
   )
 }
