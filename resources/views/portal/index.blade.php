@@ -1532,7 +1532,7 @@
                       id="sim-pokok"
                       type="text"
                       inputmode="numeric"
-                      value="285.000"
+                      value=""
                       data-sim-pokok
                       autocomplete="off"
                     />
@@ -1586,7 +1586,7 @@
                         <use href="#i-minus" />
                       </svg>
                     </button>
-                    <output data-sim-telat aria-live="polite">3</output>
+                    <output data-sim-telat aria-live="polite">—</output>
                     <button
                       type="button"
                       data-sim-step="1"
@@ -1598,43 +1598,39 @@
                     </button>
                   </div>
                   <p class="tile__meta">
-                    <span>bulan</span><span>maks. 24</span>
+                    <span>bulan</span><span data-tarif="maks"></span>
                   </p>
                 </div>
                 <div class="tile bento__opsen">
                   <span class="size-chip">1×1</span>
-                  <p class="tile__label">Opsen PKB 66%</p>
-                  <p class="tile__value bento__val" data-sim-out="opsen">
-                    Rp188.100
-                  </p>
+                  <p class="tile__label" data-tarif="label-opsen">Opsen PKB</p>
+                  <p class="tile__value bento__val" data-sim-out="opsen">—</p>
                 </div>
                 <div class="tile bento__denda">
                   <span class="size-chip">1×1</span>
-                  <p class="tile__label">Denda 1%/bulan</p>
-                  <p class="tile__value bento__val" data-sim-out="denda">
-                    Rp14.200
-                  </p>
+                  <p class="tile__label" data-tarif="label-denda">Denda</p>
+                  <p class="tile__value bento__val" data-sim-out="denda">—</p>
                 </div>
                 <div class="tile bento__total">
                   <span class="size-chip">2×2</span>
                   <p class="tile__label">Estimasi total bayar</p>
-                  <p class="bento__total-val" data-sim-out="total">Rp522.300</p>
+                  <p class="bento__total-val" data-sim-out="total">—</p>
                   <ul class="bento__rows" role="list">
                     <li>
                       <span>Pokok PKB</span
-                      ><span data-sim-out="pokok">Rp285.000</span>
+                      ><span data-sim-out="pokok">—</span>
                     </li>
                     <li>
                       <span>Opsen PKB</span
-                      ><span data-sim-out="opsen2">Rp188.100</span>
+                      ><span data-sim-out="opsen2">—</span>
                     </li>
                     <li>
                       <span>Denda</span
-                      ><span data-sim-out="denda2">Rp14.200</span>
+                      ><span data-sim-out="denda2">—</span>
                     </li>
                     <li>
                       <span>SWDKLLJ</span
-                      ><span data-sim-out="swd2">Rp35.000</span>
+                      ><span data-sim-out="swd2">—</span>
                     </li>
                   </ul>
                   <label class="switch on-night"
@@ -1648,13 +1644,11 @@
                 <div class="tile bento__swd">
                   <span class="size-chip">2×1</span>
                   <p class="tile__label">SWDKLLJ · Jasa Raharja</p>
-                  <p class="tile__value bento__val" data-sim-out="swd">
-                    Rp35.000
-                  </p>
+                  <p class="tile__value bento__val" data-sim-out="swd">—</p>
                 </div>
               </div>
             </div>
-            <p class="micro muted canvas__note">
+            <p class="micro muted canvas__note" data-sim-catatan aria-live="polite">
               Pratinjau interaktif dengan nilai contoh. Tagihan resmi mengikuti
               notis pajak di loket.
             </p>

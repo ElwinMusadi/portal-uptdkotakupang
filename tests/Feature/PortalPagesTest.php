@@ -88,6 +88,21 @@ class PortalPagesTest extends TestCase
         $this->assertStringContainsString('<p class="tile__value board__big" data-papan-nomor>—</p>', $html);
     }
 
+    #[TestWith(['/'])]
+    #[TestWith(['/layanan'])]
+    public function test_leaves_the_tax_simulation_rates_to_the_public_api(string $uri): void
+    {
+        $html = $this->get($uri)->assertOk()->getContent();
+
+        $this->assertSame(1, preg_match('/<section[^>]*\bid="simulasi"[^>]*>.*?<\/section>/s', $html, $simulation));
+        foreach (['66%', '1%', 'maks. 24', '285.000', 'Rp35.000', 'Rp143.000', 'Asumsi contoh'] as $exampleValue) {
+            $this->assertStringNotContainsString($exampleValue, $simulation[0]);
+        }
+        $this->assertStringContainsString('<p class="tile__label" data-tarif="label-opsen">Opsen PKB</p>', $simulation[0]);
+        $this->assertStringContainsString('<span data-tarif="maks"></span>', $simulation[0]);
+        $this->assertStringContainsString('data-sim-catatan', $simulation[0]);
+    }
+
     public function test_sends_the_contact_form_to_the_message_api_with_the_services_it_accepts(): void
     {
         $html = $this->get('/kontak')->assertOk()->getContent();

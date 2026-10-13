@@ -9,6 +9,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET` | `/api/public/keliling` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/jam` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/papan` | anonim, hanya baca | tersedia |
+| `GET` | `/api/public/tarif` | anonim, hanya baca | tersedia |
 | `POST` | `/api/public/pesan` | anonim, formulir Kontak | tersedia |
 | `POST` | `/api/masuk` | halaman Login Pegawai | tersedia |
 | `GET` | `/api/sesi` | pegawai login | tersedia |
@@ -26,6 +27,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `POST` | `/api/koleksi/keliling/hapus` | Administrator, pengelola Samsat Keliling | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/jam` | Administrator, pengelola Jam Pelayanan | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/papan` | Administrator, pengelola Papan Layanan | tersedia |
+| `GET`, `PUT` | `/api/pengaturan/tarif` | baca: semua pegawai login; simpan: Administrator, pengelola Tarif & Simulasi | tersedia |
 | `GET`, `POST` | `/api/koleksi/pesan` | Administrator, pengelola Pesan & Pengaduan | tersedia |
 | `GET`, `PATCH` | `/api/koleksi/pesan/{id}` | Administrator, pengelola Pesan & Pengaduan | tersedia |
 | `POST` | `/api/koleksi/pesan/hapus` | Administrator | tersedia |
@@ -94,7 +96,7 @@ Kunci modul untuk `modul` ([D-010](decisions.md#d-010--2026-10-13--penugasan-mod
 | `jam` | Jam Pelayanan (termasuk koleksi `penyesuaian`) | `halaman` | Halaman Statis |
 | `keliling` | Samsat Keliling | `pemutakhiran` | Jadwal Pemutakhiran |
 
-Endpoint konten dashboard (`/api/koleksi/…`, `/api/pengaturan/…`) wajib menolak pegawai yang tidak mengelola modul koleksi atau pengaturan itu. `/api/koleksi/faq`, `/api/koleksi/keliling`, `/api/koleksi/penyesuaian`, `/api/koleksi/pesan`, `/api/pengaturan/jam`, dan `/api/pengaturan/papan` sudah melakukannya.
+Endpoint konten dashboard (`/api/koleksi/…`, `/api/pengaturan/…`) wajib menolak pegawai yang tidak mengelola modul koleksi atau pengaturan itu. `/api/koleksi/faq`, `/api/koleksi/keliling`, `/api/koleksi/penyesuaian`, `/api/koleksi/pesan`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, dan `/api/pengaturan/tarif` sudah melakukannya; tarif boleh dibaca semua pegawai untuk Kalkulator PKB, tetapi hanya pengelolanya yang boleh menyimpan.
 
 ## Tanya Jawab di dashboard
 
@@ -207,6 +209,28 @@ Dipakai halaman *Papan Layanan* di dashboard ([D-015](decisions.md#d-015--2026-1
 Penyimpanan tercatat di log aktivitas sebagai "memperbarui Papan Layanan".
 
 Kode: `app/Http/Controllers/Dashboard/ServiceBoardController.php`, `app/Http/Requests/Dashboard/UpdateServiceBoardRequest.php`, `app/Actions/SaveSetting.php`, `app/Models/Setting.php`. Tes: `tests/Feature/ServiceBoardControllerTest.php`.
+
+## Tarif & Simulasi di dashboard
+
+Dipakai halaman *Tarif & Simulasi* dan *Kalkulator PKB* di dashboard ([D-017](decisions.md#d-017--2026-10-13--tarif--simulasi-tersimpan-di-server)). Tamu mendapat `401`. Semua pegawai yang login boleh membaca; pegawai yang tidak mengelola modul `tarif` mendapat `403` `{"message": "Modul Tarif & Simulasi belum ditugaskan kepada Anda."}` saat menyimpan.
+
+```json
+{
+  "opsenPersen": 66, "dendaPersenPerBulan": 1.5, "maksBulanDenda": 24,
+  "swdklljMotor": 35000, "swdklljMobil": 143000,
+  "contohPokok": 285000, "contohJenis": "motor", "contohTelat": 3,
+  "catatan": "Tagihan resmi mengikuti notis pajak di loket."
+}
+```
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `GET /api/pengaturan/tarif` | — | `200` dokumen di atas. Sebelum pertama kali disimpan: semua angka `0`, `contohJenis` `motor`, catatan kosong. |
+| `PUT /api/pengaturan/tarif` | dokumen lengkap | `200` dokumen tersimpan. Persentase bulat disimpan sebagai bilangan bulat (`66.0` menjadi `66`); isi yang sama dengan yang tersimpan tidak dicatat. `422` bila opsen di luar 0–100, denda di luar 0–10 per bulan, maksimal bulan denda atau bulan terlambat contoh bukan bilangan bulat 0–60, SWDKLLJ bukan bilangan bulat Rp0–Rp10.000.000, pokok contoh bukan bilangan bulat Rp0–Rp999.999.999, jenis selain `motor` atau `mobil`, atau catatan lebih dari 300 karakter atau berisi karakter kontrol. |
+
+Penyimpanan tercatat di log aktivitas sebagai "memperbarui Tarif & Simulasi".
+
+Kode: `app/Http/Controllers/Dashboard/TariffController.php`, `app/Http/Requests/Dashboard/UpdateTariffRequest.php`, `app/Actions/SaveSetting.php`, `app/Models/Setting.php`, `app/Policies/SettingPolicy.php`. Tes: `tests/Feature/TariffControllerTest.php`.
 
 ## Pesan & Pengaduan di dashboard
 
@@ -321,6 +345,18 @@ Papan layanan untuk beranda portal ([D-015](decisions.md#d-015--2026-10-13--papa
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 
 Kode: `app/Http/Controllers/PublicServiceBoardController.php`, `app/Actions/ShowPublicServiceBoard.php`. Tes: `tests/Feature/PublicServiceBoardControllerTest.php`.
+
+## `GET /api/public/tarif`
+
+Tarif untuk simulasi PKB di beranda dan halaman Layanan ([D-017](decisions.md#d-017--2026-10-13--tarif--simulasi-tersimpan-di-server), `initSim()` di `public/assets/js/main.js`). Bentuknya sama dengan dokumen dashboard, ditambah `diperbarui`: waktu tarif terakhir disimpan, atau `null` bila belum pernah disimpan.
+
+| Hal | Perilaku |
+|---|---|
+| Berhasil | `200`. Bila `diperbarui` `null`, semua tarif bernilai nol dan portal menyatakan simulasi belum tersedia. Catatan wajib ditampilkan sebagai teks polos. |
+| Galat | `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah batas laju yang sama dengan `GET /api/public/faq`; `503` bila data tidak bisa dibaca, tidak pernah tarif nol sebagai gantinya. |
+| Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
+
+Kode: `app/Http/Controllers/PublicTariffController.php`, `app/Actions/ShowPublicTariff.php`. Tes: `tests/Feature/PublicTariffControllerTest.php`.
 
 ## `POST /api/public/pesan`
 

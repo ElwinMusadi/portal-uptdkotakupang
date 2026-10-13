@@ -19,14 +19,6 @@
      ------------------------------------------------------------------ */
   const CONFIG = {
     timeZone: "Asia/Makassar", // WITA
-    // Parameter simulasi (contoh; sesuaikan Perda Pajak Daerah NTT & ketentuan Jasa Raharja).
-    sim: {
-      opsen: 0.66,           // opsen PKB untuk kabupaten/kota
-      dendaPerBulan: 0.01,   // sanksi administratif per bulan
-      maksBulan: 24,
-      swdkllj: { motor: 35000, mobil: 143000 },
-      default: { pokok: 285000, jenis: "motor", telat: 3, putih: false },
-    },
   };
 
   const HARI = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
@@ -599,93 +591,201 @@
     }
   }
 
-  /* ---------- Simulasi PKB ---------- */
-  function initSim() {
-    $$("[data-sim]").forEach((root) => {
-      const S = CONFIG.sim;
-      const state = { ...S.default };
-      const inPokok = $("[data-sim-pokok]", root);
-      const outTelat = $("[data-sim-telat]", root);
-      const putih = $("[data-sim-putih]", root);
-      const out = (k) => $$(`[data-sim-out="${k}"]`, root);
-      const set = (k, v, raw) => out(k).forEach((el) => {
-        el.textContent = v; el.dataset.full = v; el.removeAttribute("title");
-        if (raw == null) delete el.dataset.raw; else el.dataset.raw = raw;
-      });
+  /* ---------- Simulasi PKB ----------
+     Tarif dikelola di dashboard (Tarif & Simulasi) dan dibaca dari
+     GET /api/public/tarif. Rumusnya sama dengan Kalkulator PKB di dashboard
+     (resources/js/dashboard/lib/pajak.ts). Tidak ada tarif cadangan: selama
+     dimuat, sebelum tarif pertama kali disimpan petugas, atau bila API gagal,
+     simulasi dinonaktifkan dan keterangannya tampil di bawah kanvas. */
+  const persenFmt = new Intl.NumberFormat("id-ID", { maximumFractionDigits: 2 });
+  const persen = (n) => `${persenFmt.format(n)}%`;
 
-      const parse = (s) => Number(String(s).replace(/[^\d]/g, "")) || 0;
-      const render = () => {
-        const opsen = state.pokok * S.opsen;
-        const denda = state.putih ? 0 : (state.pokok + opsen) * S.dendaPerBulan * Math.min(state.telat, S.maksBulan);
-        const swd = S.swdkllj[state.jenis];
-        const total = state.pokok + opsen + denda + swd;
-        set("pokok", rupiah(state.pokok));
-        set("opsen", rupiah(opsen), opsen); set("opsen2", rupiah(opsen));
-        set("denda", state.putih ? "Rp0 · dihapus" : rupiah(denda), state.putih ? null : denda); set("denda2", rupiah(denda));
-        set("swd", rupiah(swd), swd); set("swd2", rupiah(swd));
-        set("total", rupiah(total)); // total tidak pernah diringkas: angka lengkap hanya ada di sini
-        if (outTelat) outTelat.textContent = state.telat;
-        $$("[data-sim-jenis] [role=radio]", root).forEach((b) => b.setAttribute("aria-checked", String(b.dataset.val === state.jenis)));
-        if (putih) putih.checked = state.putih;
-        if (inPokok && document.activeElement !== inPokok) inPokok.value = fmt.format(state.pokok);
-        fitAll();
-      };
-      // Angka dikecilkan sampai muat. Bila di ukuran minimum tetap tidak muat (tile 1×1 yang sempit),
-      // tampilkan format ringkas ("Rp660 jt"); angka lengkap tetap ada di rincian dan di tooltip.
-      const fitAll = () => $$(".bento__val, .bento__total-val", root).forEach((el) => {
-        const min = el.matches(".bento__total-val") ? 18 : 14;
-        if (el.dataset.full) { el.textContent = el.dataset.full; el.removeAttribute("title"); }
-        el.style.whiteSpace = "";
+  async function muatTarif() {
+    const t = await ambilJson("/api/public/tarif");
+    const angka = ["opsenPersen", "dendaPersenPerBulan", "maksBulanDenda", "swdklljMotor", "swdklljMobil", "contohPokok", "contohTelat"];
+    if (!angka.every((k) => Number.isFinite(t?.[k]) && t[k] >= 0) || !["motor", "mobil"].includes(t.contohJenis) || typeof t.catatan !== "string") {
+      throw new Error("Respons tidak dikenal");
+    }
+    return t;
+  }
+
+  /** Satu kanvas [data-sim]; aktif hanya setelah menerima tarif */
+  function simulasi(root) {
+    let T = null;
+    const state = { pokok: 0, jenis: "motor", telat: 0, putih: false };
+    const awal = () => ({ pokok: T.contohPokok, jenis: T.contohJenis, telat: Math.min(T.contohTelat, T.maksBulanDenda), putih: false });
+    const kontrol = $$("input, button", root);
+    const catatan = root.parentElement && $("[data-sim-catatan]", root.parentElement);
+    const catatanBawaan = catatan ? catatan.textContent.replace(/\s+/g, " ").trim() : "";
+    const inPokok = $("[data-sim-pokok]", root);
+    const outTelat = $("[data-sim-telat]", root);
+    const putih = $("[data-sim-putih]", root);
+    const out = (k) => $$(`[data-sim-out="${k}"]`, root);
+    const set = (k, v, raw) => out(k).forEach((el) => {
+      el.textContent = v; el.dataset.full = v; el.removeAttribute("title");
+      if (raw == null) delete el.dataset.raw; else el.dataset.raw = raw;
+    });
+
+    const parse = (s) => Number(String(s).replace(/[^\d]/g, "")) || 0;
+    const render = () => {
+      const opsen = state.pokok * (T.opsenPersen / 100);
+      const denda = state.putih ? 0 : (state.pokok + opsen) * (T.dendaPersenPerBulan / 100) * Math.min(state.telat, T.maksBulanDenda);
+      const swd = state.jenis === "mobil" ? T.swdklljMobil : T.swdklljMotor;
+      const total = state.pokok + opsen + denda + swd;
+      set("pokok", rupiah(state.pokok));
+      set("opsen", rupiah(opsen), opsen); set("opsen2", rupiah(opsen));
+      set("denda", state.putih ? "Rp0 · dihapus" : rupiah(denda), state.putih ? null : denda); set("denda2", rupiah(denda));
+      set("swd", rupiah(swd), swd); set("swd2", rupiah(swd));
+      set("total", rupiah(total)); // total tidak pernah diringkas: angka lengkap hanya ada di sini
+      if (outTelat) outTelat.textContent = state.telat;
+      $$("[data-sim-jenis] [role=radio]", root).forEach((b) => b.setAttribute("aria-checked", String(b.dataset.val === state.jenis)));
+      if (putih) putih.checked = state.putih;
+      if (inPokok && document.activeElement !== inPokok) inPokok.value = fmt.format(state.pokok);
+      fitAll();
+    };
+    // Angka dikecilkan sampai muat. Bila di ukuran minimum tetap tidak muat (tile 1×1 yang sempit),
+    // tampilkan format ringkas ("Rp660 jt"); angka lengkap tetap ada di rincian dan di tooltip.
+    const fitAll = () => $$(".bento__val, .bento__total-val", root).forEach((el) => {
+      const min = el.matches(".bento__total-val") ? 18 : 14;
+      if (el.dataset.full) { el.textContent = el.dataset.full; el.removeAttribute("title"); }
+      el.style.whiteSpace = "";
+      fitText(el, min);
+      if (el.dataset.raw && overflows(el)) {
+        el.title = el.dataset.full;
+        el.textContent = "Rp" + compact.format(Number(el.dataset.raw));
         fitText(el, min);
-        if (el.dataset.raw && overflows(el)) {
-          el.title = el.dataset.full;
-          el.textContent = "Rp" + compact.format(Number(el.dataset.raw));
-          fitText(el, min);
-        }
-        // Pengaman terakhir untuk font sistem yang sangat lebar: boleh membungkus, tidak pernah terpotong
-        if (overflows(el)) el.style.whiteSpace = "normal";
-      });
-      // Hitung ulang saat lebar kanvas berubah (rotasi layar, ubah ukuran jendela) dan setelah font termuat
-      if ("ResizeObserver" in window) {
-        let lastW = 0;
-        new ResizeObserver(([entry]) => {
-          const w = Math.round(entry.contentRect.width);
-          if (w !== lastW) { lastW = w; fitAll(); }
-        }).observe(root);
       }
-      document.fonts?.ready.then(fitAll);
-      document.fonts?.addEventListener?.("loadingdone", fitAll);
+      // Pengaman terakhir untuk font sistem yang sangat lebar: boleh membungkus, tidak pernah terpotong
+      if (overflows(el)) el.style.whiteSpace = "normal";
+    });
+    // Hitung ulang saat lebar kanvas berubah (rotasi layar, ubah ukuran jendela) dan setelah font termuat
+    if ("ResizeObserver" in window) {
+      let lastW = 0;
+      new ResizeObserver(([entry]) => {
+        const w = Math.round(entry.contentRect.width);
+        if (w !== lastW) { lastW = w; fitAll(); }
+      }).observe(root);
+    }
+    document.fonts?.ready.then(fitAll);
+    document.fonts?.addEventListener?.("loadingdone", fitAll);
 
-      inPokok?.addEventListener("input", () => {
-        state.pokok = Math.min(parse(inPokok.value), 999999999);
-        const caret = inPokok.value.length - inPokok.selectionStart;
-        inPokok.value = state.pokok ? fmt.format(state.pokok) : "";
-        const pos = Math.max(0, inPokok.value.length - caret);
-        inPokok.setSelectionRange(pos, pos);
-        render();
-      });
-      inPokok?.addEventListener("blur", render);
-      $$("[data-sim-step]", root).forEach((b) => b.addEventListener("click", () => {
-        state.telat = Math.max(0, Math.min(S.maksBulan, state.telat + Number(b.dataset.simStep)));
-        render();
-      }));
-      $$("[data-sim-jenis] [role=radio]", root).forEach((b, i, all) => {
-        b.addEventListener("click", () => {
-          state.jenis = b.dataset.val;
-          if (state.pokok === S.default.pokok || state.pokok === 2450000) state.pokok = state.jenis === "mobil" ? 2450000 : S.default.pokok;
-          render();
-        });
-        b.addEventListener("keydown", (e) => {
-          const dir = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
-          if (!dir) return;
-          e.preventDefault();
-          const n = all[(i + dir + all.length) % all.length]; n.click(); n.focus();
-        });
-      });
-      putih?.addEventListener("change", () => { state.putih = putih.checked; render(); });
-      $("[data-sim-reset]", root)?.addEventListener("click", () => { Object.assign(state, S.default); render(); toast("Simulasi dikembalikan ke nilai contoh."); });
+    inPokok?.addEventListener("input", () => {
+      if (!T) return;
+      state.pokok = Math.min(parse(inPokok.value), 999999999);
+      const caret = inPokok.value.length - inPokok.selectionStart;
+      inPokok.value = state.pokok ? fmt.format(state.pokok) : "";
+      const pos = Math.max(0, inPokok.value.length - caret);
+      inPokok.setSelectionRange(pos, pos);
       render();
     });
+    inPokok?.addEventListener("blur", () => { if (T) render(); });
+    $$("[data-sim-step]", root).forEach((b) => b.addEventListener("click", () => {
+      if (!T) return;
+      state.telat = Math.max(0, Math.min(T.maksBulanDenda, state.telat + Number(b.dataset.simStep)));
+      render();
+    }));
+    $$("[data-sim-jenis] [role=radio]", root).forEach((b, i, all) => {
+      b.addEventListener("click", () => {
+        if (!T) return;
+        state.jenis = b.dataset.val;
+        render();
+      });
+      b.addEventListener("keydown", (e) => {
+        const dir = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+        if (!dir) return;
+        e.preventDefault();
+        const n = all[(i + dir + all.length) % all.length]; n.click(); n.focus();
+      });
+    });
+    putih?.addEventListener("change", () => { if (!T) return; state.putih = putih.checked; render(); });
+    $("[data-sim-reset]", root)?.addEventListener("click", () => {
+      if (!T) return;
+      Object.assign(state, awal());
+      render();
+      toast("Simulasi dikembalikan ke nilai contoh.");
+    });
+
+    return {
+      /** Nonaktifkan kanvas; pesan (dan tombol coba lagi) tampil di bawahnya */
+      nonaktif(pesan, tombol) {
+        T = null;
+        root.classList.add("is-off");
+        kontrol.forEach((el) => (el.disabled = true));
+        ["pokok", "opsen", "opsen2", "denda", "denda2", "swd", "swd2", "total"].forEach((k) => set(k, "—"));
+        if (outTelat) outTelat.textContent = "—";
+        if (inPokok) inPokok.value = "";
+        if (putih) putih.checked = false;
+        if (catatan) {
+          catatan.textContent = pesan;
+          if (tombol) catatan.append(tombol);
+        }
+        fitAll();
+      },
+      aktifkan(tarif) {
+        T = tarif;
+        root.classList.remove("is-off");
+        kontrol.forEach((el) => (el.disabled = false));
+        Object.assign(state, awal());
+        if (catatan) catatan.textContent = T.catatan || catatanBawaan;
+        render();
+      },
+    };
+  }
+
+  function initSim() {
+    const sims = $$("[data-sim]").map(simulasi);
+    const params = $$("[data-tarif]");
+    if (!sims.length && !params.length) return;
+    params.forEach((el) => (el.dataset.tarifAwal = el.textContent));
+
+    // Teks parameter di samping kanvas (halaman Layanan) dan di label tile
+    const isiParameter = (t) => {
+      const maks = t && `maks. ${t.maksBulanDenda}`;
+      const teks = t && {
+        "label-opsen": `Opsen PKB ${persen(t.opsenPersen)}`,
+        "opsen-pokok": `${persen(t.opsenPersen)} dari pokok`,
+        "label-denda": `Denda ${persen(t.dendaPersenPerBulan)}/bulan`,
+        "denda-maks": `${persen(t.dendaPersenPerBulan)} per bulan, ${maks}`,
+        maks,
+        swdkllj: `${rupiah(t.swdklljMotor)} / ${rupiah(t.swdklljMobil)}`,
+      };
+      params.forEach((el) => {
+        if (el.dataset.tarif === "diperbarui") {
+          const w = t && nowWita(new Date(t.diperbarui));
+          el.textContent = w ? `Tarif diperbarui ${w.d} ${BULAN[w.mo - 1]} ${w.y}.` : "";
+          el.hidden = !w;
+          return;
+        }
+        el.textContent = teks?.[el.dataset.tarif] ?? el.dataset.tarifAwal;
+      });
+    };
+
+    const muat = async (fokus) => {
+      sims.forEach((s) => s.nonaktif("Memuat tarif simulasi…"));
+      isiParameter(null);
+      try {
+        const t = await muatTarif();
+        if (typeof t.diperbarui !== "string") {
+          sims.forEach((s) => s.nonaktif("Simulasi belum tersedia karena tarif belum ditetapkan petugas. Tagihan resmi mengikuti notis pajak di loket."));
+          return;
+        }
+        isiParameter(t);
+        sims.forEach((s) => s.aktifkan(t));
+      } catch {
+        const tombol = sims.map(() => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "link";
+          b.textContent = "Coba lagi";
+          b.addEventListener("click", () => muat(true));
+          return b;
+        });
+        sims.forEach((s, i) => s.nonaktif("Tarif simulasi belum dapat dimuat. ", tombol[i]));
+        if (fokus) tombol[0]?.focus();
+      }
+    };
+
+    muat(false);
   }
 
   /* ---------- Dialog ---------- */

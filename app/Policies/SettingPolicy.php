@@ -3,21 +3,29 @@
 namespace App\Policies;
 
 use App\Enums\DashboardModule;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
 /**
  * A settings document belongs to the dashboard module of the same name
  * (D-010), e.g. "jam" to Jam Pelayanan: administrators and the employees
- * assigned to that module may read and save it.
+ * assigned to that module may read and save it. The tariff is the exception
+ * for reading (D-017).
  */
 class SettingPolicy
 {
     /**
-     * Determine whether the user can read the named settings document.
+     * Determine whether the user can read the named settings document. Every
+     * employee may read the tariff: the Kalkulator PKB is open to all of them
+     * (D-010), and the portal publishes the same rates.
      */
     public function view(User $user, string $name): Response
     {
+        if ($name === Setting::TARIFF) {
+            return Response::allow();
+        }
+
         return $this->managesSetting($user, $name);
     }
 

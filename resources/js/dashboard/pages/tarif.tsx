@@ -1,8 +1,10 @@
+import { IconServer } from "@tabler/icons-react"
 import { z } from "zod"
 
 import { Bagian, Baris, Halaman, PengantarHalaman } from "@/components/data/page"
 import { FieldAngka, FieldArea, FieldPilih } from "@/components/form/fields"
 import { FormPengaturan } from "@/components/form/settings-form"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import type { Tarif } from "@/lib/api"
 import { rupiah } from "@/lib/format"
 import { hitungPkb } from "@/lib/pajak"
@@ -12,8 +14,8 @@ const schema = z.object({
   opsenPersen: v.angka({ min: 0, maks: 100 }),
   dendaPersenPerBulan: v.angka({ min: 0, maks: 10 }),
   maksBulanDenda: v.angka({ min: 0, maks: 60, bulat: true }),
-  swdklljMotor: v.angka({ min: 0, bulat: true }),
-  swdklljMobil: v.angka({ min: 0, bulat: true }),
+  swdklljMotor: v.angka({ min: 0, maks: 10000000, bulat: true }),
+  swdklljMobil: v.angka({ min: 0, maks: 10000000, bulat: true }),
   contohPokok: v.angka({ min: 0, maks: 999999999, bulat: true }),
   contohJenis: z.enum(["motor", "mobil"]),
   contohTelat: v.angka({ min: 0, maks: 60, bulat: true }),
@@ -48,6 +50,15 @@ export default function HalamanTarif() {
   return (
     <Halaman>
       <PengantarHalaman deskripsi="Parameter simulasi pajak di beranda dan halaman Layanan. Sesuaikan dengan Perda Pajak Daerah Provinsi NTT dan ketentuan Jasa Raharja; tagihan resmi tetap mengikuti notis." />
+      <Alert>
+        <IconServer />
+        <AlertTitle>Tersimpan di server</AlertTitle>
+        <AlertDescription>
+          Tarif ini dipakai bersama semua pengelola Tarif & Simulasi, langsung dipakai simulasi PKB di portal, dan
+          dibaca Kalkulator PKB semua pegawai. Sebelum tarif disimpan pertama kali, simulasi di portal menampilkan
+          keterangan belum tersedia.
+        </AlertDescription>
+      </Alert>
       <FormPengaturan nama="tarif" schema={schema}>
         {(form) => {
           const nilai = form.watch()

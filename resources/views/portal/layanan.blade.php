@@ -366,12 +366,12 @@
         <table class="table table--fluid" style="margin-top:28px;max-width:420px">
           <caption class="sr-only">Asumsi perhitungan simulasi</caption>
           <tbody>
-            <tr><td>Opsen PKB</td><td class="num">66% dari pokok</td></tr>
-            <tr><td>Denda keterlambatan</td><td class="num">1% per bulan, maks. 24</td></tr>
-            <tr><td>SWDKLLJ motor / mobil</td><td class="num">Rp35.000 / Rp143.000</td></tr>
+            <tr><td>Opsen PKB</td><td class="num" data-tarif="opsen-pokok">—</td></tr>
+            <tr><td>Denda keterlambatan</td><td class="num" data-tarif="denda-maks">—</td></tr>
+            <tr><td>SWDKLLJ motor / mobil</td><td class="num" data-tarif="swdkllj">—</td></tr>
           </tbody>
         </table>
-        <p class="proto-note" style="margin-top:14px">Asumsi contoh. Wajib diverifikasi petugas sebelum terbit.</p>
+        <p class="micro muted" style="margin-top:14px" data-tarif="diperbarui" hidden></p>
       </div>
       <div data-reveal>
         <div class="canvas" data-sim>
@@ -380,16 +380,16 @@
             <button class="btn btn--ghost btn--xs" type="button" data-sim-reset><svg class="i i--sm" aria-hidden="true"><use href="#i-refresh"/></svg>Reset</button>
           </div>
           <div class="bento">
-            <div class="tile bento__pokok"><span class="size-chip">2×1</span><label class="tile__label" for="sim-pokok-2">Pokok PKB di notis</label><div class="bento__money"><span>Rp</span><input class="bento__input" id="sim-pokok-2" type="text" inputmode="numeric" value="285.000" data-sim-pokok autocomplete="off"></div></div>
+            <div class="tile bento__pokok"><span class="size-chip">2×1</span><label class="tile__label" for="sim-pokok-2">Pokok PKB di notis</label><div class="bento__money"><span>Rp</span><input class="bento__input" id="sim-pokok-2" type="text" inputmode="numeric" value="" data-sim-pokok autocomplete="off"></div></div>
             <div class="tile bento__jenis"><span class="size-chip">1×1</span><p class="tile__label" id="sim2-jenis-l">Jenis</p><div class="seg" role="radiogroup" aria-labelledby="sim2-jenis-l" data-sim-jenis><button type="button" role="radio" aria-checked="true" data-val="motor"><svg class="i" aria-hidden="true"><use href="#i-motor"/></svg>Motor</button><button type="button" role="radio" aria-checked="false" data-val="mobil"><svg class="i" aria-hidden="true"><use href="#i-car"/></svg>Mobil</button></div></div>
-            <div class="tile bento__telat"><span class="size-chip">1×1</span><p class="tile__label" id="sim2-telat-l">Terlambat</p><div class="stepper" role="group" aria-labelledby="sim2-telat-l"><button type="button" data-sim-step="-1" aria-label="Kurangi satu bulan"><svg class="i i--sm" aria-hidden="true"><use href="#i-minus"/></svg></button><output data-sim-telat aria-live="polite">3</output><button type="button" data-sim-step="1" aria-label="Tambah satu bulan"><svg class="i i--sm" aria-hidden="true"><use href="#i-plus"/></svg></button></div><p class="tile__meta"><span>bulan</span><span>maks. 24</span></p></div>
-            <div class="tile bento__opsen"><span class="size-chip">1×1</span><p class="tile__label">Opsen PKB 66%</p><p class="tile__value bento__val" data-sim-out="opsen">—</p></div>
-            <div class="tile bento__denda"><span class="size-chip">1×1</span><p class="tile__label">Denda 1%/bulan</p><p class="tile__value bento__val" data-sim-out="denda">—</p></div>
+            <div class="tile bento__telat"><span class="size-chip">1×1</span><p class="tile__label" id="sim2-telat-l">Terlambat</p><div class="stepper" role="group" aria-labelledby="sim2-telat-l"><button type="button" data-sim-step="-1" aria-label="Kurangi satu bulan"><svg class="i i--sm" aria-hidden="true"><use href="#i-minus"/></svg></button><output data-sim-telat aria-live="polite">—</output><button type="button" data-sim-step="1" aria-label="Tambah satu bulan"><svg class="i i--sm" aria-hidden="true"><use href="#i-plus"/></svg></button></div><p class="tile__meta"><span>bulan</span><span data-tarif="maks"></span></p></div>
+            <div class="tile bento__opsen"><span class="size-chip">1×1</span><p class="tile__label" data-tarif="label-opsen">Opsen PKB</p><p class="tile__value bento__val" data-sim-out="opsen">—</p></div>
+            <div class="tile bento__denda"><span class="size-chip">1×1</span><p class="tile__label" data-tarif="label-denda">Denda</p><p class="tile__value bento__val" data-sim-out="denda">—</p></div>
             <div class="tile bento__total"><span class="size-chip">2×2</span><p class="tile__label">Estimasi total bayar</p><p class="bento__total-val" data-sim-out="total">—</p><ul class="bento__rows" role="list"><li><span>Pokok PKB</span><span data-sim-out="pokok">—</span></li><li><span>Opsen PKB</span><span data-sim-out="opsen2">—</span></li><li><span>Denda</span><span data-sim-out="denda2">—</span></li><li><span>SWDKLLJ</span><span data-sim-out="swd2">—</span></li></ul><label class="switch on-night"><input type="checkbox" data-sim-putih><span class="switch__track" aria-hidden="true"></span>Program pemutihan denda</label></div>
             <div class="tile bento__swd"><span class="size-chip">2×1</span><p class="tile__label">SWDKLLJ · Jasa Raharja</p><p class="tile__value bento__val" data-sim-out="swd">—</p></div>
           </div>
         </div>
-        <p class="micro muted canvas__note">Pratinjau interaktif dengan nilai contoh. Tagihan resmi mengikuti notis pajak di loket.</p>
+        <p class="micro muted canvas__note" data-sim-catatan aria-live="polite">Pratinjau interaktif dengan nilai contoh. Tagihan resmi mengikuti notis pajak di loket.</p>
       </div>
     </div>
   </section>

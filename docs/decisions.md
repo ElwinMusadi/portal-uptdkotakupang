@@ -203,3 +203,20 @@ Formulir Kontak di portal kini benar-benar mengirim pesan ke server, dan pesan d
 | Data contoh | Pesan contoh di peramban tidak dipindahkan ke server. |
 
 Belum dibuat: pemberitahuan surel atau WhatsApp kepada petugas saat pesan masuk, pengecekan status tiket oleh warga, dan masa simpan otomatis.
+
+## D-017 · 2026-10-13 · Tarif & Simulasi tersimpan di server
+
+Tarif & Simulasi kini tersimpan di server. Simulasi PKB di beranda dan halaman Layanan menghitung dengan tarif dari dashboard, bukan lagi nilai contoh yang tertanam di kode portal.
+
+| Hal | Keputusan |
+|---|---|
+| Penyimpanan | Opsen PKB (0–100%), denda keterlambatan (0–10% per bulan), maksimal bulan denda (0–60), SWDKLLJ sepeda motor dan mobil (Rp0–Rp10.000.000), nilai awal simulasi (pokok PKB, jenis kendaraan, bulan terlambat), dan catatan di bawah simulasi (maks. 300 karakter) disimpan sebagai dokumen pengaturan `tarif` (`/api/pengaturan/tarif`). |
+| Akses | Menyimpan: Administrator dan Pegawai UPTD yang mengelola Tarif & Simulasi; pegawai lain ditolak `403`. Membaca: **semua pegawai yang login**, karena Kalkulator PKB terbuka untuk semua pegawai (D-010) dan tarif yang sama memang diumumkan di portal. |
+| Sebelum disimpan | Semua tarif bernilai nol. Portal menyatakan simulasi belum tersedia dan Kalkulator PKB menampilkan peringatan. Tidak ada tarif contoh yang dipakai sebagai cadangan. |
+| Portal | `GET /api/public/tarif` memberikan tarif dan waktu penyimpanannya. Simulasi di beranda dan halaman Layanan, label tile (opsen, denda, maks. bulan), dan tabel asumsi di halaman Layanan diisi dari sana. Catatan dari dashboard menggantikan keterangan di bawah simulasi; bila kosong, keterangan bawaan tetap tampil. Catatan "Asumsi contoh. Wajib diverifikasi petugas sebelum terbit." diganti tanggal pembaruan tarif. Selama dimuat, sebelum tarif disimpan, atau bila API gagal, simulasi dinonaktifkan dan keterangannya tampil di bawah kanvas, dengan tombol coba lagi saat gagal. |
+| Simulasi | Mengganti jenis kendaraan tidak lagi mengganti pokok PKB ke nilai contoh mobil (Rp2.450.000) yang tertanam di kode. Bulan terlambat dibatasi maksimal bulan denda. |
+| Data contoh | Tarif contoh di peramban tidak dipindahkan ke server. |
+
+Satu kunjungan beranda kini memakai lima permintaan dari batas laju API publik (D-013).
+
+Belum dibuat: tanggal mulai berlaku tarif dan riwayat nilai tarif sebelumnya (log aktivitas hanya mencatat "memperbarui Tarif & Simulasi").

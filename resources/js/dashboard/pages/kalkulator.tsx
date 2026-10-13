@@ -1,6 +1,7 @@
 import * as React from "react"
 import {
   IconAdjustments,
+  IconAlertTriangle,
   IconCopy,
   IconMinus,
   IconPlus,
@@ -11,6 +12,7 @@ import { Link } from "react-router"
 import { toast } from "sonner"
 
 import { Halaman, PengantarHalaman } from "@/components/data/page"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -29,7 +31,7 @@ import { Switch } from "@/components/ui/switch"
 import type { Tarif } from "@/lib/api"
 import { angka, rupiah } from "@/lib/format"
 import { hitungPkb, LABEL_KENDARAAN, type JenisKendaraan, type MasukanPkb } from "@/lib/pajak"
-import { usePengaturan } from "@/lib/queries"
+import { usePengaturan, useWaktuPengaturan } from "@/lib/queries"
 
 const MAKS_TELAT = 120
 
@@ -308,7 +310,9 @@ function Kalkulator({ tarif }: { tarif: Tarif }) {
 }
 
 export default function HalamanKalkulator() {
-  const { data: tarif, isLoading } = usePengaturan("tarif")
+  const { data: tarif, isLoading, error } = usePengaturan("tarif")
+  const { data: waktu } = useWaktuPengaturan()
+  const belumDitetapkan = waktu !== undefined && !waktu.tarif
   return (
     <Halaman>
       <PengantarHalaman deskripsi="Hitung estimasi tagihan PKB untuk wajib pajak di loket, termasuk saat masa amnesti denda. Rumus dan parameternya sama dengan simulasi di portal.">
@@ -319,7 +323,22 @@ export default function HalamanKalkulator() {
           </Link>
         </Button>
       </PengantarHalaman>
-      {isLoading || !tarif ? (
+      {belumDitetapkan && (
+        <Alert>
+          <IconAlertTriangle />
+          <AlertTitle>Tarif belum ditetapkan</AlertTitle>
+          <AlertDescription>
+            Semua tarif masih nol, jadi hasil hitungan belum bisa dipakai. Simulasi di portal juga belum tersedia
+            sampai pengelola Tarif & Simulasi menyimpan tarifnya.
+          </AlertDescription>
+        </Alert>
+      )}
+      {error ? (
+        <Alert variant="destructive">
+          <AlertTitle>Tarif gagal dimuat</AlertTitle>
+          <AlertDescription>{error instanceof Error ? error.message : String(error)}</AlertDescription>
+        </Alert>
+      ) : isLoading || !tarif ? (
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_400px]">
           <Skeleton className="h-[30rem] rounded-xl" />
           <Skeleton className="h-80 rounded-xl" />
