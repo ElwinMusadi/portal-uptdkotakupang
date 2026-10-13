@@ -154,3 +154,19 @@ Samsat Keliling menjadi modul kedua yang tersimpan di server, dengan pola yang s
 | Batas laju | Bawaan `PINTU_PUBLIC_API_REQUESTS_PER_MINUTE` naik dari 60 menjadi **300** permintaan per menit per IP, **menggantikan nilai di D-004**. Batas ini dipakai bersama semua API publik; satu kunjungan beranda kini memakai dua permintaan (Tanya Jawab dan Samsat Keliling), dan pengunjung yang berbagi satu IP (CGNAT seluler, jaringan kantor) perlu ruang lebih. |
 
 Belum dibuat: penyesuaian jadwal (libur, jam khusus) di server dan modul lain di server.
+
+## D-014 · 2026-10-13 · Jam Pelayanan tersimpan di server
+
+Jam Pelayanan menjadi modul ketiga yang tersimpan di server (D-011, D-013) dan pengaturan pertama yang tidak lagi tersimpan di peramban. Status loket, hitung mundur, dan daftar jam di portal kini mengikuti dashboard.
+
+| Hal | Keputusan |
+|---|---|
+| Penyimpanan | Jam loket per hari (Senin–Minggu, Minggu mewakili hari libur), batas penerimaan berkas, catatan untuk warga, dan pemberitahuan perubahan disimpan sebagai satu dokumen pengaturan (`/api/pengaturan/jam`, tabel `settings`). Penyesuaian jadwal (loket tutup atau jam khusus pada satu tanggal, satu penyesuaian per tanggal) disimpan sebagai koleksi `/api/koleksi/penyesuaian`. |
+| Akses | Administrator dan Pegawai UPTD yang mengelola Jam Pelayanan boleh menyunting jam, serta menambah, menyunting, dan menghapus penyesuaian. Pegawai lain ditolak `403`. Semua pegawai boleh melihat kapan pengaturan server terakhir disimpan (`GET /api/pengaturan`), untuk Jadwal Pemutakhiran. |
+| Belum disimpan | Sebelum jam loket pertama kali disimpan, dashboard menampilkan semua hari tutup dan portal menyatakan "Jam loket belum tersedia". Jam contoh di peramban dan di `main.js` tidak dipindahkan, karena belum diverifikasi petugas. |
+| Portal | `GET /api/public/jam` memberikan jam per hari, batas berkas, catatan, pemberitahuan, dan penyesuaian mulai hari ini (WITA). Status buka/tutup dan hitung mundur memperhitungkan penyesuaian, termasuk saat mencari jam buka berikutnya (hingga dua pekan ke depan). Tabel jam di halaman Jadwal, ringkasan di halaman Kontak, dan footer semua halaman diisi dari API; halaman Jadwal juga mendaftar penyesuaian mendatang. Bila API gagal, portal menyatakannya dan tidak menebak jam. |
+| Jejak | Penyimpanan jam ("memperbarui Jam Pelayanan", hanya bila ada perubahan) dan setiap penyesuaian ("menambahkan 2026-12-25 · Hari Raya Natal") tercatat di log aktivitas server. |
+
+Satu kunjungan beranda kini memakai tiga permintaan dari batas laju API publik (D-013).
+
+Belum dibuat: modul lain di server, dan pengumuman otomatis di portal saat penyesuaian ditambahkan.

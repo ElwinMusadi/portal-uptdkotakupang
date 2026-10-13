@@ -12,7 +12,7 @@ import { api } from "@/lib/api"
 import { bolehModul, sesi } from "@/lib/auth"
 import { tanggal } from "@/lib/format"
 import { useItemAlur } from "@/lib/hitung"
-import { LABEL_KOLEKSI_SERVER } from "@/lib/meta"
+import { LABEL_MODUL_SERVER } from "@/lib/meta"
 
 const KUNCI_INFO = "pintu.info-prototipe"
 
@@ -36,7 +36,7 @@ function InfoPrototipe() {
         <AlertDescription>
           <p>
             {campuran
-              ? `${LABEL_KOLEKSI_SERVER} sudah tersimpan di server. Konten lain masih disimpan di IndexedDB perangkat ini dan belum tersambung ke portal publik.`
+              ? `${LABEL_MODUL_SERVER} sudah tersimpan di server. Konten lain masih disimpan di IndexedDB perangkat ini dan belum tersambung ke portal publik.`
               : "Perubahan disimpan di IndexedDB perangkat ini dan belum tersambung ke portal publik."}{" "}
             Cadangkan data lewat <Link to="/pengaturan?tab=data" className="underline underline-offset-4">Pengaturan › Data</Link>,
             atau baca <Link to="/panduan" className="underline underline-offset-4">Panduan</Link> untuk

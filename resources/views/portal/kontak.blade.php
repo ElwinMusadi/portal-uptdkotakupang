@@ -201,7 +201,7 @@
     <div data-reveal>
       <ul class="contact-list" role="list">
         <li><svg class="i" aria-hidden="true"><use href="#i-map-pin"/></svg><span><strong>Kantor Bersama Samsat Kota Kupang</strong><span>Jl. [alamat kantor], Kota Kupang, Nusa Tenggara Timur</span></span></li>
-        <li><svg class="i" aria-hidden="true"><use href="#i-clock"/></svg><span><strong data-status-text>Loket buka · tutup 15.00 WITA</strong><span>Senin–Kamis 08.00–15.00 · Jumat 08.00–11.30 · Sabtu 08.00–12.00</span></span></li>
+        <li><svg class="i" aria-hidden="true"><use href="#i-clock"/></svg><span><strong data-status-text>Memuat status loket…</strong><span data-jam-ringkas-baris><a class="link" href="jadwal.html">Lihat jam loket</a></span></span></li>
         <li><svg class="i" aria-hidden="true"><use href="#i-phone"/></svg><span><strong>Telepon</strong><a href="tel:+620000000000">(0380) 000 000</a></span></li>
         <li><svg class="i" aria-hidden="true"><use href="#i-message"/></svg><span><strong>WhatsApp layanan</strong><a href="#">+62 8xx-xxxx-xxxx · hanya pesan teks, hari kerja</a></span></li>
         <li><svg class="i" aria-hidden="true"><use href="#i-mail"/></svg><span><strong>Surel</strong><a href="mailto:uptd.kotakupang@example.go.id">uptd.kotakupang@…go.id</a></span></li>
@@ -304,10 +304,8 @@
       </div>
       <div>
         <h3>Jam loket</h3>
-        <ul role="list">
-          <li>Senin–Kamis · 08.00–15.00</li>
-          <li>Jumat · 08.00–11.30</li>
-          <li>Sabtu · 08.00–12.00</li>
+        <ul role="list" data-jam-ringkas>
+          <li><a href="jadwal.html">Lihat jam loket</a></li>
         </ul>
       </div>
       <div>

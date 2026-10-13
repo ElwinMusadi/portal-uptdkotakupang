@@ -1,5 +1,5 @@
 import * as React from "react"
-import { IconCalendarEvent, IconPlus } from "@tabler/icons-react"
+import { IconCalendarEvent, IconPlus, IconRefresh, IconServer } from "@tabler/icons-react"
 import { z } from "zod"
 
 import { DataTable, HeaderUrut, pembantuKolom } from "@/components/data/data-table"
@@ -9,6 +9,7 @@ import { NadaBadge, TitikStatus } from "@/components/data/status-badge"
 import { EntriSheet, useEditorEntri } from "@/components/form/entri-sheet"
 import { FieldAngka, FieldPilih, FieldTanggal, FieldTeks } from "@/components/form/fields"
 import { FormPengaturan } from "@/components/form/settings-form"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
@@ -100,7 +101,7 @@ function StatusSekarang() {
 const k = pembantuKolom<PenyesuaianJadwal>()
 
 function PenyesuaianJadwalBagian() {
-  const { data, isLoading } = useKoleksi("penyesuaian")
+  const { data, isLoading, error, refetch, isRefetching } = useKoleksi("penyesuaian")
   const hapus = useHapus("penyesuaian", "penyesuaian jadwal")
   const ed = useEditorEntri({
     koleksi: "penyesuaian",
@@ -162,15 +163,28 @@ function PenyesuaianJadwalBagian() {
         </Button>
       }
     >
-      <DataTable
-        data={data}
-        memuat={isLoading}
-        columns={kolom}
-        label="Daftar penyesuaian jadwal"
-        pilih={false}
-        sortingAwal={[{ id: "tanggal", desc: false }]}
-        kosong={{ judul: "Tidak ada penyesuaian", deskripsi: "Loket mengikuti jam reguler." }}
-      />
+      {error ? (
+        <Alert variant="destructive">
+          <AlertTitle>Penyesuaian jadwal gagal dimuat</AlertTitle>
+          <AlertDescription>
+            <p>{error instanceof Error ? error.message : String(error)}</p>
+            <Button variant="outline" size="sm" className="mt-2" onClick={() => void refetch()} disabled={isRefetching}>
+              <IconRefresh />
+              Coba lagi
+            </Button>
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <DataTable
+          data={data}
+          memuat={isLoading}
+          columns={kolom}
+          label="Daftar penyesuaian jadwal"
+          pilih={false}
+          sortingAwal={[{ id: "tanggal", desc: false }]}
+          kosong={{ judul: "Tidak ada penyesuaian", deskripsi: "Loket mengikuti jam reguler." }}
+        />
+      )}
       <EntriSheet
         terbuka={ed.terbuka}
         tutup={ed.tutup}
@@ -205,6 +219,15 @@ export default function HalamanJam() {
   return (
     <Halaman>
       <PengantarHalaman deskripsi="Jam loket kantor menentukan status Buka/Tutup dan hitung mundur di portal (waktu Kupang, WITA). Perbarui setiap ada perubahan dan tinjau minimal sebulan sekali." />
+      <Alert>
+        <IconServer />
+        <AlertTitle>Tersimpan di server</AlertTitle>
+        <AlertDescription>
+          Jam loket dan penyesuaian jadwal dipakai bersama semua pengelola Jam Pelayanan dan langsung mengubah
+          status loket, hitung mundur, dan daftar jam di portal. Jam contoh dari penyimpanan peramban tidak
+          dipindahkan ke server; sebelum disimpan, semua hari tercatat tutup.
+        </AlertDescription>
+      </Alert>
       <StatusSekarang />
       <FormPengaturan nama="jam" schema={skemaJam}>
         {(form) => (

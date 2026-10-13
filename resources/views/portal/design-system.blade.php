@@ -479,10 +479,8 @@
       </div>
       <div>
         <h3>Jam loket</h3>
-        <ul role="list">
-          <li>Senin–Kamis · 08.00–15.00</li>
-          <li>Jumat · 08.00–11.30</li>
-          <li>Sabtu · 08.00–12.00</li>
+        <ul role="list" data-jam-ringkas>
+          <li><a href="jadwal.html">Lihat jam loket</a></li>
         </ul>
       </div>
       <div>

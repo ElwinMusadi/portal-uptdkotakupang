@@ -1,4 +1,4 @@
-import { KOLEKSI_SERVER } from "@/lib/api/hybrid"
+import { KOLEKSI_SERVER, PENGATURAN_SERVER } from "@/lib/api/hybrid"
 import type {
   Faq,
   Hari,
@@ -35,14 +35,6 @@ export const KOLEKSI_LABEL: Record<NamaKoleksi, string> = {
   absensi: "Absensi Lapangan",
 }
 
-/** Modul yang sudah tersimpan di server, mis. "Tanya Jawab dan Samsat Keliling" */
-export const LABEL_KOLEKSI_SERVER = daftarKata(KOLEKSI_SERVER.map((k) => KOLEKSI_LABEL[k]))
-
-function daftarKata(kata: string[]): string {
-  if (kata.length < 3) return kata.join(" dan ")
-  return `${kata.slice(0, -1).join(", ")}, dan ${kata[kata.length - 1]}`
-}
-
 export const PENGATURAN_LABEL: Record<NamaPengaturan, string> = {
   situs: "Pengaturan Situs",
   beranda: "Beranda",
@@ -54,6 +46,18 @@ export const PENGATURAN_LABEL: Record<NamaPengaturan, string> = {
   visiMisi: "Visi & Misi",
   kontak: "Kontak & Kanal Pengaduan",
   akun: "Akun",
+}
+
+/** Modul yang sudah tersimpan di server, mis. "Tanya Jawab, Samsat Keliling, dan Jam Pelayanan" */
+export const LABEL_MODUL_SERVER = daftarKata([
+  // Penyesuaian jadwal bagian dari modul Jam Pelayanan
+  ...KOLEKSI_SERVER.filter((k) => k !== "penyesuaian").map((k) => KOLEKSI_LABEL[k]),
+  ...PENGATURAN_SERVER.map((n) => PENGATURAN_LABEL[n]),
+])
+
+function daftarKata(kata: string[]): string {
+  if (kata.length < 3) return kata.join(" dan ")
+  return `${kata.slice(0, -1).join(", ")}, dan ${kata[kata.length - 1]}`
 }
 
 export const HARI_LABEL: Record<Hari, string> = {

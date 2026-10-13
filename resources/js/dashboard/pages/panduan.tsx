@@ -6,7 +6,7 @@ import { StatusAlurBadge } from "@/components/data/status-badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Kbd, KbdGroup } from "@/components/ui/kbd"
 import { api } from "@/lib/api"
-import { AKSI_ALUR, LABEL_KOLEKSI_SERVER, STATUS_ALUR, TAHAP_ALUR } from "@/lib/meta"
+import { AKSI_ALUR, LABEL_MODUL_SERVER, STATUS_ALUR, TAHAP_ALUR } from "@/lib/meta"
 import { TOMBOL_MOD } from "@/lib/platform"
 
 function Topik({ id, judul, deskripsi, children }: { id: string; judul: string; deskripsi?: string; children: React.ReactNode }) {
@@ -118,7 +118,7 @@ export default function HalamanPanduan() {
           <>
             {api.mode === "campuran" ? (
               <p>
-                <strong>{LABEL_KOLEKSI_SERVER}</strong> sudah tersimpan di server PINTU: perubahannya langsung
+                <strong>{LABEL_MODUL_SERVER}</strong> sudah tersimpan di server PINTU: perubahannya langsung
                 terlihat oleh pengelola lain, dan entri yang ditandai tampil langsung dipakai portal publik.
                 Konten lain masih disimpan di IndexedDB peramban yang sedang Anda pakai: perubahannya belum
                 tampil di portal publik dan tidak terlihat dari perangkat lain.

@@ -19,16 +19,6 @@
      ------------------------------------------------------------------ */
   const CONFIG = {
     timeZone: "Asia/Makassar", // WITA
-    // Jam loket (contoh). 0 = Minggu … 6 = Sabtu. null = tutup.
-    hours: {
-      0: null,
-      1: ["08:00", "15:00"],
-      2: ["08:00", "15:00"],
-      3: ["08:00", "15:00"],
-      4: ["08:00", "15:00"],
-      5: ["08:00", "11:30"],
-      6: ["08:00", "12:00"],
-    },
     // Parameter simulasi (contoh; sesuaikan Perda Pajak Daerah NTT & ketentuan Jasa Raharja).
     sim: {
       opsen: 0.66,           // opsen PKB untuk kabupaten/kota
@@ -143,7 +133,12 @@
     });
   }
 
-  /* ---------- Waktu WITA & status loket ---------- */
+  /* ---------- Waktu WITA & status loket ----------
+     Jam loket dan penyesuaian jadwal dikelola di dashboard dan dibaca dari
+     GET /api/public/jam. Penyesuaian (libur, jam khusus) menggantikan jam
+     reguler pada tanggalnya. Selama dimuat, atau bila gagal, status dan daftar
+     jam tidak menebak: tampil pesan, bukan jam contoh. Teks di-escape sebelum
+     dipasang. */
   function nowWita() {
     const parts = new Intl.DateTimeFormat("en-US", {
       timeZone: CONFIG.timeZone, hourCycle: "h23",
@@ -155,27 +150,73 @@
   }
   const toSec = (hhmm) => { const [h, m] = hhmm.split(":").map(Number); return h * 3600 + m * 60; };
   const dot = (hhmm) => hhmm.replace(":", ".");
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  const rentang = (s) => `${dot(s.mulai)}–${dot(s.selesai)}`;
+  const hms = (sec) => `${pad(Math.floor(sec / 3600))}:${pad(Math.floor((sec % 3600) / 60))}:${pad(sec % 60)}`;
+
+  async function ambilJson(url) {
+    const batas = new AbortController();
+    const waktu = setTimeout(() => batas.abort(), 10000);
+    try {
+      const res = await fetch(url, { headers: { Accept: "application/json" }, credentials: "omit", signal: batas.signal });
+      if (!res.ok) throw new Error(`Status ${res.status}`);
+      return await res.json();
+    } finally {
+      clearTimeout(waktu);
+    }
+  }
+
+  /** Jam loket dari dashboard; null sampai dimuat */
+  let JAM = null;
+
+  async function muatJam() {
+    const data = await ambilJson("/api/public/jam");
+    if (!Array.isArray(data?.hari) || !Array.isArray(data?.penyesuaian)) throw new Error("Respons tidak dikenal");
+    const waktuValid = (x) => typeof x.mulai === "string" && typeof x.selesai === "string";
+    return {
+      hari: data.hari.filter((h) => Number.isInteger(h?.hari) && typeof h.buka === "boolean" && waktuValid(h)),
+      batasBerkasMenit: Number.isInteger(data.batasBerkasMenit) ? data.batasBerkasMenit : 0,
+      catatan: typeof data.catatan === "string" ? data.catatan : "",
+      pemberitahuan: typeof data.pemberitahuan === "string" ? data.pemberitahuan : "",
+      penyesuaian: data.penyesuaian.filter((p) => typeof p?.tanggal === "string" && typeof p.keterangan === "string" && waktuValid(p)),
+    };
+  }
+
+  /** Tanggal t + i hari: { iso, wd, d, mo } */
+  function tanggalKe(t, i) {
+    const d = new Date(Date.UTC(t.y, t.mo - 1, t.d + i));
+    return { iso: d.toISOString().slice(0, 10), wd: d.getUTCDay(), d: d.getUTCDate(), mo: d.getUTCMonth() };
+  }
+
+  /** Jam buka [mulai, selesai] pada tanggal itu, atau null bila tutup */
+  function jamPada(tgl) {
+    const khusus = JAM.penyesuaian.find((p) => p.tanggal === tgl.iso);
+    if (khusus) return khusus.jenis === "jam-khusus" && khusus.mulai && khusus.selesai ? [khusus.mulai, khusus.selesai] : null;
+    const h = JAM.hari.find((x) => x.hari === tgl.wd);
+    return h?.buka && h.mulai && h.selesai ? [h.mulai, h.selesai] : null;
+  }
 
   function serviceStatus() {
     const t = nowWita();
     const cur = t.h * 3600 + t.m * 60 + t.s;
-    const today = CONFIG.hours[t.wd];
+    const hariIni = tanggalKe(t, 0);
+    const khusus = JAM.penyesuaian.find((p) => p.tanggal === hariIni.iso);
+    const today = jamPada(hariIni);
     if (today && cur >= toSec(today[0]) && cur < toSec(today[1])) {
-      return { open: true, left: toSec(today[1]) - cur, close: dot(today[1]), wd: t.wd, t };
+      return { open: true, left: toSec(today[1]) - cur, close: dot(today[1]), khusus };
     }
-    // cari jam buka berikutnya (hari ini nanti atau hari-hari berikutnya)
-    for (let i = 0; i < 8; i++) {
-      const wd = (t.wd + i) % 7;
-      const h = CONFIG.hours[wd];
+    // jam buka berikutnya: hari ini nanti atau dalam dua pekan (libur panjang)
+    for (let i = 0; i < 15; i++) {
+      const tgl = tanggalKe(t, i);
+      const h = jamPada(tgl);
       if (!h) continue;
       const start = toSec(h[0]);
       if (i === 0 && cur >= start) continue;
-      const left = i * 86400 + start - cur;
-      return { open: false, left, nextDay: i === 0 ? "hari ini" : i === 1 ? "besok" : HARI[wd], nextTime: dot(h[0]), wd: t.wd, t };
+      const nextDay = i === 0 ? "hari ini" : i === 1 ? "besok" : i < 7 ? HARI[tgl.wd] : `${HARI[tgl.wd]}, ${tgl.d} ${BULAN[tgl.mo]}`;
+      return { open: false, left: i * 86400 + start - cur, nextDay, nextTime: dot(h[0]), khusus };
     }
-    return { open: false, left: 0, wd: t.wd, t };
+    return { open: false, none: true, khusus };
   }
-  const hms = (sec) => `${pad(Math.floor(sec / 3600))}:${pad(Math.floor((sec % 3600) / 60))}:${pad(sec % 60)}`;
 
   function initStatus() {
     const textEls = $$("[data-status-text]");
@@ -185,31 +226,103 @@
     const dots = $$("[data-open-dot]");
     const pills = $$("[data-open-pill]");
     const headline = $$("[data-status-headline]");
-    if (!(textEls.length || shortEls.length || cdEls.length || headline.length)) return;
+    const subs = $$("[data-status-sub]");
+    const caps = $$("[data-countdown-cap]");
+    const tabel = $("[data-jam-tabel]");
+    const ringkas = $$("[data-jam-ringkas]");
+    const ringkasBaris = $$("[data-jam-ringkas-baris]");
+    const catatan = $("[data-jam-catatan]");
+    const pemberitahuan = $("[data-jam-pemberitahuan]");
+    const penyesuaian = $("[data-jam-penyesuaian]");
+    if (!(textEls.length || shortEls.length || cdEls.length || headline.length || tabel || ringkas.length || ringkasBaris.length)) return;
+
+    const tulis = (els, teks) => els.forEach((el) => (el.textContent = teks));
+    const tandai = (buka) => [...dots, ...pills].forEach((el) => el.classList.toggle("is-closed", !buka));
 
     const tick = () => {
       const st = serviceStatus();
-      const long = st.open ? `Loket buka · tutup ${st.close} WITA` : `Loket tutup · buka ${st.nextDay} ${st.nextTime}`;
-      textEls.forEach((el) => (el.textContent = long));
-      shortEls.forEach((el) => (el.textContent = st.open ? `Buka · s.d. ${st.close}` : `Tutup · buka ${st.nextDay} ${st.nextTime}`));
-      cdEls.forEach((el) => (el.textContent = hms(Math.max(0, st.left))));
-      cdLabels.forEach((el) => (el.textContent = st.open ? "Loket tutup dalam" : "Loket buka dalam"));
-      dots.forEach((el) => el.classList.toggle("is-closed", !st.open));
-      pills.forEach((el) => el.classList.toggle("is-closed", !st.open));
-      headline.forEach((el) => (el.textContent = st.open ? "Loket sedang buka." : "Loket sedang tutup."));
-      $$("[data-status-sub]").forEach((el) => (el.textContent = st.open
-        ? `Penerimaan berkas ditutup 60 menit sebelum loket tutup pukul ${st.close} WITA.`
+      if (st.none) {
+        tulis(textEls, "Jam loket belum tersedia");
+        tulis(shortEls, "Jam belum tersedia");
+        tulis(headline, "Jam loket belum tersedia.");
+        tulis(subs, "Lihat pengumuman terbaru untuk jadwal pelayanan.");
+        tulis(cdEls, "--:--:--");
+        tulis(cdLabels, "Jam loket");
+        tulis(caps, "");
+        tandai(false);
+        return;
+      }
+      const tutupKhusus = st.khusus?.jenis === "tutup";
+      tulis(textEls, st.open ? `Loket buka · tutup ${st.close} WITA` : `Loket tutup · buka ${st.nextDay} ${st.nextTime}`);
+      tulis(shortEls, st.open ? `Buka · s.d. ${st.close}` : `Tutup · buka ${st.nextDay} ${st.nextTime}`);
+      tulis(cdEls, hms(Math.max(0, st.left)));
+      tulis(cdLabels, st.open ? "Loket tutup dalam" : "Loket buka dalam");
+      tandai(st.open);
+      tulis(headline, st.open ? "Loket sedang buka." : tutupKhusus ? "Loket tutup hari ini." : "Loket sedang tutup.");
+      const keterangan = st.khusus ? `${st.khusus.keterangan}. ` : "";
+      tulis(subs, keterangan + (st.open
+        ? JAM.batasBerkasMenit > 0
+          ? `Penerimaan berkas ditutup ${JAM.batasBerkasMenit} menit sebelum loket tutup pukul ${st.close} WITA.`
+          : `Loket tutup pukul ${st.close} WITA.`
         : `Buka kembali ${st.nextDay} pukul ${st.nextTime} WITA.`));
-      $$("[data-countdown-cap]").forEach((el) => (el.textContent = st.open ? "menuju tutup" : "menuju buka"));
+      tulis(caps, st.open ? "menuju tutup" : "menuju buka");
     };
-    tick();
-    setInterval(tick, 1000);
 
-    // tandai baris hari ini di tabel jam
-    const wd = nowWita().wd;
-    $$("[data-weekday]").forEach((row) => {
-      if (row.dataset.weekday.split(",").map(Number).includes(wd)) row.classList.add("is-today");
-    });
+    // Hari buka berurutan dengan jam yang sama digabung, mis. "Senin–Kamis · 08.00–15.00"
+    const kelompok = () => {
+      const hasil = [];
+      [1, 2, 3, 4, 5, 6, 0].forEach((wd) => {
+        const h = JAM.hari.find((x) => x.hari === wd);
+        const akhir = hasil[hasil.length - 1];
+        if (!h?.buka) { if (akhir) akhir.putus = true; return; }
+        if (akhir && !akhir.putus && akhir.mulai === h.mulai && akhir.selesai === h.selesai) akhir.sampai = wd;
+        else hasil.push({ dari: wd, sampai: wd, mulai: h.mulai, selesai: h.selesai });
+      });
+      return hasil.map((g) => ({ hari: g.dari === g.sampai ? HARI[g.dari] : `${HARI[g.dari]}–${HARI[g.sampai]}`, jam: rentang(g) }));
+    };
+
+    const tampilkan = () => {
+      const t = nowWita();
+      if (tabel) {
+        tabel.innerHTML = JAM.hari.length
+          ? JAM.hari.map((h) => `<tr data-weekday="${h.hari}"${h.hari === t.wd ? ' class="is-today"' : ""}><th scope="row">${h.hari === 0 ? "Minggu &amp; libur" : HARI[h.hari]}</th><td>${h.buka ? esc(rentang(h)) : "Tutup"}</td><td>${h.catatan ? esc(h.catatan) : "—"}</td></tr>`).join("")
+          : '<tr><td colspan="3">Jam loket belum diumumkan.</td></tr>';
+      }
+      const grup = kelompok();
+      if (grup.length) {
+        ringkas.forEach((ul) => (ul.innerHTML = grup.map((g) => `<li>${g.hari} · ${g.jam}</li>`).join("")));
+        tulis(ringkasBaris, grup.map((g) => `${g.hari} ${g.jam}`).join(" · "));
+      }
+      if (catatan) { catatan.textContent = JAM.catatan; catatan.hidden = !JAM.catatan; }
+      if (pemberitahuan) { pemberitahuan.textContent = JAM.pemberitahuan; pemberitahuan.hidden = !JAM.pemberitahuan; }
+      if (penyesuaian) {
+        penyesuaian.innerHTML = JAM.penyesuaian.map((p) => {
+          const [y, mo, d] = p.tanggal.split("-").map(Number);
+          const tgl = new Date(Date.UTC(y, mo - 1, d));
+          const jam = p.jenis === "jam-khusus" ? `${esc(rentang(p))} WITA` : "Tutup";
+          return `<li><strong>${HARI[tgl.getUTCDay()]}, ${d} ${BULAN[mo - 1]} ${y}</strong> · ${jam} · ${esc(p.keterangan)}</li>`;
+        }).join("");
+        penyesuaian.hidden = !JAM.penyesuaian.length;
+      }
+    };
+
+    const gagal = () => {
+      tulis([...textEls, ...shortEls], "Status loket tidak tersedia");
+      tulis(headline, "Status loket belum dapat dimuat.");
+      tulis(subs, "Muat ulang halaman untuk mencoba lagi.");
+      tulis(cdEls, "--:--:--");
+      tulis(cdLabels, "Status loket");
+      tulis(caps, "");
+      tandai(false);
+      if (tabel) tabel.innerHTML = '<tr><td colspan="3">Jam loket belum dapat dimuat. Muat ulang halaman untuk mencoba lagi.</td></tr>';
+    };
+
+    muatJam().then((data) => {
+      JAM = data;
+      tampilkan();
+      tick();
+      setInterval(tick, 1000);
+    }, gagal);
   }
 
   /* ---------- Samsat Keliling ----------
@@ -217,21 +330,10 @@
      yang hanya memberikan lokasi aktif. Teksnya di-escape sebelum dipasang.
      Tidak ada jadwal cadangan: bila API gagal, pengunjung melihat pesan dan
      tombol coba lagi. */
-  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
-  const rentang = (s) => `${s.mulai.replace(":", ".")}–${s.selesai.replace(":", ".")}`;
-
   async function muatKeliling() {
-    const batas = new AbortController();
-    const waktu = setTimeout(() => batas.abort(), 10000);
-    try {
-      const res = await fetch("/api/public/keliling", { headers: { Accept: "application/json" }, credentials: "omit", signal: batas.signal });
-      if (!res.ok) throw new Error(`Status ${res.status}`);
-      const data = await res.json();
-      if (!Array.isArray(data)) throw new Error("Respons bukan daftar");
-      return data.filter((s) => Number.isInteger(s?.hari) && ["mulai", "selesai", "lokasi", "kecamatan", "catatan"].every((k) => typeof s[k] === "string"));
-    } finally {
-      clearTimeout(waktu);
-    }
+    const data = await ambilJson("/api/public/keliling");
+    if (!Array.isArray(data)) throw new Error("Respons bukan daftar");
+    return data.filter((s) => Number.isInteger(s?.hari) && ["mulai", "selesai", "lokasi", "kecamatan", "catatan"].every((k) => typeof s[k] === "string"));
   }
 
   // Senin–Jumat, ditambah Sabtu bila ada jadwalnya. Bila hari terakhir minggu ini

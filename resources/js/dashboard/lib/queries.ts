@@ -6,7 +6,7 @@ import {
 } from "@tanstack/react-query"
 import { toast } from "sonner"
 
-import { api, ApiError, diServer } from "@/lib/api"
+import { api, ApiError, diServer, pengaturanDiServer } from "@/lib/api"
 import type { Draf, Id, Koleksi, NamaKoleksi, NamaPengaturan, Pengaturan } from "@/lib/api"
 import { keluar } from "@/lib/auth"
 
@@ -49,11 +49,15 @@ export function useKoleksi<K extends NamaKoleksi>(k: K, { aktif = true }: { akti
 }
 
 export function usePengaturan<N extends NamaPengaturan>(n: N) {
-  return useQuery({ queryKey: qk.pengaturan(n), queryFn: () => api.getSetting(n) })
+  return useQuery({ queryKey: qk.pengaturan(n), queryFn: () => api.getSetting(n), refetchOnWindowFocus: pengaturanDiServer(n) })
 }
 
 export function useWaktuPengaturan() {
-  return useQuery({ queryKey: qk.waktuPengaturan, queryFn: () => api.settingsUpdatedAt() })
+  return useQuery({
+    queryKey: qk.waktuPengaturan,
+    queryFn: () => api.settingsUpdatedAt(),
+    refetchOnWindowFocus: api.mode !== "lokal",
+  })
 }
 
 export function useAktivitas(limit = 50) {

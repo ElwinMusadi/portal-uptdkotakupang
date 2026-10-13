@@ -65,6 +65,28 @@ class PortalPagesTest extends TestCase
     }
 
     #[TestWith(['/'])]
+    #[TestWith(['/jadwal'])]
+    #[TestWith(['/kontak'])]
+    #[TestWith(['/layanan'])]
+    public function test_leaves_the_opening_hours_to_the_public_api(string $uri): void
+    {
+        $html = $this->get($uri)->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('Senin–Kamis', $html);
+        $this->assertStringNotContainsString('tutup 15.00', $html);
+        $this->assertStringContainsString('<ul role="list" data-jam-ringkas>', $html);
+    }
+
+    public function test_fills_the_opening_hours_table_only_from_the_public_api(): void
+    {
+        $html = $this->get('/jadwal')->assertOk()->getContent();
+
+        $this->assertSame(1, preg_match('/<tbody data-jam-tabel>(.*?)<\/tbody>/s', $html, $rows));
+        $this->assertSame('<tr><td colspan="3">Memuat jam loket…</td></tr>', trim($rows[1]));
+        $this->assertStringNotContainsString('Jam contoh', $html);
+    }
+
+    #[TestWith(['/'])]
     #[TestWith(['/login'])]
     #[TestWith(['/layanan'])]
     public function test_serves_portal_pages_without_setting_any_cookie(string $uri): void

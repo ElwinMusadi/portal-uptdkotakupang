@@ -740,9 +740,9 @@
                     height="24"
                   />PINTU <span>· Papan layanan hari ini</span>
                 </p>
-                <p class="board__status" data-open-pill>
+                <p class="board__status is-closed" data-open-pill>
                   <span class="live-dot" aria-hidden="true"></span
-                  ><span data-status-text>Loket buka · tutup 15.00</span>
+                  ><span data-status-text>Memuat status loket…</span>
                 </p>
               </div>
               <div class="board__grid">
@@ -1341,13 +1341,13 @@
           <div class="notch" data-reveal>
             <div class="notch__item">
               <span
-                class="live-dot notch__dot"
+                class="live-dot notch__dot is-closed"
                 data-open-dot
                 aria-hidden="true"
               ></span
               ><span
                 ><small>Loket kantor</small
-                ><strong data-status-short>Buka · s.d. 15.00</strong></span
+                ><strong data-status-short>Memuat…</strong></span
               >
             </div>
             <span class="notch__sep" aria-hidden="true"></span>
@@ -1749,8 +1749,8 @@
               <a class="link" href="kontak.html#pengaduan">Laporkan di sini</a>.
             </p>
             <p class="price__timer">
-              <span class="live-dot" data-open-dot aria-hidden="true"></span
-              ><span data-countdown-label>Loket tutup dalam</span
+              <span class="live-dot is-closed" data-open-dot aria-hidden="true"></span
+              ><span data-countdown-label>Status loket</span
               ><strong class="mono" data-countdown>--:--:--</strong>
             </p>
           </div>
@@ -1875,10 +1875,8 @@
           </div>
           <div>
             <h3>Jam loket</h3>
-            <ul role="list">
-              <li>Senin–Kamis · 08.00–15.00</li>
-              <li>Jumat · 08.00–11.30</li>
-              <li>Sabtu · 08.00–12.00</li>
+            <ul role="list" data-jam-ringkas>
+              <li><a href="jadwal.html">Lihat jam loket</a></li>
             </ul>
           </div>
           <div>

@@ -10,11 +10,18 @@ use App\Http\Controllers\Dashboard\FaqDeletionController;
 use App\Http\Controllers\Dashboard\FaqOrderController;
 use App\Http\Controllers\Dashboard\MobileServiceStopController;
 use App\Http\Controllers\Dashboard\MobileServiceStopDeletionController;
+use App\Http\Controllers\Dashboard\OpeningHoursController;
+use App\Http\Controllers\Dashboard\ScheduleAdjustmentController;
+use App\Http\Controllers\Dashboard\ScheduleAdjustmentDeletionController;
+use App\Http\Controllers\Dashboard\SettingTimestampController;
 use App\Http\Controllers\PublicFaqController;
 use App\Http\Controllers\PublicMobileServiceStopController;
+use App\Http\Controllers\PublicOpeningHoursController;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Models\Faq;
 use App\Models\MobileServiceStop;
+use App\Models\ScheduleAdjustment;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Route;
@@ -80,6 +87,29 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::patch('/{stop}', [MobileServiceStopController::class, 'update'])->can('update', 'stop')->name('update');
     });
 
+    /*
+     * Jam Pelayanan: the opening hours document (SettingPolicy) and the
+     * schedule adjustments (ScheduleAdjustmentPolicy). GET /pengaturan tells
+     * every employee when each server-side settings document was last saved.
+     */
+    Route::get('/pengaturan', SettingTimestampController::class)->name('pengaturan.waktu');
+    // A quoted value reaches the policy as a string instead of naming a route parameter.
+    $openingHours = "'".Setting::OPENING_HOURS."'";
+    Route::get('/pengaturan/jam', [OpeningHoursController::class, 'show'])
+        ->can('view', [Setting::class, $openingHours])
+        ->name('pengaturan.jam.show');
+    Route::put('/pengaturan/jam', [OpeningHoursController::class, 'update'])
+        ->can('update', [Setting::class, $openingHours])
+        ->name('pengaturan.jam.update');
+
+    Route::prefix('koleksi/penyesuaian')->name('koleksi.penyesuaian.')->whereUlid('adjustment')->group(function (): void {
+        Route::get('/', [ScheduleAdjustmentController::class, 'index'])->can('viewAny', ScheduleAdjustment::class)->name('index');
+        Route::post('/', [ScheduleAdjustmentController::class, 'store'])->can('create', ScheduleAdjustment::class)->name('store');
+        Route::post('/hapus', [ScheduleAdjustmentDeletionController::class, 'store'])->can('deleteAny', ScheduleAdjustment::class)->name('hapus');
+        Route::get('/{adjustment}', [ScheduleAdjustmentController::class, 'show'])->can('view', 'adjustment')->name('show');
+        Route::patch('/{adjustment}', [ScheduleAdjustmentController::class, 'update'])->can('update', 'adjustment')->name('update');
+    });
+
     Route::get('/aktivitas', ActivityController::class)->name('aktivitas');
 });
 
@@ -94,4 +124,5 @@ Route::prefix('public')
     ->group(function (): void {
         Route::get('/faq', PublicFaqController::class)->name('faq.index');
         Route::get('/keliling', PublicMobileServiceStopController::class)->name('keliling.index');
+        Route::get('/jam', PublicOpeningHoursController::class)->name('jam.show');
     });

@@ -13,15 +13,18 @@ import type {
 } from "./types"
 
 /**
- * Koleksi yang sudah tersimpan di server PINTU (D-011, D-013). Koleksi lain menyusul
- * satu per satu; sampai saat itu tetap di IndexedDB peramban.
+ * Koleksi dan pengaturan yang sudah tersimpan di server PINTU (D-011, D-013,
+ * D-014). Yang lain menyusul satu per satu; sampai saat itu tetap di
+ * IndexedDB peramban.
  */
-export const KOLEKSI_SERVER: readonly NamaKoleksi[] = ["faq", "keliling"]
+export const KOLEKSI_SERVER: readonly NamaKoleksi[] = ["faq", "keliling", "penyesuaian"]
+export const PENGATURAN_SERVER: readonly NamaPengaturan[] = ["jam"]
 
 /**
  * Mode campuran selama konten dipindahkan ke server secara bertahap. Koleksi
- * di KOLEKSI_SERVER dibaca dan ditulis lewat REST API; koleksi lain,
- * pengaturan, dan unggahan tetap lokal. Log aktivitas menggabungkan keduanya.
+ * di KOLEKSI_SERVER dan pengaturan di PENGATURAN_SERVER dibaca dan ditulis
+ * lewat REST API; yang lain dan unggahan tetap lokal. Log aktivitas dan waktu
+ * simpan pengaturan menggabungkan keduanya.
  */
 export class HybridApi implements ApiClient {
   readonly mode = "campuran" as const
@@ -65,16 +68,24 @@ export class HybridApi implements ApiClient {
     return this.sumber(k).reorder(k, ids)
   }
 
+  private sumberPengaturan(n: NamaPengaturan): ApiClient {
+    return PENGATURAN_SERVER.includes(n) ? this.server : this.lokal
+  }
+
   getSetting<N extends NamaPengaturan>(n: N) {
-    return this.lokal.getSetting(n)
+    return this.sumberPengaturan(n).getSetting(n)
   }
 
   saveSetting<N extends NamaPengaturan>(n: N, nilai: Pengaturan[N]) {
-    return this.lokal.saveSetting(n, nilai)
+    return this.sumberPengaturan(n).saveSetting(n, nilai)
   }
 
-  settingsUpdatedAt(): Promise<Record<NamaPengaturan, IsoDateTime>> {
-    return this.lokal.settingsUpdatedAt()
+  /** Waktu simpan pengaturan server dari server (tidak ada bila belum pernah disimpan), sisanya dari peramban */
+  async settingsUpdatedAt(): Promise<Record<NamaPengaturan, IsoDateTime>> {
+    const [lokal, server] = await Promise.all([this.lokal.settingsUpdatedAt(), this.server.settingsUpdatedAt()])
+    const gabungan: Partial<Record<NamaPengaturan, IsoDateTime>> = { ...lokal }
+    for (const n of PENGATURAN_SERVER) delete gabungan[n]
+    return { ...gabungan, ...server }
   }
 
   /** Aktivitas di server (sebatas modul pengguna) dan di peramban ini, terbaru lebih dulu */
@@ -92,11 +103,19 @@ export class HybridApi implements ApiClient {
     return this.lokal.upload(berkas, nama)
   }
 
-  /** Cadangan lengkap: data di peramban ini, dengan koleksi server diambil dari server */
+  /** Cadangan lengkap: data di peramban ini, dengan koleksi dan pengaturan server diambil dari server */
   async exportAll(): Promise<Snapshot> {
     const snap = await this.lokal.exportAll()
     for (const k of KOLEKSI_SERVER) {
       ;(snap.koleksi as Record<string, unknown>)[k] = await this.daftarUntukCadangan(k)
+    }
+    for (const n of PENGATURAN_SERVER) {
+      try {
+        ;(snap.pengaturan as unknown as Record<string, unknown>)[n] = await this.server.getSetting(n)
+      } catch (e) {
+        // Modul yang tidak ditugaskan: cadangan memakai salinan di peramban ini
+        if (!(e instanceof ApiError && e.status === 403)) throw e
+      }
     }
     return snap
   }
@@ -111,12 +130,12 @@ export class HybridApi implements ApiClient {
     }
   }
 
-  /** Hanya data di peramban ini; koleksi server tidak ikut dipulihkan */
+  /** Hanya data di peramban ini; koleksi dan pengaturan server tidak ikut dipulihkan */
   importAll(snap: Snapshot) {
     return this.lokal.importAll(snap)
   }
 
-  /** Hanya data di peramban ini; koleksi server tidak ikut dikembalikan */
+  /** Hanya data di peramban ini; koleksi dan pengaturan server tidak ikut dikembalikan */
   reset() {
     return this.lokal.reset()
   }

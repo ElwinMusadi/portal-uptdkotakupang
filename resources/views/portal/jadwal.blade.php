@@ -199,12 +199,12 @@
 
   <section class="container">
     <div class="status-card" data-reveal>
-      <span class="live-dot" data-open-dot aria-hidden="true"></span>
+      <span class="live-dot is-closed" data-open-dot aria-hidden="true"></span>
       <div>
-        <strong data-status-headline>Loket sedang buka.</strong>
-        <span data-status-sub>Penerimaan berkas ditutup 60 menit sebelum loket tutup.</span>
+        <strong data-status-headline>Memuat status loket…</strong>
+        <span data-status-sub></span>
       </div>
-      <p class="status-card__cd"><span data-countdown>--:--:--</span><small data-countdown-cap>menuju tutup</small></p>
+      <p class="status-card__cd"><span data-countdown>--:--:--</span><small data-countdown-cap></small></p>
     </div>
   </section>
 
@@ -213,27 +213,22 @@
       <div class="split__sticky" data-reveal>
         <p class="eyebrow">Jam loket kantor</p>
         <h2 class="h2" style="margin-top:20px">Datang pagi. <span class="tone">Antre lebih pendek.</span></h2>
-        <p class="body" style="margin-top:20px">Antrean biasanya paling ramai pukul 09.00–11.00. Penerimaan berkas ditutup satu jam sebelum loket tutup.</p>
-        <p class="proto-note" style="margin-top:20px">Jam contoh. Diverifikasi petugas sebelum terbit.</p>
+        <!-- Jam loket dari dashboard, dimuat main.js lewat GET /api/public/jam -->
+        <p class="body" style="margin-top:20px" data-jam-catatan hidden></p>
       </div>
       <div data-reveal>
         <table class="hours">
           <caption class="sr-only">Jam pelayanan loket per hari</caption>
-          <tbody>
-            <tr data-weekday="1"><th scope="row">Senin</th><td>08.00–15.00</td><td>Berkas s.d. 14.00</td></tr>
-            <tr data-weekday="2"><th scope="row">Selasa</th><td>08.00–15.00</td><td>Berkas s.d. 14.00</td></tr>
-            <tr data-weekday="3"><th scope="row">Rabu</th><td>08.00–15.00</td><td>Berkas s.d. 14.00</td></tr>
-            <tr data-weekday="4"><th scope="row">Kamis</th><td>08.00–15.00</td><td>Berkas s.d. 14.00</td></tr>
-            <tr data-weekday="5"><th scope="row">Jumat</th><td>08.00–11.30</td><td>Berkas s.d. 10.30</td></tr>
-            <tr data-weekday="6"><th scope="row">Sabtu</th><td>08.00–12.00</td><td>Pajak tahunan saja</td></tr>
-            <tr data-weekday="0"><th scope="row">Minggu &amp; libur</th><td>Tutup</td><td>—</td></tr>
+          <tbody data-jam-tabel>
+            <tr><td colspan="3">Memuat jam loket…</td></tr>
           </tbody>
         </table>
         <div class="card card--pad" style="margin-top:28px;display:flex;gap:14px;align-items:flex-start">
           <svg class="i" aria-hidden="true" style="margin-top:2px"><use href="#i-bell"/></svg>
           <div>
-            <p class="title-sm">Perubahan jadwal diumumkan paling lambat H-3.</p>
-            <p class="small muted" style="margin-top:4px">Termasuk cuti bersama dan kegiatan khusus. Lihat <a class="link" href="informasi.html">pengumuman terbaru</a>.</p>
+            <p class="title-sm" data-jam-pemberitahuan hidden></p>
+            <ul class="small" role="list" style="margin-top:4px" data-jam-penyesuaian hidden></ul>
+            <p class="small muted" style="margin-top:4px">Cuti bersama dan kegiatan khusus juga diumumkan di <a class="link" href="informasi.html">pengumuman terbaru</a>.</p>
           </div>
         </div>
       </div>
@@ -277,10 +272,8 @@
       </div>
       <div>
         <h3>Jam loket</h3>
-        <ul role="list">
-          <li>Senin–Kamis · 08.00–15.00</li>
-          <li>Jumat · 08.00–11.30</li>
-          <li>Sabtu · 08.00–12.00</li>
+        <ul role="list" data-jam-ringkas>
+          <li><a href="jadwal.html">Lihat jam loket</a></li>
         </ul>
       </div>
       <div>
