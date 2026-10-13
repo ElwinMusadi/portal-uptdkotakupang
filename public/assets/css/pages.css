@@ -485,29 +485,74 @@
 @media (max-width: 560px) { .form-row { grid-template-columns: 1fr; } .form-row .field + .field { margin-top: 18px; } }
 
 /* ---------- Login ---------- */
-.auth { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); }
-.auth__side { padding: clamp(24px, 4vw, 56px); display: flex; flex-direction: column; gap: 40px; }
+/* Login dan aktivasi selalu tepat setinggi layar dan tidak pernah bergulir. Di
+   layar pendek jaraknya dirapatkan, lalu bagian pelengkap disembunyikan
+   bertahap; bila kartu tetap tidak muat, main.js mengecilkannya. */
+.auth { height: 100vh; height: 100dvh; overflow: hidden; overflow: clip; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); grid-template-rows: minmax(0, 1fr); }
+.auth__side { padding: clamp(24px, 4vw, 56px); display: flex; flex-direction: column; gap: 40px; overflow: hidden; overflow: clip; }
 .auth__brand { display: inline-flex; align-items: center; gap: 10px; }
 .auth__brand .mark { width: 30px; height: 30px; }
 .auth__brand strong { font-size: 14px; letter-spacing: .08em; }
 .auth__brand span { font-size: 12.5px; color: var(--text-2); display: block; line-height: 1.3; }
 .auth__copy { margin-top: auto; margin-bottom: auto; }
+.auth__copy .h-display, .auth__copy .body { margin-top: 20px; }
 .auth__roles { list-style: none; margin-top: 32px; display: grid; gap: 0; border-top: var(--hairline); max-width: 420px; }
 .auth__roles li { display: grid; grid-template-columns: 28px 1fr; gap: 12px; padding: 14px 0; border-bottom: var(--hairline); font-size: 14px; color: var(--text-2); }
 .auth__roles strong { color: var(--ink); font-weight: 600; }
 .auth__roles .numtab__num { color: var(--text-2); padding-top: 2px; }
 .auth__foot { font-size: 12.5px; color: var(--text-2); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
-.auth__main { background: var(--paper-2); border-left: var(--hairline); display: grid; place-items: center; padding: clamp(20px, 4vw, 56px); }
+.auth__main { background: var(--paper-2); border-left: var(--hairline); display: grid; place-items: center; place-items: safe center; padding: clamp(20px, 4vw, 56px); overflow: hidden; overflow: clip; }
 .auth__card { width: 100%; max-width: 440px; padding: clamp(24px, 3.6vw, 40px); }
-.auth__card h2 { font-family: var(--font-display); font-weight: var(--fw-display); font-size: 30px; line-height: 1.1; letter-spacing: -0.02em; }
+.auth__card h2 { margin-top: 12px; font-family: var(--font-display); font-weight: var(--fw-display); font-size: 30px; line-height: 1.1; letter-spacing: -0.02em; }
+.auth__lead, .auth__message { margin-top: 8px; }
 .auth__alert { display: none; margin-top: 18px; padding: 12px 14px; border-radius: 12px; background: var(--danger-soft); color: var(--danger); font-size: 13.5px; gap: 10px; align-items: flex-start; }
 .auth__alert.is-on { display: flex; }
 .auth__alert--info { background: var(--ok-soft); color: var(--ok); }
+.auth__fields { margin-top: 26px; }
+.auth__check { margin-top: 18px; }
+.auth__submit { margin-top: 24px; }
 .auth__divider { display: flex; align-items: center; gap: 12px; margin: 22px 0; font-size: 12px; color: var(--text-2); }
 .auth__divider::before, .auth__divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.auth__help { margin-top: 20px; }
 .auth__security { margin-top: 22px; padding-top: 18px; border-top: var(--hairline); display: flex; gap: 10px; font-size: 12.5px; color: var(--text-2); }
 .auth__security .i { width: 16px; height: 16px; flex: none; margin-top: 2px; }
-@media (max-width: 900px) { .auth { grid-template-columns: 1fr; } .auth__main { border-left: 0; border-top: var(--hairline); } .auth__copy { margin-block: 0; } }
+@media (max-height: 900px) {
+  .auth__side { gap: 24px; padding-block: clamp(20px, 4vh, 40px); }
+  .auth__main { padding-block: clamp(12px, 3vh, 32px); }
+  .auth__card { padding-block: 28px; }
+  .auth__fields { margin-top: 20px; }
+  .auth__card .field + .field { margin-top: 14px; }
+  .auth__check { margin-top: 14px; }
+  .auth__submit { margin-top: 18px; }
+  .auth__divider { margin: 14px 0; }
+  .auth__help { margin-top: 14px; }
+  .auth__security { margin-top: 14px; padding-top: 12px; }
+}
+@media (max-height: 780px) { .auth__roles { display: none; } }
+@media (max-height: 760px) { .auth__security { display: none; } }
+@media (max-height: 680px) { .auth__divider, .auth__alt { display: none; } }
+@media (max-height: 620px) { .auth__copy .body { display: none; } .auth__card { padding-block: 22px; } }
+@media (max-height: 580px) { .auth__greeting, .auth__lead { display: none; } }
+/* Layar sempit: kolom kiri menjadi bilah lambang di atas kartu. */
+@media (max-width: 900px) {
+  .auth { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .auth__side { padding: 10px 20px; }
+  .auth__copy, .auth__foot { display: none; }
+  .auth__main { border-left: 0; border-top: var(--hairline); padding: 16px; }
+  .auth__card { padding-inline: 20px; }
+  .auth__card h2 { font-size: 26px; }
+}
+/* Ponsel mendatar dan jendela sangat pendek: tanpa bilah lambang, isian bersebelahan. */
+@media (max-height: 460px) {
+  .auth { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+  .auth__side { display: none; }
+  .auth__main { border: 0; padding: 12px 16px; }
+  .auth__card { max-width: 640px; padding: 16px 20px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 14px; align-items: end; }
+  .auth__card > * { grid-column: 1 / -1; }
+  .auth__card > .field, .auth__check, .auth__check + .auth__submit { grid-column: auto; }
+  .auth__check, .auth__check + .auth__submit { margin-top: 14px; }
+  .auth__check { align-self: center; }
+}
 
 /* ---------- 404 ---------- */
 .notfound { min-height: 70vh; display: grid; place-items: center; text-align: center; padding-block: 80px; }
@@ -582,3 +627,4 @@
 .tile__value, .price__fig, .bento__total-val, .bento__input, .bento__val, .stepper output, .board__big { font-family: var(--font-display); }
 /* Judul login: ukuran sendiri agar "Jaga keakuratannya." muat satu baris di kolom kiri */
 .auth__copy .h-display { font-size: clamp(36px, 3.9vw, 56px); }
+@media (max-height: 700px) { .auth__copy .h-display { font-size: clamp(30px, 3.2vw, 44px); } }

@@ -50,9 +50,12 @@ export interface ApiClient {
 
 export class ApiError extends Error {
   readonly status: number
-  constructor(message: string, status = 0) {
+  /** Pesan per isian dari validasi server (422), mis. { nip: "NIP ini sudah terdaftar." } */
+  readonly isian: Record<string, string>
+  constructor(message: string, status = 0, isian: Record<string, string> = {}) {
     super(message)
     this.name = "ApiError"
     this.status = status
+    this.isian = isian
   }
 }

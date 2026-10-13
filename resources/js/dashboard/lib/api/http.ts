@@ -15,10 +15,51 @@ import type {
 } from "./types"
 
 /**
+ * Permintaan JSON ke server PINTU sendiri dengan cookie sesi Laravel Sanctum
+ * dan header X-XSRF-TOKEN. Galat menjadi ApiError berpesan bahasa Indonesia;
+ * galat validasi (422) membawa pesan per isian, bukan ringkasan Laravel.
+ */
+export async function mintaServer<T>(url: string, method: string, body?: unknown): Promise<T> {
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    ...(method === "GET" ? {} : headerXsrf()),
+  }
+  let payload: BodyInit | undefined
+  if (body instanceof FormData) {
+    payload = body
+  } else if (body !== undefined) {
+    headers["Content-Type"] = "application/json"
+    payload = JSON.stringify(body)
+  }
+
+  let res: Response
+  try {
+    res = await fetch(url, { ...SAMA_ORIGIN, method, headers, body: payload })
+  } catch {
+    throw new ApiError("Server tidak dapat dihubungi. Periksa koneksi internet Anda.")
+  }
+  if (!res.ok) {
+    let pesan = `Permintaan gagal (${res.status}).`
+    let isian: Record<string, string> = {}
+    try {
+      const json = (await res.json()) as { message?: string; pesan?: string; errors?: Record<string, string[]> }
+      isian = Object.fromEntries(Object.entries(json.errors ?? {}).map(([nama, daftar]) => [nama, daftar[0]]))
+      pesan = Object.values(isian)[0] ?? json.pesan ?? json.message ?? pesan
+    } catch {
+      // respons bukan JSON
+    }
+    if (res.status === 401) pesan = "Sesi Anda berakhir. Silakan masuk kembali."
+    if (res.status === 419) pesan = "Halaman ini sudah terlalu lama dibuka. Muat ulang halaman lalu coba lagi."
+    throw new ApiError(pesan, res.status, isian)
+  }
+  if (res.status === 204) return undefined as T
+  return (await res.json()) as T
+}
+
+/**
  * Adapter REST. Aktif bila dashboard di-build dengan VITE_API_URL, mis.
  *   VITE_API_URL=/api npm run build
- * Autentikasi memakai cookie sesi Laravel Sanctum (satu origin) dan header
- * X-XSRF-TOKEN. Kontrak endpoint lengkap ada di docs/dashboard.md.
+ * Kontrak endpoint lengkap ada di docs/dashboard.md.
  */
 export class HttpApi implements ApiClient {
   readonly mode = "server" as const
@@ -29,39 +70,8 @@ export class HttpApi implements ApiClient {
     this.base = base.replace(/\/+$/, "")
   }
 
-  private async req<T>(method: string, path: string, body?: unknown): Promise<T> {
-    const headers: Record<string, string> = {
-      Accept: "application/json",
-      ...(method === "GET" ? {} : headerXsrf()),
-    }
-    let payload: BodyInit | undefined
-    if (body instanceof FormData) {
-      payload = body
-    } else if (body !== undefined) {
-      headers["Content-Type"] = "application/json"
-      payload = JSON.stringify(body)
-    }
-
-    let res: Response
-    try {
-      res = await fetch(this.base + path, { ...SAMA_ORIGIN, method, headers, body: payload })
-    } catch {
-      throw new ApiError("Server tidak dapat dihubungi. Periksa koneksi internet Anda.")
-    }
-    if (!res.ok) {
-      let pesan = `Permintaan gagal (${res.status}).`
-      try {
-        const json = (await res.json()) as { message?: string; pesan?: string }
-        pesan = json.pesan ?? json.message ?? pesan
-      } catch {
-        // respons bukan JSON
-      }
-      if (res.status === 401) pesan = "Sesi Anda berakhir. Silakan masuk kembali."
-      if (res.status === 419) pesan = "Halaman ini sudah terlalu lama dibuka. Muat ulang halaman lalu coba lagi."
-      throw new ApiError(pesan, res.status)
-    }
-    if (res.status === 204) return undefined as T
-    return (await res.json()) as T
+  private req<T>(method: string, path: string, body?: unknown): Promise<T> {
+    return mintaServer<T>(this.base + path, method, body)
   }
 
   list<K extends NamaKoleksi>(k: K) {

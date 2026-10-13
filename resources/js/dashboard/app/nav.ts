@@ -24,8 +24,11 @@ import {
   IconSettings,
   IconTargetArrow,
   IconTruck,
+  IconUsers,
   type Icon,
 } from "@tabler/icons-react"
+
+import type { Peran } from "@/lib/auth"
 
 export interface ItemNav {
   judul: string
@@ -38,6 +41,13 @@ export interface ItemNav {
   /** Label tindakan tambah di menu samping (default "Tambah baru") */
   labelTambah?: string
   keterangan?: string
+  /** Hanya ditampilkan untuk peran ini; server tetap memeriksa haknya */
+  khusus?: Peran
+}
+
+/** Item navigasi yang boleh dilihat peran tertentu */
+export function navUntuk(items: ItemNav[], peran: Peran): ItemNav[] {
+  return items.filter((item) => !item.khusus || item.khusus === peran)
 }
 
 export interface GrupNav {
@@ -99,6 +109,13 @@ export const NAV_GRUP: GrupNav[] = [
 ]
 
 export const NAV_SEKUNDER: ItemNav[] = [
+  {
+    judul: "Akun Pegawai",
+    url: "/akun",
+    ikon: IconUsers,
+    khusus: "administrator",
+    keterangan: "Buat akun, terbitkan tautan aktivasi, tangguhkan atau nonaktifkan akun",
+  },
   { judul: "Pengaturan", url: "/pengaturan", ikon: IconSettings },
   { judul: "Panduan", url: "/panduan", ikon: IconBook2 },
 ]

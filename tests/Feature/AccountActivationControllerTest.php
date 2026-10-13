@@ -119,6 +119,6 @@ class AccountActivationControllerTest extends TestCase
 
     private function activationLink(User $user): string
     {
-        return app(IssueActivationLink::class)->handle($user);
+        return app(IssueActivationLink::class)->handle($user)['url'];
     }
 }

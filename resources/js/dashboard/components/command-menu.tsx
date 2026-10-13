@@ -10,7 +10,7 @@ import {
 } from "@tabler/icons-react"
 import { useNavigate } from "react-router"
 
-import { BUAT_CEPAT, SEMUA_NAV } from "@/app/nav"
+import { BUAT_CEPAT, navUntuk, SEMUA_NAV } from "@/app/nav"
 import { useTheme } from "@/components/theme-provider"
 import {
   CommandDialog,
@@ -21,7 +21,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command"
-import { keluar } from "@/lib/auth"
+import { keluar, sesi } from "@/lib/auth"
 import { useKoleksi } from "@/lib/queries"
 import { urlPortal } from "@/lib/portal"
 
@@ -81,7 +81,7 @@ function CommandMenu({ open, setOpen }: CommandMenuContext) {
       <CommandList>
         <CommandEmpty>Tidak ada yang cocok.</CommandEmpty>
         <CommandGroup heading="Halaman">
-          {SEMUA_NAV.map((item) => (
+          {navUntuk(SEMUA_NAV, sesi().peran).map((item) => (
             <CommandItem
               key={item.url}
               value={`halaman ${item.judul} ${item.keterangan ?? ""}`}

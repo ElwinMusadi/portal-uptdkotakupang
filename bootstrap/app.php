@@ -4,10 +4,13 @@ use App\Exceptions\PublicContentUnavailableException;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\PreventResponseCaching;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -38,6 +41,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // Laravel only withholds fields named "password" from the old input it
         // stores in the session after a failed validation.
         $exceptions->dontFlash(['sandi', 'sandi_ulang']);
+
+        // A record the API cannot find is reported without naming its model class.
+        $exceptions->render(function (NotFoundHttpException $e, Request $request): ?JsonResponse {
+            return $request->is('api/*') && $e->getPrevious() instanceof ModelNotFoundException
+                ? response()->json(['message' => 'Data tidak ditemukan.'], 404)
+                : null;
+        });
 
         // Anonymous traffic must not flood the log while a public source is down.
         $exceptions->throttle(function (Throwable $e): ?Limit {

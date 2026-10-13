@@ -116,8 +116,8 @@
     </a>
     <div class="auth__copy">
       <p class="eyebrow">Ruang pegawai</p>
-      <h1 class="h-display" style="margin-top:20px">Kelola informasi.<br><span class="tone">Jaga keakuratannya.</span></h1>
-      <p class="body" style="margin-top:20px">Akses internal untuk mengelola seluruh konten dan informasi portal PINTU, dari draf sampai terbit.</p>
+      <h1 class="h-display">Kelola informasi.<br><span class="tone">Jaga keakuratannya.</span></h1>
+      <p class="body">Akses internal untuk mengelola seluruh konten dan informasi portal PINTU, dari draf sampai terbit.</p>
       <ul class="auth__roles" role="list">
         <li><span class="numtab__num">01</span><span><strong>Penyedia</strong> menyiapkan bahan informasi dari unit.</span></li>
         <li><span class="numtab__num">02</span><span><strong>Pemeriksa</strong> mencocokkan isi dengan sumber resmi.</span></li>
@@ -131,13 +131,13 @@
   <section class="auth__main">
     <form class="card card--xl auth__card" data-login-form novalidate>
       <p class="smallcaps">Masuk</p>
-      <h2 style="margin-top:12px">Selamat datang kembali.</h2>
-      <p class="small muted" style="margin-top:8px">Gunakan NIP dan kata sandi akun PINTU Anda.</p>
+      <h2 class="auth__greeting">Selamat datang kembali.</h2>
+      <p class="small muted auth__lead">Gunakan NIP dan kata sandi akun PINTU Anda.</p>
 
       <div class="auth__alert" role="alert" data-login-alert><svg class="i i--sm" aria-hidden="true" style="margin-top:2px"><use href="#i-alert"/></svg><span data-login-msg>NIP atau kata sandi belum sesuai.</span></div>
       <div class="auth__alert auth__alert--info" role="status" data-login-info><svg class="i i--sm" aria-hidden="true" style="margin-top:2px"><use href="#i-info"/></svg><span data-login-info-msg></span></div>
 
-      <div class="field" style="margin-top:26px">
+      <div class="field auth__fields">
         <label class="label" for="nip">NIP <small>18 digit</small></label>
         <input class="input mono" id="nip" name="nip" inputmode="numeric" autocomplete="username" placeholder="1997xxxxxxxxxxxxxx" required>
       </div>
@@ -148,14 +148,14 @@
           <button class="input-wrap__btn" type="button" data-toggle-pass aria-label="Tampilkan kata sandi"><svg class="i i--sm" aria-hidden="true"><use href="#i-eye"/></svg></button>
         </div>
       </div>
-      <label class="check" style="margin-top:18px"><input type="checkbox" name="ingat"> Ingat perangkat ini selama 7 hari</label>
+      <label class="check auth__check"><input type="checkbox" name="ingat"> Ingat perangkat ini selama 7 hari</label>
 
-      <button class="btn btn--dark btn--block" type="submit" style="margin-top:24px">Masuk<svg class="i" aria-hidden="true"><use href="#i-log-in"/></svg></button>
+      <button class="btn btn--dark btn--block auth__submit" type="submit">Masuk<svg class="i" aria-hidden="true"><use href="#i-log-in"/></svg></button>
 
       <div class="auth__divider">atau</div>
-      <button class="btn btn--ghost btn--block" type="button" data-sso><svg class="i" aria-hidden="true"><use href="#i-key"/></svg>Masuk dengan SSO Pemprov</button>
+      <button class="btn btn--ghost btn--block auth__alt" type="button" data-sso><svg class="i" aria-hidden="true"><use href="#i-key"/></svg>Masuk dengan SSO Pemprov</button>
 
-      <p class="small muted" id="lupa" style="margin-top:20px">Lupa kata sandi atau akun terkunci? Hubungi admin di Sub Bagian Tata Usaha.</p>
+      <p class="small muted auth__help" id="lupa">Lupa kata sandi atau akun terkunci? Hubungi admin di Sub Bagian Tata Usaha.</p>
       <p class="auth__security"><svg class="i" aria-hidden="true"><use href="#i-shield"/></svg><span>Setiap akses dicatat. Jangan bagikan kata sandi, termasuk kepada rekan kerja.</span></p>
     </form>
   </section>

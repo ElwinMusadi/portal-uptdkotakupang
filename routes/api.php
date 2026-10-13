@@ -1,8 +1,12 @@
 <?php
 
+use App\Http\Controllers\Admin\AccountActivationLinkController;
+use App\Http\Controllers\Admin\AccountController;
+use App\Http\Controllers\Admin\AccountStatusController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\PublicFaqController;
 use App\Http\Middleware\EnsureAccountIsActive;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Route;
 use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
@@ -26,6 +30,20 @@ Route::post('/masuk', [AuthenticatedSessionController::class, 'store'])
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/sesi', [AuthenticatedSessionController::class, 'show'])->name('auth.sesi');
     Route::post('/keluar', [AuthenticatedSessionController::class, 'destroy'])->name('auth.keluar');
+
+    /*
+     * Account management for administrators (UserPolicy). Passwords are
+     * never set here: the owner chooses one through an activation link.
+     */
+    Route::prefix('akun')->name('akun.')->whereUlid('user')->group(function (): void {
+        Route::get('/', [AccountController::class, 'index'])->can('viewAny', User::class)->name('index');
+        Route::post('/', [AccountController::class, 'store'])->can('create', User::class)->name('store');
+        Route::patch('/{user}', [AccountController::class, 'update'])->can('update', 'user')->name('update');
+        Route::put('/{user}/status', [AccountStatusController::class, 'update'])->can('changeStatus', 'user')->name('status');
+        Route::post('/{user}/tautan-aktivasi', [AccountActivationLinkController::class, 'store'])
+            ->can('issueActivationLink', 'user')
+            ->name('tautan-aktivasi');
+    });
 });
 
 /*

@@ -217,6 +217,15 @@ Halaman `/login` (`public/assets/js/main.js`) mengirim NIP dan kata sandi ke `PO
 - Nama, NIP, dan peran di menu akun berasal dari server. Profil di *Pengaturan › Akun* (jabatan, unit, peran alur) masih data lokal untuk riwayat alur publikasi.
 - Administrator produksi dibuat dengan `php artisan pintu:create-admin <nip> "<nama>"`; tanpa mode interaktif, perintah ini mencetak tautan aktivasi (lihat [README](../README.md#login-pegawai)).
 
+## Akun pegawai
+
+Halaman *Akun Pegawai* (`#/akun`, `pages/akun.tsx`) hanya tampil di menu dan pencarian untuk Administrator; Pegawai UPTD yang membuka alamatnya melihat pesan bahwa halaman itu khusus Administrator, dan server tetap menolak permintaannya. Keputusannya di [D-008](decisions.md#d-008--2026-10-13--manajemen-akun-oleh-administrator), kontraknya di [docs/api.md](api.md#manajemen-akun-administrator).
+
+- Data akun selalu dibaca dari server (`lib/akun.ts`), apa pun sumber data konten dashboard; tidak ada salinannya di IndexedDB.
+- *Tambah akun* membuat akun yang menunggu aktivasi, lalu menampilkan tautan aktivasi sekali saja untuk disalin dan dikirim kepada pemiliknya.
+- Menu tiap baris: *Sunting* (nama, surel, peran), *Tangguhkan* / *Aktifkan kembali*, *Atur ulang kata sandi* atau *Tautan aktivasi baru*, dan *Nonaktifkan*. Setiap tindakan yang mengubah akses meminta konfirmasi yang menjelaskan akibatnya. Baris akun sendiri hanya bisa disunting, dan perannya tidak bisa diubah.
+- Galat validasi dari server ditampilkan di isian yang bersangkutan (`ApiError.isian`).
+
 ## Pemeriksaan sebelum commit
 
 ```bash

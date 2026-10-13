@@ -11,7 +11,6 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 use Symfony\Component\Console\Output\OutputInterface;
 
 use function Laravel\Prompts\password;
@@ -61,26 +60,21 @@ class CreateAdministrator extends Command
             return self::FAILURE;
         }
 
-        $interactive = $this->input->isInteractive();
+        $user = (new User)->forceFill([...$attributes, 'role' => UserRole::Administrator]);
 
-        $user = (new User)->forceFill([
-            ...$attributes,
-            'password' => $interactive ? $this->askForPassword() : Str::password(64),
-            'role' => UserRole::Administrator,
-            'status' => $interactive ? AccountStatus::Active : AccountStatus::Pending,
-        ]);
-        $user->save();
-
-        if ($interactive) {
+        if ($this->input->isInteractive()) {
+            $user->forceFill(['password' => $this->askForPassword(), 'status' => AccountStatus::Active])->save();
             $this->components->info("Administrator {$user->name} (NIP {$user->nip}) dibuat dan aktif.");
 
             return self::SUCCESS;
         }
 
+        $link = $issueActivationLink->handle($user);
+
         $this->components->info("Administrator {$user->name} (NIP {$user->nip}) dibuat, menunggu aktivasi.");
         $this->components->warn('Kirim tautan ini hanya kepada pemilik akun. Berlaku '.IssueActivationLink::MINUTES.' menit dan hanya sekali pakai:');
         // Raw output: console formatting must never alter the printed link.
-        $this->output->writeln($issueActivationLink->handle($user), OutputInterface::OUTPUT_RAW);
+        $this->output->writeln($link['url'], OutputInterface::OUTPUT_RAW);
 
         return self::SUCCESS;
     }

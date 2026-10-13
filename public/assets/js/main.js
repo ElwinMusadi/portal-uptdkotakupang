@@ -604,7 +604,8 @@
     const login = $("[data-login-form]");
     if (login) {
       const params = new URLSearchParams(location.search);
-      if (!params.has("keluar")) {
+      // Setelah keluar atau aktivasi, tetap di formulir walau peramban ini masih punya sesi lain.
+      if (!params.has("keluar") && !params.has("aktif")) {
         sudahMasuk().then((ya) => { if (ya) location.replace(tujuanDashboard()); });
       }
       const nip = $("#nip", login), pass = $("#sandi", login), alert = $("[data-login-alert]"), info = $("[data-login-info]");
@@ -667,6 +668,24 @@
     }));
   }
 
+  /* ---------- Login & aktivasi: kartu selalu muat dalam satu layar ---------- */
+  // Halaman tidak bergulir (lihat .auth di pages.css). Bila kartu tetap lebih
+  // tinggi dari ruangnya, misalnya ponsel mendatar atau pesan galat panjang,
+  // kartu dikecilkan agar tombolnya tidak terpotong.
+  function initAuthFit() {
+    const card = $(".auth__card");
+    const area = card?.parentElement;
+    if (!card || !("ResizeObserver" in window)) return;
+    const muatkan = () => {
+      card.style.zoom = "";
+      const gaya = getComputedStyle(area);
+      const ruang = area.clientHeight - parseFloat(gaya.paddingTop) - parseFloat(gaya.paddingBottom);
+      if (card.offsetHeight > ruang) card.style.zoom = String(Math.max(ruang / card.offsetHeight, 0.6));
+    };
+    new ResizeObserver(muatkan).observe(area);
+    new MutationObserver(muatkan).observe(card, { subtree: true, childList: true, attributeFilter: ["class"] });
+  }
+
   /* ---------- Bagikan / salin tautan / cetak ---------- */
   function initUtilities() {
     $$("[data-copy-link]").forEach((b) => b.addEventListener("click", async () => {
@@ -696,6 +715,6 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initKeliling();
-    initDash(); initSim(); initDialogs(); initGag(); initFilters(); initGallery(); initForms(); initUtilities();
+    initDash(); initSim(); initDialogs(); initGag(); initFilters(); initGallery(); initForms(); initAuthFit(); initUtilities();
   });
 })();

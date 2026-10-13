@@ -48,6 +48,15 @@ class User extends Authenticatable
     }
 
     /**
+     * Whether this account may manage other accounts. Like canSignIn(), the
+     * stored role is compared exactly.
+     */
+    public function isAdministrator(): bool
+    {
+        return ($this->getAttributes()['role'] ?? null) === UserRole::Administrator->value;
+    }
+
+    /**
      * Binds an activation link to the current password hash, so the link
      * stops working as soon as a password has been set through it.
      */

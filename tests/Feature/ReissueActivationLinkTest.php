@@ -7,6 +7,7 @@ use App\Enums\AccountStatus;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Hash;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Tests\TestCase;
@@ -22,7 +23,7 @@ class ReissueActivationLinkTest extends TestCase
     public function test_replaces_the_link_of_a_pending_account_and_voids_the_previous_one(): void
     {
         $user = User::factory()->administrator()->withStatus(AccountStatus::Pending)->create(['nip' => self::NIP]);
-        $previous = app(IssueActivationLink::class)->handle($user);
+        $previous = app(IssueActivationLink::class)->handle($user)['url'];
         $buffer = new BufferedOutput;
 
         $exitCode = Artisan::call('pintu:activation-link', ['nip' => self::NIP], $buffer);
@@ -47,21 +48,41 @@ class ReissueActivationLinkTest extends TestCase
     }
 
     #[DataProvider('settledStatuses')]
-    public function test_refuses_an_account_that_is_not_pending_and_keeps_its_password(AccountStatus $status): void
+    public function test_refuses_an_account_that_is_not_pending_without_the_reset_option(AccountStatus $status): void
     {
         $user = User::factory()->withStatus($status)->create(['nip' => self::NIP]);
 
         $this->artisan('pintu:activation-link', ['nip' => self::NIP])
-            ->expectsOutputToContain('Tidak ada akun dengan NIP ini yang menunggu aktivasi.')
+            ->expectsOutputToContain('Akun ini tidak menunggu aktivasi. Tambahkan --reset bila kata sandinya memang perlu diatur ulang.')
             ->assertFailed();
 
         $this->assertSame($user->password, $user->fresh()->password);
+        $this->assertSame($status, $user->fresh()->status);
+    }
+
+    public function test_resets_an_active_account_with_the_reset_option(): void
+    {
+        $user = User::factory()->administrator()->create(['nip' => self::NIP]);
+        $buffer = new BufferedOutput;
+
+        $exitCode = Artisan::call('pintu:activation-link', ['nip' => self::NIP, '--reset' => true], $buffer);
+
+        $this->assertSame(0, $exitCode);
+        $output = $buffer->fetch();
+        $this->assertStringContainsString('kata sandi lamanya tidak berlaku lagi', $output);
+        $this->assertSame(AccountStatus::Pending, $user->fresh()->status);
+        $this->assertFalse(Hash::check('password', $user->fresh()->password));
+        $link = trim(collect(preg_split('/\R/', trim($output)))->last());
+        $this->post($link, ['sandi' => self::PASSWORD, 'sandi_ulang' => self::PASSWORD])->assertRedirect('/login?aktif=1');
+        $this->assertSame(AccountStatus::Active, $user->fresh()->status);
     }
 
     public function test_refuses_an_unknown_nip(): void
     {
-        $this->artisan('pintu:activation-link', ['nip' => self::NIP])
-            ->expectsOutputToContain('Tidak ada akun dengan NIP ini yang menunggu aktivasi.')
+        $this->artisan('pintu:activation-link', ['nip' => self::NIP, '--reset' => true])
+            ->expectsOutputToContain('Tidak ada akun dengan NIP ini.')
             ->assertFailed();
+
+        $this->assertDatabaseCount('users', 0);
     }
 }

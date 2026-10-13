@@ -1,7 +1,7 @@
 import * as React from "react"
 import { Link } from "react-router"
 
-import { NAV_GRUP, NAV_SEKUNDER, NAV_UTAMA } from "@/app/nav"
+import { NAV_GRUP, NAV_SEKUNDER, NAV_UTAMA, navUntuk } from "@/app/nav"
 import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
@@ -15,6 +15,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { sesi } from "@/lib/auth"
 import { usePengaturan } from "@/lib/queries"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -52,7 +53,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {NAV_GRUP.map((grup) => (
           <NavDocuments key={grup.label} label={grup.label} items={grup.item} />
         ))}
-        <NavSecondary items={NAV_SEKUNDER} className="mt-auto" />
+        <NavSecondary items={navUntuk(NAV_SEKUNDER, sesi().peran)} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser />

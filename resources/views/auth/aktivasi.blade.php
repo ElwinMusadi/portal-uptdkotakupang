@@ -23,8 +23,8 @@
     </a>
     <div class="auth__copy">
       <p class="eyebrow">Ruang pegawai</p>
-      <h1 class="h-display" style="margin-top:20px">Aktifkan akun.<br><span class="tone">Pilih kata sandi sendiri.</span></h1>
-      <p class="body" style="margin-top:20px">Tautan aktivasi hanya bisa dipakai sekali dan berlaku terbatas. Setelah aktif, masuk lewat halaman Login Pegawai.</p>
+      <h1 class="h-display">Aktifkan akun.<br><span class="tone">Pilih kata sandi sendiri.</span></h1>
+      <p class="body">Tautan aktivasi hanya bisa dipakai sekali dan berlaku terbatas. Setelah aktif, masuk lewat halaman Login Pegawai.</p>
     </div>
     <div class="auth__foot"><a class="link-arrow" href="{{ url('/') }}">Kembali ke portal publik</a><span>© 2026 UPTD Pendapatan Daerah Wilayah Kota Kupang</span></div>
   </section>
@@ -34,14 +34,14 @@
       <form class="card card--xl auth__card" method="post" action="{{ request()->getRequestUri() }}" novalidate>
         @csrf
         <p class="smallcaps">Aktivasi akun</p>
-        <h2 style="margin-top:12px">Buat kata sandi Anda.</h2>
-        <p class="small muted" style="margin-top:8px">{{ $user->name }} · NIP <span class="mono">{{ $user->nip }}</span></p>
+        <h2>Buat kata sandi Anda.</h2>
+        <p class="small muted auth__lead">{{ $user->name }} · NIP <span class="mono">{{ $user->nip }}</span></p>
 
         @if ($errors->any())
           <div class="auth__alert is-on" role="alert"><span>{{ $errors->first() }}</span></div>
         @endif
 
-        <div class="field" style="margin-top:26px">
+        <div class="field auth__fields">
           <label class="label" for="sandi">Kata sandi baru <small>min. 12 karakter, huruf dan angka</small></label>
           <input class="input" id="sandi" name="sandi" type="password" autocomplete="new-password" required @if ($errors->has('sandi')) aria-invalid="true" @endif>
         </div>
@@ -50,19 +50,20 @@
           <input class="input" id="sandi_ulang" name="sandi_ulang" type="password" autocomplete="new-password" required>
         </div>
 
-        <button class="btn btn--dark btn--block" type="submit" style="margin-top:24px">Aktifkan akun</button>
+        <button class="btn btn--dark btn--block auth__submit" type="submit">Aktifkan akun</button>
 
         <p class="auth__security"><span>Jangan bagikan kata sandi, termasuk kepada rekan kerja.</span></p>
       </form>
     @else
       <div class="card card--xl auth__card">
         <p class="smallcaps">Aktivasi akun</p>
-        <h2 style="margin-top:12px">Tautan tidak berlaku.</h2>
-        <p class="small muted" style="margin-top:8px">Tautan aktivasi sudah dipakai, kedaluwarsa, atau tidak lengkap. Minta tautan baru kepada admin di Sub Bagian Tata Usaha.</p>
-        <a class="btn btn--dark btn--block" href="{{ url('/login') }}" style="margin-top:24px">Ke halaman Login Pegawai</a>
+        <h2>Tautan tidak berlaku.</h2>
+        <p class="small muted auth__message">Tautan aktivasi sudah dipakai, kedaluwarsa, atau tidak lengkap. Minta tautan baru kepada admin di Sub Bagian Tata Usaha.</p>
+        <a class="btn btn--dark btn--block auth__submit" href="{{ url('/login') }}">Ke halaman Login Pegawai</a>
       </div>
     @endif
   </section>
 </main>
+<script src="{{ asset('assets/js/main.js') }}" defer></script>
 </body>
 </html>

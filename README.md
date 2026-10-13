@@ -75,7 +75,9 @@ Login diperiksa server dengan sesi cookie Laravel Sanctum ([D-007](docs/decision
 php artisan db:seed
 ```
 
-Akun administrator sungguhan, termasuk yang pertama di produksi, dibuat dengan perintah berikut. Di terminal, kata sandi diminta tanpa ditampilkan dan akun langsung aktif.
+Akun pegawai, termasuk Administrator lain, dibuat Administrator dari halaman *Akun Pegawai* di dashboard ([D-008](docs/decisions.md#d-008--2026-10-13--manajemen-akun-oleh-administrator)). Di sana juga tersedia penangguhan, penonaktifan, dan atur ulang kata sandi lewat tautan aktivasi.
+
+Administrator pertama di produksi dibuat dengan perintah berikut. Di terminal, kata sandi diminta tanpa ditampilkan dan akun langsung aktif.
 
 ```bash
 php artisan pintu:create-admin 199001012020121001 "Nama Lengkap"
@@ -85,6 +87,12 @@ Tanpa mode interaktif (`--no-interaction`, misalnya di tab *Commands* Laravel Cl
 
 ```bash
 php artisan pintu:activation-link 199001012020121001
+```
+
+Bila Administrator satu-satunya lupa kata sandi, tidak ada Administrator lain yang bisa mengatur ulang akunnya dari dashboard. Atur ulang dari server; kata sandi lamanya langsung tidak berlaku dan perintah mencetak tautan aktivasi baru:
+
+```bash
+php artisan pintu:activation-link 199001012020121001 --reset
 ```
 
 ## Pengujian
