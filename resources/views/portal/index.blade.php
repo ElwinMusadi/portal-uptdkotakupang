@@ -1801,10 +1801,7 @@
           </div>
           <div>
             <h3>Alamat</h3>
-            <p>
-              Kantor Bersama Samsat Kota Kupang<br />Jl. [alamat kantor], Kota
-              Kupang<br />Nusa Tenggara Timur
-            </p>
+            <p data-kontak-alamat>Memuat alamat…</p>
           </div>
           <div>
             <h3>Jam loket</h3>
@@ -1814,13 +1811,7 @@
           </div>
           <div>
             <h3>Hubungi</h3>
-            <ul role="list">
-              <li><a href="tel:+620000000000">(0380) 000 000</a></li>
-              <li>
-                <a href="mailto:uptd.kotakupang@example.go.id"
-                  >uptd.kotakupang@…go.id</a
-                >
-              </li>
+            <ul role="list" data-kontak-hubungi>
               <li><a href="kontak.html#pengaduan">Kanal pengaduan</a></li>
             </ul>
           </div>

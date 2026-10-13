@@ -200,14 +200,13 @@
   <section class="container contact-grid">
     <div data-reveal>
       <ul class="contact-list" role="list">
-        <li><svg class="i" aria-hidden="true"><use href="#i-map-pin"/></svg><span><strong>Kantor Bersama Samsat Kota Kupang</strong><span>Jl. [alamat kantor], Kota Kupang, Nusa Tenggara Timur</span></span></li>
+        <li><svg class="i" aria-hidden="true"><use href="#i-map-pin"/></svg><span><strong data-kontak-nama>Alamat kantor</strong><span data-kontak-alamat-baris>Memuat alamat…</span></span></li>
         <li><svg class="i" aria-hidden="true"><use href="#i-clock"/></svg><span><strong data-status-text>Memuat status loket…</strong><span data-jam-ringkas-baris><a class="link" href="jadwal.html">Lihat jam loket</a></span></span></li>
-        <li><svg class="i" aria-hidden="true"><use href="#i-phone"/></svg><span><strong>Telepon</strong><a href="tel:+620000000000">(0380) 000 000</a></span></li>
-        <li><svg class="i" aria-hidden="true"><use href="#i-message"/></svg><span><strong>WhatsApp layanan</strong><a href="#">+62 8xx-xxxx-xxxx · hanya pesan teks, hari kerja</a></span></li>
-        <li><svg class="i" aria-hidden="true"><use href="#i-mail"/></svg><span><strong>Surel</strong><a href="mailto:uptd.kotakupang@example.go.id">uptd.kotakupang@…go.id</a></span></li>
-        <li><svg class="i" aria-hidden="true"><use href="#i-instagram"/></svg><span><strong>Media sosial</strong><span>@samsatkotakupang · contoh akun</span></span></li>
+        <li data-kontak-telepon hidden><svg class="i" aria-hidden="true"><use href="#i-phone"/></svg><span><strong>Telepon</strong><a></a></span></li>
+        <li data-kontak-whatsapp hidden><svg class="i" aria-hidden="true"><use href="#i-message"/></svg><span><strong>WhatsApp layanan</strong><a target="_blank" rel="noopener"></a></span></li>
+        <li data-kontak-email hidden><svg class="i" aria-hidden="true"><use href="#i-mail"/></svg><span><strong>Surel</strong><a></a></span></li>
+        <li data-kontak-sosial hidden><svg class="i" aria-hidden="true"><use href="#i-instagram"/></svg><span><strong>Media sosial</strong><span></span></span></li>
       </ul>
-      <p class="proto-note" style="margin-top:16px">Alamat dan nomor kontak diisi setelah verifikasi.</p>
     </div>
     <div data-reveal>
       <div class="map">
@@ -233,9 +232,9 @@
           </g>
         </svg>
         <div class="map__pin"><span>Samsat Kota Kupang</span><i aria-hidden="true"></i></div>
-        <a class="btn btn--light btn--sm map__open" href="https://maps.google.com/?q=Samsat+Kota+Kupang" target="_blank" rel="noopener"><svg class="i" aria-hidden="true"><use href="#i-external"/></svg>Buka di Google Maps</a>
+        <a class="btn btn--light btn--sm map__open" target="_blank" rel="noopener" data-kontak-peta hidden><svg class="i" aria-hidden="true"><use href="#i-external"/></svg>Buka di Google Maps</a>
       </div>
-      <div class="caption-row"><p>Peta ilustrasi. Gunakan tautan untuk petunjuk arah.</p><p>Parkir tersedia di halaman kantor</p></div>
+      <div class="caption-row"><p>Peta ilustrasi. Gunakan tautan untuk petunjuk arah.</p><p data-kontak-lokasi></p></div>
     </div>
   </section>
 
@@ -244,7 +243,7 @@
       <div class="split__sticky" data-reveal>
         <p class="eyebrow">Formulir masukan</p>
         <h2 class="h2" style="margin-top:20px">Ceritakan singkat. <span class="tone">Kami tindak lanjuti.</span></h2>
-        <p class="body" style="margin-top:20px">Masukan Anda menjadi bahan evaluasi dan pemutakhiran portal serta layanan. Kami membalas paling lambat tiga hari kerja.</p>
+        <p class="body" style="margin-top:20px">Masukan Anda menjadi bahan evaluasi dan pemutakhiran portal serta layanan. <span data-kontak-janji></span></p>
       </div>
       <!-- Dikirim main.js ke POST /api/public/pesan; masuk ke Pesan & Pengaduan di dashboard -->
       <form class="card card--xl form-card" data-pesan-form novalidate data-reveal>
@@ -282,10 +281,8 @@
         <p class="eyebrow">Kanal pengaduan resmi</p>
         <h2 class="h2" style="margin-top:20px">Pilih yang paling nyaman. <span class="tone">Semuanya dicatat.</span></h2>
       </div>
-      <div class="channels" data-reveal>
-        <article class="card channel"><svg class="i" aria-hidden="true"><use href="#i-megaphone"/></svg><h3>SP4N-LAPOR!</h3><p>Sistem pengaduan pelayanan publik nasional. Aduan diteruskan ke unit kami.</p><a class="link-arrow" href="https://www.lapor.go.id" target="_blank" rel="noopener">Buka lapor.go.id<svg class="i" aria-hidden="true"><use href="#i-arrow-up-right"/></svg></a></article>
-        <article class="card channel"><svg class="i" aria-hidden="true"><use href="#i-inbox"/></svg><h3>Kotak saran di kantor.</h3><p>Tersedia di ruang tunggu. Dibuka dan direkap setiap Jumat oleh Sub Bagian Tata Usaha.</p><a class="link-arrow" href="jadwal.html">Lihat jam kantor<svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></a></article>
-        <article class="card channel"><svg class="i" aria-hidden="true"><use href="#i-scale"/></svg><h3>Ombudsman RI Perwakilan NTT.</h3><p>Bila pengaduan Anda tidak ditanggapi atau ada dugaan maladministrasi.</p><a class="link-arrow" href="https://ombudsman.go.id" target="_blank" rel="noopener">Buka ombudsman.go.id<svg class="i" aria-hidden="true"><use href="#i-arrow-up-right"/></svg></a></article>
+      <div class="channels" data-kontak-kanal data-reveal>
+        <p class="channels__status" role="status">Memuat kanal pengaduan…</p>
       </div>
     </div>
   </section>
@@ -304,7 +301,7 @@
       </div>
       <div>
         <h3>Alamat</h3>
-        <p>Kantor Bersama Samsat Kota Kupang<br>Jl. [alamat kantor], Kota Kupang<br>Nusa Tenggara Timur</p>
+        <p data-kontak-alamat>Memuat alamat…</p>
       </div>
       <div>
         <h3>Jam loket</h3>
@@ -314,9 +311,7 @@
       </div>
       <div>
         <h3>Hubungi</h3>
-        <ul role="list">
-          <li><a href="tel:+620000000000">(0380) 000 000</a></li>
-          <li><a href="mailto:uptd.kotakupang@example.go.id">uptd.kotakupang@…go.id</a></li>
+        <ul role="list" data-kontak-hubungi>
           <li><a href="kontak.html#pengaduan">Kanal pengaduan</a></li>
         </ul>
       </div>

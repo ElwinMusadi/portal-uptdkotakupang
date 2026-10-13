@@ -384,6 +384,153 @@
     });
   }
 
+  /* ---------- Kontak & Kanal ----------
+     Alamat, kontak, dan kanal pengaduan dikelola di dashboard (Kontak & Kanal)
+     dan dibaca dari GET /api/public/kontak untuk footer semua halaman dan
+     halaman Kontak (D-019). Teks dipasang sebagai teks polos dan tautan hanya
+     dengan skema yang diizinkan. Tidak ada kontak cadangan: sebelum disimpan
+     atau bila API gagal, keterangannya yang tampil. */
+  const tautanAman = (url) => (/^(https?:\/\/[^/\s]+|mailto:\S|tel:\+?\d|#|\.{1,2}\/|[\w-]+\.html(?:[#?]|$))/i.test(url) && !/[\s\x00-\x1f\x7f]/.test(url) ? url : "");
+  // Nomor Indonesia untuk tel: dan wa.me, mis. (0380) 821 234 menjadi +62380821234
+  const nomorInternasional = (nomor) => {
+    const d = nomor.replace(/[^\d+]/g, "");
+    return d.startsWith("+") ? d : d.startsWith("0") ? `+62${d.slice(1)}` : d.startsWith("62") ? `+${d}` : d;
+  };
+
+  async function muatKontak() {
+    const k = await ambilJson("/api/public/kontak");
+    const teks = (x) => typeof x === "string";
+    const isian = ["namaKantor", "alamat", "kota", "provinsi", "telepon", "whatsapp", "whatsappCatatan", "email", "mapsUrl", "catatanLokasi", "janjiBalasan"];
+    if (!isian.every((f) => teks(k?.[f])) || !Array.isArray(k.mediaSosial) || !Array.isArray(k.kanalPengaduan)) throw new Error("Respons tidak dikenal");
+    k.mediaSosial = k.mediaSosial.filter((a) => teks(a?.platform) && teks(a.akun) && teks(a.url));
+    k.kanalPengaduan = k.kanalPengaduan.filter((c) => ["nama", "deskripsi", "tautanLabel", "tautanUrl"].every((f) => teks(c?.[f])));
+    return k;
+  }
+
+  function tautan(teks, url) {
+    const a = document.createElement("a");
+    a.textContent = teks;
+    a.href = url;
+    if (/^https?:/i.test(url)) { a.target = "_blank"; a.rel = "noopener"; }
+    return a;
+  }
+
+  // Ikon kanal pengaduan menurut namanya; hanya hiasan
+  const ikonKanal = (nama) => (/lapor/i.test(nama) ? "megaphone" : /ombudsman/i.test(nama) ? "scale" : /kotak|saran/i.test(nama) ? "inbox" : "message");
+
+  function initKontak() {
+    const alamatFooter = $$("[data-kontak-alamat]");
+    const hubungi = $$("[data-kontak-hubungi]");
+    const baris = $("[data-kontak-alamat-baris]");
+    const kanal = $("[data-kontak-kanal]");
+    if (!(alamatFooter.length || hubungi.length || baris || kanal)) return;
+    const nama = $("[data-kontak-nama]");
+    const namaBawaan = nama?.textContent ?? "";
+    const item = (k) => $(`[data-kontak-${k}]`);
+    const isiItem = (k, teks, url) => {
+      const li = item(k);
+      if (!li) return;
+      const a = $("a", li);
+      li.hidden = !teks;
+      a.textContent = teks;
+      if (url) a.href = url; else a.removeAttribute("href");
+    };
+    const lainnya = { peta: item("peta"), lokasi: item("lokasi"), janji: item("janji") };
+
+    // Keadaan tanpa data: sebelum disimpan, selama dimuat ulang, atau bila gagal
+    const kosongkan = (pesanFooter, pesanKontak, pesanKanal, tombol) => {
+      alamatFooter.forEach((p) => (p.textContent = pesanFooter));
+      hubungi.forEach((ul) => $$("[data-kontak-isi]", ul).forEach((li) => li.remove()));
+      if (nama) nama.textContent = namaBawaan;
+      if (baris) {
+        baris.textContent = pesanKontak;
+        if (tombol) baris.append(tombol);
+      }
+      ["telepon", "whatsapp", "email", "sosial"].forEach((k) => { if (item(k)) item(k).hidden = true; });
+      if (lainnya.peta) lainnya.peta.hidden = true;
+      if (lainnya.lokasi) lainnya.lokasi.textContent = "";
+      if (lainnya.janji) lainnya.janji.textContent = "";
+      if (kanal) kanal.innerHTML = `<p class="channels__status" role="status">${esc(pesanKanal)}</p>`;
+    };
+
+    const tampilkan = (k) => {
+      const kotaProvinsi = [k.kota, k.provinsi].filter(Boolean);
+      alamatFooter.forEach((p) => {
+        const barisAlamat = [k.namaKantor, [k.alamat, k.kota].filter(Boolean).join(", "), k.provinsi].filter(Boolean);
+        p.replaceChildren(...barisAlamat.flatMap((t, i) => (i ? [document.createElement("br"), t] : [t])));
+      });
+      hubungi.forEach((ul) => {
+        $$("[data-kontak-isi]", ul).forEach((li) => li.remove());
+        const isi = [
+          k.telepon && tautan(k.telepon, `tel:${nomorInternasional(k.telepon)}`),
+          k.email && tautan(k.email, `mailto:${k.email}`),
+        ].filter(Boolean).map((a) => {
+          const li = document.createElement("li");
+          li.dataset.kontakIsi = "";
+          li.append(a);
+          return li;
+        });
+        ul.prepend(...isi);
+      });
+      if (nama) nama.textContent = k.namaKantor;
+      if (baris) baris.textContent = [k.alamat, ...kotaProvinsi].filter(Boolean).join(", ");
+      isiItem("telepon", k.telepon, k.telepon && `tel:${nomorInternasional(k.telepon)}`);
+      const wa = k.whatsapp ? [k.whatsapp, k.whatsappCatatan].filter(Boolean).join(" · ") : "";
+      isiItem("whatsapp", wa, k.whatsapp && `https://wa.me/${nomorInternasional(k.whatsapp).replace("+", "")}`);
+      isiItem("email", k.email, k.email && `mailto:${k.email}`);
+      const sosial = item("sosial");
+      if (sosial) {
+        const wadah = $("span > span", sosial);
+        wadah.replaceChildren(...k.mediaSosial.flatMap((a, i) => {
+          const teks = `${a.platform} ${a.akun}`;
+          const url = tautanAman(a.url);
+          return [...(i ? [" · "] : []), url ? tautan(teks, url) : teks];
+        }));
+        sosial.hidden = !k.mediaSosial.length;
+      }
+      const peta = tautanAman(k.mapsUrl);
+      if (lainnya.peta) {
+        lainnya.peta.hidden = !peta;
+        if (peta) lainnya.peta.href = peta;
+      }
+      if (lainnya.lokasi) lainnya.lokasi.textContent = k.catatanLokasi;
+      if (lainnya.janji) lainnya.janji.textContent = k.janjiBalasan;
+      if (kanal) {
+        kanal.innerHTML = k.kanalPengaduan.length
+          ? k.kanalPengaduan.map((c) => {
+            const url = tautanAman(c.tautanUrl);
+            const judul = /[.!?]$/.test(c.nama) ? c.nama : `${c.nama}.`;
+            const link = url
+              ? `<a class="link-arrow" href="${esc(url)}"${/^https?:/i.test(url) ? ' target="_blank" rel="noopener"' : ""}>${esc(c.tautanLabel || "Buka tautan")}<svg class="i" aria-hidden="true"><use href="#i-arrow-${/^https?:/i.test(url) ? "up-right" : "right"}"/></svg></a>`
+              : "";
+            return `<article class="card channel"><svg class="i" aria-hidden="true"><use href="#i-${ikonKanal(c.nama)}"/></svg><h3>${esc(judul)}</h3>${c.deskripsi ? `<p>${esc(c.deskripsi)}</p>` : ""}${link}</article>`;
+          }).join("")
+          : '<p class="channels__status" role="status">Daftar kanal pengaduan belum tersedia. Anda tetap dapat mengirim pesan lewat formulir di atas.</p>';
+      }
+    };
+
+    const muat = async (fokus) => {
+      try {
+        const k = await muatKontak();
+        if (typeof k.diperbarui === "string") tampilkan(k);
+        else kosongkan("Alamat belum tersedia.", "Alamat dan nomor kontak belum tersedia.", "Daftar kanal pengaduan belum tersedia. Anda tetap dapat mengirim pesan lewat formulir di atas.");
+      } catch {
+        const retry = document.createElement("button");
+        retry.type = "button";
+        retry.className = "link";
+        retry.textContent = "Coba lagi";
+        retry.addEventListener("click", () => {
+          kosongkan("Memuat alamat…", "Memuat alamat…", "Memuat kanal pengaduan…");
+          muat(true);
+        });
+        kosongkan("Alamat belum dapat dimuat.", "Kontak belum dapat dimuat. ", "Kanal pengaduan belum dapat dimuat.", retry);
+        if (fokus) retry.focus();
+      }
+    };
+
+    muat(false);
+  }
+
   /* ---------- Samsat Keliling ----------
      Jadwal dikelola di dashboard dan dibaca dari GET /api/public/keliling,
      yang hanya memberikan lokasi aktif. Teksnya di-escape sebelum dipasang.
@@ -1180,7 +1327,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling();
+    initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak();
     initDash(); initSim(); initDialogs(); initGag(); initFilters(); initGallery(); initFaq(); initForms(); initPesanForm(); initAuthFit(); initUtilities();
   });
 })();

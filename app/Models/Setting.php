@@ -62,6 +62,34 @@ class Setting extends Model
      */
     public const string STATISTICS_VERIFIED = 'terverifikasi';
 
+    /**
+     * The office's address, contact details and complaint channels on the
+     * portal's footer and Kontak page (Kontak & Kanal).
+     */
+    public const string CONTACT = 'kontak';
+
+    /**
+     * The contact document until it is first saved: empty, so the portal
+     * shows no placeholder address or number.
+     *
+     * @var array{namaKantor: string, alamat: string, kota: string, provinsi: string, telepon: string, whatsapp: string, whatsappCatatan: string, email: string, mediaSosial: list<array{id: string, platform: string, akun: string, url: string}>, mapsUrl: string, catatanLokasi: string, janjiBalasan: string, kanalPengaduan: list<array{id: string, nama: string, deskripsi: string, tautanLabel: string, tautanUrl: string}>}
+     */
+    public const array UNSAVED_CONTACT = [
+        'namaKantor' => '',
+        'alamat' => '',
+        'kota' => '',
+        'provinsi' => '',
+        'telepon' => '',
+        'whatsapp' => '',
+        'whatsappCatatan' => '',
+        'email' => '',
+        'mediaSosial' => [],
+        'mapsUrl' => '',
+        'catatanLokasi' => '',
+        'janjiBalasan' => '',
+        'kanalPengaduan' => [],
+    ];
+
     protected $primaryKey = 'name';
 
     protected $keyType = 'string';
@@ -126,6 +154,16 @@ class Setting extends Model
     public static function tariff(): array
     {
         return self::query()->find(self::TARIFF)?->value ?? self::UNSAVED_TARIFF;
+    }
+
+    /**
+     * The contact document as the dashboard edits it.
+     *
+     * @return array{namaKantor: string, alamat: string, kota: string, provinsi: string, telepon: string, whatsapp: string, whatsappCatatan: string, email: string, mediaSosial: list<array{id: string, platform: string, akun: string, url: string}>, mapsUrl: string, catatanLokasi: string, janjiBalasan: string, kanalPengaduan: list<array{id: string, nama: string, deskripsi: string, tautanLabel: string, tautanUrl: string}>}
+     */
+    public static function contact(): array
+    {
+        return self::query()->find(self::CONTACT)?->value ?? self::UNSAVED_CONTACT;
     }
 
     /**

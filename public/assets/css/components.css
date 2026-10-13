@@ -401,6 +401,8 @@
 .footer__info p, .footer__info li { color: var(--ink-2); line-height: 1.6; }
 .footer__info ul { list-style: none; display: grid; gap: 6px; }
 .footer__info a:hover { color: var(--accent-ink); }
+/* Surel dari dashboard (initKontak) boleh dipotong agar tidak melebihi kolom */
+.footer__info [data-kontak-hubungi] a { overflow-wrap: anywhere; }
 .footer__brand { display: flex; align-items: center; gap: 12px; }
 .footer__brand .mark { width: 30px; height: 30px; color: var(--ink); }
 .footer__brand strong { display: block; font-size: 14px; letter-spacing: .08em; }

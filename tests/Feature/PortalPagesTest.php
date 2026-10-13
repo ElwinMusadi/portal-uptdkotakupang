@@ -115,6 +115,35 @@ class PortalPagesTest extends TestCase
         $this->assertStringContainsString('data-dash-chart hidden', $dashboard[0]);
     }
 
+    #[DataProvider('pages')]
+    public function test_leaves_the_footer_contact_details_to_the_public_api(string $uri, string $view): void
+    {
+        $html = $this->get($uri)->assertOk()->getContent();
+
+        foreach (['alamat kantor', '(0380)', 'example.go.id', '8xx', '@samsatkotakupang'] as $placeholder) {
+            $this->assertStringNotContainsString($placeholder, $html, "{$view} still shows {$placeholder}");
+        }
+        if (str_contains($html, '<footer class="footer">')) {
+            $this->assertStringContainsString('<p data-kontak-alamat>Memuat alamat…</p>', $html, $view);
+            $this->assertMatchesRegularExpression('/<ul role="list" data-kontak-hubungi>\s*<li><a href="kontak.html#pengaduan">Kanal pengaduan<\/a><\/li>\s*<\/ul>/', $html, $view);
+        }
+    }
+
+    public function test_leaves_the_contact_page_details_and_complaint_channels_to_the_public_api(): void
+    {
+        $html = $this->get('/kontak')->assertOk()->getContent();
+
+        $this->assertSame(1, preg_match('/<div class="channels"[^>]*>(.*?)<\/div>/s', $html, $channels));
+        $this->assertSame('<p class="channels__status" role="status">Memuat kanal pengaduan…</p>', trim($channels[1]));
+        foreach (['lapor.go.id', 'Parkir tersedia', 'tiga hari kerja', 'maps.google.com', 'diisi setelah verifikasi'] as $example) {
+            $this->assertStringNotContainsString($example, $html);
+        }
+        foreach (['telepon', 'whatsapp', 'email', 'sosial'] as $item) {
+            $this->assertStringContainsString("<li data-kontak-{$item} hidden>", $html);
+        }
+        $this->assertStringContainsString('<span data-kontak-alamat-baris>Memuat alamat…</span>', $html);
+    }
+
     public function test_sends_the_contact_form_to_the_message_api_with_the_services_it_accepts(): void
     {
         $html = $this->get('/kontak')->assertOk()->getContent();

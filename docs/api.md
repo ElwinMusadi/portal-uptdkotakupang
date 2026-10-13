@@ -11,6 +11,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET` | `/api/public/papan` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/tarif` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/statistik` | anonim, hanya baca | tersedia |
+| `GET` | `/api/public/kontak` | anonim, hanya baca | tersedia |
 | `POST` | `/api/public/pesan` | anonim, formulir Kontak | tersedia |
 | `POST` | `/api/masuk` | halaman Login Pegawai | tersedia |
 | `GET` | `/api/sesi` | pegawai login | tersedia |
@@ -30,6 +31,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET`, `PUT` | `/api/pengaturan/papan` | Administrator, pengelola Papan Layanan | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/tarif` | baca: semua pegawai login; simpan: Administrator, pengelola Tarif & Simulasi | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/statistik` | Administrator, pengelola Statistik Layanan | tersedia |
+| `GET`, `PUT` | `/api/pengaturan/kontak` | Administrator, pengelola Kontak & Kanal | tersedia |
 | `GET`, `POST` | `/api/koleksi/pesan` | Administrator, pengelola Pesan & Pengaduan | tersedia |
 | `GET`, `PATCH` | `/api/koleksi/pesan/{id}` | Administrator, pengelola Pesan & Pengaduan | tersedia |
 | `POST` | `/api/koleksi/pesan/hapus` | Administrator | tersedia |
@@ -98,7 +100,7 @@ Kunci modul untuk `modul` ([D-010](decisions.md#d-010--2026-10-13--penugasan-mod
 | `jam` | Jam Pelayanan (termasuk koleksi `penyesuaian`) | `halaman` | Halaman Statis |
 | `keliling` | Samsat Keliling | `pemutakhiran` | Jadwal Pemutakhiran |
 
-Endpoint konten dashboard (`/api/koleksi/…`, `/api/pengaturan/…`) wajib menolak pegawai yang tidak mengelola modul koleksi atau pengaturan itu. `/api/koleksi/faq`, `/api/koleksi/keliling`, `/api/koleksi/penyesuaian`, `/api/koleksi/pesan`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/tarif`, dan `/api/pengaturan/statistik` sudah melakukannya; tarif boleh dibaca semua pegawai untuk Kalkulator PKB, tetapi hanya pengelolanya yang boleh menyimpan.
+Endpoint konten dashboard (`/api/koleksi/…`, `/api/pengaturan/…`) wajib menolak pegawai yang tidak mengelola modul koleksi atau pengaturan itu. `/api/koleksi/faq`, `/api/koleksi/keliling`, `/api/koleksi/penyesuaian`, `/api/koleksi/pesan`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/tarif`, `/api/pengaturan/statistik`, dan `/api/pengaturan/kontak` sudah melakukannya; tarif boleh dibaca semua pegawai untuk Kalkulator PKB, tetapi hanya pengelolanya yang boleh menyimpan.
 
 ## Tanya Jawab di dashboard
 
@@ -259,6 +261,29 @@ Penyimpanan tercatat di log aktivitas sebagai "memperbarui Statistik Layanan".
 
 Kode: `app/Http/Controllers/Dashboard/StatisticsController.php`, `app/Http/Requests/Dashboard/UpdateStatisticsRequest.php`, `app/Actions/SaveSetting.php`, `app/Models/Setting.php`. Tes: `tests/Feature/StatisticsControllerTest.php`.
 
+## Kontak & Kanal di dashboard
+
+Dipakai halaman *Kontak & Kanal* di dashboard ([D-019](decisions.md#d-019--2026-10-13--kontak--kanal-tersimpan-di-server)). Tamu mendapat `401`; pegawai yang tidak mengelola modul `kontak` mendapat `403` `{"message": "Modul Kontak & Kanal belum ditugaskan kepada Anda."}`.
+
+```json
+{
+  "namaKantor": "Kantor Bersama Samsat Kota Kupang", "alamat": "Jl. …", "kota": "Kota Kupang", "provinsi": "Nusa Tenggara Timur",
+  "telepon": "(0380) 821 234", "whatsapp": "0812-3456-7890", "whatsappCatatan": "Hanya pesan teks, hari kerja", "email": "…@….go.id",
+  "mediaSosial": [{ "id": "…", "platform": "Instagram", "akun": "@…", "url": "https://instagram.com/…" }],
+  "mapsUrl": "https://maps.google.com/?q=…", "catatanLokasi": "…", "janjiBalasan": "Kami membalas paling lambat tiga hari kerja.",
+  "kanalPengaduan": [{ "id": "…", "nama": "SP4N-LAPOR!", "deskripsi": "…", "tautanLabel": "Buka lapor.go.id", "tautanUrl": "https://www.lapor.go.id" }]
+}
+```
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `GET /api/pengaturan/kontak` | — | `200` dokumen di atas. Sebelum pertama kali disimpan: semua isian kosong dan kedua daftar `[]`. |
+| `PUT /api/pengaturan/kontak` | dokumen lengkap | `200` dokumen tersimpan; isian opsional yang kosong disimpan sebagai `""`. Isi yang sama dengan yang tersimpan tidak dicatat. `422` bila nama kantor (maks. 120 karakter) atau alamat (maks. 200) kosong, telepon kurang dari 6 angka atau berisi huruf, WhatsApp kurang dari 9 angka, surel tidak valid, lebih dari 8 akun media sosial atau 8 kanal, butir tanpa platform, akun, atau nama kanal, ID butir ganda, tautan selain `http(s)://`, `mailto:`, `tel:`, `#…`, atau halaman portal `*.html`, tautan berisi spasi, atau teks berisi karakter kontrol. |
+
+Penyimpanan tercatat di log aktivitas sebagai "memperbarui Kontak & Kanal".
+
+Kode: `app/Http/Controllers/Dashboard/ContactController.php`, `app/Http/Requests/Dashboard/UpdateContactRequest.php`, `app/Rules/PortalLink.php`, `app/Actions/SaveSetting.php`, `app/Models/Setting.php`. Tes: `tests/Feature/ContactControllerTest.php`.
+
 ## Pesan & Pengaduan di dashboard
 
 Dipakai halaman *Pesan & Pengaduan* di dashboard ([D-016](decisions.md#d-016--2026-10-13--pesan--pengaduan-tersimpan-di-server)). Tamu mendapat `401`; pegawai yang tidak mengelola modul `pesan` mendapat `403` `{"message": "Modul Pesan & Pengaduan belum ditugaskan kepada Anda."}`.
@@ -396,6 +421,18 @@ Dasbor transparansi di beranda ([D-018](decisions.md#d-018--2026-10-13--statisti
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 
 Kode: `app/Http/Controllers/PublicStatisticsController.php`, `app/Actions/ShowPublicStatistics.php`. Tes: `tests/Feature/PublicStatisticsControllerTest.php`.
+
+## `GET /api/public/kontak`
+
+Alamat, kontak, dan kanal pengaduan untuk footer semua halaman dan halaman Kontak & Pengaduan ([D-019](decisions.md#d-019--2026-10-13--kontak--kanal-tersimpan-di-server), `initKontak()` di `public/assets/js/main.js`). Bentuknya sama dengan dokumen dashboard tanpa `id` butir, ditambah `diperbarui`: waktu terakhir disimpan, atau `null` bila belum pernah disimpan.
+
+| Hal | Perilaku |
+|---|---|
+| Berhasil | `200`. Bila `diperbarui` `null`, semua isian kosong dan portal menyatakan alamat, nomor kontak, dan kanal pengaduan belum tersedia. Teks wajib ditampilkan sebagai teks polos; tautan hanya dipasang bila skemanya diizinkan. |
+| Galat | `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah batas laju yang sama dengan `GET /api/public/faq`; `503` bila data tidak bisa dibaca, tidak pernah kontak kosong sebagai gantinya. |
+| Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
+
+Kode: `app/Http/Controllers/PublicContactController.php`, `app/Actions/ShowPublicContact.php`. Tes: `tests/Feature/PublicContactControllerTest.php`.
 
 ## `POST /api/public/pesan`
 

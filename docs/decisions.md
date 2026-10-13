@@ -238,3 +238,19 @@ Statistik Layanan kini tersimpan di server. Dasbor transparansi di beranda menam
 Satu kunjungan beranda kini memakai enam permintaan dari batas laju API publik (D-013).
 
 Belum dibuat: data per rentang waktu, data tahun-tahun sebelumnya, dan perhitungan otomatis dari transaksi.
+
+## D-019 · 2026-10-13 · Kontak & Kanal tersimpan di server
+
+Kontak & Kanal kini tersimpan di server. Footer semua halaman portal dan halaman Kontak & Pengaduan menampilkan alamat, nomor kontak, dan kanal pengaduan dari dashboard, bukan alamat dan nomor contoh.
+
+| Hal | Keputusan |
+|---|---|
+| Penyimpanan | Dokumen pengaturan `kontak` (`/api/pengaturan/kontak`) memuat nama kantor, alamat, kota, provinsi, telepon, WhatsApp dan catatannya, surel, media sosial (maks. 8 akun), tautan Google Maps, catatan lokasi, janji waktu balasan, dan kanal pengaduan resmi (maks. 8). |
+| Akses | Administrator dan Pegawai UPTD yang mengelola Kontak & Kanal; pegawai lain ditolak `403`. |
+| Tautan dan nomor | Server hanya menerima alamat `http(s)://`, `mailto:`, `tel:`, jangkar `#…`, atau halaman portal (mis. `jadwal.html`, `kontak.html#masukan`). Skema lain seperti `javascript:` ditolak server dan juga diabaikan portal. Telepon minimal 6 angka dan WhatsApp minimal 9 angka. Portal membuat tautan `tel:` dan `wa.me` dengan kode negara +62 dari nomor yang diawali 0. |
+| Portal | `GET /api/public/kontak` (tanpa ID butir) mengisi footer di semua halaman (alamat, telepon, surel). Di halaman Kontak, API ini juga mengisi daftar kontak, tombol Google Maps, catatan lokasi, janji waktu balasan, dan kanal pengaduan. Baris yang tidak diisi disembunyikan. Catatan "Alamat dan nomor kontak diisi setelah verifikasi." dan label "contoh akun" dihapus. Sebelum disimpan, portal menyatakan alamat, nomor kontak, dan kanal pengaduan belum tersedia. Bila API gagal, portal menampilkan keterangannya dengan tombol coba lagi. |
+| Data contoh | Kontak contoh di peramban tidak dipindahkan ke server. Kanal pengaduan (mis. SP4N-LAPOR!, kotak saran, Ombudsman) diisi petugas di dashboard. |
+
+Setiap kunjungan halaman portal kini memakai satu permintaan tambahan dari batas laju API publik (D-013); beranda memakai tujuh.
+
+Belum dibuat: ringkasan "3 kanal" di halaman Layanan dan peta kanal di beranda masih teks statis.

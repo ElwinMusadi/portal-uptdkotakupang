@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\AccountStatusController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Dashboard\ActivityController;
+use App\Http\Controllers\Dashboard\ContactController;
 use App\Http\Controllers\Dashboard\FaqController;
 use App\Http\Controllers\Dashboard\FaqDeletionController;
 use App\Http\Controllers\Dashboard\FaqOrderController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\Dashboard\ServiceBoardController;
 use App\Http\Controllers\Dashboard\SettingTimestampController;
 use App\Http\Controllers\Dashboard\StatisticsController;
 use App\Http\Controllers\Dashboard\TariffController;
+use App\Http\Controllers\PublicContactController;
 use App\Http\Controllers\PublicFaqController;
 use App\Http\Controllers\PublicMessageController;
 use App\Http\Controllers\PublicMobileServiceStopController;
@@ -139,6 +141,15 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->can('update', [Setting::class, $statistics])
         ->name('pengaturan.statistik.update');
 
+    // Kontak & Kanal, the portal's footer and Kontak page (SettingPolicy).
+    $contact = "'".Setting::CONTACT."'";
+    Route::get('/pengaturan/kontak', [ContactController::class, 'show'])
+        ->can('view', [Setting::class, $contact])
+        ->name('pengaturan.kontak.show');
+    Route::put('/pengaturan/kontak', [ContactController::class, 'update'])
+        ->can('update', [Setting::class, $contact])
+        ->name('pengaturan.kontak.update');
+
     Route::prefix('koleksi/penyesuaian')->name('koleksi.penyesuaian.')->whereUlid('adjustment')->group(function (): void {
         Route::get('/', [ScheduleAdjustmentController::class, 'index'])->can('viewAny', ScheduleAdjustment::class)->name('index');
         Route::post('/', [ScheduleAdjustmentController::class, 'store'])->can('create', ScheduleAdjustment::class)->name('store');
@@ -177,6 +188,7 @@ Route::prefix('public')
         Route::get('/papan', PublicServiceBoardController::class)->name('papan.show');
         Route::get('/tarif', PublicTariffController::class)->name('tarif.show');
         Route::get('/statistik', PublicStatisticsController::class)->name('statistik.show');
+        Route::get('/kontak', PublicContactController::class)->name('kontak.show');
         // The contact form; also limited to 5 messages per hour per address (D-016).
         Route::post('/pesan', PublicMessageController::class)->middleware('throttle:public-messages')->name('pesan.store');
     });
