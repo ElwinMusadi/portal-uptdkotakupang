@@ -1,37 +1,74 @@
+import { IconServer } from "@tabler/icons-react"
 import { z } from "zod"
 
 import { Bagian, Baris, Halaman, PengantarHalaman } from "@/components/data/page"
 import { FieldArea, FieldTeks } from "@/components/form/fields"
 import { FieldJudul2Nada, IsianItem } from "@/components/form/item-fields"
 import { DaftarObjek } from "@/components/form/list-fields"
-import { FieldGambar } from "@/components/form/media-fields"
 import { FormPengaturan } from "@/components/form/settings-form"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { newId } from "@/lib/id"
 import * as v from "@/lib/validasi"
 
+const maks = (n: number) => `Maksimal ${n} karakter.`
+
+// Batas yang sama dengan server (UpdateProfileRequest). Foto belum bisa disimpan di server (D-021).
 const schema = z.object({
-  judul: v.wajib("Judul"),
-  lanjutan: v.teks,
-  pengantar: v.wajib("Pengantar"),
-  foto: z.string().nullable(),
-  keteranganFoto: v.teks,
-  kedudukan: z.object({ judul: v.wajib("Judul"), lanjutan: v.teks, deskripsi: v.teks }),
-  identitas: z.array(z.object({ id: z.string(), label: v.wajib("Label"), nilai: v.wajib("Isi") })),
-  tugasFungsi: z.array(
-    z.object({ id: z.string(), judul: v.wajib("Tugas"), deskripsi: v.teks, kataKunci: v.teks })
-  ),
+  judul: v.wajib("Judul").max(80, maks(80)),
+  lanjutan: v.teks.max(80, maks(80)),
+  pengantar: v.wajib("Pengantar").max(400, maks(400)),
+  foto: z.null(),
+  keteranganFoto: v.teks.max(200, maks(200)),
+  kedudukan: z.object({
+    judul: v.wajib("Judul").max(80, maks(80)),
+    lanjutan: v.teks.max(80, maks(80)),
+    deskripsi: v.teks.max(400, maks(400)),
+  }),
+  identitas: z
+    .array(z.object({ id: z.string(), label: v.wajib("Label").max(40, maks(40)), nilai: v.wajib("Isi").max(160, maks(160)) }))
+    .max(12, "Maksimal 12 baris identitas."),
+  tugasFungsi: z
+    .array(
+      z.object({
+        id: z.string(),
+        judul: v.wajib("Tugas").max(200, maks(200)),
+        deskripsi: v.teks.max(300, maks(300)),
+        kataKunci: v.teks.max(30, maks(30)),
+      })
+    )
+    .max(12, "Maksimal 12 tugas."),
   sambutan: z.object({
-    kutipan: v.teks,
-    nama: v.teks,
-    jabatan: v.teks,
-    foto: z.string().nullable(),
+    kutipan: v.teks.max(500, maks(500)),
+    nama: v.teks.max(120, maks(120)),
+    jabatan: v.teks.max(120, maks(120)),
+    foto: z.null(),
   }),
 })
+
+/** Pengganti isian foto selama unggahan belum bisa disimpan di server */
+function FotoMenyusul({ label }: { label: string }) {
+  return (
+    <div className="grid content-start gap-1.5 rounded-lg border border-dashed p-3 text-sm">
+      <p className="font-medium">{label}</p>
+      <p className="text-muted-foreground">
+        Unggahan foto belum bisa disimpan di server. Untuk sementara, portal menampilkan ilustrasi.
+      </p>
+    </div>
+  )
+}
 
 export default function HalamanProfil() {
   return (
     <Halaman>
       <PengantarHalaman deskripsi="Isi halaman Profil: kedudukan unit, tugas dan fungsi, serta sambutan pimpinan. Tinjau minimal setahun sekali atau saat ada perubahan organisasi." />
+      <Alert>
+        <IconServer />
+        <AlertTitle>Tersimpan di server</AlertTitle>
+        <AlertDescription>
+          Isi ini dipakai bersama semua pengelola Tentang UPTD dan langsung tampil di halaman Profil portal. Sebelum
+          disimpan pertama kali, isinya adalah teks yang sudah tampil di portal; nama Kepala UPTD masih kosong.
+        </AlertDescription>
+      </Alert>
       <FormPengaturan nama="profil" schema={schema}>
         {(form) => {
           const n = form.watch()
@@ -43,7 +80,7 @@ export default function HalamanProfil() {
               </Bagian>
               <Bagian judul="Foto gedung">
                 <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-                  <FieldGambar control={form.control} name="foto" label="Foto kantor" deskripsi="Gunakan foto resmi Kantor Bersama Samsat Kota Kupang." />
+                  <FotoMenyusul label="Foto kantor" />
                   <FieldArea control={form.control} name="keteranganFoto" label="Keterangan foto" rows={4} />
                 </div>
               </Bagian>
@@ -92,7 +129,7 @@ export default function HalamanProfil() {
               </Bagian>
               <Bagian judul="Sambutan pimpinan">
                 <div className="grid gap-5 md:grid-cols-[220px_minmax(0,1fr)]">
-                  <FieldGambar control={form.control} name="sambutan.foto" label="Foto Kepala UPTD" rasio="aspect-[4/5]" deskripsi="Foto resmi, latar polos." />
+                  <FotoMenyusul label="Foto Kepala UPTD" />
                   <div className="grid content-start gap-5">
                     <FieldArea control={form.control} name="sambutan.kutipan" label="Kutipan sambutan" rows={4} />
                     <Baris>

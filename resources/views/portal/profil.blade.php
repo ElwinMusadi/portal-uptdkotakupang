@@ -191,9 +191,10 @@
     <div class="page-hero--split">
       <div>
         <p class="eyebrow">Profil</p>
-        <h1 class="h-display" data-reveal>Melayani pajak daerah. <span class="tone">Dari jantung Kota Kupang.</span></h1>
+        <h1 class="h-display" data-reveal data-profil-judul>Tentang UPTD.</h1>
+        <p class="small muted" style="margin-top:16px" role="status" data-profil-status>Memuat profil…</p>
       </div>
-      <p class="lead" data-reveal>Kami unit pelaksana teknis yang mengurus pajak kendaraan bermotor bagi warga Kota Kupang, bersama mitra Samsat dalam satu atap.</p>
+      <p class="lead" data-reveal data-profil-pengantar></p>
     </div>
   </section>
 
@@ -204,33 +205,26 @@
         <span class="ph__label">Foto gedung Kantor Bersama Samsat Kota Kupang · ganti dengan foto resmi</span>
       </div>
       <figcaption class="caption-row">
-        <p>Kantor Bersama Samsat Kota Kupang. Tempat pajak, STNK, dan asuransi kecelakaan diurus sekaligus.</p>
+        <p data-profil-keterangan-foto></p>
         <p>Senin–Sabtu · jam layanan di halaman Jadwal</p>
       </figcaption>
     </figure>
   </section>
 
-  <section class="section">
+  <section class="section" data-profil-bagian="kedudukan" hidden>
     <div class="container split">
       <div class="split__sticky" data-reveal>
         <p class="eyebrow">Kedudukan</p>
-        <h2 class="h2" style="margin-top:20px">Bagian dari BPAD NTT. <span class="tone">Dekat dengan warga kota.</span></h2>
-        <p class="body" style="margin-top:20px">UPTD berada di bawah Badan Pendapatan dan Aset Daerah Provinsi Nusa Tenggara Timur dan melayani seluruh wilayah Kota Kupang.</p>
+        <h2 class="h2" style="margin-top:20px" data-profil-kedudukan-judul></h2>
+        <p class="body" style="margin-top:20px" data-profil-kedudukan-deskripsi></p>
       </div>
-      <dl class="facts" data-reveal>
-        <div><dt>Nama unit</dt><dd>UPTD Pendapatan Daerah Wilayah Kota Kupang</dd></div>
-        <div><dt>Dikenal sebagai</dt><dd>Samsat Kota Kupang</dd></div>
-        <div><dt>Induk organisasi</dt><dd>Badan Pendapatan dan Aset Daerah Provinsi NTT</dd></div>
-        <div><dt>Wilayah kerja</dt><dd>Kota Kupang · 6 kecamatan, 51 kelurahan</dd></div>
-        <div><dt>Mitra satu atap</dt><dd>Polri (Satlantas) dan PT Jasa Raharja</dd></div>
-        <div><dt>Pajak yang dilayani</dt><dd>PKB, BBNKB, serta opsen untuk Pemerintah Kota</dd></div>
-        <div><dt>Kanal pembayaran</dt><dd>Kasir tunai, QRIS, dan bank mitra</dd></div>
-        <div><dt>Dasar hukum</dt><dd><a class="link" href="unduhan.html">Lihat regulasi &amp; unduhan</a></dd></div>
+      <dl class="facts" data-profil-identitas data-reveal>
+        <div data-profil-tetap><dt>Dasar hukum</dt><dd><a class="link" href="unduhan.html">Lihat regulasi &amp; unduhan</a></dd></div>
       </dl>
     </div>
   </section>
 
-  <section class="section section--flush-top">
+  <section class="section section--flush-top" data-profil-bagian="tugas" hidden>
     <div class="container">
       <div class="split split--middle" style="margin-bottom: var(--inner-y)">
         <div data-reveal>
@@ -239,18 +233,11 @@
         </div>
         <p class="body" data-reveal>Ringkasan tugas dan fungsi untuk masyarakat. Rujukan lengkap mengikuti Peraturan Gubernur NTT tentang organisasi dan tata kerja UPTD.</p>
       </div>
-      <ol class="numlist" role="list" data-reveal>
-        <li><span class="numlist__n">01</span><p class="numlist__t">Pendataan objek dan subjek pajak kendaraan bermotor di Kota Kupang.<small>Termasuk pemutakhiran data kepemilikan dan alamat.</small></p><span class="numlist__k">Data</span></li>
-        <li><span class="numlist__n">02</span><p class="numlist__t">Penetapan pajak dan penerbitan notis pajak kendaraan.<small>Nilai pajak dihitung sistem, bukan oleh petugas loket.</small></p><span class="numlist__k">Tetapkan</span></li>
-        <li><span class="numlist__n">03</span><p class="numlist__t">Pelayanan Samsat: pengesahan STNK, perpanjangan 5&nbsp;tahun, mutasi, dan balik nama.<small>Bersama Satlantas dan Jasa Raharja di kantor yang sama.</small></p><span class="numlist__k">Layani</span></li>
-        <li><span class="numlist__n">04</span><p class="numlist__t">Penerimaan, penyetoran, dan pelaporan pajak daerah.<small>Tunai di kasir atau non-tunai lewat kanal resmi.</small></p><span class="numlist__k">Terima</span></li>
-        <li><span class="numlist__n">05</span><p class="numlist__t">Penagihan tunggakan serta pelaksanaan program pemutihan.<small>Termasuk Samsat Keliling ke kelurahan.</small></p><span class="numlist__k">Jangkau</span></li>
-        <li><span class="numlist__n">06</span><p class="numlist__t">Ketatausahaan: kepegawaian, keuangan, perlengkapan, dan layanan administrasi internal.<small>Dijalankan Sub Bagian Tata Usaha.</small></p><span class="numlist__k">Kelola</span></li>
-      </ol>
+      <ol class="numlist" role="list" data-profil-tugas data-reveal></ol>
     </div>
   </section>
 
-  <section class="section section--flush-top">
+  <section class="section section--flush-top" data-profil-bagian="sambutan" hidden>
     <div class="container split split--middle">
       <div class="media ph ph--slate" style="aspect-ratio: 4 / 5; border-radius: var(--r-xl);" data-reveal>
         <svg aria-hidden="true"><use href="#ill-crowd"/></svg>
@@ -258,10 +245,10 @@
       </div>
       <div data-reveal>
         <p class="eyebrow">Sambutan</p>
-        <blockquote class="quote" style="margin-top:24px">“Kami ingin setiap warga datang sekali dan pulang dengan urusan selesai. <span class="tone">PINTU adalah janji kami untuk informasi yang jelas, resmi, dan selalu terbaru.”</span></blockquote>
-        <div class="person">
-          <span class="avatar">KU</span>
-          <span><strong>[Nama Kepala UPTD]</strong><span>Kepala UPTD Pendapatan Daerah Wilayah Kota Kupang</span></span>
+        <blockquote class="quote" style="margin-top:24px" data-profil-kutipan></blockquote>
+        <div class="person" data-profil-orang>
+          <span class="avatar" data-profil-inisial></span>
+          <span><strong data-profil-nama></strong><span data-profil-jabatan></span></span>
         </div>
       </div>
     </div>

@@ -551,13 +551,23 @@
     return d;
   }
 
-  // Bagian akhir diberi nada redup seperti desain halaman: visi setelah koma terakhir, maklumat pada kalimat terakhir
+  // Bagian akhir diberi nada redup seperti desain halaman, mis. visi setelah koma terakhir atau lanjutan judul
   function duaNada(el, awal, akhir) {
     const nada = document.createElement("span");
     nada.className = "tone";
     nada.textContent = akhir;
     el.replaceChildren(...(awal ? [awal] : []), ...(akhir ? [nada] : []));
   }
+
+  // Kutipan bertanda petik (maklumat, sambutan): kalimat terakhir bernada redup; satu kalimat tetap polos
+  function kutipanDuaNada(el, teks) {
+    const kalimat = teks.match(/^([\s\S]*[.!?])\s+(\S[\s\S]*)$/);
+    if (kalimat) duaNada(el, `“${kalimat[1]} `, `${kalimat[2]}”`);
+    else el.textContent = `“${teks}”`;
+  }
+
+  // Inisial untuk avatar, mis. "Kepala UPTD" menjadi KU
+  const inisial = (teks) => teks.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w.charAt(0).toUpperCase()).join("");
 
   function initVisiMisi() {
     const visi = $("[data-visi]");
@@ -592,14 +602,11 @@
         `<div><span class="values__l">${esc(n.huruf || n.judul.charAt(0))}</span><h3>${esc(n.judul)}</h3>${n.deskripsi ? `<p>${esc(n.deskripsi)}</p>` : ""}</div>`).join(""));
       bagian("nilai").hidden = !d.nilai.length;
 
-      // Kalimat terakhir maklumat bernada redup, dengan tanda kutip mengapit seluruh maklumat; satu kalimat tetap polos
-      const kalimat = d.maklumat.teks.match(/^([\s\S]*[.!?])\s+(\S[\s\S]*)$/);
-      if (kalimat) duaNada($("[data-visi-maklumat]"), `“${kalimat[1]} `, `${kalimat[2]}”`);
-      else $("[data-visi-maklumat]").textContent = `“${d.maklumat.teks}”`;
+      kutipanDuaNada($("[data-visi-maklumat]"), d.maklumat.teks);
       const penandatangan = $("[data-visi-penandatangan]");
       penandatangan.hidden = !d.maklumat.penandatangan;
       $("[data-visi-penandatangan-nama]").textContent = d.maklumat.penandatangan;
-      $("[data-visi-inisial]").textContent = d.maklumat.penandatangan.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w.charAt(0).toUpperCase()).join("");
+      $("[data-visi-inisial]").textContent = inisial(d.maklumat.penandatangan);
       bagian("maklumat").hidden = false;
 
       status.hidden = true;
@@ -620,6 +627,85 @@
         retry.textContent = "Coba lagi";
         retry.addEventListener("click", () => muat(true));
         status.textContent = "Visi dan misi belum dapat dimuat. ";
+        status.append(retry);
+        if (fokus) retry.focus();
+      }
+    };
+
+    muat(false);
+  }
+
+  /* ---------- Tentang UPTD ----------
+     Isi halaman Profil dikelola di dashboard (Tentang UPTD) dan dibaca dari
+     GET /api/public/profil (D-021). Sebelum disimpan, API memberikan teks yang
+     sama dengan halaman sebelumnya, tanpa nama Kepala UPTD contoh. Foto masih
+     ilustrasi sampai unggahan tersedia di server. Teks dipasang sebagai teks
+     polos; bila API gagal, keterangan dan tombol coba lagi. */
+  async function muatProfil() {
+    const p = await ambilJson("/api/public/profil");
+    const teks = (x) => typeof x === "string";
+    const daftar = (xs, isian) => Array.isArray(xs) && xs.every((x) => isian.every((f) => teks(x?.[f])));
+    if (!["judul", "lanjutan", "pengantar", "keteranganFoto"].every((f) => teks(p?.[f]))
+      || !["judul", "lanjutan", "deskripsi"].every((f) => teks(p.kedudukan?.[f]))
+      || !["kutipan", "nama", "jabatan"].every((f) => teks(p.sambutan?.[f]))
+      || !daftar(p.identitas, ["label", "nilai"]) || !daftar(p.tugasFungsi, ["judul", "deskripsi", "kataKunci"])) {
+      throw new Error("Respons tidak dikenal");
+    }
+    return p;
+  }
+
+  function initProfil() {
+    const judul = $("[data-profil-judul]");
+    if (!judul) return;
+    const status = $("[data-profil-status]");
+    const bagian = (k) => $(`[data-profil-bagian="${k}"]`);
+    const identitas = $("[data-profil-identitas]");
+
+    const tampilkan = (p) => {
+      duaNada(judul, p.lanjutan ? `${p.judul} ` : p.judul, p.lanjutan);
+      $("[data-profil-pengantar]").textContent = p.pengantar;
+      $("[data-profil-keterangan-foto]").textContent = p.keteranganFoto;
+
+      const k = p.kedudukan;
+      duaNada($("[data-profil-kedudukan-judul]"), k.lanjutan ? `${k.judul} ` : k.judul, k.lanjutan);
+      $("[data-profil-kedudukan-deskripsi]").textContent = k.deskripsi;
+      // Baris "Dasar hukum" tetap di akhir tabel
+      $$(":scope > :not([data-profil-tetap])", identitas).forEach((el) => el.remove());
+      $("[data-profil-tetap]", identitas).insertAdjacentHTML("beforebegin",
+        p.identitas.map((f) => `<div><dt>${esc(f.label)}</dt><dd>${esc(f.nilai)}</dd></div>`).join(""));
+      bagian("kedudukan").hidden = false;
+
+      $("[data-profil-tugas]").innerHTML = p.tugasFungsi.map((t, i) =>
+        `<li><span class="numlist__n">${pad(i + 1)}</span><p class="numlist__t">${esc(t.judul)}${t.deskripsi ? `<small>${esc(t.deskripsi)}</small>` : ""}</p><span class="numlist__k">${esc(t.kataKunci)}</span></li>`).join("");
+      bagian("tugas").hidden = !p.tugasFungsi.length;
+
+      // Tanpa nama, jabatan yang ditampilkan sebagai penanda sambutan
+      const s = p.sambutan;
+      const kutipan = $("[data-profil-kutipan]");
+      if (s.kutipan) kutipanDuaNada(kutipan, s.kutipan);
+      else kutipan.textContent = "";
+      $("[data-profil-nama]").textContent = s.nama || s.jabatan;
+      $("[data-profil-jabatan]").textContent = s.nama ? s.jabatan : "";
+      $("[data-profil-inisial]").textContent = inisial(s.nama || s.jabatan);
+      $("[data-profil-orang]").hidden = !(s.nama || s.jabatan);
+      bagian("sambutan").hidden = !(s.kutipan || s.nama || s.jabatan);
+
+      status.hidden = true;
+    };
+
+    const muat = async (fokus) => {
+      status.hidden = false;
+      status.textContent = "Memuat profil…";
+      try {
+        tampilkan(await muatProfil());
+      } catch {
+        ["kedudukan", "tugas", "sambutan"].forEach((k) => (bagian(k).hidden = true));
+        const retry = document.createElement("button");
+        retry.type = "button";
+        retry.className = "link";
+        retry.textContent = "Coba lagi";
+        retry.addEventListener("click", () => muat(true));
+        status.textContent = "Profil belum dapat dimuat. ";
         status.append(retry);
         if (fokus) retry.focus();
       }
@@ -1424,7 +1510,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi();
+    initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil();
     initDash(); initSim(); initDialogs(); initGag(); initFilters(); initGallery(); initFaq(); initForms(); initPesanForm(); initAuthFit(); initUtilities();
   });
 })();

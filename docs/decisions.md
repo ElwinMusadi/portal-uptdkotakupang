@@ -268,3 +268,17 @@ Visi & Misi kini tersimpan di server, dan halaman Visi & Misi di portal membaca 
 | Portal | `GET /api/public/visi-misi` (tanpa ID butir dan tanpa berkas) mengisi visi, misi, kontribusi, nilai, dan maklumat. Bagian tampil setelah isinya dimuat; bagian tanpa butir disembunyikan. Jumlah pada judul ("Lima misi.", "mendukung dua misi provinsi", angka nilai inti) mengikuti isinya. Bagian akhir visi dan kalimat terakhir maklumat tetap bernada redup seperti desain sebelumnya. Bila API gagal, keterangan dan tombol coba lagi tampil di bawah visi. |
 
 Belum dibuat: unggahan berkas maklumat ke server.
+
+## D-021 · 2026-10-14 · Tentang UPTD tersimpan di server; unggahan foto ditunda
+
+Tentang UPTD kini tersimpan di server, dan halaman Profil di portal membaca isinya dari API. Keputusan pemilik untuk Visi & Misi (D-020) diterapkan dengan cara yang sama.
+
+| Hal | Keputusan |
+|---|---|
+| Penyimpanan | Dokumen pengaturan `profil` (`/api/pengaturan/profil`) memuat judul pembuka dan lanjutannya, pengantar, keterangan foto gedung, kedudukan (judul, lanjutan, deskripsi), tabel identitas (maks. 12 baris), tugas dan fungsi (maks. 12, dengan kata kunci), serta sambutan pimpinan (kutipan, nama, jabatan). |
+| Isi awal | Teks yang sudah tampil di halaman Profil menjadi isi awal, seperti Visi & Misi. Nama "[Nama Kepala UPTD]" hanya tempat isian, jadi isi awalnya kosong. Selama nama kosong, portal menampilkan jabatan saja. |
+| Akses | Administrator dan Pegawai UPTD yang mengelola Tentang UPTD; pegawai lain ditolak `403`. |
+| Foto | **Unggahan foto gedung dan foto Kepala UPTD ditunda**, sama seperti berkas maklumat (D-020). Server menolak foto, dan dashboard menampilkan keterangan sebagai pengganti isian unggahan. Portal tetap menampilkan ilustrasi. |
+| Portal | `GET /api/public/profil` (tanpa ID butir dan tanpa foto) mengisi judul, pengantar, keterangan foto, kedudukan, tabel identitas, tugas dan fungsi, serta sambutan. Baris "Dasar hukum" yang menautkan ke Regulasi & Unduhan tetap di akhir tabel identitas. Bagian tampil setelah isinya dimuat; tugas tanpa butir disembunyikan. Lanjutan judul dan kalimat terakhir sambutan tetap bernada redup. Bila API gagal, keterangan dan tombol coba lagi tampil di bawah judul. |
+
+Belum dibuat: unggahan foto ke server. Keterangan "Senin–Sabtu · jam layanan di halaman Jadwal" di bawah foto gedung masih teks statis.

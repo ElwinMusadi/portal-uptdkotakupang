@@ -14,6 +14,7 @@ use App\Http\Controllers\Dashboard\MessageDeletionController;
 use App\Http\Controllers\Dashboard\MobileServiceStopController;
 use App\Http\Controllers\Dashboard\MobileServiceStopDeletionController;
 use App\Http\Controllers\Dashboard\OpeningHoursController;
+use App\Http\Controllers\Dashboard\ProfileController;
 use App\Http\Controllers\Dashboard\ScheduleAdjustmentController;
 use App\Http\Controllers\Dashboard\ScheduleAdjustmentDeletionController;
 use App\Http\Controllers\Dashboard\ServiceBoardController;
@@ -26,6 +27,7 @@ use App\Http\Controllers\PublicFaqController;
 use App\Http\Controllers\PublicMessageController;
 use App\Http\Controllers\PublicMobileServiceStopController;
 use App\Http\Controllers\PublicOpeningHoursController;
+use App\Http\Controllers\PublicProfileController;
 use App\Http\Controllers\PublicServiceBoardController;
 use App\Http\Controllers\PublicStatisticsController;
 use App\Http\Controllers\PublicTariffController;
@@ -161,6 +163,15 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->can('update', [Setting::class, $visionMission])
         ->name('pengaturan.visi-misi.update');
 
+    // Tentang UPTD, the portal's Profil page (SettingPolicy).
+    $profile = "'".Setting::PROFILE."'";
+    Route::get('/pengaturan/profil', [ProfileController::class, 'show'])
+        ->can('view', [Setting::class, $profile])
+        ->name('pengaturan.profil.show');
+    Route::put('/pengaturan/profil', [ProfileController::class, 'update'])
+        ->can('update', [Setting::class, $profile])
+        ->name('pengaturan.profil.update');
+
     Route::prefix('koleksi/penyesuaian')->name('koleksi.penyesuaian.')->whereUlid('adjustment')->group(function (): void {
         Route::get('/', [ScheduleAdjustmentController::class, 'index'])->can('viewAny', ScheduleAdjustment::class)->name('index');
         Route::post('/', [ScheduleAdjustmentController::class, 'store'])->can('create', ScheduleAdjustment::class)->name('store');
@@ -201,6 +212,7 @@ Route::prefix('public')
         Route::get('/statistik', PublicStatisticsController::class)->name('statistik.show');
         Route::get('/kontak', PublicContactController::class)->name('kontak.show');
         Route::get('/visi-misi', PublicVisionMissionController::class)->name('visi-misi.show');
+        Route::get('/profil', PublicProfileController::class)->name('profil.show');
         // The contact form; also limited to 5 messages per hour per address (D-016).
         Route::post('/pesan', PublicMessageController::class)->middleware('throttle:public-messages')->name('pesan.store');
     });

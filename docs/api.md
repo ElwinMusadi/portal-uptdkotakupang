@@ -13,6 +13,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET` | `/api/public/statistik` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/kontak` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/visi-misi` | anonim, hanya baca | tersedia |
+| `GET` | `/api/public/profil` | anonim, hanya baca | tersedia |
 | `POST` | `/api/public/pesan` | anonim, formulir Kontak | tersedia |
 | `POST` | `/api/masuk` | halaman Login Pegawai | tersedia |
 | `GET` | `/api/sesi` | pegawai login | tersedia |
@@ -34,6 +35,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET`, `PUT` | `/api/pengaturan/statistik` | Administrator, pengelola Statistik Layanan | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/kontak` | Administrator, pengelola Kontak & Kanal | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/visiMisi` | Administrator, pengelola Visi & Misi | tersedia |
+| `GET`, `PUT` | `/api/pengaturan/profil` | Administrator, pengelola Tentang UPTD | tersedia |
 | `GET`, `POST` | `/api/koleksi/pesan` | Administrator, pengelola Pesan & Pengaduan | tersedia |
 | `GET`, `PATCH` | `/api/koleksi/pesan/{id}` | Administrator, pengelola Pesan & Pengaduan | tersedia |
 | `POST` | `/api/koleksi/pesan/hapus` | Administrator | tersedia |
@@ -102,7 +104,7 @@ Kunci modul untuk `modul` ([D-010](decisions.md#d-010--2026-10-13--penugasan-mod
 | `jam` | Jam Pelayanan (termasuk koleksi `penyesuaian`) | `halaman` | Halaman Statis |
 | `keliling` | Samsat Keliling | `pemutakhiran` | Jadwal Pemutakhiran |
 
-Endpoint konten dashboard (`/api/koleksi/…`, `/api/pengaturan/…`) wajib menolak pegawai yang tidak mengelola modul koleksi atau pengaturan itu. `/api/koleksi/faq`, `/api/koleksi/keliling`, `/api/koleksi/penyesuaian`, `/api/koleksi/pesan`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/tarif`, `/api/pengaturan/statistik`, `/api/pengaturan/kontak`, dan `/api/pengaturan/visiMisi` sudah melakukannya; tarif boleh dibaca semua pegawai untuk Kalkulator PKB, tetapi hanya pengelolanya yang boleh menyimpan.
+Endpoint konten dashboard (`/api/koleksi/…`, `/api/pengaturan/…`) wajib menolak pegawai yang tidak mengelola modul koleksi atau pengaturan itu. `/api/koleksi/faq`, `/api/koleksi/keliling`, `/api/koleksi/penyesuaian`, `/api/koleksi/pesan`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/tarif`, `/api/pengaturan/statistik`, `/api/pengaturan/kontak`, `/api/pengaturan/visiMisi`, dan `/api/pengaturan/profil` sudah melakukannya; tarif boleh dibaca semua pegawai untuk Kalkulator PKB, tetapi hanya pengelolanya yang boleh menyimpan.
 
 ## Tanya Jawab di dashboard
 
@@ -309,6 +311,30 @@ Penyimpanan tercatat di log aktivitas sebagai "memperbarui Visi & Misi".
 
 Kode: `app/Http/Controllers/Dashboard/VisionMissionController.php`, `app/Http/Requests/Dashboard/UpdateVisionMissionRequest.php`, `app/Actions/SaveSetting.php`, `app/Models/Setting.php`. Tes: `tests/Feature/VisionMissionControllerTest.php`.
 
+## Tentang UPTD di dashboard
+
+Dipakai halaman *Tentang UPTD* di dashboard ([D-021](decisions.md#d-021--2026-10-14--tentang-uptd-tersimpan-di-server-unggahan-foto-ditunda)). Tamu mendapat `401`; pegawai yang tidak mengelola modul `profil` mendapat `403` `{"message": "Modul Tentang UPTD belum ditugaskan kepada Anda."}`.
+
+```json
+{
+  "judul": "Melayani pajak daerah.", "lanjutan": "Dari jantung Kota Kupang.", "pengantar": "…",
+  "foto": null, "keteranganFoto": "…",
+  "kedudukan": { "judul": "Bagian dari BPAD NTT.", "lanjutan": "Dekat dengan warga kota.", "deskripsi": "…" },
+  "identitas": [{ "id": "identitas-1", "label": "Nama unit", "nilai": "UPTD Pendapatan Daerah Wilayah Kota Kupang" }],
+  "tugasFungsi": [{ "id": "tugas-1", "judul": "…", "deskripsi": "…", "kataKunci": "Data" }],
+  "sambutan": { "kutipan": "…", "nama": "", "jabatan": "Kepala UPTD Pendapatan Daerah Wilayah Kota Kupang", "foto": null }
+}
+```
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `GET /api/pengaturan/profil` | — | `200` dokumen di atas. Sebelum pertama kali disimpan: teks yang sudah tampil di portal, dengan nama Kepala UPTD kosong. |
+| `PUT /api/pengaturan/profil` | dokumen lengkap | `200` dokumen tersimpan; isian opsional yang kosong disimpan sebagai `""`, dan `foto` serta `sambutan.foto` selalu `null`. Isi yang sama dengan yang tersimpan tidak dicatat. `422` bila judul (maks. 80 karakter), pengantar (maks. 400), atau judul kedudukan kosong, baris identitas tanpa label atau isi, tugas tanpa uraian, lebih dari 12 baris identitas atau 12 tugas, ID butir ganda, teks berisi karakter kontrol, atau foto dikirim: `{"foto": ["Foto kantor belum bisa diunggah ke server."]}`, `{"sambutan.foto": ["Foto Kepala UPTD belum bisa diunggah ke server."]}`. |
+
+Penyimpanan tercatat di log aktivitas sebagai "memperbarui Tentang UPTD".
+
+Kode: `app/Http/Controllers/Dashboard/ProfileController.php`, `app/Http/Requests/Dashboard/UpdateProfileRequest.php`, `app/Actions/SaveSetting.php`, `app/Models/Setting.php`. Tes: `tests/Feature/ProfileControllerTest.php`.
+
 ## Pesan & Pengaduan di dashboard
 
 Dipakai halaman *Pesan & Pengaduan* di dashboard ([D-016](decisions.md#d-016--2026-10-13--pesan--pengaduan-tersimpan-di-server)). Tamu mendapat `401`; pegawai yang tidak mengelola modul `pesan` mendapat `403` `{"message": "Modul Pesan & Pengaduan belum ditugaskan kepada Anda."}`.
@@ -470,6 +496,18 @@ Halaman Visi & Misi di portal ([D-020](decisions.md#d-020--2026-10-13--visi--mis
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 
 Kode: `app/Http/Controllers/PublicVisionMissionController.php`, `app/Actions/ShowPublicVisionMission.php`. Tes: `tests/Feature/PublicVisionMissionControllerTest.php`.
+
+## `GET /api/public/profil`
+
+Halaman Profil (Tentang UPTD) di portal ([D-021](decisions.md#d-021--2026-10-14--tentang-uptd-tersimpan-di-server-unggahan-foto-ditunda), `initProfil()` di `public/assets/js/main.js`). Bentuknya sama dengan dokumen dashboard tanpa `id` butir dan tanpa foto, ditambah `diperbarui`: waktu terakhir disimpan, atau `null` selama isinya masih teks awal.
+
+| Hal | Perilaku |
+|---|---|
+| Berhasil | `200`. Teks wajib ditampilkan sebagai teks polos. |
+| Galat | `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah batas laju yang sama dengan `GET /api/public/faq`; `503` bila data tidak bisa dibaca, tidak pernah teks lain sebagai gantinya. |
+| Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
+
+Kode: `app/Http/Controllers/PublicProfileController.php`, `app/Actions/ShowPublicProfile.php`. Tes: `tests/Feature/PublicProfileControllerTest.php`.
 
 ## `POST /api/public/pesan`
 

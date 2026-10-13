@@ -157,6 +157,18 @@ class PortalPagesTest extends TestCase
         $this->assertStringContainsString('href="unduhan.html"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Unduh maklumat (PDF)</a>', $html);
     }
 
+    public function test_leaves_the_profile_text_to_the_public_api(): void
+    {
+        $html = $this->get('/profil')->assertOk()->getContent();
+
+        foreach (['Melayani pajak daerah', '[Nama Kepala UPTD]', 'Bagian dari BPAD NTT', 'Pendataan objek', 'Kami ingin setiap warga'] as $text) {
+            $this->assertStringNotContainsString($text, $html);
+        }
+        $this->assertStringContainsString('<p class="small muted" style="margin-top:16px" role="status" data-profil-status>Memuat profil…</p>', $html);
+        $this->assertSame(3, preg_match_all('/<section [^>]*data-profil-bagian="[a-z]+" hidden>/', $html));
+        $this->assertStringContainsString('<div data-profil-tetap><dt>Dasar hukum</dt>', $html);
+    }
+
     public function test_sends_the_contact_form_to_the_message_api_with_the_services_it_accepts(): void
     {
         $html = $this->get('/kontak')->assertOk()->getContent();

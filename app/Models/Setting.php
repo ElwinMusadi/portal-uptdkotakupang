@@ -133,6 +133,56 @@ class Setting extends Model
         ],
     ];
 
+    /**
+     * The portal's Tentang UPTD page: introduction, position, identity
+     * facts, duties and the head's welcome (Tentang UPTD).
+     */
+    public const string PROFILE = 'profil';
+
+    /**
+     * The Tentang UPTD document until it is first saved: the text the portal
+     * showed before the page was managed from the dashboard, without the
+     * placeholder name of the head of the unit (D-021). Photos are not
+     * stored on the server yet.
+     *
+     * @var array{judul: string, lanjutan: string, pengantar: string, foto: null, keteranganFoto: string, kedudukan: array{judul: string, lanjutan: string, deskripsi: string}, identitas: list<array{id: string, label: string, nilai: string}>, tugasFungsi: list<array{id: string, judul: string, deskripsi: string, kataKunci: string}>, sambutan: array{kutipan: string, nama: string, jabatan: string, foto: null}}
+     */
+    public const array INITIAL_PROFILE = [
+        'judul' => 'Melayani pajak daerah.',
+        'lanjutan' => 'Dari jantung Kota Kupang.',
+        'pengantar' => 'Kami unit pelaksana teknis yang mengurus pajak kendaraan bermotor bagi warga Kota Kupang, bersama mitra Samsat dalam satu atap.',
+        'foto' => null,
+        'keteranganFoto' => 'Kantor Bersama Samsat Kota Kupang. Tempat pajak, STNK, dan asuransi kecelakaan diurus sekaligus.',
+        'kedudukan' => [
+            'judul' => 'Bagian dari BPAD NTT.',
+            'lanjutan' => 'Dekat dengan warga kota.',
+            'deskripsi' => 'UPTD berada di bawah Badan Pendapatan dan Aset Daerah Provinsi Nusa Tenggara Timur dan melayani seluruh wilayah Kota Kupang.',
+        ],
+        'identitas' => [
+            ['id' => 'identitas-1', 'label' => 'Nama unit', 'nilai' => 'UPTD Pendapatan Daerah Wilayah Kota Kupang'],
+            ['id' => 'identitas-2', 'label' => 'Dikenal sebagai', 'nilai' => 'Samsat Kota Kupang'],
+            ['id' => 'identitas-3', 'label' => 'Induk organisasi', 'nilai' => 'Badan Pendapatan dan Aset Daerah Provinsi NTT'],
+            ['id' => 'identitas-4', 'label' => 'Wilayah kerja', 'nilai' => 'Kota Kupang · 6 kecamatan, 51 kelurahan'],
+            ['id' => 'identitas-5', 'label' => 'Mitra satu atap', 'nilai' => 'Polri (Satlantas) dan PT Jasa Raharja'],
+            ['id' => 'identitas-6', 'label' => 'Pajak yang dilayani', 'nilai' => 'PKB, BBNKB, serta opsen untuk Pemerintah Kota'],
+            ['id' => 'identitas-7', 'label' => 'Kanal pembayaran', 'nilai' => 'Kasir tunai, QRIS, dan bank mitra'],
+        ],
+        'tugasFungsi' => [
+            ['id' => 'tugas-1', 'judul' => 'Pendataan objek dan subjek pajak kendaraan bermotor di Kota Kupang.', 'deskripsi' => 'Termasuk pemutakhiran data kepemilikan dan alamat.', 'kataKunci' => 'Data'],
+            ['id' => 'tugas-2', 'judul' => 'Penetapan pajak dan penerbitan notis pajak kendaraan.', 'deskripsi' => 'Nilai pajak dihitung sistem, bukan oleh petugas loket.', 'kataKunci' => 'Tetapkan'],
+            ['id' => 'tugas-3', 'judul' => "Pelayanan Samsat: pengesahan STNK, perpanjangan 5\u{00A0}tahun, mutasi, dan balik nama.", 'deskripsi' => 'Bersama Satlantas dan Jasa Raharja di kantor yang sama.', 'kataKunci' => 'Layani'],
+            ['id' => 'tugas-4', 'judul' => 'Penerimaan, penyetoran, dan pelaporan pajak daerah.', 'deskripsi' => 'Tunai di kasir atau non-tunai lewat kanal resmi.', 'kataKunci' => 'Terima'],
+            ['id' => 'tugas-5', 'judul' => 'Penagihan tunggakan serta pelaksanaan program pemutihan.', 'deskripsi' => 'Termasuk Samsat Keliling ke kelurahan.', 'kataKunci' => 'Jangkau'],
+            ['id' => 'tugas-6', 'judul' => 'Ketatausahaan: kepegawaian, keuangan, perlengkapan, dan layanan administrasi internal.', 'deskripsi' => 'Dijalankan Sub Bagian Tata Usaha.', 'kataKunci' => 'Kelola'],
+        ],
+        'sambutan' => [
+            'kutipan' => 'Kami ingin setiap warga datang sekali dan pulang dengan urusan selesai. PINTU adalah janji kami untuk informasi yang jelas, resmi, dan selalu terbaru.',
+            'nama' => '',
+            'jabatan' => 'Kepala UPTD Pendapatan Daerah Wilayah Kota Kupang',
+            'foto' => null,
+        ],
+    ];
+
     protected $primaryKey = 'name';
 
     protected $keyType = 'string';
@@ -217,6 +267,16 @@ class Setting extends Model
     public static function visionMission(): array
     {
         return self::query()->find(self::VISION_MISSION)?->value ?? self::INITIAL_VISION_MISSION;
+    }
+
+    /**
+     * The Tentang UPTD document as the dashboard edits it.
+     *
+     * @return array{judul: string, lanjutan: string, pengantar: string, foto: null, keteranganFoto: string, kedudukan: array{judul: string, lanjutan: string, deskripsi: string}, identitas: list<array{id: string, label: string, nilai: string}>, tugasFungsi: list<array{id: string, judul: string, deskripsi: string, kataKunci: string}>, sambutan: array{kutipan: string, nama: string, jabatan: string, foto: null}}
+     */
+    public static function profile(): array
+    {
+        return self::query()->find(self::PROFILE)?->value ?? self::INITIAL_PROFILE;
     }
 
     /**
