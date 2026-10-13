@@ -26,9 +26,10 @@ import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
 import type { Beralur, Riwayat } from "@/lib/api"
 import { bolehUbahAlur, patchAlur, type KoleksiBeralur } from "@/lib/alur"
+import { sesi } from "@/lib/auth"
 import { tanggalJam, waktuRelatif } from "@/lib/format"
 import { AKSI_ALUR, STATUS_ALUR, TAHAP_ALUR, type AksiAlur } from "@/lib/meta"
-import { usePengaturan, useUbahEntri } from "@/lib/queries"
+import { useUbahEntri } from "@/lib/queries"
 import { cn } from "@/lib/utils"
 
 type ItemBeralur = Beralur & { id: string }
@@ -39,7 +40,6 @@ type ItemBeralur = Beralur & { id: string }
  */
 export function useAksiAlur(koleksi: KoleksiBeralur) {
   const ubah = useUbahEntri(koleksi)
-  const { data: akun } = usePengaturan("akun")
   const [minta, setMinta] = React.useState<{ item: ItemBeralur; aksi: AksiAlur } | null>(null)
   const [catatan, setCatatan] = React.useState("")
   const idCatatan = React.useId()
@@ -48,7 +48,7 @@ export function useAksiAlur(koleksi: KoleksiBeralur) {
     try {
       await ubah.mutateAsync({
         id: item.id,
-        patch: patchAlur(item, aksi, akun?.nama ?? "Pengelola PINTU", cat) as never,
+        patch: patchAlur(item, aksi, sesi().nama, cat) as never,
       })
       toast.success(`Status: ${STATUS_ALUR[aksi.ke].label}`)
       return true

@@ -15,9 +15,10 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import type { Dokumen, FormatDokumen } from "@/lib/api"
 import { alurBaru } from "@/lib/alur"
+import { sesi } from "@/lib/auth"
 import { ukuranBerkas } from "@/lib/format"
 import { KATEGORI_DOKUMEN, PEMERIKSA, STATUS_ALUR, UNIT_PENYEDIA } from "@/lib/meta"
-import { useKoleksi, usePengaturan } from "@/lib/queries"
+import { useKoleksi } from "@/lib/queries"
 import * as v from "@/lib/validasi"
 
 const FORMAT: FormatDokumen[] = ["PDF", "DOCX", "XLSX", "JPG", "Tautan"]
@@ -54,7 +55,6 @@ const k = pembantuKolom<Dokumen>()
 
 export default function HalamanUnduhan() {
   const { data, isLoading } = useKoleksi("dokumen")
-  const { data: akun } = usePengaturan("akun")
   const hapus = useHapus("dokumen", "dokumen")
   const { jalankan, dialog, memproses } = useAksiAlur("dokumen")
 
@@ -86,7 +86,7 @@ export default function HalamanUnduhan() {
       penyedia: d.penyedia,
       pemeriksa: d.pemeriksa,
     }),
-    keEntriBaru: (f) => ({ ...alurBaru(akun?.nama ?? "Pengelola PINTU", f.penyedia, f.pemeriksa), ...f }),
+    keEntriBaru: (f) => ({ ...alurBaru(sesi().nama, f.penyedia, f.pemeriksa), ...f }),
   })
 
   // format mengikuti berkas yang diunggah

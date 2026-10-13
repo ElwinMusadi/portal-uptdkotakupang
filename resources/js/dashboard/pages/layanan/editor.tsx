@@ -21,11 +21,12 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from "@/component
 import { Input } from "@/components/ui/input"
 import type { Layanan } from "@/lib/api"
 import { alurBaru, bolehUbahAlur, khususAdministrator } from "@/lib/alur"
+import { sesi } from "@/lib/auth"
 import { slugify } from "@/lib/format"
 import { validasiFormulir } from "@/lib/formulir"
 import { newId } from "@/lib/id"
 import { PEMERIKSA, UNIT_PENYEDIA } from "@/lib/meta"
-import { useKoleksi, usePengaturan, useTambahEntri, useUbahEntri } from "@/lib/queries"
+import { useKoleksi, useTambahEntri, useUbahEntri } from "@/lib/queries"
 import * as v from "@/lib/validasi"
 
 const schema = z.object({
@@ -107,7 +108,6 @@ function IsiEditor({ entri, semua }: { entri: Layanan | null; semua: Layanan[] }
   const navigate = useNavigate()
   const tambah = useTambahEntri("layanan")
   const ubah = useUbahEntri("layanan")
-  const { data: akun } = usePengaturan("akun")
   const hapus = useHapus("layanan", "layanan")
   const { jalankan, dialog, memproses } = useAksiAlur("layanan")
   // Layanan yang menunggu persetujuan atau sudah terbit, urutan, dan penghapusan hanya untuk Administrator (D-022)
@@ -145,7 +145,7 @@ function IsiEditor({ entri, semua }: { entri: Layanan | null; semua: Layanan[] }
         toast.success("Perubahan layanan disimpan")
       } else {
         const baru = await tambah.mutateAsync({
-          ...alurBaru(akun?.nama ?? "Pengelola PINTU", nilai.penyedia, nilai.pemeriksa),
+          ...alurBaru(sesi().nama, nilai.penyedia, nilai.pemeriksa),
           ...nilai,
         })
         toast.success("Layanan ditambahkan sebagai draf")

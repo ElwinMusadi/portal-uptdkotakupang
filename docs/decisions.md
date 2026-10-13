@@ -358,3 +358,15 @@ Pengaturan Situs kini tersimpan di server. Kaki halaman portal dan bilah pengumu
 | Tampilan | Teks dipasang sebagai teks polos. Deskripsi atau hak cipta yang dikosongkan disembunyikan. Bilah pengumuman disembunyikan bila dimatikan atau teksnya kosong. Tanpa tujuan tautan yang sah, bilah tampil sebagai teks tanpa tautan dan tanpa label. |
 
 Setiap halaman portal yang memiliki kaki halaman kini memakai satu permintaan tambahan dari batas laju API publik (D-013).
+
+## D-027 · 2026-10-14 · Profil akun tersimpan di server; nama dan surel mengikuti akun
+
+Tab *Akun* di halaman Pengaturan kini membaca dan menyimpan profil akun yang sedang masuk di server, bukan salinan di peramban.
+
+| Hal | Keputusan |
+|---|---|
+| Nama dan surel | **Mengikuti akun server** (keputusan pemilik). Tab Akun menampilkannya sebagai hanya-baca; Administrator mengubahnya di Akun Pegawai (D-008). Server menolak nama atau surel yang berbeda dari akun. |
+| Profil | **Jabatan, unit, dan peran dalam pengelolaan informasi disimpan per akun di server** (keputusan pemilik), di tabel `users` (`jabatan`, `unit`, `peran_informasi`). Setiap pegawai mengisi profilnya sendiri: jabatan dan unit maks. 120 karakter, dan peran salah satu dari Penyedia, Pemeriksa, Penyetuju, atau Pengelola publikasi. Profil hanya keterangan; hak akses tetap ditentukan peran akun dan modulnya. Penyimpanan profil tidak dicatat di log aktivitas. |
+| Nama pelaku | Riwayat alur publikasi dan log aktivitas untuk modul yang masih tersimpan di peramban (Berita, Dokumentasi, Unduhan, Absensi) kini memakai nama akun yang sedang masuk, sama seperti modul di server. Nama di profil peramban tidak dipakai lagi. |
+
+`GET` dan `PUT /api/pengaturan/akun` hanya membaca dan mengubah akun yang sedang masuk. Administrator belum melihat profil pegawai lain di Akun Pegawai.

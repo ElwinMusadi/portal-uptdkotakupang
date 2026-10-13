@@ -51,7 +51,7 @@ import { hariIniIso, jamTitik, selisihHari, tanggalJam } from "@/lib/format"
 import { kompresGambar, namaBerkasGambar, TIPE_GAMBAR } from "@/lib/gambar"
 import { sekarangWita } from "@/lib/jadwal"
 import { JENIS_KEGIATAN, TIPE_ABSEN, judulEntri } from "@/lib/meta"
-import { useKoleksi, usePengaturan } from "@/lib/queries"
+import { useKoleksi } from "@/lib/queries"
 import * as v from "@/lib/validasi"
 
 /** Sisi terpanjang foto absensi; cukup untuk bukti, hemat penyimpanan */
@@ -415,11 +415,10 @@ export default function HalamanAbsensi() {
   const [params, setParams] = useSearchParams()
   const { data, isLoading } = useKoleksi("absensi")
   const { data: keliling } = useKoleksi("keliling")
-  const { data: akun } = usePengaturan("akun")
   const hapusEntri = useHapus("absensi", "absensi")
   const [periode, setPeriode] = React.useState<Periode>("semua")
 
-  const nama = akun?.nama || "Pengelola PINTU"
+  const nama = sesi().nama
   const nip = sesi().nip
   const hariIni = hariIniIso()
 

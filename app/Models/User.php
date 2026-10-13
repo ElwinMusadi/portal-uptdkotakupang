@@ -25,6 +25,26 @@ class User extends Authenticatable
     use HasFactory, HasUlids, Notifiable;
 
     /**
+     * The roles in the information workflow an employee may state in their
+     * profile (D-027). They describe the employee; access still follows the
+     * account's role and modules.
+     *
+     * @var list<string>
+     */
+    public const array INFORMATION_ROLES = ['Penyedia', 'Pemeriksa', 'Penyetuju', 'Pengelola publikasi'];
+
+    /**
+     * The profile is empty until the employee fills it in, as in the database.
+     *
+     * @var array<string, string>
+     */
+    protected $attributes = [
+        'jabatan' => '',
+        'unit' => '',
+        'peran_informasi' => '',
+    ];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

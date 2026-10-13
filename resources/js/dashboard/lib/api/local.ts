@@ -1,5 +1,6 @@
 import { clear, createStore, get, set, setMany, type UseStore } from "idb-keyval"
 
+import { sesi } from "@/lib/auth"
 import { newId } from "@/lib/id"
 import { KOLEKSI_LABEL, PENGATURAN_LABEL, judulEntri, kerjaStatus } from "@/lib/meta"
 
@@ -151,9 +152,13 @@ export class LocalApi implements ApiClient {
     return data.slice().sort((a, b) => a.urutan - b.urutan)
   }
 
-  private async pelaku(w: Wadah): Promise<string> {
-    const akun = await w.get<Pengaturan["akun"]>(kPengaturan("akun"))
-    return akun?.nama || "Pengelola PINTU"
+  /** Nama akun yang sedang masuk; profil di peramban tidak lagi menyimpan nama (D-027) */
+  private pelaku(): string {
+    try {
+      return sesi().nama
+    } catch {
+      return "Pengelola PINTU"
+    }
   }
 
   private async catat(w: Wadah, aksi: string, modul: string, target: string) {
@@ -161,7 +166,7 @@ export class LocalApi implements ApiClient {
     const entri: Aktivitas = {
       id: newId(),
       waktu: new Date().toISOString(),
-      oleh: await this.pelaku(w),
+      oleh: this.pelaku(),
       aksi,
       modul,
       target,

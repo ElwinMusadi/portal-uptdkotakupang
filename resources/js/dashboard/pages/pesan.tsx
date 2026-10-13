@@ -38,7 +38,7 @@ import { sesi } from "@/lib/auth"
 import { tanggalJam, waktuRelatif } from "@/lib/format"
 import { newId, newTiket } from "@/lib/id"
 import { LAYANAN_PESAN, PESAN_JENIS, PESAN_STATUS, PESAN_SUMBER } from "@/lib/meta"
-import { useKoleksi, usePengaturan, useUbahEntri } from "@/lib/queries"
+import { useKoleksi, useUbahEntri } from "@/lib/queries"
 import * as v from "@/lib/validasi"
 
 const schema = z.object({
@@ -55,12 +55,11 @@ const k = pembantuKolom<Pesan>()
 
 function DetailPesan({ pesan, tutup }: { pesan: Pesan | null; tutup: () => void }) {
   const ubah = useUbahEntri("pesan")
-  const { data: akun } = usePengaturan("akun")
   const [balasan, setBalasan] = React.useState("")
   const [selesai, setSelesai] = React.useState(true)
   const idBalasan = React.useId()
   const idStatus = React.useId()
-  const nama = akun?.nama ?? "Pengelola PINTU"
+  const nama = sesi().nama
 
   React.useEffect(() => {
     setBalasan("")

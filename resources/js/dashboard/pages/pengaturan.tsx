@@ -53,12 +53,13 @@ const skemaSitus = z.object({
     }),
 })
 
+// Nama dan surel mengikuti akun server; jabatan, unit, dan peran disimpan per akun (D-027)
 const skemaAkun = z.object({
-  nama: v.wajib("Nama"),
-  jabatan: v.teks,
-  unit: v.teks,
+  nama: v.teks,
+  jabatan: v.teks.max(120, maks(120)),
+  unit: v.teks.max(120, maks(120)),
   peran: v.wajib("Peran"),
-  email: v.email,
+  email: v.teks,
 })
 
 function TabSitus() {
@@ -121,8 +122,21 @@ function TabAkun() {
         {(form) => (
           <Bagian judul="Profil pengelola" deskripsi="Nama ini tercatat di riwayat alur publikasi dan log aktivitas.">
             <Baris>
-              <FieldTeks control={form.control} name="nama" label="Nama tampilan" wajib />
-              <FieldTeks control={form.control} name="email" label="Surel dinas" type="email" />
+              <FieldTeks
+                control={form.control}
+                name="nama"
+                label="Nama tampilan"
+                readOnly
+                deskripsi="Mengikuti akun; diubah Administrator di Akun Pegawai."
+              />
+              <FieldTeks
+                control={form.control}
+                name="email"
+                label="Surel dinas"
+                type="email"
+                readOnly
+                deskripsi="Mengikuti akun; diubah Administrator di Akun Pegawai."
+              />
             </Baris>
             <Baris>
               <FieldTeks control={form.control} name="jabatan" label="Jabatan" />

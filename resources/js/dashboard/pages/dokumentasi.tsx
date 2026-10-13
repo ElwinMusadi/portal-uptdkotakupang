@@ -15,9 +15,10 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import type { Dokumentasi } from "@/lib/api"
 import { alurBaru } from "@/lib/alur"
+import { sesi } from "@/lib/auth"
 import { hariIniIso, tanggal } from "@/lib/format"
 import { KATEGORI_DOKUMENTASI, PEMERIKSA, STATUS_ALUR, UNIT_PENYEDIA } from "@/lib/meta"
-import { useKoleksi, usePengaturan } from "@/lib/queries"
+import { useKoleksi } from "@/lib/queries"
 import * as v from "@/lib/validasi"
 
 const schema = z.object({
@@ -36,7 +37,6 @@ const k = pembantuKolom<Dokumentasi>()
 
 export default function HalamanDokumentasi() {
   const { data, isLoading } = useKoleksi("dokumentasi")
-  const { data: akun } = usePengaturan("akun")
   const hapus = useHapus("dokumentasi", "kegiatan")
   const { jalankan, dialog, memproses } = useAksiAlur("dokumentasi")
 
@@ -64,7 +64,7 @@ export default function HalamanDokumentasi() {
       penyedia: d.penyedia,
       pemeriksa: d.pemeriksa,
     }),
-    keEntriBaru: (f) => ({ ...alurBaru(akun?.nama ?? "Pengelola PINTU", f.penyedia, f.pemeriksa), ...f }),
+    keEntriBaru: (f) => ({ ...alurBaru(sesi().nama, f.penyedia, f.pemeriksa), ...f }),
   })
 
   const kolom = [

@@ -28,10 +28,11 @@ import {
 import { Input } from "@/components/ui/input"
 import type { Berita } from "@/lib/api"
 import { alurBaru } from "@/lib/alur"
+import { sesi } from "@/lib/auth"
 import { hariIniIso, menitBaca, slugify } from "@/lib/format"
 import { validasiFormulir } from "@/lib/formulir"
 import { KATEGORI_BERITA, PEMERIKSA, UNIT_PENYEDIA } from "@/lib/meta"
-import { useKoleksi, usePengaturan, useTambahEntri, useUbahEntri } from "@/lib/queries"
+import { useKoleksi, useTambahEntri, useUbahEntri } from "@/lib/queries"
 import * as v from "@/lib/validasi"
 
 const schema = z.object({
@@ -115,7 +116,6 @@ function IsiEditor({ entri, semua }: { entri: Berita | null; semua: Berita[] }) 
   const navigate = useNavigate()
   const tambah = useTambahEntri("berita")
   const ubah = useUbahEntri("berita")
-  const { data: akun } = usePengaturan("akun")
   const hapus = useHapus("berita", "tulisan")
   const { jalankan, dialog, memproses } = useAksiAlur("berita")
   const [slugManual, setSlugManual] = React.useState(!!entri)
@@ -151,7 +151,7 @@ function IsiEditor({ entri, semua }: { entri: Berita | null; semua: Berita[] }) 
         tersimpan = await ubah.mutateAsync({ id: entri.id, patch: nilai })
       } else {
         tersimpan = await tambah.mutateAsync({
-          ...alurBaru(akun?.nama ?? "Pengelola PINTU", nilai.penyedia, nilai.pemeriksa),
+          ...alurBaru(sesi().nama, nilai.penyedia, nilai.pemeriksa),
           ...nilai,
         })
       }

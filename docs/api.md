@@ -43,6 +43,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET`, `PUT` | `/api/pengaturan/beranda` | Administrator, pengelola Beranda | tersedia |
 | `GET` | `/api/pengaturan/situs` | pegawai login | tersedia |
 | `PUT` | `/api/pengaturan/situs` | Administrator | tersedia |
+| `GET`, `PUT` | `/api/pengaturan/akun` | pegawai login, untuk akunnya sendiri | tersedia |
 | `GET`, `POST` | `/api/koleksi/pesan` | Administrator, pengelola Pesan & Pengaduan | tersedia |
 | `GET`, `PATCH` | `/api/koleksi/pesan/{id}` | Administrator, pengelola Pesan & Pengaduan | tersedia |
 | `POST` | `/api/koleksi/pesan/hapus` | Administrator | tersedia |
@@ -484,6 +485,23 @@ Dipakai tab *Situs* di halaman Pengaturan, sidebar, dan tautan ke portal di dash
 Penyimpanan tidak tercatat di log aktivitas, karena log aktivitas disusun per modul.
 
 Kode: `app/Http/Controllers/Dashboard/SiteController.php`, `app/Http/Requests/Dashboard/UpdateSiteRequest.php`, `app/Policies/SettingPolicy.php`, `app/Actions/SaveSetting.php`, `app/Models/Setting.php`. Tes: `tests/Feature/SiteControllerTest.php`.
+
+## Profil akun di dashboard
+
+Dipakai tab *Akun* di halaman Pengaturan dan menu pengguna di dashboard ([D-027](decisions.md#d-027--2026-10-14--profil-akun-tersimpan-di-server-nama-dan-surel-mengikuti-akun)). Setiap pegawai yang masuk hanya membaca dan mengubah profilnya sendiri; tamu mendapat `401`.
+
+```json
+{ "nama": "Maria Pegawai", "jabatan": "Pengelola Data", "unit": "Sub Bagian Tata Usaha", "peran": "Pemeriksa", "email": "" }
+```
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `GET /api/pengaturan/akun` | — | `200` profil di atas. `nama` dan `email` berasal dari akun (`email` kosong `""` bila tidak ada); jabatan, unit, dan peran kosong sampai diisi. |
+| `PUT /api/pengaturan/akun` | `jabatan`, `unit`, `peran`; `nama` dan `email` boleh ikut dikirim | `200` profil tersimpan; jabatan dan unit yang kosong disimpan sebagai `""`. `422` bila `peran` kosong atau bukan Penyedia, Pemeriksa, Penyetuju, atau Pengelola publikasi; jabatan atau unit lebih dari 120 karakter atau berisi karakter kontrol; atau `nama`/`email` berbeda dari akun (`{"nama": ["Nama mengikuti akun dan hanya dapat diubah Administrator di Akun Pegawai."]}`). |
+
+Penyimpanan profil tidak dicatat di log aktivitas.
+
+Kode: `app/Http/Controllers/Dashboard/OwnAccountController.php`, `app/Http/Requests/Dashboard/UpdateOwnAccountRequest.php`, `app/Models/User.php`. Tes: `tests/Feature/OwnAccountControllerTest.php`.
 
 ## Pesan & Pengaduan di dashboard
 

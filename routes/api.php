@@ -15,6 +15,7 @@ use App\Http\Controllers\Dashboard\MessageDeletionController;
 use App\Http\Controllers\Dashboard\MobileServiceStopController;
 use App\Http\Controllers\Dashboard\MobileServiceStopDeletionController;
 use App\Http\Controllers\Dashboard\OpeningHoursController;
+use App\Http\Controllers\Dashboard\OwnAccountController;
 use App\Http\Controllers\Dashboard\ProfileController;
 use App\Http\Controllers\Dashboard\ScheduleAdjustmentController;
 use App\Http\Controllers\Dashboard\ScheduleAdjustmentDeletionController;
@@ -205,6 +206,10 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::put('/pengaturan/situs', [SiteController::class, 'update'])
         ->can('update', [Setting::class, $site])
         ->name('pengaturan.situs.update');
+
+    // The signed-in employee's own profile, the dashboard's "akun" settings (D-027).
+    Route::get('/pengaturan/akun', [OwnAccountController::class, 'show'])->name('pengaturan.akun.show');
+    Route::put('/pengaturan/akun', [OwnAccountController::class, 'update'])->name('pengaturan.akun.update');
 
     Route::prefix('koleksi/penyesuaian')->name('koleksi.penyesuaian.')->whereUlid('adjustment')->group(function (): void {
         Route::get('/', [ScheduleAdjustmentController::class, 'index'])->can('viewAny', ScheduleAdjustment::class)->name('index');

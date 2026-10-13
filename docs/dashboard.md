@@ -4,7 +4,7 @@ Dashboard pengelolaan konten portal **PINTU** (UPTD Pendapatan Daerah Wilayah Ko
 
 Tata letaknya mengikuti template [shadcn/ui *dashboard-01*](https://ui.shadcn.com/blocks#dashboard-01): sidebar, kartu KPI, grafik area interaktif, dan tabel data. Warna dan tipografinya disesuaikan dengan design system portal.
 
-> **Status.** Login sudah diperiksa server (lihat [Sesi login](#sesi-login)) dan Tanya Jawab, Samsat Keliling, Pesan & Pengaduan, Persyaratan Layanan, Jam Pelayanan, Papan Layanan, Tarif & Simulasi, Statistik Layanan, Kontak & Kanal, Visi & Misi, Tentang UPTD, Beranda, Halaman Statis, Jadwal Pemutakhiran, serta Pengaturan Situs sudah tersimpan di server (lihat [Penyimpanan data](#penyimpanan-data)). Konten lain masih tersimpan di peramban (IndexedDB) sampai gilirannya pindah ke server; kontraknya ada di bagian [Menyambungkan ke server](#menyambungkan-ke-server-rest-api).
+> **Status.** Login sudah diperiksa server (lihat [Sesi login](#sesi-login)) dan Tanya Jawab, Samsat Keliling, Pesan & Pengaduan, Persyaratan Layanan, Jam Pelayanan, Papan Layanan, Tarif & Simulasi, Statistik Layanan, Kontak & Kanal, Visi & Misi, Tentang UPTD, Beranda, Halaman Statis, Jadwal Pemutakhiran, Pengaturan Situs, serta profil akun sudah tersimpan di server (lihat [Penyimpanan data](#penyimpanan-data)). Konten lain masih tersimpan di peramban (IndexedDB) sampai gilirannya pindah ke server; kontraknya ada di bagian [Menyambungkan ke server](#menyambungkan-ke-server-rest-api).
 
 ## Menjalankan
 
@@ -152,7 +152,7 @@ Contoh entri `faq`:
 
 Tanpa `VITE_API_URL`, dashboard berjalan dalam **mode campuran** (`lib/api/hybrid.ts`, [D-011](decisions.md#d-011--2026-10-13--tanya-jawab-tersimpan-di-server)):
 
-- Koleksi di `KOLEKSI_SERVER` (saat ini `faq`, `keliling`, `penyesuaian`, `pesan`, `layanan`, `halaman`, dan `pemutakhiran`) dan pengaturan di `PENGATURAN_SERVER` (saat ini `jam`, `papan`, `tarif`, `statistik`, `kontak`, `visiMisi`, `profil`, `beranda`, dan `situs`) dibaca dan ditulis lewat API PINTU (`/api/koleksi/…`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/tarif`, `/api/pengaturan/statistik`, `/api/pengaturan/kontak`, `/api/pengaturan/visiMisi`, `/api/pengaturan/profil`, `/api/pengaturan/beranda`, `/api/pengaturan/situs`, lihat [docs/api.md](api.md#tanya-jawab-di-dashboard)). Perubahan pegawai lain muncul saat tab kembali dilihat, dan server memeriksa modul pengguna. Waktu simpan pengaturan server (`GET /api/pengaturan`) menggantikan waktu di peramban untuk pengaturan itu.
+- Koleksi di `KOLEKSI_SERVER` (saat ini `faq`, `keliling`, `penyesuaian`, `pesan`, `layanan`, `halaman`, dan `pemutakhiran`) dan pengaturan di `PENGATURAN_SERVER` (saat ini `jam`, `papan`, `tarif`, `statistik`, `kontak`, `visiMisi`, `profil`, `beranda`, `situs`, dan `akun`) dibaca dan ditulis lewat API PINTU (`/api/koleksi/…`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/tarif`, `/api/pengaturan/statistik`, `/api/pengaturan/kontak`, `/api/pengaturan/visiMisi`, `/api/pengaturan/profil`, `/api/pengaturan/beranda`, `/api/pengaturan/situs`, `/api/pengaturan/akun`, lihat [docs/api.md](api.md#tanya-jawab-di-dashboard)). Perubahan pegawai lain muncul saat tab kembali dilihat, dan server memeriksa modul pengguna. Waktu simpan pengaturan server (`GET /api/pengaturan`) menggantikan waktu di peramban untuk pengaturan itu.
 - Koleksi dan pengaturan lain serta unggahan tersimpan di IndexedDB peramban: database `pintu-dashboard`, store `data`, dengan kunci `koleksi:<nama>`, `pengaturan:<nama>`, `aktivitas`, dan `meta`.
 - Saat pertama dibuka, dashboard mengisi data lokal awal dari isi portal yang sudah ada (`resources/js/dashboard/lib/api/seed.ts`). Tanya jawab contoh di sana tidak dipakai lagi dan tidak dipindahkan ke server.
 - Foto dan berkas disimpan sebagai data URL. Foto dikecilkan dulu menjadi maks. 1600 px.
@@ -174,7 +174,7 @@ Tanpa `VITE_API_URL`, dashboard berjalan dalam **mode campuran** (`lib/api/hybri
 
 ## Menyambungkan ke server (REST API)
 
-> **Sebagian tersedia.** Laravel sudah menyediakan koleksi `faq`, `keliling`, `penyesuaian`, `pesan`, `layanan`, `halaman`, dan `pemutakhiran` (tanpa `PUT /urutan` untuk `keliling` dan `penyesuaian`, yang diurutkan menurut hari, jam, atau tanggal; `halaman` hanya dibaca dan disunting), pengaturan `jam`, `papan`, `tarif`, `statistik`, `kontak`, `visiMisi`, `profil`, `beranda`, dan `situs`, `GET /pengaturan`, serta `GET /aktivitas` ([docs/api.md](api.md#tanya-jawab-di-dashboard)); mode campuran memakainya otomatis. Endpoint lain di bawah adalah sasaran modul berikutnya, jadi `VITE_API_URL` baru berguna setelah semuanya tersedia. `DELETE /aktivitas` sengaja tidak dibuat: log aktivitas server tidak bisa dikosongkan dari dashboard.
+> **Sebagian tersedia.** Laravel sudah menyediakan koleksi `faq`, `keliling`, `penyesuaian`, `pesan`, `layanan`, `halaman`, dan `pemutakhiran` (tanpa `PUT /urutan` untuk `keliling` dan `penyesuaian`, yang diurutkan menurut hari, jam, atau tanggal; `halaman` hanya dibaca dan disunting), pengaturan `jam`, `papan`, `tarif`, `statistik`, `kontak`, `visiMisi`, `profil`, `beranda`, `situs`, dan `akun`, `GET /pengaturan`, serta `GET /aktivitas` ([docs/api.md](api.md#tanya-jawab-di-dashboard)); mode campuran memakainya otomatis. Endpoint lain di bawah adalah sasaran modul berikutnya, jadi `VITE_API_URL` baru berguna setelah semuanya tersedia. `DELETE /aktivitas` sengaja tidak dibuat: log aktivitas server tidak bisa dikosongkan dari dashboard.
 
 Build dengan alamat API, lalu semua baca/tulis memakai REST. Karena dashboard dan API kini satu origin, alamatnya cukup `/api`:
 
@@ -342,6 +342,13 @@ Tab *Situs* di halaman *Pengaturan* (`#/pengaturan?tab=situs`, `pages/pengaturan
 
 - Hanya Administrator yang menyimpan; pegawai lain melihat formulirnya dalam keadaan hanya-baca. Nama portal dan nama yang dikenal tetap dipakai sidebar, dan alamat portal dipakai tautan *Lihat di portal*.
 - Deskripsi dan hak cipta tampil di kaki halaman portal, dan bilah pengumuman di halaman Informasi (`GET /api/public/situs`). Teks di HTML portal tetap tampil sampai pengaturan pertama kali disimpan. Nama di kepala halaman dan judul tab tetap mengikuti HTML.
+
+## Profil akun
+
+Tab *Akun* di halaman *Pengaturan* (`#/pengaturan?tab=akun`) tersimpan di server sejak [D-027](decisions.md#d-027--2026-10-14--profil-akun-tersimpan-di-server-nama-dan-surel-mengikuti-akun) sebagai pengaturan `akun`: profil akun yang sedang masuk.
+
+- Nama dan surel mengikuti akun dan tampil hanya-baca; Administrator mengubahnya di *Akun Pegawai*. Jabatan, unit, dan peran dalam pengelolaan informasi diisi pegawai sendiri, dan unit tampil di menu pengguna.
+- Riwayat alur publikasi dan log aktivitas untuk modul yang masih di IndexedDB memakai nama akun yang sedang masuk (`sesi().nama`), sama seperti modul di server.
 
 ## Pesan & Pengaduan
 
