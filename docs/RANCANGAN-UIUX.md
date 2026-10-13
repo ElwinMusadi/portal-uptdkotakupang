@@ -241,14 +241,14 @@ Tidak ada nama, logo, salinan, harga, atau tangkapan layar TinyKPI yang dipakai.
 
 | Konten | Sifat | Pemilik | Frekuensi |
 |---|---|---|---|
-| Jadwal Samsat Keliling | Dinamis | Seksi Penagihan | Mingguan, setiap Jumat |
-| Jam pelayanan & perubahan jadwal | Dinamis | Sub Bagian TU | Bulanan + paling lambat H-3 bila berubah |
+| Jadwal Samsat Keliling | Dinamis | Seksi Penetapan dan Penagihan | Mingguan, setiap Jumat |
+| Jam pelayanan & perubahan jadwal | Dinamis | Subbagian Tata Usaha | Bulanan + paling lambat H-3 bila berubah |
 | Pengumuman | Dinamis | Semua unit | Saat ada kebijakan baru |
 | Berita | Semi-dinamis | Pengelola publikasi | Minimal 2 per bulan |
 | Dokumentasi kegiatan | Semi-dinamis | Semua unit | Setiap kegiatan, maks. 3 hari kerja |
-| Persyaratan layanan | Statis | Seksi Pendataan | Saat regulasi berubah |
-| Profil, visi-misi, struktur | Statis | Sub Bagian TU | Saat ada perubahan pejabat/regulasi |
-| Regulasi & unduhan | Statis | Sub Bagian TU | Saat ada regulasi baru |
+| Persyaratan layanan | Statis | Seksi Verifikasi | Saat regulasi berubah |
+| Profil, visi-misi, struktur | Statis | Subbagian Tata Usaha | Saat ada perubahan pejabat/regulasi |
+| Regulasi & unduhan | Statis | Subbagian Tata Usaha | Saat ada regulasi baru |
 
 Informasi kedinasan yang tidak untuk publik (data wajib pajak, NIP lengkap, dokumen internal) **tidak** ditampilkan di portal publik.
 

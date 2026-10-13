@@ -325,9 +325,9 @@ function IsiEditor({ entri, semua }: { entri: Berita | null; semua: Berita[] }) 
                 />
               </Bagian>
               <Bagian judul="Foto sampul">
-                <FieldGambar control={form.control} name="sampul" label="Foto" />
+                <FieldGambar control={form.control} name="sampul" label="Foto" tujuan="berita" />
                 <FieldTeks control={form.control} name="keteranganSampul" label="Keterangan foto" />
-                <FieldTeks control={form.control} name="kreditFoto" label="Kredit foto" placeholder="Mis. Sub Bagian Tata Usaha" />
+                <FieldTeks control={form.control} name="kreditFoto" label="Kredit foto" placeholder="Mis. Subbagian Tata Usaha" />
               </Bagian>
               {entri && (
                 <Bagian judul="Riwayat">

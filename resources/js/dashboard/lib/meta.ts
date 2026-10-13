@@ -257,7 +257,7 @@ export const KATEGORI_DOKUMEN: Record<KategoriDokumen, string> = {
 
 export const JENIS_UNIT: Record<JenisUnit, string> = {
   pimpinan: "Pimpinan",
-  "tata-usaha": "Sub Bagian",
+  "tata-usaha": "Subbagian",
   seksi: "Seksi",
   fungsional: "Jabatan fungsional",
   mitra: "Mitra satu atap",
@@ -321,15 +321,16 @@ export const TIPE_ABSEN: Record<TipeAbsen, string> = {
   pulang: "Pulang",
 }
 
+// Unit kerja menurut Renstra BPAD 2025–2029 (Pergub NTT Nomor 96 Tahun 2023)
 export const UNIT_PENYEDIA = [
-  "Sub Bagian Tata Usaha",
-  "Seksi Pendataan & Penetapan",
-  "Seksi Penagihan & Pelaporan",
+  "Subbagian Tata Usaha",
+  "Seksi Penetapan dan Penagihan",
+  "Seksi Verifikasi",
   "Pengelola publikasi",
 ] as const
 
 export const PEMERIKSA = [
-  "Kepala Sub Bagian Tata Usaha",
-  "Kepala Seksi Pendataan & Penetapan",
-  "Kepala Seksi Penagihan & Pelaporan",
+  "Kepala Subbagian Tata Usaha",
+  "Kepala Seksi Penetapan dan Penagihan",
+  "Kepala Seksi Verifikasi",
 ] as const

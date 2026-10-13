@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Actions\SaveSetting;
+use App\Actions\SyncUploads;
+use App\Enums\UploadTarget;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dashboard\UpdateProfileRequest;
 use App\Models\Setting;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 /**
  * The Tentang UPTD settings document as the dashboard edits it (D-021). The
@@ -24,11 +27,24 @@ class ProfileController extends Controller
     }
 
     /**
-     * Replace the document.
+     * Replace the document. Photos it now uses are kept; replaced or removed
+     * photos are deleted with it (D-028).
      */
-    public function update(UpdateProfileRequest $request, SaveSetting $saveSetting): JsonResponse
+    public function update(UpdateProfileRequest $request, SaveSetting $saveSetting, SyncUploads $syncUploads): JsonResponse
     {
-        $setting = $saveSetting->handle($request->user(), Setting::PROFILE, $request->profile());
+        $before = Setting::profile();
+        $profile = $request->profile();
+
+        $setting = DB::transaction(function () use ($request, $saveSetting, $syncUploads, $before, $profile): Setting {
+            $setting = $saveSetting->handle($request->user(), Setting::PROFILE, $profile);
+            $syncUploads->handle(
+                UploadTarget::Profil,
+                [$before['foto'] ?? null, $before['sambutan']['foto'] ?? null],
+                [$profile['foto'], $profile['sambutan']['foto']],
+            );
+
+            return $setting;
+        });
 
         return response()->json($setting->value);
     }

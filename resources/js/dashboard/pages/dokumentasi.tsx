@@ -202,7 +202,7 @@ export default function HalamanDokumentasi() {
         </Baris>
         <FieldTeks control={ed.form.control} name="lokasi" label="Lokasi" wajib placeholder="Mis. Kec. Kelapa Lima" />
         <FieldArea control={ed.form.control} name="deskripsi" label="Deskripsi singkat" rows={3} />
-        <FieldFoto control={ed.form.control} name="foto" />
+        <FieldFoto control={ed.form.control} name="foto" tujuan="dokumentasi" />
         <Baris>
           <FieldPilih
             control={ed.form.control}

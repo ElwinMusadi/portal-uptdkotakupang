@@ -543,7 +543,9 @@
      dashboard (Visi & Misi) dan dibaca dari GET /api/public/visi-misi (D-020).
      Sebelum disimpan, API memberikan teks resmi yang sama dengan halaman
      sebelumnya. Teks dipasang sebagai teks polos; bagian halaman tampil
-     setelah isinya dimuat. Bila API gagal, keterangan dan tombol coba lagi. */
+     setelah isinya dimuat. Tombol unduh maklumat memakai PDF yang diunggah
+     (D-028), atau halaman Regulasi & Unduhan bila belum ada. Bila API gagal,
+     keterangan dan tombol coba lagi. */
   const KATA_ANGKA = ["Nol", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh"];
   const kataAngka = (n) => KATA_ANGKA[n] ?? String(n);
 
@@ -552,6 +554,7 @@
     const teks = (x) => typeof x === "string";
     const daftar = (xs, isian) => Array.isArray(xs) && xs.every((x) => isian.every((f) => teks(x?.[f])));
     if (!teks(d?.sumberVisi) || !teks(d.visi) || !teks(d.maklumat?.teks) || !teks(d.maklumat.penandatangan)
+      || !(d.maklumat.berkas === null || teks(d.maklumat.berkas?.url))
       || !daftar(d.misi, ["teks", "kataKunci"]) || !daftar(d.kontribusi, ["misi", "judul", "deskripsi"]) || !daftar(d.nilai, ["huruf", "judul", "deskripsi"])) {
       throw new Error("Respons tidak dikenal");
     }
@@ -614,6 +617,7 @@
       penandatangan.hidden = !d.maklumat.penandatangan;
       $("[data-visi-penandatangan-nama]").textContent = d.maklumat.penandatangan;
       $("[data-visi-inisial]").textContent = inisial(d.maklumat.penandatangan);
+      $("[data-visi-unduh]").href = tautanAman(d.maklumat.berkas?.url ?? "") || "unduhan.html";
       bagian("maklumat").hidden = false;
 
       status.hidden = true;
@@ -644,10 +648,14 @@
 
   /* ---------- Tentang UPTD ----------
      Isi halaman Profil dikelola di dashboard (Tentang UPTD) dan dibaca dari
-     GET /api/public/profil (D-021). Sebelum disimpan, API memberikan teks yang
-     sama dengan halaman sebelumnya, tanpa nama Kepala UPTD contoh. Foto masih
-     ilustrasi sampai unggahan tersedia di server. Teks dipasang sebagai teks
-     polos; bila API gagal, keterangan dan tombol coba lagi. */
+     GET /api/public/profil (D-021). Sebelum disimpan, API memberikan teks awal
+     tanpa nama Kepala UPTD. Foto gedung bawaan di HTML tetap tampil sampai
+     foto kantor diunggah dari dashboard, dan foto Kepala UPTD menggantikan
+     ilustrasinya (D-028). Teks dipasang sebagai teks polos dan foto hanya dari
+     alamat http(s); bila API gagal, keterangan dan tombol coba lagi. */
+  const gambarAman = (url) => (typeof url === "string" && /^https?:\/\/[^\s\x00-\x1f\x7f]+$/i.test(url) ? url : "");
+
+
   async function muatProfil() {
     const p = await ambilJson("/api/public/profil");
     const teks = (x) => typeof x === "string";
@@ -655,6 +663,7 @@
     if (!["judul", "lanjutan", "pengantar", "keteranganFoto"].every((f) => teks(p?.[f]))
       || !["judul", "lanjutan", "deskripsi"].every((f) => teks(p.kedudukan?.[f]))
       || !["kutipan", "nama", "jabatan"].every((f) => teks(p.sambutan?.[f]))
+      || ![p.foto, p.sambutan.foto].every((f) => f === null || teks(f))
       || !daftar(p.identitas, ["label", "nilai"]) || !daftar(p.tugasFungsi, ["judul", "deskripsi", "kataKunci"])) {
       throw new Error("Respons tidak dikenal");
     }
@@ -672,6 +681,13 @@
       duaNada(judul, p.lanjutan ? `${p.judul} ` : p.judul, p.lanjutan);
       $("[data-profil-pengantar]").textContent = p.pengantar;
       $("[data-profil-keterangan-foto]").textContent = p.keteranganFoto;
+      const fotoKantor = gambarAman(p.foto);
+      if (fotoKantor) {
+        const foto = $("[data-profil-foto]");
+        foto.removeAttribute("srcset");
+        foto.src = fotoKantor;
+        foto.alt = p.keteranganFoto || "Foto kantor UPTD";
+      }
 
       const k = p.kedudukan;
       duaNada($("[data-profil-kedudukan-judul]"), k.lanjutan ? `${k.judul} ` : k.judul, k.lanjutan);
@@ -695,6 +711,16 @@
       $("[data-profil-jabatan]").textContent = s.nama ? s.jabatan : "";
       $("[data-profil-inisial]").textContent = inisial(s.nama || s.jabatan);
       $("[data-profil-orang]").hidden = !(s.nama || s.jabatan);
+      const fotoKepala = gambarAman(s.foto);
+      if (fotoKepala) {
+        const wadah = $("[data-profil-sambutan-foto]");
+        const foto = document.createElement("img");
+        foto.src = fotoKepala;
+        foto.alt = `Foto ${s.nama || s.jabatan || "Kepala UPTD"}`;
+        foto.loading = "lazy";
+        wadah.classList.remove("ph", "ph--slate");
+        wadah.replaceChildren(foto);
+      }
       bagian("sambutan").hidden = !(s.kutipan || s.nama || s.jabatan);
 
       status.hidden = true;

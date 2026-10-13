@@ -200,9 +200,8 @@
 
   <section class="container container--wide">
     <figure data-reveal>
-      <div class="media ph ph--sand" style="aspect-ratio: 21 / 9;">
-        <svg aria-hidden="true"><use href="#ill-building"/></svg>
-        <span class="ph__label">Foto gedung Kantor Bersama Samsat Kota Kupang · ganti dengan foto resmi</span>
+      <div class="media" style="aspect-ratio: 21 / 9;">
+        <img src="assets/img/kantor-samsat-kota-kupang-1600.webp" srcset="assets/img/kantor-samsat-kota-kupang-800.webp 800w, assets/img/kantor-samsat-kota-kupang-1600.webp 1600w" sizes="(max-width: 1320px) 100vw, 1320px" width="1600" height="809" alt="Gedung Kantor Bersama Samsat Kota Kupang dengan dua mobil Samsat Keliling di halaman depan" data-profil-foto>
       </div>
       <figcaption class="caption-row">
         <p data-profil-keterangan-foto></p>
@@ -239,7 +238,7 @@
 
   <section class="section section--flush-top" data-profil-bagian="sambutan" hidden>
     <div class="container split split--middle">
-      <div class="media ph ph--slate" style="aspect-ratio: 4 / 5; border-radius: var(--r-xl);" data-reveal>
+      <div class="media ph ph--slate" style="aspect-ratio: 4 / 5; border-radius: var(--r-xl);" data-reveal data-profil-sambutan-foto>
         <svg aria-hidden="true"><use href="#ill-crowd"/></svg>
         <span class="ph__label">Foto Kepala UPTD · ganti dengan foto resmi</span>
       </div>

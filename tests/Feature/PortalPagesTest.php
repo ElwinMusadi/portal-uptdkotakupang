@@ -184,7 +184,8 @@ class PortalPagesTest extends TestCase
         $this->assertStringContainsString('<p class="small muted" style="margin-top:16px" role="status" data-visi-status>Memuat visi dan misi…</p>', $html);
         $this->assertStringContainsString('<ol class="numlist" role="list" data-visi-misi data-reveal></ol>', $html);
         $this->assertSame(4, preg_match_all('/<section [^>]*data-visi-bagian="[a-z]+"[^>]* hidden>/', $html));
-        $this->assertStringContainsString('href="unduhan.html"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Unduh maklumat (PDF)</a>', $html);
+        // Tanpa berkas maklumat di server, tombol unduh tetap ke halaman Regulasi & Unduhan
+        $this->assertStringContainsString('href="unduhan.html" data-visi-unduh><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Unduh maklumat (PDF)</a>', $html);
     }
 
     public function test_leaves_the_profile_text_to_the_public_api(): void
@@ -197,6 +198,12 @@ class PortalPagesTest extends TestCase
         $this->assertStringContainsString('<p class="small muted" style="margin-top:16px" role="status" data-profil-status>Memuat profil…</p>', $html);
         $this->assertSame(3, preg_match_all('/<section [^>]*data-profil-bagian="[a-z]+" hidden>/', $html));
         $this->assertStringContainsString('<div data-profil-tetap><dt>Dasar hukum</dt>', $html);
+        // Foto gedung bawaan tampil sampai foto kantor diunggah; foto Kepala UPTD menggantikan ilustrasinya
+        $this->assertSame(1, preg_match('#<img src="(assets/img/kantor-samsat-kota-kupang-1600\.webp)" srcset="(assets/img/kantor-samsat-kota-kupang-800\.webp) 800w, [^"]+"[^>]* data-profil-foto>#', $html, $photo));
+        $this->assertFileExists(public_path($photo[1]));
+        $this->assertFileExists(public_path($photo[2]));
+        $this->assertStringNotContainsString('ganti dengan foto resmi</span>', substr($html, 0, (int) strpos($html, 'data-profil-sambutan-foto')));
+        $this->assertStringContainsString('data-reveal data-profil-sambutan-foto>', $html);
     }
 
     public function test_leaves_the_service_requirements_to_the_public_api(): void

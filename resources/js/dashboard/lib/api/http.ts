@@ -12,6 +12,7 @@ import type {
   NamaPengaturan,
   Pengaturan,
   Snapshot,
+  TujuanUnggah,
 } from "./types"
 
 /**
@@ -125,8 +126,9 @@ export class HttpApi implements ApiClient {
     return this.req<void>("DELETE", "/aktivitas")
   }
 
-  upload(berkas: File | Blob, nama: string) {
+  upload(berkas: File | Blob, nama: string, tujuan: TujuanUnggah) {
     const form = new FormData()
+    form.append("modul", tujuan)
     form.append("berkas", berkas, nama)
     return this.req<Berkas>("POST", "/unggah", form)
   }

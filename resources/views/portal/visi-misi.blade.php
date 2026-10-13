@@ -249,7 +249,7 @@
           <div>
             <p class="eyebrow"><svg class="i" aria-hidden="true"><use href="#i-award"/></svg>Maklumat pelayanan</p>
             <p class="small muted" style="margin-top:16px;max-width:30ch">Janji layanan yang dipasang di ruang tunggu. Anda berhak menagihnya.</p>
-            <p style="margin-top:28px"><a class="btn btn--ghost btn--sm" href="unduhan.html"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Unduh maklumat (PDF)</a></p>
+            <p style="margin-top:28px"><a class="btn btn--ghost btn--sm" href="unduhan.html" data-visi-unduh><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Unduh maklumat (PDF)</a></p>
           </div>
           <div>
             <p class="quote" data-visi-maklumat></p>

@@ -60,6 +60,9 @@ export interface Beralur {
 /* Berkas                                                              */
 /* ------------------------------------------------------------------ */
 
+/** Tempat berkas dipakai; menentukan bucket, format yang diterima, dan siapa yang boleh mengunggah (D-028) */
+export type TujuanUnggah = "berita" | "dokumentasi" | "dokumen" | "unit" | "visiMisi" | "profil" | "absensi"
+
 export interface Berkas {
   nama: string
   /** ukuran dalam byte */

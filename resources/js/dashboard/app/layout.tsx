@@ -38,8 +38,8 @@ function HalamanTerkunci({ item }: { item: ItemNav }) {
           <EmptyTitle>{item.khusus ? "Khusus Administrator" : "Modul ini belum ditugaskan kepada Anda"}</EmptyTitle>
           <EmptyDescription>
             {item.khusus
-              ? "Akun pegawai dikelola oleh Administrator di Sub Bagian Tata Usaha."
-              : `${item.judul} hanya untuk pegawai yang ditugaskan mengelolanya. Minta Administrator di Sub Bagian Tata Usaha menambahkan modulnya ke akun Anda.`}
+              ? "Akun pegawai dikelola oleh Administrator di Subbagian Tata Usaha."
+              : `${item.judul} hanya untuk pegawai yang ditugaskan mengelolanya. Minta Administrator di Subbagian Tata Usaha menambahkan modulnya ke akun Anda.`}
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>

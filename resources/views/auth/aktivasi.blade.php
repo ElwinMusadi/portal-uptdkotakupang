@@ -58,7 +58,7 @@
       <div class="card card--xl auth__card">
         <p class="smallcaps">Aktivasi akun</p>
         <h2>Tautan tidak berlaku.</h2>
-        <p class="small muted auth__message">Tautan aktivasi sudah dipakai, kedaluwarsa, atau tidak lengkap. Minta tautan baru kepada admin di Sub Bagian Tata Usaha.</p>
+        <p class="small muted auth__message">Tautan aktivasi sudah dipakai, kedaluwarsa, atau tidak lengkap. Minta tautan baru kepada admin di Subbagian Tata Usaha.</p>
         <a class="btn btn--dark btn--block auth__submit" href="{{ url('/login') }}">Ke halaman Login Pegawai</a>
       </div>
     @endif

@@ -5,6 +5,7 @@ import { Bagian, Halaman, PengantarHalaman } from "@/components/data/page"
 import { FieldArea, FieldTeks } from "@/components/form/fields"
 import { IsianItem } from "@/components/form/item-fields"
 import { DaftarObjek } from "@/components/form/list-fields"
+import { FieldBerkas } from "@/components/form/media-fields"
 import { FormPengaturan } from "@/components/form/settings-form"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { newId } from "@/lib/id"
@@ -39,8 +40,8 @@ const schema = z.object({
       })
     )
     .max(10, "Maksimal 10 nilai."),
-  // Berkas maklumat belum bisa disimpan di server (D-020); nilainya selalu kosong
-  maklumat: z.object({ teks: v.wajib("Isi maklumat").max(600, maks(600)), penandatangan: v.teks.max(120, maks(120)), berkas: z.null() }),
+  // Berkas maklumat hanya dari unggahan PINTU (D-028)
+  maklumat: z.object({ teks: v.wajib("Isi maklumat").max(600, maks(600)), penandatangan: v.teks.max(120, maks(120)), berkas: v.berkas }),
 })
 
 export default function HalamanVisiMisi() {
@@ -117,13 +118,15 @@ export default function HalamanVisiMisi() {
             <Bagian judul="Maklumat pelayanan" deskripsi="Janji layanan yang dipasang di ruang tunggu.">
               <FieldArea control={form.control} name="maklumat.teks" label="Isi maklumat" wajib rows={4} />
               <FieldTeks control={form.control} name="maklumat.penandatangan" label="Penandatangan" />
-              <div className="grid gap-1.5 rounded-lg border border-dashed p-3 text-sm">
-                <p className="font-medium">Berkas maklumat (PDF bertanda tangan)</p>
-                <p className="text-muted-foreground">
-                  Unggahan berkas belum bisa disimpan di server. Untuk sementara, tombol “Unduh maklumat (PDF)” di
-                  portal mengarah ke halaman Regulasi & Unduhan.
-                </p>
-              </div>
+              <FieldBerkas
+                control={form.control}
+                name="maklumat.berkas"
+                label="Berkas maklumat (PDF bertanda tangan)"
+                terima=".pdf"
+                petunjuk="PDF · maks. 10 MB"
+                tujuan="visiMisi"
+                deskripsi="Tanpa berkas, tombol “Unduh maklumat (PDF)” di portal mengarah ke halaman Regulasi & Unduhan."
+              />
             </Bagian>
           </>
         )}

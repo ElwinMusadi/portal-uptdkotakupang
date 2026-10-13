@@ -158,6 +158,8 @@
 /* ---------- Media (blok bulat besar) + baris keterangan ---------- */
 .media { position: relative; border-radius: var(--r-xl); overflow: hidden; background: var(--night); isolation: isolate; }
 .media--light { background: var(--paper-2); border: var(--hairline); }
+/* Foto yang mengisi seluruh bingkai (foto gedung dan Kepala UPTD di Profil) */
+.media > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .caption-row {
   display: flex; justify-content: space-between; align-items: baseline; gap: 24px;
   margin-top: 20px; padding-top: 20px; border-top: var(--hairline);

@@ -172,7 +172,7 @@ function TabAkun() {
           <AlertTitle>Login diperiksa server PINTU</AlertTitle>
           <AlertDescription>
             Sesi berakhir bila lama tidak aktif atau peramban ditutup, kecuali “Ingat perangkat ini” dicentang saat
-            masuk. Untuk mengganti kata sandi atau membuka akun yang terkunci, hubungi admin di Sub Bagian Tata Usaha.
+            masuk. Untuk mengganti kata sandi atau membuka akun yang terkunci, hubungi admin di Subbagian Tata Usaha.
           </AlertDescription>
         </Alert>
         <div>

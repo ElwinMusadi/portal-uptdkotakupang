@@ -10,11 +10,12 @@ class ShowPublicVisionMission
 {
     /**
      * Build the Visi & Misi page for the public portal, without the list
-     * items' IDs or the pledge file. Until the document is first saved it is
+     * items' IDs. The pledge file is its upload's name, size, type and address,
+     * or null (D-028). Until the document is first saved it is
      * the official initial text and "diperbarui" is null. A source that
      * cannot be read fails the request instead of showing other text.
      *
-     * @return array{sumberVisi: string, visi: string, misi: list<array{teks: string, kataKunci: string}>, kontribusi: list<array{misi: string, judul: string, deskripsi: string}>, nilai: list<array{huruf: string, judul: string, deskripsi: string}>, maklumat: array{teks: string, penandatangan: string}, diperbarui: ?string}
+     * @return array{sumberVisi: string, visi: string, misi: list<array{teks: string, kataKunci: string}>, kontribusi: list<array{misi: string, judul: string, deskripsi: string}>, nilai: list<array{huruf: string, judul: string, deskripsi: string}>, maklumat: array{teks: string, penandatangan: string, berkas: ?array{nama: string, ukuran: int, tipe: string, url: string}}, diperbarui: ?string}
      *
      * @throws PublicContentUnavailableException
      */
@@ -48,6 +49,7 @@ class ShowPublicVisionMission
             'maklumat' => [
                 'teks' => $document['maklumat']['teks'],
                 'penandatangan' => $document['maklumat']['penandatangan'],
+                'berkas' => $document['maklumat']['berkas'] ?? null,
             ],
             'diperbarui' => $setting?->updated_at?->toIso8601String(),
         ];

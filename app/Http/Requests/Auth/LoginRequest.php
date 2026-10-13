@@ -103,7 +103,7 @@ class LoginRequest extends FormRequest
 
         if (! $user->canSignIn()) {
             throw ValidationException::withMessages([
-                'nip' => 'Akun Anda belum aktif atau sedang dinonaktifkan. Hubungi admin di Sub Bagian Tata Usaha.',
+                'nip' => 'Akun Anda belum aktif atau sedang dinonaktifkan. Hubungi admin di Subbagian Tata Usaha.',
             ]);
         }
 

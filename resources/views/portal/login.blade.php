@@ -155,7 +155,7 @@
       <div class="auth__divider">atau</div>
       <button class="btn btn--ghost btn--block auth__alt" type="button" data-sso><svg class="i" aria-hidden="true"><use href="#i-key"/></svg>Masuk dengan SSO Pemprov</button>
 
-      <p class="small muted auth__help" id="lupa">Lupa kata sandi atau akun terkunci? Hubungi admin di Sub Bagian Tata Usaha.</p>
+      <p class="small muted auth__help" id="lupa">Lupa kata sandi atau akun terkunci? Hubungi admin di Subbagian Tata Usaha.</p>
       <p class="auth__security"><svg class="i" aria-hidden="true"><use href="#i-shield"/></svg><span>Setiap akses dicatat. Jangan bagikan kata sandi, termasuk kepada rekan kerja.</span></p>
     </form>
   </section>

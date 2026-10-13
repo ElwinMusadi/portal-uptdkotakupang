@@ -63,7 +63,7 @@ function kosong(): FormLayanan {
     label: [],
     persyaratan: [{ id: newId(), dokumen: "", jumlah: "2 lembar" }],
     catatan: "",
-    penyedia: "Seksi Pendataan & Penetapan",
+    penyedia: "Seksi Verifikasi",
     pemeriksa: PEMERIKSA[1],
   }
 }

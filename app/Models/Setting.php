@@ -99,7 +99,8 @@ class Setting extends Model
     /**
      * The Visi & Misi document until it is first saved: the official text the
      * portal showed before the page was managed from the dashboard (D-020).
-     * The signed pledge file is not stored on the server yet.
+     * Without the signed pledge file, which is uploaded from the dashboard
+     * (D-028).
      *
      * @var array{sumberVisi: string, visi: string, misi: list<array{id: string, teks: string, kataKunci: string}>, kontribusi: list<array{id: string, misi: string, judul: string, deskripsi: string}>, nilai: list<array{id: string, huruf: string, judul: string, deskripsi: string}>, maklumat: array{teks: string, penandatangan: string, berkas: null}}
      */
@@ -140,44 +141,49 @@ class Setting extends Model
     public const string PROFILE = 'profil';
 
     /**
-     * The Tentang UPTD document until it is first saved: the text the portal
-     * showed before the page was managed from the dashboard, without the
-     * placeholder name of the head of the unit (D-021). Photos are not
-     * stored on the server yet.
+     * The Tentang UPTD document until it is first saved (D-029): the unit's
+     * position, organisation and duties as the Renstra BPAD 2025–2029 (Pergub
+     * NTT 46/2025) and the RPJMD NTT 2025–2029 (Perda NTT 6/2025) describe
+     * them, in the portal's wording, with the head of the unit as the owner
+     * named him. Without photos: the portal shows its own building photo
+     * until one is uploaded (D-028).
      *
      * @var array{judul: string, lanjutan: string, pengantar: string, foto: null, keteranganFoto: string, kedudukan: array{judul: string, lanjutan: string, deskripsi: string}, identitas: list<array{id: string, label: string, nilai: string}>, tugasFungsi: list<array{id: string, judul: string, deskripsi: string, kataKunci: string}>, sambutan: array{kutipan: string, nama: string, jabatan: string, foto: null}}
      */
     public const array INITIAL_PROFILE = [
         'judul' => 'Melayani pajak daerah.',
         'lanjutan' => 'Dari jantung Kota Kupang.',
-        'pengantar' => 'Kami unit pelaksana teknis yang mengurus pajak kendaraan bermotor bagi warga Kota Kupang, bersama mitra Samsat dalam satu atap.',
+        'pengantar' => 'Kami satu dari 22 unit pelaksana teknis Badan Pendapatan dan Aset Daerah Provinsi NTT. Kami mengurus pajak kendaraan bermotor bagi warga Kota Kupang, bersama mitra Samsat dalam satu atap.',
         'foto' => null,
-        'keteranganFoto' => 'Kantor Bersama Samsat Kota Kupang. Tempat pajak, STNK, dan asuransi kecelakaan diurus sekaligus.',
+        'keteranganFoto' => 'Kantor Bersama Samsat Kota Kupang dengan dua mobil Samsat Keliling. Pajak, STNK, dan asuransi kecelakaan diurus di satu tempat.',
         'kedudukan' => [
             'judul' => 'Bagian dari BPAD NTT.',
             'lanjutan' => 'Dekat dengan warga kota.',
-            'deskripsi' => 'UPTD berada di bawah Badan Pendapatan dan Aset Daerah Provinsi Nusa Tenggara Timur dan melayani seluruh wilayah Kota Kupang.',
+            'deskripsi' => 'UPTD adalah unit pelaksana teknis Badan Pendapatan dan Aset Daerah Provinsi Nusa Tenggara Timur, badan yang membantu Gubernur di bidang pendapatan dan aset daerah. Kedudukan, susunan organisasi, dan tugasnya diatur dalam Peraturan Gubernur NTT Nomor 96 Tahun 2023. UPTD melayani seluruh wilayah Kota Kupang.',
         ],
         'identitas' => [
             ['id' => 'identitas-1', 'label' => 'Nama unit', 'nilai' => 'UPTD Pendapatan Daerah Wilayah Kota Kupang'],
             ['id' => 'identitas-2', 'label' => 'Dikenal sebagai', 'nilai' => 'Samsat Kota Kupang'],
             ['id' => 'identitas-3', 'label' => 'Induk organisasi', 'nilai' => 'Badan Pendapatan dan Aset Daerah Provinsi NTT'],
-            ['id' => 'identitas-4', 'label' => 'Wilayah kerja', 'nilai' => 'Kota Kupang · 6 kecamatan, 51 kelurahan'],
-            ['id' => 'identitas-5', 'label' => 'Mitra satu atap', 'nilai' => 'Polri (Satlantas) dan PT Jasa Raharja'],
-            ['id' => 'identitas-6', 'label' => 'Pajak yang dilayani', 'nilai' => 'PKB, BBNKB, serta opsen untuk Pemerintah Kota'],
-            ['id' => 'identitas-7', 'label' => 'Kanal pembayaran', 'nilai' => 'Kasir tunai, QRIS, dan bank mitra'],
+            ['id' => 'identitas-4', 'label' => 'Dasar organisasi', 'nilai' => 'Peraturan Gubernur NTT Nomor 96 Tahun 2023'],
+            ['id' => 'identitas-5', 'label' => 'Susunan organisasi', 'nilai' => 'Kepala UPTD, Subbagian Tata Usaha, Seksi Penetapan dan Penagihan, Seksi Verifikasi, dan kelompok jabatan fungsional'],
+            ['id' => 'identitas-6', 'label' => 'Wilayah kerja', 'nilai' => 'Kota Kupang · 6 kecamatan, 51 kelurahan, 159 km²'],
+            ['id' => 'identitas-7', 'label' => 'Mitra satu atap', 'nilai' => 'Polri (Satlantas) dan PT Jasa Raharja'],
+            ['id' => 'identitas-8', 'label' => 'Pajak yang dikelola', 'nilai' => 'PKB dan BBNKB beserta opsennya untuk Pemerintah Kota, PBBKB, dan Pajak Air Permukaan'],
+            ['id' => 'identitas-9', 'label' => 'Kanal pembayaran', 'nilai' => 'Kasir tunai, QRIS, dan bank mitra'],
         ],
         'tugasFungsi' => [
-            ['id' => 'tugas-1', 'judul' => 'Pendataan objek dan subjek pajak kendaraan bermotor di Kota Kupang.', 'deskripsi' => 'Termasuk pemutakhiran data kepemilikan dan alamat.', 'kataKunci' => 'Data'],
-            ['id' => 'tugas-2', 'judul' => 'Penetapan pajak dan penerbitan notis pajak kendaraan.', 'deskripsi' => 'Nilai pajak dihitung sistem, bukan oleh petugas loket.', 'kataKunci' => 'Tetapkan'],
-            ['id' => 'tugas-3', 'judul' => "Pelayanan Samsat: pengesahan STNK, perpanjangan 5\u{00A0}tahun, mutasi, dan balik nama.", 'deskripsi' => 'Bersama Satlantas dan Jasa Raharja di kantor yang sama.', 'kataKunci' => 'Layani'],
-            ['id' => 'tugas-4', 'judul' => 'Penerimaan, penyetoran, dan pelaporan pajak daerah.', 'deskripsi' => 'Tunai di kasir atau non-tunai lewat kanal resmi.', 'kataKunci' => 'Terima'],
-            ['id' => 'tugas-5', 'judul' => 'Penagihan tunggakan serta pelaksanaan program pemutihan.', 'deskripsi' => 'Termasuk Samsat Keliling ke kelurahan.', 'kataKunci' => 'Jangkau'],
-            ['id' => 'tugas-6', 'judul' => 'Ketatausahaan: kepegawaian, keuangan, perlengkapan, dan layanan administrasi internal.', 'deskripsi' => 'Dijalankan Sub Bagian Tata Usaha.', 'kataKunci' => 'Kelola'],
+            ['id' => 'tugas-1', 'judul' => 'Merencanakan, mengendalikan, dan mengevaluasi pemungutan PKB, BBNKB, PBBKB, dan Pajak Air Permukaan di Kota Kupang.', 'deskripsi' => 'Termasuk lain-lain pendapatan asli daerah yang sah, untuk meningkatkan penerimaan daerah.', 'kataKunci' => 'Pungut'],
+            ['id' => 'tugas-2', 'judul' => 'Penetapan dan penagihan pajak serta pendapatan lain-lain.', 'deskripsi' => 'Dijalankan Seksi Penetapan dan Penagihan, termasuk surat keterangan terdaftar kendaraan bermotor. Nilai pajak dihitung sistem, bukan oleh petugas loket.', 'kataKunci' => 'Tetapkan'],
+            ['id' => 'tugas-3', 'judul' => 'Verifikasi data dan kebenaran penetapan pajak serta pendapatan lain-lain.', 'deskripsi' => 'Dijalankan Seksi Verifikasi, mulai dari pengumpulan data.', 'kataKunci' => 'Periksa'],
+            ['id' => 'tugas-4', 'judul' => "Pelayanan Samsat: pengesahan STNK, perpanjangan 5\u{00A0}tahun, mutasi, dan balik nama.", 'deskripsi' => 'Layanan terpadu bersama Polri dan PT Jasa Raharja: pajak kendaraan dan asuransi kecelakaan di satu kantor.', 'kataKunci' => 'Layani'],
+            ['id' => 'tugas-5', 'judul' => 'Menjangkau wajib pajak lewat Samsat Keliling, penagihan dari pintu ke pintu, dan pembayaran daring.', 'deskripsi' => 'Agar wajib pajak tidak selalu harus datang ke kantor.', 'kataKunci' => 'Jangkau'],
+            ['id' => 'tugas-6', 'judul' => 'Mengawal target retribusi daerah dan memantau aset Pemerintah Provinsi di Kota Kupang.', 'deskripsi' => 'Selain pajak, UPTD ikut menjaga pendapatan dan aset daerah.', 'kataKunci' => 'Awasi'],
+            ['id' => 'tugas-7', 'judul' => 'Ketatausahaan: kepegawaian, keuangan, perlengkapan, tata usaha umum, dan layanan administrasi.', 'deskripsi' => 'Dijalankan Subbagian Tata Usaha.', 'kataKunci' => 'Kelola'],
         ],
         'sambutan' => [
             'kutipan' => 'Kami ingin setiap warga datang sekali dan pulang dengan urusan selesai. PINTU adalah janji kami untuk informasi yang jelas, resmi, dan selalu terbaru.',
-            'nama' => '',
+            'nama' => 'Remmy Christian Pah, S.STP, M.Si',
             'jabatan' => 'Kepala UPTD Pendapatan Daerah Wilayah Kota Kupang',
             'foto' => null,
         ],
@@ -361,7 +367,7 @@ class Setting extends Model
     /**
      * The Visi & Misi document as the dashboard edits it.
      *
-     * @return array{sumberVisi: string, visi: string, misi: list<array{id: string, teks: string, kataKunci: string}>, kontribusi: list<array{id: string, misi: string, judul: string, deskripsi: string}>, nilai: list<array{id: string, huruf: string, judul: string, deskripsi: string}>, maklumat: array{teks: string, penandatangan: string, berkas: null}}
+     * @return array{sumberVisi: string, visi: string, misi: list<array{id: string, teks: string, kataKunci: string}>, kontribusi: list<array{id: string, misi: string, judul: string, deskripsi: string}>, nilai: list<array{id: string, huruf: string, judul: string, deskripsi: string}>, maklumat: array{teks: string, penandatangan: string, berkas: ?array{nama: string, ukuran: int, tipe: string, url: string}}}
      */
     public static function visionMission(): array
     {
@@ -371,7 +377,7 @@ class Setting extends Model
     /**
      * The Tentang UPTD document as the dashboard edits it.
      *
-     * @return array{judul: string, lanjutan: string, pengantar: string, foto: null, keteranganFoto: string, kedudukan: array{judul: string, lanjutan: string, deskripsi: string}, identitas: list<array{id: string, label: string, nilai: string}>, tugasFungsi: list<array{id: string, judul: string, deskripsi: string, kataKunci: string}>, sambutan: array{kutipan: string, nama: string, jabatan: string, foto: null}}
+     * @return array{judul: string, lanjutan: string, pengantar: string, foto: ?string, keteranganFoto: string, kedudukan: array{judul: string, lanjutan: string, deskripsi: string}, identitas: list<array{id: string, label: string, nilai: string}>, tugasFungsi: list<array{id: string, judul: string, deskripsi: string, kataKunci: string}>, sambutan: array{kutipan: string, nama: string, jabatan: string, foto: ?string}}
      */
     public static function profile(): array
     {

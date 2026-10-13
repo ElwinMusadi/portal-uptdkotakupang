@@ -3,9 +3,12 @@
 namespace Tests\Feature;
 
 use App\Enums\DashboardModule;
+use App\Enums\UploadTarget;
 use App\Models\Setting;
+use App\Models\Upload;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\TestWith;
 use Tests\TestCase;
 
@@ -95,14 +98,47 @@ class VisionMissionControllerTest extends TestCase
         $response->assertOk()->assertJsonPath('misi', [])->assertJsonPath('kontribusi', [])->assertJsonPath('nilai', []);
     }
 
-    public function test_rejects_a_pledge_file_until_uploads_are_stored_on_the_server(): void
+    public function test_keeps_the_uploaded_pledge_as_its_upload_describes_it_and_deletes_a_replaced_one(): void
     {
+        Storage::fake('public');
+        $employee = $this->visiMisiEmployee();
+        [$first, $second] = Upload::factory()->count(2)->create([
+            'tujuan' => UploadTarget::VisiMisi,
+            'nama' => 'Maklumat Pelayanan.pdf',
+            'tipe' => 'application/pdf',
+            'ukuran' => 2048,
+        ])->all();
+        Storage::disk('public')->put($first->path, '%PDF');
+        Storage::disk('public')->put($second->path, '%PDF');
         $document = $this->document();
-        $document['maklumat']['berkas'] = ['nama' => 'maklumat.pdf', 'ukuran' => 1024, 'tipe' => 'application/pdf', 'url' => 'data:application/pdf;base64,JVBERi0='];
+        $document['maklumat']['berkas'] = ['nama' => 'lain.html', 'ukuran' => 1, 'tipe' => 'text/html', 'url' => $first->url()];
 
-        $response = $this->actingAs($this->visiMisiEmployee())->putJson('/api/pengaturan/visiMisi', $document);
+        $this->actingAs($employee)->putJson('/api/pengaturan/visiMisi', $document)
+            ->assertOk()
+            ->assertJsonPath('maklumat.berkas', ['nama' => 'Maklumat Pelayanan.pdf', 'ukuran' => 2048, 'tipe' => 'application/pdf', 'url' => $first->url()]);
+        $this->assertNotNull($first->fresh()->dipakai_pada);
 
-        $response->assertUnprocessable()->assertJsonValidationErrors(['maklumat.berkas' => 'Berkas maklumat belum bisa diunggah ke server.']);
+        $document['maklumat']['berkas'] = ['url' => $second->url()];
+        $this->actingAs($employee)->putJson('/api/pengaturan/visiMisi', $document)->assertOk();
+
+        $this->assertModelMissing($first);
+        Storage::disk('public')->assertMissing($first->path);
+        $this->assertNotNull($second->fresh()->dipakai_pada);
+        $this->assertSame($second->url(), Setting::visionMission()['maklumat']['berkas']['url']);
+    }
+
+    public function test_rejects_a_pledge_file_that_is_not_its_upload(): void
+    {
+        $news = Upload::factory()->create();
+
+        foreach (['data:application/pdf;base64,JVBERi0=', 'https://example.com/maklumat.pdf', $news->url(), ''] as $url) {
+            $document = $this->document();
+            $document['maklumat']['berkas'] = ['nama' => 'maklumat.pdf', 'ukuran' => 1024, 'tipe' => 'application/pdf', 'url' => $url];
+
+            $this->actingAs($this->visiMisiEmployee())->putJson('/api/pengaturan/visiMisi', $document)
+                ->assertUnprocessable()
+                ->assertJsonValidationErrors(['maklumat.berkas.url' => 'Berkas maklumat harus diunggah lewat dashboard.']);
+        }
         $this->assertDatabaseCount('settings', 0);
     }
 

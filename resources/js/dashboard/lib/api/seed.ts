@@ -58,7 +58,7 @@ function acak(benih: number) {
 }
 
 const OPERATOR = "Operator PINTU"
-const KASUBBAG = "Kepala Sub Bagian Tata Usaha"
+const KASUBBAG = "Kepala Subbagian Tata Usaha"
 const KEPALA = "Kepala UPTD"
 
 interface OpsiAlur {
@@ -131,7 +131,7 @@ function berita(sekarang: Date): Berita[] {
       isi: `<p>Selama ini, informasi persyaratan layanan Samsat Kota Kupang ditempel pada kertas di meja dan kaca loket. Kertas mudah rusak dan harus diganti terus-menerus. Warga juga perlu bertanya langsung kepada petugas untuk hal yang sebenarnya bisa dibaca sebelum datang.</p><p>PINTU, singkatan dari Portal Informasi dan Pelayanan, hadir untuk menjawab masalah itu. Semua informasi resmi UPTD Pendapatan Daerah Wilayah Kota Kupang kini terhimpun di satu alamat.</p><h2>Apa saja yang tersedia.</h2><ul><li><p>Persyaratan lima layanan utama, lengkap dengan jumlah lembar fotokopi.</p></li><li><p>Jam loket dengan status buka atau tutup secara langsung.</p></li><li><p>Jadwal dan lokasi Samsat Keliling setiap minggu.</p></li><li><p>Berita, pengumuman, dokumentasi kegiatan, serta dokumen regulasi.</p></li><li><p>Formulir masukan dan kanal pengaduan.</p></li></ul><blockquote><p>“Informasi yang sama, untuk semua orang, kapan saja. Itu inti dari PINTU.”</p></blockquote><h2>Bagaimana isinya dijaga.</h2><p>Setiap informasi melewati empat peran sebelum terbit: penyedia data dari unit terkait, pemeriksa, atasan langsung sebagai penyetuju, dan operator sebagai pengelola publikasi. Jadwal Samsat Keliling diperbarui mingguan, sedangkan persyaratan diperbarui setiap ada perubahan regulasi.</p><h2>Sampaikan masukan Anda.</h2><p>Ada informasi yang kurang jelas atau belum tercantum? Kirimkan lewat <a href="kontak.html#masukan">formulir masukan</a>. Masukan pengguna menjadi bahan evaluasi dan pemutakhiran portal.</p>`,
       sampul: null,
       keteranganSampul: "Petugas loket mencoba portal PINTU bersama wajib pajak.",
-      kreditFoto: "Sub Bagian Tata Usaha",
+      kreditFoto: "Subbagian Tata Usaha",
       tanggal: "2026-10-27",
       sorotan: true,
       pengumumanBeranda: false,
@@ -150,7 +150,7 @@ function berita(sekarang: Date): Berita[] {
       tanggal: "2026-10-27",
       sorotan: false,
       pengumumanBeranda: true,
-      alur: { status: "persetujuan", penyedia: "Seksi Penagihan & Pelaporan", mulai: 3 },
+      alur: { status: "persetujuan", penyedia: "Seksi Penetapan dan Penagihan", mulai: 3 },
     },
     {
       judul: "Samsat Keliling menjangkau 31 kelurahan tahun ini.",
@@ -160,11 +160,11 @@ function berita(sekarang: Date): Berita[] {
       isi: `<p>Samsat Keliling hadir di kantor kelurahan sesuai jadwal mingguan. Warga cukup membawa STNK, notis pajak, dan KTP asli untuk membayar pajak tahunan tanpa harus ke kantor.</p><p>Jadwal minggu berikutnya diumumkan setiap Jumat di halaman jadwal portal PINTU.</p>`,
       sampul: null,
       keteranganSampul: "Samsat Keliling · Oesapa",
-      kreditFoto: "Seksi Penagihan & Pelaporan",
+      kreditFoto: "Seksi Penetapan dan Penagihan",
       tanggal: "2026-10-23",
       sorotan: false,
       pengumumanBeranda: false,
-      alur: { status: "draf", penyedia: "Seksi Penagihan & Pelaporan", mulai: 1 },
+      alur: { status: "draf", penyedia: "Seksi Penetapan dan Penagihan", mulai: 1 },
     },
     {
       judul: "Jadwal Samsat Keliling pekan depan telah terbit.",
@@ -178,7 +178,7 @@ function berita(sekarang: Date): Berita[] {
       tanggal: "2026-10-23",
       sorotan: false,
       pengumumanBeranda: false,
-      alur: { status: "diperiksa", penyedia: "Seksi Penagihan & Pelaporan", mulai: 2 },
+      alur: { status: "diperiksa", penyedia: "Seksi Penetapan dan Penagihan", mulai: 2 },
     },
     {
       judul: "Lima berkas yang paling sering terlupa saat perpanjangan STNK.",
@@ -192,7 +192,7 @@ function berita(sekarang: Date): Berita[] {
       tanggal: "2026-10-20",
       sorotan: false,
       pengumumanBeranda: false,
-      alur: { status: "terbit", penyedia: "Seksi Pendataan & Penetapan", mulai: 9 },
+      alur: { status: "terbit", penyedia: "Seksi Verifikasi", mulai: 9 },
     },
     {
       judul: "Pembayaran QRIS kini tersedia di semua kasir.",
@@ -202,11 +202,11 @@ function berita(sekarang: Date): Berita[] {
       isi: `<p>Seluruh kasir di Kantor Bersama Samsat Kota Kupang kini menerima pembayaran QRIS. Pembayaran non-tunai tercatat di sistem dan bukti transaksinya dapat disimpan sampai STNK selesai disahkan.</p>`,
       sampul: null,
       keteranganSampul: "Kasir non-tunai",
-      kreditFoto: "Sub Bagian Tata Usaha",
+      kreditFoto: "Subbagian Tata Usaha",
       tanggal: "2026-10-16",
       sorotan: false,
       pengumumanBeranda: false,
-      alur: { status: "terbit", penyedia: "Seksi Penagihan & Pelaporan", mulai: 14 },
+      alur: { status: "terbit", penyedia: "Seksi Penetapan dan Penagihan", mulai: 14 },
     },
     {
       judul: "Penyesuaian jam layanan Jumat selama kegiatan apel bersama.",
@@ -220,7 +220,7 @@ function berita(sekarang: Date): Berita[] {
       tanggal: "2026-10-12",
       sorotan: false,
       pengumumanBeranda: false,
-      alur: { status: "terbit", penyedia: "Sub Bagian Tata Usaha", mulai: 18 },
+      alur: { status: "terbit", penyedia: "Subbagian Tata Usaha", mulai: 18 },
     },
     {
       judul: "Cara membaca notis pajak kendaraan Anda.",
@@ -234,7 +234,7 @@ function berita(sekarang: Date): Berita[] {
       tanggal: "2026-10-08",
       sorotan: false,
       pengumumanBeranda: false,
-      alur: { status: "terbit", penyedia: "Seksi Pendataan & Penetapan", mulai: 22 },
+      alur: { status: "terbit", penyedia: "Seksi Verifikasi", mulai: 22 },
     },
     {
       judul: "Sosialisasi pajak kendaraan bersama ketua RT di Kecamatan Alak.",
@@ -244,11 +244,11 @@ function berita(sekarang: Date): Berita[] {
       isi: `<p>UPTD Pendapatan Daerah Wilayah Kota Kupang mengadakan sosialisasi pajak kendaraan bersama para ketua RT di Kecamatan Alak. Warga bertanya langsung soal mutasi, balik nama, dan program pemutihan denda.</p>`,
       sampul: null,
       keteranganSampul: "Sosialisasi",
-      kreditFoto: "Seksi Penagihan & Pelaporan",
+      kreditFoto: "Seksi Penetapan dan Penagihan",
       tanggal: "2026-10-02",
       sorotan: false,
       pengumumanBeranda: false,
-      alur: { status: "terbit", penyedia: "Seksi Penagihan & Pelaporan", mulai: 30 },
+      alur: { status: "terbit", penyedia: "Seksi Penetapan dan Penagihan", mulai: 30 },
     },
     {
       judul: "Waspada penipuan yang mengatasnamakan petugas Samsat.",
@@ -263,7 +263,7 @@ function berita(sekarang: Date): Berita[] {
       tanggal: "2026-10-01",
       sorotan: false,
       pengumumanBeranda: false,
-      alur: { status: "terbit", penyedia: "Sub Bagian Tata Usaha", mulai: 34 },
+      alur: { status: "terbit", penyedia: "Subbagian Tata Usaha", mulai: 34 },
     },
   ]
   return data.map(({ alur: o, ...b }, i) => ({ id: newId(), urutan: i, ...b, ...alur(sekarang, o) }))
@@ -282,7 +282,7 @@ function dokumentasi(sekarang: Date): Dokumentasi[] {
       tanggal: "2026-10-21",
       deskripsi: "Pelayanan pajak tahunan di Kantor Kelurahan Oesapa.",
       foto: foto("Samsat Keliling di Kelurahan Oesapa."),
-      alur: { status: "terbit", penyedia: "Seksi Penagihan & Pelaporan", mulai: 5 },
+      alur: { status: "terbit", penyedia: "Seksi Penetapan dan Penagihan", mulai: 5 },
     },
     {
       judul: "Operasi gabungan pemeriksaan pajak kendaraan.",
@@ -295,7 +295,7 @@ function dokumentasi(sekarang: Date): Dokumentasi[] {
         "Pemeriksaan fisik kendaraan saat operasi gabungan · Jl. Frans Seda",
         "Petugas mencocokkan data notis di lapangan."
       ),
-      alur: { status: "draf", penyedia: "Seksi Penagihan & Pelaporan", mulai: 1 },
+      alur: { status: "draf", penyedia: "Seksi Penetapan dan Penagihan", mulai: 1 },
     },
     {
       judul: "Antrean Samsat Keliling di Kelurahan Sikumana.",
@@ -304,7 +304,7 @@ function dokumentasi(sekarang: Date): Dokumentasi[] {
       tanggal: "2026-10-14",
       deskripsi: "",
       foto: foto("Antrean Samsat Keliling di Kelurahan Sikumana."),
-      alur: { status: "terbit", penyedia: "Seksi Penagihan & Pelaporan", mulai: 12 },
+      alur: { status: "terbit", penyedia: "Seksi Penetapan dan Penagihan", mulai: 12 },
     },
     {
       judul: "Pelayanan Samsat Keliling di Kelurahan Penfui.",
@@ -313,7 +313,7 @@ function dokumentasi(sekarang: Date): Dokumentasi[] {
       tanggal: "2026-10-08",
       deskripsi: "",
       foto: foto("Pelayanan Samsat Keliling di Kelurahan Penfui."),
-      alur: { status: "terbit", penyedia: "Seksi Penagihan & Pelaporan", mulai: 16 },
+      alur: { status: "terbit", penyedia: "Seksi Penetapan dan Penagihan", mulai: 16 },
     },
     {
       judul: "Konsultasi alur pengelolaan informasi dengan atasan langsung.",
@@ -322,7 +322,7 @@ function dokumentasi(sekarang: Date): Dokumentasi[] {
       tanggal: "2026-10-06",
       deskripsi: "Pembahasan alur pengumpulan, verifikasi, persetujuan, dan publikasi informasi.",
       foto: foto("Konsultasi alur pengelolaan informasi dengan atasan langsung."),
-      alur: { status: "terbit", penyedia: "Sub Bagian Tata Usaha", mulai: 20 },
+      alur: { status: "terbit", penyedia: "Subbagian Tata Usaha", mulai: 20 },
     },
     {
       judul: "Sosialisasi pajak kendaraan bersama ketua RT.",
@@ -331,7 +331,7 @@ function dokumentasi(sekarang: Date): Dokumentasi[] {
       tanggal: "2026-10-02",
       deskripsi: "",
       foto: foto("Sosialisasi pajak kendaraan bersama ketua RT."),
-      alur: { status: "terbit", penyedia: "Seksi Penagihan & Pelaporan", mulai: 28 },
+      alur: { status: "terbit", penyedia: "Seksi Penetapan dan Penagihan", mulai: 28 },
     },
     {
       judul: "Gedung Kantor Bersama Samsat Kota Kupang.",
@@ -340,7 +340,7 @@ function dokumentasi(sekarang: Date): Dokumentasi[] {
       tanggal: "2026-10-01",
       deskripsi: "",
       foto: foto("Gedung Kantor Bersama Samsat Kota Kupang."),
-      alur: { status: "terbit", penyedia: "Sub Bagian Tata Usaha", mulai: 32 },
+      alur: { status: "terbit", penyedia: "Subbagian Tata Usaha", mulai: 32 },
     },
     {
       judul: "Sosialisasi alur pengelolaan konten kepada operator.",
@@ -349,7 +349,7 @@ function dokumentasi(sekarang: Date): Dokumentasi[] {
       tanggal: "2026-11-04",
       deskripsi: "Rencana kegiatan. Foto ditambahkan setelah kegiatan berlangsung.",
       foto: [],
-      alur: { status: "diperiksa", penyedia: "Sub Bagian Tata Usaha", mulai: 2 },
+      alur: { status: "diperiksa", penyedia: "Subbagian Tata Usaha", mulai: 2 },
     },
     {
       judul: "Uji coba portal PINTU bersama petugas loket.",
@@ -377,7 +377,7 @@ function dokumen(sekarang: Date): Dokumen[] {
       tahun: "2022",
       berkas: null,
       tautan: "",
-      alur: { status: "terbit", penyedia: "Sub Bagian Tata Usaha", mulai: 40 },
+      alur: { status: "terbit", penyedia: "Subbagian Tata Usaha", mulai: 40 },
     },
     {
       judul: "Peraturan Daerah Provinsi NTT tentang Pajak Daerah dan Retribusi Daerah",
@@ -388,7 +388,7 @@ function dokumen(sekarang: Date): Dokumen[] {
       tahun: "",
       berkas: null,
       tautan: "",
-      alur: { status: "terbit", penyedia: "Sub Bagian Tata Usaha", mulai: 40 },
+      alur: { status: "terbit", penyedia: "Subbagian Tata Usaha", mulai: 40 },
     },
     {
       judul: "Peraturan Gubernur NTT tentang Organisasi dan Tata Kerja UPTD",
@@ -399,7 +399,7 @@ function dokumen(sekarang: Date): Dokumen[] {
       tahun: "",
       berkas: null,
       tautan: "",
-      alur: { status: "terbit", penyedia: "Sub Bagian Tata Usaha", mulai: 40 },
+      alur: { status: "terbit", penyedia: "Subbagian Tata Usaha", mulai: 40 },
     },
     {
       judul: "Standar Pelayanan UPTD Pendapatan Daerah Wilayah Kota Kupang",
@@ -410,7 +410,7 @@ function dokumen(sekarang: Date): Dokumen[] {
       tahun: "2026",
       berkas: null,
       tautan: "",
-      alur: { status: "terbit", penyedia: "Sub Bagian Tata Usaha", mulai: 35 },
+      alur: { status: "terbit", penyedia: "Subbagian Tata Usaha", mulai: 35 },
     },
     {
       judul: "Maklumat Pelayanan",
@@ -421,7 +421,7 @@ function dokumen(sekarang: Date): Dokumen[] {
       tahun: "2026",
       berkas: null,
       tautan: "",
-      alur: { status: "terbit", penyedia: "Sub Bagian Tata Usaha", mulai: 35 },
+      alur: { status: "terbit", penyedia: "Subbagian Tata Usaha", mulai: 35 },
     },
     {
       judul: "SOP Pengelolaan dan Publikasi Informasi PINTU",
@@ -443,7 +443,7 @@ function dokumen(sekarang: Date): Dokumen[] {
       tahun: "",
       berkas: null,
       tautan: "",
-      alur: { status: "terbit", penyedia: "Seksi Pendataan & Penetapan", mulai: 30 },
+      alur: { status: "terbit", penyedia: "Seksi Verifikasi", mulai: 30 },
     },
     {
       judul: "Formulir surat kuasa versi 2026",
@@ -454,7 +454,7 @@ function dokumen(sekarang: Date): Dokumen[] {
       tahun: "2026",
       berkas: null,
       tautan: "",
-      alur: { status: "persetujuan", penyedia: "Seksi Pendataan & Penetapan", mulai: 2 },
+      alur: { status: "persetujuan", penyedia: "Seksi Verifikasi", mulai: 2 },
     },
     {
       judul: "Formulir surat pernyataan STNK hilang/rusak",
@@ -465,7 +465,7 @@ function dokumen(sekarang: Date): Dokumen[] {
       tahun: "",
       berkas: null,
       tautan: "",
-      alur: { status: "terbit", penyedia: "Seksi Pendataan & Penetapan", mulai: 30 },
+      alur: { status: "terbit", penyedia: "Seksi Verifikasi", mulai: 30 },
     },
     {
       judul: "Laporan Survei Kepuasan Masyarakat Semester I 2026",
@@ -476,7 +476,7 @@ function dokumen(sekarang: Date): Dokumen[] {
       tahun: "2026",
       berkas: null,
       tautan: "",
-      alur: { status: "terbit", penyedia: "Sub Bagian Tata Usaha", mulai: 25 },
+      alur: { status: "terbit", penyedia: "Subbagian Tata Usaha", mulai: 25 },
     },
   ]
   return data.map(({ alur: o, ...d }, i) => ({ id: newId(), urutan: i, ...d, ...alur(sekarang, o) }))
@@ -505,7 +505,7 @@ function layanan(sekarang: Date): Layanan[] {
       ],
       catatan: "",
       unggulan: true,
-      alur: { status: "terbit", penyedia: "Seksi Pendataan & Penetapan", mulai: 20 },
+      alur: { status: "terbit", penyedia: "Seksi Verifikasi", mulai: 20 },
     },
     {
       nama: "Perpanjangan STNK 5 tahun",
@@ -527,7 +527,7 @@ function layanan(sekarang: Date): Layanan[] {
       catatan:
         "Jika dikuasakan, sertakan surat kuasa bertanda tangan di atas meterai Rp10.000 (1 lembar).",
       unggulan: true,
-      alur: { status: "terbit", penyedia: "Seksi Pendataan & Penetapan", mulai: 20 },
+      alur: { status: "terbit", penyedia: "Seksi Verifikasi", mulai: 20 },
     },
     {
       nama: "Mutasi keluar, pemilik tetap",
@@ -547,7 +547,7 @@ function layanan(sekarang: Date): Layanan[] {
       ],
       catatan: "",
       unggulan: true,
-      alur: { status: "terbit", penyedia: "Seksi Pendataan & Penetapan", mulai: 20 },
+      alur: { status: "terbit", penyedia: "Seksi Verifikasi", mulai: 20 },
     },
     {
       nama: "Mutasi keluar, ganti pemilik",
@@ -570,7 +570,7 @@ function layanan(sekarang: Date): Layanan[] {
       catatan:
         "Kendaraan sudah berada di tempat baru? Ajukan permohonan cek fisik bantuan di Samsat tujuan.",
       unggulan: false,
-      alur: { status: "persetujuan", penyedia: "Seksi Pendataan & Penetapan", mulai: 4 },
+      alur: { status: "persetujuan", penyedia: "Seksi Verifikasi", mulai: 4 },
     },
     {
       nama: "Duplikat STNK hilang atau rusak",
@@ -593,7 +593,7 @@ function layanan(sekarang: Date): Layanan[] {
       catatan:
         "Jika mewakili, sertakan surat kuasa bertanda tangan di atas meterai Rp10.000 (1 lembar).",
       unggulan: false,
-      alur: { status: "terbit", penyedia: "Seksi Pendataan & Penetapan", mulai: 20 },
+      alur: { status: "terbit", penyedia: "Seksi Verifikasi", mulai: 20 },
     },
     {
       nama: "Tambahan untuk badan hukum",
@@ -616,7 +616,7 @@ function layanan(sekarang: Date): Layanan[] {
       catatan:
         "Layanan lain (mis. balik nama dalam daerah) dapat ditanyakan di meja informasi.",
       unggulan: false,
-      alur: { status: "terbit", penyedia: "Seksi Pendataan & Penetapan", mulai: 20 },
+      alur: { status: "terbit", penyedia: "Seksi Verifikasi", mulai: 20 },
     },
   ]
   return data.map(({ alur: o, ...d }, i) => ({ id: newId(), urutan: i, ...d, ...alur(sekarang, o) }))
@@ -733,7 +733,7 @@ function unit(sekarang: Date): UnitKerja[] {
       jenis: "pimpinan",
       induk: null,
       jabatan: "Kepala UPTD Pendapatan Daerah Wilayah Kota Kupang",
-      pejabat: "[Nama pejabat]",
+      pejabat: "Remmy Christian Pah, S.STP, M.Si",
       nip: "",
       foto: null,
       anggota: [],
@@ -743,11 +743,11 @@ function unit(sekarang: Date): UnitKerja[] {
     },
     {
       id: newId(),
-      nama: "Sub Bagian Tata Usaha",
+      nama: "Subbagian Tata Usaha",
       singkatan: "TU",
       jenis: "tata-usaha",
       induk: ku,
-      jabatan: "Kepala Sub Bagian",
+      jabatan: "Kepala Subbagian",
       pejabat: "[Nama]",
       nip: "",
       foto: null,
@@ -763,7 +763,7 @@ function unit(sekarang: Date): UnitKerja[] {
     },
     {
       id: newId(),
-      nama: "Seksi Pendataan & Penetapan",
+      nama: "Seksi Penetapan dan Penagihan",
       singkatan: "S1",
       jenis: "seksi",
       induk: ku,
@@ -771,14 +771,19 @@ function unit(sekarang: Date): UnitKerja[] {
       pejabat: "[Nama]",
       nip: "",
       foto: null,
-      anggota: ["Petugas pendataan", "Petugas penetapan & korektor", "Petugas loket pelayanan"],
+      anggota: [
+        "Petugas penetapan & korektor",
+        "Petugas penagihan & Samsat Keliling",
+        "Kasir & bendahara penerimaan",
+        "Petugas pembukuan & pelaporan",
+      ],
       uraianTugas:
-        "Menghimpun dan memutakhirkan data objek serta subjek pajak, menetapkan pajak terutang, dan menerbitkan notis pajak kendaraan bermotor.",
+        "Merencanakan dan melaksanakan kegiatan penetapan dan penagihan pajak serta pendapatan lain-lain, termasuk pemberian surat keterangan terdaftar untuk kendaraan bermotor.",
       catatan: "",
     },
     {
       id: newId(),
-      nama: "Seksi Penagihan & Pelaporan",
+      nama: "Seksi Verifikasi",
       singkatan: "S2",
       jenis: "seksi",
       induk: ku,
@@ -786,13 +791,9 @@ function unit(sekarang: Date): UnitKerja[] {
       pejabat: "[Nama]",
       nip: "",
       foto: null,
-      anggota: [
-        "Kasir & bendahara penerimaan",
-        "Petugas penagihan & Samsat Keliling",
-        "Petugas pembukuan & pelaporan",
-      ],
+      anggota: ["Petugas pendataan & verifikasi", "Petugas loket pelayanan"],
       uraianTugas:
-        "Menerima dan menyetorkan pembayaran, menagih tunggakan, menyelenggarakan Samsat Keliling, serta menyusun pembukuan dan laporan penerimaan.",
+        "Merencanakan dan melaksanakan kegiatan verifikasi, meliputi pengumpulan data serta pengendalian dan evaluasi pemeriksaan kebenaran penetapan pajak dan pendapatan lain-lain, termasuk pemberian surat keterangan terdaftar kendaraan bermotor.",
       catatan: "",
     },
     {
@@ -972,7 +973,7 @@ function absensi(sekarang: Date): Absensi[] {
     hariKerja++
     const [, mulai, selesai, lokasi, , lat, lng] = slot
     const kelurahan = lokasi.replace("Kantor Kelurahan ", "")
-    const petugas = hariKerja === 2 ? "Petugas Seksi Penagihan" : OPERATOR
+    const petugas = hariKerja === 2 ? "Petugas Seksi Penetapan dan Penagihan" : OPERATOR
     for (const tipe of ["datang", "pulang"] as const) {
       const [jam, menit] = (tipe === "datang" ? mulai : selesai).split(":").map(Number)
       const geser = tipe === "datang" ? -Math.floor(4 + rnd() * 10) : Math.floor(2 + rnd() * 12)
@@ -1039,13 +1040,13 @@ function halaman(sekarang: Date): Halaman[] {
 function pemutakhiran(sekarang: Date): Pemutakhiran[] {
   const data: Array<Omit<Pemutakhiran, "id" | "dibuat" | "diperbarui" | "urutan">> = [
     { konten: "Papan layanan hari ini", modul: "papan", unit: "Petugas loket", frekuensi: "Setiap hari kerja, 07.45 WITA", intervalHari: 1 },
-    { konten: "Jadwal Samsat Keliling", modul: "keliling", unit: "Seksi Penagihan & Pelaporan", frekuensi: "Mingguan, setiap Jumat", intervalHari: 7 },
+    { konten: "Jadwal Samsat Keliling", modul: "keliling", unit: "Seksi Penetapan dan Penagihan", frekuensi: "Mingguan, setiap Jumat", intervalHari: 7 },
     { konten: "Dokumentasi kegiatan", modul: "dokumentasi", unit: "Semua unit", frekuensi: "Setiap kegiatan", intervalHari: 14 },
     { konten: "Berita & pengumuman", modul: "berita", unit: "Pengelola publikasi", frekuensi: "Minimal 2 per bulan", intervalHari: 15 },
-    { konten: "Jam pelayanan", modul: "jam", unit: "Sub Bagian Tata Usaha", frekuensi: "Bulanan", intervalHari: 30 },
-    { konten: "Persyaratan layanan", modul: "layanan", unit: "Seksi Pendataan & Penetapan", frekuensi: "Saat regulasi berubah · tinjau tiap 3 bulan", intervalHari: 90 },
-    { konten: "Regulasi & unduhan", modul: "dokumen", unit: "Sub Bagian Tata Usaha", frekuensi: "Saat regulasi berubah · tinjau tiap 6 bulan", intervalHari: 180 },
-    { konten: "Profil instansi", modul: "profil", unit: "Sub Bagian Tata Usaha", frekuensi: "Tahunan", intervalHari: 365 },
+    { konten: "Jam pelayanan", modul: "jam", unit: "Subbagian Tata Usaha", frekuensi: "Bulanan", intervalHari: 30 },
+    { konten: "Persyaratan layanan", modul: "layanan", unit: "Seksi Verifikasi", frekuensi: "Saat regulasi berubah · tinjau tiap 3 bulan", intervalHari: 90 },
+    { konten: "Regulasi & unduhan", modul: "dokumen", unit: "Subbagian Tata Usaha", frekuensi: "Saat regulasi berubah · tinjau tiap 6 bulan", intervalHari: 180 },
+    { konten: "Profil instansi", modul: "profil", unit: "Subbagian Tata Usaha", frekuensi: "Tahunan", intervalHari: 365 },
   ]
   return data.map((d, i) => ({
     id: newId(),
@@ -1265,12 +1266,12 @@ function pengaturan(sekarang: Date): Pengaturan {
         { id: id(), judul: "Pelayanan Samsat: pengesahan STNK, perpanjangan 5 tahun, mutasi, dan balik nama.", deskripsi: "Bersama Satlantas dan Jasa Raharja di kantor yang sama.", kataKunci: "Layani" },
         { id: id(), judul: "Penerimaan, penyetoran, dan pelaporan pajak daerah.", deskripsi: "Tunai di kasir atau non-tunai lewat kanal resmi.", kataKunci: "Terima" },
         { id: id(), judul: "Penagihan tunggakan serta pelaksanaan program pemutihan.", deskripsi: "Termasuk Samsat Keliling ke kelurahan.", kataKunci: "Jangkau" },
-        { id: id(), judul: "Ketatausahaan: kepegawaian, keuangan, perlengkapan, dan layanan administrasi internal.", deskripsi: "Dijalankan Sub Bagian Tata Usaha.", kataKunci: "Kelola" },
+        { id: id(), judul: "Ketatausahaan: kepegawaian, keuangan, perlengkapan, dan layanan administrasi internal.", deskripsi: "Dijalankan Subbagian Tata Usaha.", kataKunci: "Kelola" },
       ],
       sambutan: {
         kutipan:
           "Kami ingin setiap warga datang sekali dan pulang dengan urusan selesai. PINTU adalah janji kami untuk informasi yang jelas, resmi, dan selalu terbaru.",
-        nama: "[Nama Kepala UPTD]",
+        nama: "Remmy Christian Pah, S.STP, M.Si",
         jabatan: "Kepala UPTD Pendapatan Daerah Wilayah Kota Kupang",
         foto: null,
       },
@@ -1319,14 +1320,14 @@ function pengaturan(sekarang: Date): Pengaturan {
       janjiBalasan: "Kami membalas paling lambat tiga hari kerja.",
       kanalPengaduan: [
         { id: id(), nama: "SP4N-LAPOR!", deskripsi: "Sistem pengaduan pelayanan publik nasional. Aduan diteruskan ke unit kami.", tautanLabel: "Buka lapor.go.id", tautanUrl: "https://www.lapor.go.id" },
-        { id: id(), nama: "Kotak saran di kantor", deskripsi: "Tersedia di ruang tunggu. Dibuka dan direkap setiap Jumat oleh Sub Bagian Tata Usaha.", tautanLabel: "Lihat jam kantor", tautanUrl: "jadwal.html" },
+        { id: id(), nama: "Kotak saran di kantor", deskripsi: "Tersedia di ruang tunggu. Dibuka dan direkap setiap Jumat oleh Subbagian Tata Usaha.", tautanLabel: "Lihat jam kantor", tautanUrl: "jadwal.html" },
         { id: id(), nama: "Ombudsman RI Perwakilan NTT", deskripsi: "Bila pengaduan Anda tidak ditanggapi atau ada dugaan maladministrasi.", tautanLabel: "Buka ombudsman.go.id", tautanUrl: "https://ombudsman.go.id" },
       ],
     },
     akun: {
       nama: "Admin PINTU",
       jabatan: "Penata Kelola Sistem dan Teknologi Informasi",
-      unit: "Sub Bagian Tata Usaha",
+      unit: "Subbagian Tata Usaha",
       peran: "Pengelola publikasi",
       email: "",
     },
@@ -1336,7 +1337,7 @@ function pengaturan(sekarang: Date): Pengaturan {
 function aktivitas(sekarang: Date): Aktivitas[] {
   const data: Array<[number, number, number, string, string, string, string]> = [
     [0, 9, 5, OPERATOR, "memperbarui", "Papan Layanan", "Papan layanan hari ini"],
-    [1, 14, 20, "Seksi Penagihan & Pelaporan", "menyiapkan draf", "Berita & Pengumuman", "Samsat Keliling menjangkau 31 kelurahan tahun ini."],
+    [1, 14, 20, "Seksi Penetapan dan Penagihan", "menyiapkan draf", "Berita & Pengumuman", "Samsat Keliling menjangkau 31 kelurahan tahun ini."],
     [2, 10, 12, KEPALA, "menyetujui dan menerbitkan", "Berita & Pengumuman", "Pembayaran QRIS kini tersedia di semua kasir."],
     [3, 14, 40, KASUBBAG, "meneruskan ke penyetuju", "Persyaratan Layanan", "Mutasi keluar, ganti pemilik"],
     [8, 15, 30, OPERATOR, "memperbarui", "Samsat Keliling", "Jadwal Samsat Keliling"],

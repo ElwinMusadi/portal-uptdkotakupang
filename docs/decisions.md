@@ -393,3 +393,18 @@ Sebelum go-live:
 - Konfirmasi ke unit hukum atau Diskominfo kewajiban lokasi data lingkup publik (PP 71/2019). R2 tidak menawarkan wilayah Indonesia; ini juga menyangkut database di Laravel Cloud (D-006).
 - Tentukan cadangan isi bucket; dokumentasi Laravel Cloud tidak menyebut cadangan otomatis untuk bucket.
 - Bila portal kelak memakai Content-Security-Policy, izinkan host bucket publik.
+
+## D-029 · 2026-10-14 · Foto Tentang UPTD dan maklumat diunggah ke server; profil disusun dari Renstra dan RPJMD
+
+Unggahan yang ditunda di D-020 dan D-021 kini disimpan di server dengan fondasi D-028. Isi awal Tentang UPTD juga disusun ulang dari dokumen perencanaan resmi, atas permintaan pemilik.
+
+| Hal | Keputusan |
+|---|---|
+| Foto Tentang UPTD | Foto kantor dan foto Kepala UPTD diunggah dari dashboard (tujuan `profil`). Server hanya menerima alamat unggahan PINTU untuk tujuan itu; foto yang diganti atau dikosongkan dihapus bersama berkasnya. |
+| Foto gedung bawaan | **Foto Kantor Bersama Samsat Kota Kupang dari pemilik menjadi foto gedung bawaan portal** (`public/assets/img/kantor-samsat-kota-kupang-1600.webp` dan versi 800 px, tanpa metadata). Foto ini tampil sampai foto kantor diunggah dari dashboard. Foto Kepala UPTD belum ada, jadi ilustrasinya tetap tampil sampai diunggah. |
+| Berkas maklumat | PDF maklumat diunggah dari dashboard (tujuan `visiMisi`, hanya PDF). Nama, ukuran, dan tipenya diambil dari catatan unggahan, bukan dari kiriman dashboard. Tombol "Unduh maklumat (PDF)" di portal menautkan berkas itu, atau halaman Regulasi & Unduhan bila belum ada. |
+| Isi awal Tentang UPTD | **Disusun dari Renstra BPAD 2025–2029** (Pergub NTT No. 46 Tahun 2025) **dan RPJMD NTT 2025–2029** (Perda NTT No. 6 Tahun 2025), atas permintaan pemilik. Isinya: dasar organisasi Pergub NTT No. 96 Tahun 2023; satu dari 22 UPTD; susunan organisasi (Kepala UPTD, Subbagian Tata Usaha, Seksi Penetapan dan Penagihan, Seksi Verifikasi, kelompok jabatan fungsional); tugas pemungutan PKB, BBNKB, PBBKB, dan Pajak Air Permukaan; layanan terpadu bersama Polri dan PT Jasa Raharja; peran mengawal retribusi dan memantau aset; luas Kota Kupang 159 km². Teks lama yang tidak bertentangan dengan dokumen tetap dipakai. Kedua dokumen tidak menyebut nama Kepala UPTD; namanya, **Remmy Christian Pah, S.STP, M.Si**, diberikan pemilik dan juga tampil di bagan Struktur Organisasi. |
+| Nama unit kerja | **Seluruh portal dan dashboard memakai nama unit menurut Renstra** (keputusan pemilik): Subbagian Tata Usaha, Seksi Penetapan dan Penagihan, dan Seksi Verifikasi. Nama lama dipetakan menurut tugasnya. "Seksi Penagihan & Pelaporan" (penagihan, Samsat Keliling) menjadi Seksi Penetapan dan Penagihan. "Seksi Pendataan & Penetapan" (pengumpulan data, pemeriksaan berkas persyaratan) menjadi Seksi Verifikasi. Perubahan mencakup bagan dan uraian tugas di halaman Struktur Organisasi (uraian dari Renstra), standar awal Jadwal Pemutakhiran (D-025), penyedia layanan awal (D-022), daftar unit penyedia dan pemeriksa di dashboard, serta pesan yang menyebut Subbagian Tata Usaha. |
+| Unggahan dashboard | Setiap unggahan menyebut tujuannya. Mode campuran mengirim unggahan `visiMisi` dan `profil` ke server; tujuan lain tetap di peramban sampai modulnya pindah. Isian foto tidak menawarkan "Pakai URL" untuk tujuan yang sudah di server. |
+
+Sumber resmi susunan dan tugas UPTD adalah Pergub NTT No. 96 Tahun 2023; Renstra meringkasnya, dan Pergub-nya belum dicocokkan langsung.

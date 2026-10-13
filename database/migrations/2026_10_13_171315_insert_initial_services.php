@@ -88,7 +88,7 @@ return new class extends Migration
             'unggulan' => $service[11],
             'urutan' => $urutan,
             'status' => 'terbit',
-            'penyedia' => 'Seksi Pendataan & Penetapan',
+            'penyedia' => 'Seksi Verifikasi',
             'pemeriksa' => '',
             'catatan_revisi' => '',
             'terbit_pada' => $now,

@@ -10,6 +10,7 @@ import type {
   NamaPengaturan,
   Pengaturan,
   Snapshot,
+  TujuanUnggah,
 } from "./types"
 
 /**
@@ -31,6 +32,9 @@ export const PENGATURAN_SERVER: readonly NamaPengaturan[] = [
   "situs",
   "akun",
 ]
+
+/** Unggahan yang sudah disimpan di server (D-028): tujuan yang modulnya sudah di server */
+export const UNGGAHAN_SERVER: readonly TujuanUnggah[] = ["visiMisi", "profil"]
 
 /**
  * Mode campuran selama konten dipindahkan ke server secara bertahap. Koleksi
@@ -111,8 +115,8 @@ export class HybridApi implements ApiClient {
     return this.lokal.clearActivity()
   }
 
-  upload(berkas: File | Blob, nama: string): Promise<Berkas> {
-    return this.lokal.upload(berkas, nama)
+  upload(berkas: File | Blob, nama: string, tujuan: TujuanUnggah): Promise<Berkas> {
+    return (UNGGAHAN_SERVER.includes(tujuan) ? this.server : this.lokal).upload(berkas, nama, tujuan)
   }
 
   /** Cadangan lengkap: data di peramban ini, dengan koleksi dan pengaturan server diambil dari server */

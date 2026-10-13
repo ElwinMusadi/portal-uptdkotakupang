@@ -199,7 +199,7 @@
     <div class="container container--wide">
       <figure data-reveal>
         <div class="ph ph--blue article-media"><svg aria-hidden="true"><use href="#ill-desk"/></svg><span class="ph__label">Foto peluncuran · contoh</span></div>
-        <figcaption class="caption-row"><p>Petugas loket mencoba portal PINTU bersama wajib pajak.</p><p>Foto: Sub Bagian Tata Usaha</p></figcaption>
+        <figcaption class="caption-row"><p>Petugas loket mencoba portal PINTU bersama wajib pajak.</p><p>Foto: Subbagian Tata Usaha</p></figcaption>
       </figure>
     </div>
 
@@ -209,7 +209,7 @@
           <dl style="display:grid;gap:20px">
             <div><dt>Diterbitkan</dt><dd>27 Okt 2026, 09.15 WITA</dd></div>
             <div><dt>Diperbarui</dt><dd>27 Okt 2026, 14.02 WITA</dd></div>
-            <div><dt>Diverifikasi oleh</dt><dd>Kepala Sub Bagian Tata Usaha</dd></div>
+            <div><dt>Diverifikasi oleh</dt><dd>Kepala Subbagian Tata Usaha</dd></div>
             <div><dt>Bagikan</dt><dd class="share" style="margin-top:8px">
               <button type="button" data-copy-link aria-label="Salin tautan"><svg class="i" aria-hidden="true"><use href="#i-link"/></svg></button>
               <a href="https://wa.me/?text=PINTU%20Samsat%20Kota%20Kupang" target="_blank" rel="noopener" aria-label="Bagikan ke WhatsApp"><svg class="i" aria-hidden="true"><use href="#i-message"/></svg></a>

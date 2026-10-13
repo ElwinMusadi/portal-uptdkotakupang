@@ -90,7 +90,7 @@ class AuthenticatedSessionControllerTest extends TestCase
         $response = $this->postJson('/api/masuk', ['nip' => self::NIP, 'sandi' => 'password']);
 
         $response->assertUnprocessable()->assertJsonValidationErrors([
-            'nip' => 'Akun Anda belum aktif atau sedang dinonaktifkan. Hubungi admin di Sub Bagian Tata Usaha.',
+            'nip' => 'Akun Anda belum aktif atau sedang dinonaktifkan. Hubungi admin di Subbagian Tata Usaha.',
         ]);
         $this->assertGuest();
     }

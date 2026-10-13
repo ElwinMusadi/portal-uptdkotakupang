@@ -17,6 +17,7 @@ import type {
   NamaPengaturan,
   Pengaturan,
   Snapshot,
+  TujuanUnggah,
 } from "./types"
 
 const NAMA_KOLEKSI = Object.keys(KOLEKSI_LABEL) as NamaKoleksi[]
@@ -278,7 +279,8 @@ export class LocalApi implements ApiClient {
     return this.kunci((w) => w.set("aktivitas", []))
   }
 
-  async upload(berkas: File | Blob, nama: string): Promise<Berkas> {
+  /** Di peramban semua tujuan sama: berkas disimpan sebagai data URL */
+  async upload(berkas: File | Blob, nama: string, _tujuan: TujuanUnggah): Promise<Berkas> {
     const url = await bacaSebagaiDataUrl(berkas)
     return { nama, ukuran: berkas.size, tipe: berkas.type || "application/octet-stream", url }
   }

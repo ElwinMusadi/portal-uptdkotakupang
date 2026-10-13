@@ -19,13 +19,13 @@ return new class extends Migration
      */
     private const array STANDARDS = [
         ['Papan layanan hari ini', 'papan', 'Petugas loket', 'Setiap hari kerja, 07.45 WITA', 1],
-        ['Jadwal Samsat Keliling', 'keliling', 'Seksi Penagihan & Pelaporan', 'Mingguan, setiap Jumat', 7],
+        ['Jadwal Samsat Keliling', 'keliling', 'Seksi Penetapan dan Penagihan', 'Mingguan, setiap Jumat', 7],
         ['Dokumentasi kegiatan', 'dokumentasi', 'Semua unit', 'Setiap kegiatan', 14],
         ['Berita & pengumuman', 'berita', 'Pengelola publikasi', 'Minimal 2 per bulan', 15],
-        ['Jam pelayanan', 'jam', 'Sub Bagian Tata Usaha', 'Bulanan', 30],
-        ['Persyaratan layanan', 'layanan', 'Seksi Pendataan & Penetapan', 'Saat regulasi berubah · tinjau tiap 3 bulan', 90],
-        ['Regulasi & unduhan', 'dokumen', 'Sub Bagian Tata Usaha', 'Saat regulasi berubah · tinjau tiap 6 bulan', 180],
-        ['Profil instansi', 'profil', 'Sub Bagian Tata Usaha', 'Tahunan', 365],
+        ['Jam pelayanan', 'jam', 'Subbagian Tata Usaha', 'Bulanan', 30],
+        ['Persyaratan layanan', 'layanan', 'Seksi Verifikasi', 'Saat regulasi berubah · tinjau tiap 3 bulan', 90],
+        ['Regulasi & unduhan', 'dokumen', 'Subbagian Tata Usaha', 'Saat regulasi berubah · tinjau tiap 6 bulan', 180],
+        ['Profil instansi', 'profil', 'Subbagian Tata Usaha', 'Tahunan', 365],
     ];
 
     /**

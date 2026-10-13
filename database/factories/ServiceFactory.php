@@ -36,7 +36,7 @@ class ServiceFactory extends Factory
             'unggulan' => false,
             'urutan' => 100,
             'status' => WorkflowStatus::Draft,
-            'penyedia' => 'Seksi Pendataan & Penetapan',
+            'penyedia' => 'Seksi Verifikasi',
             'pemeriksa' => '',
             'catatan_revisi' => '',
             'terbit_pada' => null,

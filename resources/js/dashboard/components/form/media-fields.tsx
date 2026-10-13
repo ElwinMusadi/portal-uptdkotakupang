@@ -21,15 +21,15 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
-import { api, type Berkas } from "@/lib/api"
+import { api, unggahanDiServer, type Berkas, type TujuanUnggah } from "@/lib/api"
 import { ukuranBerkas } from "@/lib/format"
 import { kompresGambar, MAKS_BERKAS, namaBerkasGambar, TIPE_GAMBAR } from "@/lib/gambar"
 import { cn } from "@/lib/utils"
 
-/** Unggah foto: dikompres di peramban lalu dikirim ke penyimpanan aktif */
-export async function unggahGambar(berkas: File): Promise<string> {
+/** Unggah foto: dikompres di peramban lalu dikirim ke penyimpanan tujuannya */
+export async function unggahGambar(berkas: File, tujuan: TujuanUnggah): Promise<string> {
   const blob = await kompresGambar(berkas)
-  const hasil = await api.upload(blob, namaBerkasGambar(berkas.name, blob))
+  const hasil = await api.upload(blob, namaBerkasGambar(berkas.name, blob), tujuan)
   return hasil.url
 }
 
@@ -55,7 +55,8 @@ export function FieldGambar<T extends FieldValues>({
   deskripsi,
   className,
   rasio = "aspect-[16/9]",
-}: PropsDasar<T> & { rasio?: string }) {
+  tujuan,
+}: PropsDasar<T> & { rasio?: string; tujuan: TujuanUnggah }) {
   const inputRef = React.useRef<HTMLInputElement>(null)
   const [proses, setProses] = React.useState(false)
   const [modeUrl, setModeUrl] = React.useState(false)
@@ -70,7 +71,7 @@ export function FieldGambar<T extends FieldValues>({
           if (!berkas) return
           setProses(true)
           try {
-            field.onChange(await unggahGambar(berkas))
+            field.onChange(await unggahGambar(berkas, tujuan))
           } catch (e) {
             toast.error("Gambar gagal diunggah", { description: (e as Error).message })
           } finally {
@@ -122,10 +123,13 @@ export function FieldGambar<T extends FieldValues>({
                 <IconUpload />
                 {src ? "Ganti foto" : "Pilih foto"}
               </Button>
-              <Button type="button" variant="ghost" size="sm" onClick={() => setModeUrl((m) => !m)}>
-                <IconLink />
-                Pakai URL
-              </Button>
+              {/* Server hanya menerima foto yang diunggah ke PINTU */}
+              {!unggahanDiServer(tujuan) && (
+                <Button type="button" variant="ghost" size="sm" onClick={() => setModeUrl((m) => !m)}>
+                  <IconLink />
+                  Pakai URL
+                </Button>
+              )}
               {src && (
                 <Button type="button" variant="ghost" size="sm" onClick={() => field.onChange(null)}>
                   <IconTrash />
@@ -160,7 +164,9 @@ export function FieldBerkas<T extends FieldValues>({
   deskripsi,
   className,
   terima = ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png",
-}: PropsDasar<T> & { terima?: string }) {
+  petunjuk = "PDF, Word, Excel, atau gambar · maks. 10 MB",
+  tujuan,
+}: PropsDasar<T> & { terima?: string; petunjuk?: string; tujuan: TujuanUnggah }) {
   const inputRef = React.useRef<HTMLInputElement>(null)
   const [proses, setProses] = React.useState(false)
 
@@ -178,7 +184,7 @@ export function FieldBerkas<T extends FieldValues>({
           }
           setProses(true)
           try {
-            field.onChange(await api.upload(b, b.name))
+            field.onChange(await api.upload(b, b.name, tujuan))
           } catch (e) {
             toast.error("Berkas gagal diunggah", { description: (e as Error).message })
           } finally {
@@ -220,7 +226,7 @@ export function FieldBerkas<T extends FieldValues>({
               >
                 {proses ? <Spinner /> : <IconUpload className="size-5" aria-hidden="true" />}
                 <span className="font-medium text-foreground">Pilih berkas atau seret ke sini</span>
-                <span>PDF, Word, Excel, atau gambar · maks. 10 MB</span>
+                <span>{petunjuk}</span>
               </button>
             )}
             <FormControl>

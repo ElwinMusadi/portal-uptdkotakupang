@@ -10,11 +10,12 @@ class ShowPublicProfile
 {
     /**
      * Build the Tentang UPTD page for the public portal, without the list
-     * items' IDs or the photos. Until the document is first saved it is the
+     * items' IDs. Photos are the addresses of their uploads, or null when the
+     * portal keeps its own picture (D-028). Until the document is first saved it is the
      * initial text and "diperbarui" is null. A source that cannot be read
      * fails the request instead of showing other text.
      *
-     * @return array{judul: string, lanjutan: string, pengantar: string, keteranganFoto: string, kedudukan: array{judul: string, lanjutan: string, deskripsi: string}, identitas: list<array{label: string, nilai: string}>, tugasFungsi: list<array{judul: string, deskripsi: string, kataKunci: string}>, sambutan: array{kutipan: string, nama: string, jabatan: string}, diperbarui: ?string}
+     * @return array{judul: string, lanjutan: string, pengantar: string, foto: ?string, keteranganFoto: string, kedudukan: array{judul: string, lanjutan: string, deskripsi: string}, identitas: list<array{label: string, nilai: string}>, tugasFungsi: list<array{judul: string, deskripsi: string, kataKunci: string}>, sambutan: array{kutipan: string, nama: string, jabatan: string, foto: ?string}, diperbarui: ?string}
      *
      * @throws PublicContentUnavailableException
      */
@@ -32,6 +33,7 @@ class ShowPublicProfile
             'judul' => $profile['judul'],
             'lanjutan' => $profile['lanjutan'],
             'pengantar' => $profile['pengantar'],
+            'foto' => $profile['foto'] ?? null,
             'keteranganFoto' => $profile['keteranganFoto'],
             'kedudukan' => [
                 'judul' => $profile['kedudukan']['judul'],
@@ -51,6 +53,7 @@ class ShowPublicProfile
                 'kutipan' => $profile['sambutan']['kutipan'],
                 'nama' => $profile['sambutan']['nama'],
                 'jabatan' => $profile['sambutan']['jabatan'],
+                'foto' => $profile['sambutan']['foto'] ?? null,
             ],
             'diperbarui' => $setting?->updated_at?->toIso8601String(),
         ];

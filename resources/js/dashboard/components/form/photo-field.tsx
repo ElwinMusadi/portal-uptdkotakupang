@@ -31,7 +31,7 @@ import { PlaceholderFoto, unggahGambar } from "@/components/form/media-fields"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
-import type { Foto } from "@/lib/api"
+import type { Foto, TujuanUnggah } from "@/lib/api"
 import { TIPE_GAMBAR } from "@/lib/gambar"
 import { newId } from "@/lib/id"
 import { cn } from "@/lib/utils"
@@ -101,10 +101,12 @@ export function FieldFoto<T extends FieldValues, N extends ArrayPath<T>>({
   control,
   name,
   label = "Foto kegiatan",
+  tujuan,
 }: {
   control: Control<T>
   name: N
   label?: string
+  tujuan: TujuanUnggah
 }) {
   const { fields, append, remove, move } = useFieldArray({ control, name, keyName: "_kunci" })
   const inputRef = React.useRef<HTMLInputElement>(null)
@@ -123,7 +125,7 @@ export function FieldFoto<T extends FieldValues, N extends ArrayPath<T>>({
     setProses((n) => n + semua.length)
     for (const b of semua) {
       try {
-        const src = await unggahGambar(b)
+        const src = await unggahGambar(b, tujuan)
         append({ id: newId(), src, keterangan: "" } as unknown as FieldArray<T, N>)
       } catch (e) {
         toast.error(`${b.name} gagal diunggah`, { description: (e as Error).message })

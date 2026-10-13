@@ -2,14 +2,16 @@
 
 namespace App\Http\Requests\Dashboard;
 
+use App\Enums\UploadTarget;
 use App\Rules\PlainText;
+use App\Rules\UploadUrl;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * The complete Tentang UPTD document: the page opening, the building photo
  * caption, the unit's position and identity facts, its duties, and the
- * head's welcome. Photos cannot be uploaded to the server yet (D-021), so
- * "foto" and "sambutan.foto" must stay empty.
+ * head's welcome. The building photo and the head's photo are files uploaded
+ * to PINTU for Tentang UPTD (D-028), or empty.
  */
 class UpdateProfileRequest extends FormRequest
 {
@@ -33,7 +35,7 @@ class UpdateProfileRequest extends FormRequest
             'judul' => ['required', 'string', 'max:80', new PlainText('Judul')],
             'lanjutan' => ['nullable', 'string', 'max:80', new PlainText('Lanjutan judul')],
             'pengantar' => ['required', 'string', 'max:400', new PlainText('Pengantar')],
-            'foto' => ['prohibited'],
+            'foto' => ['nullable', 'string', new UploadUrl(UploadTarget::Profil, 'Foto kantor harus diunggah lewat dashboard.')],
             'keteranganFoto' => ['nullable', 'string', 'max:200', new PlainText('Keterangan foto')],
             'kedudukan' => ['required', 'array'],
             'kedudukan.judul' => ['required', 'string', 'max:80', new PlainText('Judul kedudukan')],
@@ -54,7 +56,7 @@ class UpdateProfileRequest extends FormRequest
             'sambutan.kutipan' => ['nullable', 'string', 'max:500', new PlainText('Kutipan sambutan')],
             'sambutan.nama' => ['nullable', 'string', 'max:120', new PlainText('Nama')],
             'sambutan.jabatan' => ['nullable', 'string', 'max:120', new PlainText('Jabatan')],
-            'sambutan.foto' => ['prohibited'],
+            'sambutan.foto' => ['nullable', 'string', new UploadUrl(UploadTarget::Profil, 'Foto Kepala UPTD harus diunggah lewat dashboard.')],
         ];
     }
 
@@ -72,7 +74,6 @@ class UpdateProfileRequest extends FormRequest
             'pengantar.required' => 'Pengantar wajib diisi.',
             'pengantar.string' => 'Pengantar tidak valid.',
             'pengantar.max' => 'Pengantar maksimal :max karakter.',
-            'foto.prohibited' => 'Foto kantor belum bisa diunggah ke server.',
             'keteranganFoto.string' => 'Keterangan foto tidak valid.',
             'keteranganFoto.max' => 'Keterangan foto maksimal :max karakter.',
             'kedudukan.required' => 'Kedudukan wajib dikirim.',
@@ -123,15 +124,14 @@ class UpdateProfileRequest extends FormRequest
             'sambutan.nama.max' => 'Nama maksimal :max karakter.',
             'sambutan.jabatan.string' => 'Jabatan tidak valid.',
             'sambutan.jabatan.max' => 'Jabatan maksimal :max karakter.',
-            'sambutan.foto.prohibited' => 'Foto Kepala UPTD belum bisa diunggah ke server.',
         ];
     }
 
     /**
      * The document as it is stored, with empty optional fields as empty
-     * strings and no photos.
+     * strings and photos as their address or null.
      *
-     * @return array{judul: string, lanjutan: string, pengantar: string, foto: null, keteranganFoto: string, kedudukan: array{judul: string, lanjutan: string, deskripsi: string}, identitas: list<array{id: string, label: string, nilai: string}>, tugasFungsi: list<array{id: string, judul: string, deskripsi: string, kataKunci: string}>, sambutan: array{kutipan: string, nama: string, jabatan: string, foto: null}}
+     * @return array{judul: string, lanjutan: string, pengantar: string, foto: ?string, keteranganFoto: string, kedudukan: array{judul: string, lanjutan: string, deskripsi: string}, identitas: list<array{id: string, label: string, nilai: string}>, tugasFungsi: list<array{id: string, judul: string, deskripsi: string, kataKunci: string}>, sambutan: array{kutipan: string, nama: string, jabatan: string, foto: ?string}}
      */
     public function profile(): array
     {
@@ -139,7 +139,7 @@ class UpdateProfileRequest extends FormRequest
             'judul' => $this->validated('judul'),
             'lanjutan' => $this->validated('lanjutan') ?? '',
             'pengantar' => $this->validated('pengantar'),
-            'foto' => null,
+            'foto' => $this->validated('foto'),
             'keteranganFoto' => $this->validated('keteranganFoto') ?? '',
             'kedudukan' => [
                 'judul' => $this->validated('kedudukan.judul'),
@@ -161,7 +161,7 @@ class UpdateProfileRequest extends FormRequest
                 'kutipan' => $this->validated('sambutan.kutipan') ?? '',
                 'nama' => $this->validated('sambutan.nama') ?? '',
                 'jabatan' => $this->validated('sambutan.jabatan') ?? '',
-                'foto' => null,
+                'foto' => $this->validated('sambutan.foto'),
             ],
         ];
     }

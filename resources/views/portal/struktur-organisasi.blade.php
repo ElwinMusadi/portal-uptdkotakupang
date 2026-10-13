@@ -202,12 +202,12 @@
       <div class="org">
         <div class="org__node org__node--head">
           <span class="avatar">KU</span>
-          <span><strong>Kepala UPTD</strong><span>[Nama pejabat] · NIP disamarkan</span></span>
+          <span><strong>Kepala UPTD</strong><span>Remmy Christian Pah, S.STP, M.Si</span></span>
         </div>
         <div class="org__v" aria-hidden="true"></div>
         <div class="org__row">
           <div class="org__col">
-            <div class="org__node"><span class="avatar">TU</span><span><strong>Sub Bagian Tata Usaha</strong><span>Kepala Sub Bagian · [Nama]</span></span></div>
+            <div class="org__node"><span class="avatar">TU</span><span><strong>Subbagian Tata Usaha</strong><span>Kepala Subbagian · [Nama]</span></span></div>
             <div class="org__sub">
               <span class="org__staff">Pengelola kepegawaian</span>
               <span class="org__staff">Pengelola keuangan</span>
@@ -216,19 +216,19 @@
             </div>
           </div>
           <div class="org__col">
-            <div class="org__node"><span class="avatar">S1</span><span><strong>Seksi Pendataan &amp; Penetapan</strong><span>Kepala Seksi · [Nama]</span></span></div>
+            <div class="org__node"><span class="avatar">S1</span><span><strong>Seksi Penetapan dan Penagihan</strong><span>Kepala Seksi · [Nama]</span></span></div>
             <div class="org__sub">
-              <span class="org__staff">Petugas pendataan</span>
               <span class="org__staff">Petugas penetapan &amp; korektor</span>
-              <span class="org__staff">Petugas loket pelayanan</span>
+              <span class="org__staff">Petugas penagihan &amp; Samsat Keliling</span>
+              <span class="org__staff">Kasir &amp; bendahara penerimaan</span>
+              <span class="org__staff">Petugas pembukuan &amp; pelaporan</span>
             </div>
           </div>
           <div class="org__col">
-            <div class="org__node"><span class="avatar">S2</span><span><strong>Seksi Penagihan &amp; Pelaporan</strong><span>Kepala Seksi · [Nama]</span></span></div>
+            <div class="org__node"><span class="avatar">S2</span><span><strong>Seksi Verifikasi</strong><span>Kepala Seksi · [Nama]</span></span></div>
             <div class="org__sub">
-              <span class="org__staff">Kasir &amp; bendahara penerimaan</span>
-              <span class="org__staff">Petugas penagihan &amp; Samsat Keliling</span>
-              <span class="org__staff">Petugas pembukuan &amp; pelaporan</span>
+              <span class="org__staff">Petugas pendataan &amp; verifikasi</span>
+              <span class="org__staff">Petugas loket pelayanan</span>
             </div>
           </div>
         </div>
@@ -241,7 +241,7 @@
         <p class="micro muted center" style="margin-top:12px">Mitra satu atap Samsat · garis koordinasi, bukan garis komando.</p>
       </div>
     </div>
-    <p class="proto-note" style="margin-top:16px">Nama seksi dan pejabat menyesuaikan Peraturan Gubernur NTT yang berlaku. Diisi setelah verifikasi.</p>
+    <p class="proto-note" style="margin-top:16px">Susunan unit mengikuti Renstra BPAD 2025–2029 (Pergub NTT Nomor 96 Tahun 2023). Nama pejabat lain diisi setelah verifikasi.</p>
   </section>
 
   <section class="section">
@@ -257,16 +257,16 @@
           <div class="acc__body"><div><p>Memimpin, mengoordinasikan, dan mengawasi pelaksanaan tugas teknis operasional pendapatan daerah di wilayah Kota Kupang, serta menyetujui informasi sebelum dipublikasikan.</p></div></div>
         </details>
         <details class="acc">
-          <summary>Sub Bagian Tata Usaha<span class="acc__plus" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></summary>
+          <summary>Subbagian Tata Usaha<span class="acc__plus" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></summary>
           <div class="acc__body"><div><p>Merencanakan dan melaksanakan kegiatan ketatausahaan meliputi urusan kepegawaian, keuangan, perlengkapan, dan tata usaha umum, serta memberikan pelayanan administratif kepada semua unsur di lingkungan UPTD.</p><p>Pengelolaan portal PINTU berada di bawah unit ini.</p></div></div>
         </details>
         <details class="acc">
-          <summary>Seksi Pendataan &amp; Penetapan<span class="acc__plus" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></summary>
-          <div class="acc__body"><div><p>Menghimpun dan memutakhirkan data objek serta subjek pajak, menetapkan pajak terutang, dan menerbitkan notis pajak kendaraan bermotor.</p></div></div>
+          <summary>Seksi Penetapan dan Penagihan<span class="acc__plus" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></summary>
+          <div class="acc__body"><div><p>Merencanakan dan melaksanakan kegiatan penetapan dan penagihan pajak serta pendapatan lain-lain, termasuk pemberian surat keterangan terdaftar untuk kendaraan bermotor.</p></div></div>
         </details>
         <details class="acc">
-          <summary>Seksi Penagihan &amp; Pelaporan<span class="acc__plus" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></summary>
-          <div class="acc__body"><div><p>Menerima dan menyetorkan pembayaran, menagih tunggakan, menyelenggarakan Samsat Keliling, serta menyusun pembukuan dan laporan penerimaan.</p></div></div>
+          <summary>Seksi Verifikasi<span class="acc__plus" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></summary>
+          <div class="acc__body"><div><p>Merencanakan dan melaksanakan kegiatan verifikasi, meliputi pengumpulan data serta pengendalian dan evaluasi pemeriksaan kebenaran penetapan pajak dan pendapatan lain-lain, termasuk pemberian surat keterangan terdaftar kendaraan bermotor.</p></div></div>
         </details>
         <details class="acc">
           <summary>Kelompok Jabatan Fungsional<span class="acc__plus" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></summary>

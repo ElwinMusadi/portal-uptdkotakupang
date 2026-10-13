@@ -326,7 +326,7 @@ Dipakai halaman *Visi & Misi* di dashboard ([D-020](decisions.md#d-020--2026-10-
 | Alamat | Permintaan | Respons |
 |---|---|---|
 | `GET /api/pengaturan/visiMisi` | — | `200` dokumen di atas. Sebelum pertama kali disimpan: teks resmi yang sudah tampil di portal. |
-| `PUT /api/pengaturan/visiMisi` | dokumen lengkap | `200` dokumen tersimpan; isian opsional yang kosong disimpan sebagai `""` dan `maklumat.berkas` selalu `null`. Isi yang sama dengan yang tersimpan tidak dicatat. `422` bila visi (maks. 300 karakter) atau isi maklumat (maks. 600) kosong, misi tanpa teks, kontribusi tanpa judul, nilai tanpa nama, huruf nilai lebih dari 2 karakter, lebih dari 10 misi, 6 kontribusi, atau 10 nilai, ID butir ganda, teks berisi karakter kontrol, atau `maklumat.berkas` berisi berkas: `{"maklumat.berkas": ["Berkas maklumat belum bisa diunggah ke server."]}`. |
+| `PUT /api/pengaturan/visiMisi` | dokumen lengkap | `200` dokumen tersimpan; isian opsional yang kosong disimpan sebagai `""`. `maklumat.berkas` berisi `{ nama, ukuran, tipe, url }` dari catatan unggahan PDF untuk tujuan `visiMisi`, atau `null` ([D-029](decisions.md#d-029--2026-10-14--foto-tentang-uptd-dan-maklumat-diunggah-ke-server-profil-disusun-dari-renstra-dan-rpjmd)); berkas yang diganti atau dikosongkan dihapus. Isi yang sama dengan yang tersimpan tidak dicatat. `422` bila visi (maks. 300 karakter) atau isi maklumat (maks. 600) kosong, misi tanpa teks, kontribusi tanpa judul, nilai tanpa nama, huruf nilai lebih dari 2 karakter, lebih dari 10 misi, 6 kontribusi, atau 10 nilai, ID butir ganda, teks berisi karakter kontrol, atau alamat berkas maklumat bukan unggahan PINTU untuk Visi & Misi: `{"maklumat.berkas.url": ["Berkas maklumat harus diunggah lewat dashboard."]}`. |
 
 Penyimpanan tercatat di log aktivitas sebagai "memperbarui Visi & Misi".
 
@@ -349,8 +349,8 @@ Dipakai halaman *Tentang UPTD* di dashboard ([D-021](decisions.md#d-021--2026-10
 
 | Alamat | Permintaan | Respons |
 |---|---|---|
-| `GET /api/pengaturan/profil` | — | `200` dokumen di atas. Sebelum pertama kali disimpan: teks yang sudah tampil di portal, dengan nama Kepala UPTD kosong. |
-| `PUT /api/pengaturan/profil` | dokumen lengkap | `200` dokumen tersimpan; isian opsional yang kosong disimpan sebagai `""`, dan `foto` serta `sambutan.foto` selalu `null`. Isi yang sama dengan yang tersimpan tidak dicatat. `422` bila judul (maks. 80 karakter), pengantar (maks. 400), atau judul kedudukan kosong, baris identitas tanpa label atau isi, tugas tanpa uraian, lebih dari 12 baris identitas atau 12 tugas, ID butir ganda, teks berisi karakter kontrol, atau foto dikirim: `{"foto": ["Foto kantor belum bisa diunggah ke server."]}`, `{"sambutan.foto": ["Foto Kepala UPTD belum bisa diunggah ke server."]}`. |
+| `GET /api/pengaturan/profil` | — | `200` dokumen di atas. Sebelum pertama kali disimpan: teks awal dari Renstra BPAD dan RPJMD NTT, dengan nama Kepala UPTD dari pemilik. |
+| `PUT /api/pengaturan/profil` | dokumen lengkap | `200` dokumen tersimpan; isian opsional yang kosong disimpan sebagai `""`. `foto` dan `sambutan.foto` berisi alamat unggahan foto untuk tujuan `profil`, atau `null` ([D-029](decisions.md#d-029--2026-10-14--foto-tentang-uptd-dan-maklumat-diunggah-ke-server-profil-disusun-dari-renstra-dan-rpjmd)); foto yang diganti atau dikosongkan dihapus. Isi yang sama dengan yang tersimpan tidak dicatat. `422` bila judul (maks. 80 karakter), pengantar (maks. 400), atau judul kedudukan kosong, baris identitas tanpa label atau isi, tugas tanpa uraian, lebih dari 12 baris identitas atau 12 tugas, ID butir ganda, teks berisi karakter kontrol, atau foto bukan unggahan PINTU untuk Tentang UPTD: `{"foto": ["Foto kantor harus diunggah lewat dashboard."]}`, `{"sambutan.foto": ["Foto Kepala UPTD harus diunggah lewat dashboard."]}`. |
 
 Penyimpanan tercatat di log aktivitas sebagai "memperbarui Tentang UPTD".
 
@@ -366,7 +366,7 @@ Dipakai halaman *Persyaratan Layanan* di dashboard ([D-022](decisions.md#d-022--
   "jenis": "layanan", "cekFisik": false, "nonTunai": true, "diwakilkan": true, "label": [],
   "persyaratan": [{ "id": "p1", "dokumen": "Fotokopi STNK dan notis pajak (lampirkan asli)", "jumlah": "2 lembar" }],
   "catatan": "", "unggulan": true,
-  "status": "terbit", "penyedia": "Seksi Pendataan & Penetapan", "pemeriksa": "", "catatanRevisi": "",
+  "status": "terbit", "penyedia": "Seksi Verifikasi", "pemeriksa": "", "catatanRevisi": "",
   "terbitPada": "2026-10-14T01:00:00+00:00",
   "riwayat": [{ "waktu": "…", "oleh": "Yohanes Admin", "aksi": "menyetujui dan menerbitkan", "ke": "terbit" }],
   "urutan": 0, "dibuat": "…", "diperbarui": "…"
@@ -445,7 +445,7 @@ Dipakai halaman *Jadwal Pemutakhiran* dan Ringkasan di dashboard ([D-025](decisi
 ```json
 {
   "id": "01m4…", "konten": "Jadwal Samsat Keliling", "modul": "keliling",
-  "unit": "Seksi Penagihan & Pelaporan", "frekuensi": "Mingguan, setiap Jumat", "intervalHari": 7,
+  "unit": "Seksi Penetapan dan Penagihan", "frekuensi": "Mingguan, setiap Jumat", "intervalHari": 7,
   "urutan": 1, "dibuat": "…", "diperbarui": "…"
 }
 ```
@@ -493,7 +493,7 @@ Kode: `app/Http/Controllers/Dashboard/SiteController.php`, `app/Http/Requests/Da
 Dipakai tab *Akun* di halaman Pengaturan dan menu pengguna di dashboard ([D-027](decisions.md#d-027--2026-10-14--profil-akun-tersimpan-di-server-nama-dan-surel-mengikuti-akun)). Setiap pegawai yang masuk hanya membaca dan mengubah profilnya sendiri; tamu mendapat `401`.
 
 ```json
-{ "nama": "Maria Pegawai", "jabatan": "Pengelola Data", "unit": "Sub Bagian Tata Usaha", "peran": "Pemeriksa", "email": "" }
+{ "nama": "Maria Pegawai", "jabatan": "Pengelola Data", "unit": "Subbagian Tata Usaha", "peran": "Pemeriksa", "email": "" }
 ```
 
 | Alamat | Permintaan | Respons |
@@ -507,7 +507,7 @@ Kode: `app/Http/Controllers/Dashboard/OwnAccountController.php`, `app/Http/Reque
 
 ## Unggahan di dashboard
 
-Penyimpanan berkas dari dashboard ([D-028](decisions.md#d-028--2026-10-14--unggahan-disimpan-di-laravel-cloud-object-storage)). Tamu mendapat `401`. Dashboard baru memakainya saat modul yang bersangkutan pindah ke server; sampai saat itu unggahan tetap di peramban.
+Penyimpanan berkas dari dashboard ([D-028](decisions.md#d-028--2026-10-14--unggahan-disimpan-di-laravel-cloud-object-storage)). Tamu mendapat `401`. Dashboard memakainya untuk tujuan yang modulnya sudah di server, saat ini `visiMisi` dan `profil` ([D-029](decisions.md#d-029--2026-10-14--foto-tentang-uptd-dan-maklumat-diunggah-ke-server-profil-disusun-dari-renstra-dan-rpjmd)); unggahan lain tetap di peramban sampai modulnya pindah.
 
 | Alamat | Permintaan | Respons |
 |---|---|---|
@@ -672,7 +672,7 @@ Kode: `app/Http/Controllers/PublicContactController.php`, `app/Actions/ShowPubli
 
 ## `GET /api/public/visi-misi`
 
-Halaman Visi & Misi di portal ([D-020](decisions.md#d-020--2026-10-13--visi--misi-tersimpan-di-server-unggahan-maklumat-ditunda), `initVisiMisi()` di `public/assets/js/main.js`). Bentuknya sama dengan dokumen dashboard tanpa `id` butir dan tanpa `maklumat.berkas`, ditambah `diperbarui`: waktu terakhir disimpan, atau `null` selama isinya masih teks resmi awal.
+Halaman Visi & Misi di portal ([D-020](decisions.md#d-020--2026-10-13--visi--misi-tersimpan-di-server-unggahan-maklumat-ditunda), `initVisiMisi()` di `public/assets/js/main.js`). Bentuknya sama dengan dokumen dashboard tanpa `id` butir, ditambah `diperbarui`: waktu terakhir disimpan, atau `null` selama isinya masih teks resmi awal.
 
 | Hal | Perilaku |
 |---|---|
@@ -684,11 +684,11 @@ Kode: `app/Http/Controllers/PublicVisionMissionController.php`, `app/Actions/Sho
 
 ## `GET /api/public/profil`
 
-Halaman Profil (Tentang UPTD) di portal ([D-021](decisions.md#d-021--2026-10-14--tentang-uptd-tersimpan-di-server-unggahan-foto-ditunda), `initProfil()` di `public/assets/js/main.js`). Bentuknya sama dengan dokumen dashboard tanpa `id` butir dan tanpa foto, ditambah `diperbarui`: waktu terakhir disimpan, atau `null` selama isinya masih teks awal.
+Halaman Profil (Tentang UPTD) di portal ([D-021](decisions.md#d-021--2026-10-14--tentang-uptd-tersimpan-di-server-unggahan-foto-ditunda), `initProfil()` di `public/assets/js/main.js`). Bentuknya sama dengan dokumen dashboard tanpa `id` butir, ditambah `diperbarui`: waktu terakhir disimpan, atau `null` selama isinya masih teks awal.
 
 | Hal | Perilaku |
 |---|---|
-| Berhasil | `200`. Teks wajib ditampilkan sebagai teks polos. |
+| Berhasil | `200`. Teks wajib ditampilkan sebagai teks polos. `foto` dan `sambutan.foto` berisi alamat bucket publik atau `null`; selama `null`, portal memakai foto gedung bawaannya dan ilustrasi Kepala UPTD ([D-029](decisions.md#d-029--2026-10-14--foto-tentang-uptd-dan-maklumat-diunggah-ke-server-profil-disusun-dari-renstra-dan-rpjmd)). |
 | Galat | `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah batas laju yang sama dengan `GET /api/public/faq`; `503` bila data tidak bisa dibaca, tidak pernah teks lain sebagai gantinya. |
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 

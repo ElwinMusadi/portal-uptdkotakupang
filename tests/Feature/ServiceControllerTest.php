@@ -200,8 +200,8 @@ class ServiceControllerTest extends TestCase
             'persyaratan' => [['id' => 'p1', 'dokumen' => 'Fotokopi KTP pemilik baru', 'jumlah' => '2 lembar']],
             'catatan' => 'Bawa kuitansi pembelian.',
             'unggulan' => false,
-            'penyedia' => 'Seksi Pendataan & Penetapan',
-            'pemeriksa' => 'Kepala Seksi Pendataan & Penetapan',
+            'penyedia' => 'Seksi Verifikasi',
+            'pemeriksa' => 'Kepala Seksi Verifikasi',
         ];
     }
 }

@@ -197,7 +197,7 @@ Server perlu menyediakan endpoint berikut. Bentuk JSON-nya sama dengan model dat
 | `GET` | `/pengaturan` | — | `{ "situs": "<waktu ISO>", … }`, waktu terakhir tiap pengaturan disimpan |
 | `GET` | `/aktivitas?limit=50` | — | Log aktivitas terbaru `{ id, waktu, oleh, aksi, modul, target }` |
 | `DELETE` | `/aktivitas` | — | 204 |
-| `POST` | `/unggah` | `multipart/form-data`, field `modul` (tujuan) dan `berkas` | `{ nama, ukuran, tipe, url }`; sudah tersedia di server ([D-028](decisions.md#d-028--2026-10-14--unggahan-disimpan-di-laravel-cloud-object-storage)), dipakai dashboard saat modulnya pindah ke server |
+| `POST` | `/unggah` | `multipart/form-data`, field `modul` (tujuan) dan `berkas` | `{ nama, ukuran, tipe, url }`; tersedia di server ([D-028](decisions.md#d-028--2026-10-14--unggahan-disimpan-di-laravel-cloud-object-storage)). Mode campuran memakainya untuk tujuan di `UNGGAHAN_SERVER` (saat ini `visiMisi` dan `profil`) |
 | `GET` | `/ekspor` | — | Cadangan lengkap (format di atas) |
 | `POST` | `/impor` | Cadangan lengkap | 204 |
 | `POST` | `/reset` | — | 204 |
@@ -296,14 +296,15 @@ Halaman *Kontak & Kanal* (`#/kontak`, `pages/kontak.tsx`) tersimpan di server se
 Halaman *Visi & Misi* (`#/visi-misi`, `pages/visi-misi.tsx`) tersimpan di server sejak [D-020](decisions.md#d-020--2026-10-13--visi--misi-tersimpan-di-server-unggahan-maklumat-ditunda) sebagai pengaturan `visiMisi`.
 
 - Sebelum disimpan pertama kali, isinya adalah teks resmi yang sudah tampil di portal. Perubahan langsung tampil di halaman Visi & Misi portal (`GET /api/public/visi-misi`).
-- Berkas maklumat (PDF bertanda tangan) belum bisa diunggah ke server; isian unggahannya diganti keterangan, dan tombol unduh di portal mengarah ke halaman Regulasi & Unduhan.
+- Berkas maklumat (PDF bertanda tangan) diunggah ke server sejak [D-029](decisions.md#d-029--2026-10-14--foto-tentang-uptd-dan-maklumat-diunggah-ke-server-profil-disusun-dari-renstra-dan-rpjmd). Tanpa berkas, tombol unduh di portal mengarah ke halaman Regulasi & Unduhan.
 
 ## Tentang UPTD
 
 Halaman *Tentang UPTD* (`#/profil`, `pages/profil.tsx`) tersimpan di server sejak [D-021](decisions.md#d-021--2026-10-14--tentang-uptd-tersimpan-di-server-unggahan-foto-ditunda) sebagai pengaturan `profil`.
 
-- Sebelum disimpan pertama kali, isinya adalah teks yang sudah tampil di halaman Profil portal, dengan nama Kepala UPTD kosong. Perubahan langsung tampil di portal (`GET /api/public/profil`).
-- Foto gedung dan foto Kepala UPTD belum bisa diunggah ke server; isian unggahannya diganti keterangan, dan portal tetap menampilkan ilustrasi.
+- Sebelum disimpan pertama kali, isinya adalah teks awal dari Renstra BPAD dan RPJMD NTT, dengan nama Kepala UPTD dari pemilik. Perubahan langsung tampil di portal (`GET /api/public/profil`).
+- Foto kantor dan foto Kepala UPTD diunggah ke server sejak [D-029](decisions.md#d-029--2026-10-14--foto-tentang-uptd-dan-maklumat-diunggah-ke-server-profil-disusun-dari-renstra-dan-rpjmd). Tanpa foto kantor, portal menampilkan foto gedung bawaannya; tanpa foto Kepala UPTD, ilustrasi.
+- Isi awal disusun dari Renstra BPAD 2025–2029 dan RPJMD NTT 2025–2029.
 
 ## Persyaratan Layanan
 

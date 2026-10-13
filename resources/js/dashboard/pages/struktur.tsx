@@ -276,7 +276,7 @@ export default function HalamanStruktur() {
           <FieldTeks control={ed.form.control} name="pejabat" label="Nama pejabat" />
         </Baris>
         <div className="grid gap-5 sm:grid-cols-[180px_minmax(0,1fr)]">
-          <FieldGambar control={ed.form.control} name="foto" label="Foto pejabat" rasio="aspect-[4/5]" deskripsi="Opsional." />
+          <FieldGambar control={ed.form.control} name="foto" label="Foto pejabat" rasio="aspect-[4/5]" deskripsi="Opsional." tujuan="unit" />
           <div className="grid content-start gap-5">
             <FieldTeks
               control={ed.form.control}

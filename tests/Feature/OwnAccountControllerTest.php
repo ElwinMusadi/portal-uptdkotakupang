@@ -37,18 +37,18 @@ class OwnAccountControllerTest extends TestCase
             'nama' => 'Maria Pegawai',
             'email' => 'maria@example.go.id',
             'jabatan' => 'Pengelola Data',
-            'unit' => 'Sub Bagian Tata Usaha',
+            'unit' => 'Subbagian Tata Usaha',
             'peran' => 'Pemeriksa',
         ]);
 
         $response->assertOk()->assertExactJson([
             'nama' => 'Maria Pegawai',
             'jabatan' => 'Pengelola Data',
-            'unit' => 'Sub Bagian Tata Usaha',
+            'unit' => 'Subbagian Tata Usaha',
             'peran' => 'Pemeriksa',
             'email' => 'maria@example.go.id',
         ]);
-        $this->assertSame(['Pengelola Data', 'Sub Bagian Tata Usaha', 'Pemeriksa'], [$employee->fresh()->jabatan, $employee->fresh()->unit, $employee->fresh()->peran_informasi]);
+        $this->assertSame(['Pengelola Data', 'Subbagian Tata Usaha', 'Pemeriksa'], [$employee->fresh()->jabatan, $employee->fresh()->unit, $employee->fresh()->peran_informasi]);
         $this->assertSame('', $other->fresh()->jabatan);
         $this->assertDatabaseCount('activities', 0);
 

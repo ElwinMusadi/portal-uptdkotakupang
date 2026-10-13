@@ -22,21 +22,23 @@ class PublicProfileControllerTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('judul', 'Melayani pajak daerah.')
-            ->assertJsonPath('identitas.3', ['label' => 'Wilayah kerja', 'nilai' => 'Kota Kupang · 6 kecamatan, 51 kelurahan'])
-            ->assertJsonPath('tugasFungsi.2.judul', "Pelayanan Samsat: pengesahan STNK, perpanjangan 5\u{00A0}tahun, mutasi, dan balik nama.")
-            ->assertJsonPath('sambutan.nama', '')
+            ->assertJsonPath('identitas.3', ['label' => 'Dasar organisasi', 'nilai' => 'Peraturan Gubernur NTT Nomor 96 Tahun 2023'])
+            ->assertJsonPath('identitas.5', ['label' => 'Wilayah kerja', 'nilai' => 'Kota Kupang · 6 kecamatan, 51 kelurahan, 159 km²'])
+            ->assertJsonPath('tugasFungsi.3.judul', "Pelayanan Samsat: pengesahan STNK, perpanjangan 5\u{00A0}tahun, mutasi, dan balik nama.")
+            ->assertJsonPath('sambutan.nama', 'Remmy Christian Pah, S.STP, M.Si')
+            ->assertJsonPath('foto', null)
+            ->assertJsonPath('sambutan.foto', null)
             ->assertJsonPath('diperbarui', null);
-        $this->assertArrayNotHasKey('foto', $response->json());
     }
 
-    public function test_returns_the_saved_document_without_item_ids_or_photos(): void
+    public function test_returns_the_saved_document_without_item_ids(): void
     {
         $this->travelTo(Carbon::parse('2026-10-13 08:00:00', 'UTC'));
         (new Setting)->forceFill(['name' => Setting::PROFILE, 'value' => [
             'judul' => 'Judul.',
             'lanjutan' => 'Lanjutan.',
             'pengantar' => 'Pengantar.',
-            'foto' => null,
+            'foto' => 'https://bucket.example/profil/2026/10/gedung.jpg',
             'keteranganFoto' => 'Keterangan.',
             'kedudukan' => ['judul' => 'Kedudukan.', 'lanjutan' => '', 'deskripsi' => 'Deskripsi.'],
             'identitas' => [['id' => 'i1', 'label' => 'Nama unit', 'nilai' => 'UPTD']],
@@ -50,11 +52,12 @@ class PublicProfileControllerTest extends TestCase
             'judul' => 'Judul.',
             'lanjutan' => 'Lanjutan.',
             'pengantar' => 'Pengantar.',
+            'foto' => 'https://bucket.example/profil/2026/10/gedung.jpg',
             'keteranganFoto' => 'Keterangan.',
             'kedudukan' => ['judul' => 'Kedudukan.', 'lanjutan' => '', 'deskripsi' => 'Deskripsi.'],
             'identitas' => [['label' => 'Nama unit', 'nilai' => 'UPTD']],
             'tugasFungsi' => [['judul' => 'Tugas.', 'deskripsi' => '', 'kataKunci' => 'Data']],
-            'sambutan' => ['kutipan' => 'Sambutan.', 'nama' => 'Nama Kepala', 'jabatan' => 'Kepala UPTD'],
+            'sambutan' => ['kutipan' => 'Sambutan.', 'nama' => 'Nama Kepala', 'jabatan' => 'Kepala UPTD', 'foto' => null],
             'diperbarui' => '2026-10-13T08:00:00+00:00',
         ]);
     }

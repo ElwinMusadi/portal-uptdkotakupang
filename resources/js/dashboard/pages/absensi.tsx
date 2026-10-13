@@ -238,7 +238,7 @@ function FieldFotoBukti({ form }: { form: UseFormReturn<FormAbsen> }) {
           setProses(true)
           try {
             const blob = await kompresGambar(berkas, SISI_FOTO)
-            const hasil = await api.upload(blob, namaBerkasGambar(berkas.name || "absensi.jpg", blob))
+            const hasil = await api.upload(blob, namaBerkasGambar(berkas.name || "absensi.jpg", blob), "absensi")
             field.onChange(hasil.url)
           } catch (e) {
             toast.error("Foto gagal diproses", { description: (e as Error).message })

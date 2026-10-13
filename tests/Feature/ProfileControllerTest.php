@@ -3,9 +3,12 @@
 namespace Tests\Feature;
 
 use App\Enums\DashboardModule;
+use App\Enums\UploadTarget;
 use App\Models\Setting;
+use App\Models\Upload;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\TestWith;
 use Tests\TestCase;
 
@@ -41,11 +44,11 @@ class ProfileControllerTest extends TestCase
             ->assertJsonPath('lanjutan', 'Dari jantung Kota Kupang.')
             ->assertJsonPath('foto', null)
             ->assertJsonPath('kedudukan.judul', 'Bagian dari BPAD NTT.')
-            ->assertJsonPath('identitas.*.label', ['Nama unit', 'Dikenal sebagai', 'Induk organisasi', 'Wilayah kerja', 'Mitra satu atap', 'Pajak yang dilayani', 'Kanal pembayaran'])
-            ->assertJsonPath('tugasFungsi.*.kataKunci', ['Data', 'Tetapkan', 'Layani', 'Terima', 'Jangkau', 'Kelola'])
+            ->assertJsonPath('identitas.*.label', ['Nama unit', 'Dikenal sebagai', 'Induk organisasi', 'Dasar organisasi', 'Susunan organisasi', 'Wilayah kerja', 'Mitra satu atap', 'Pajak yang dikelola', 'Kanal pembayaran'])
+            ->assertJsonPath('tugasFungsi.*.kataKunci', ['Pungut', 'Tetapkan', 'Periksa', 'Layani', 'Jangkau', 'Awasi', 'Kelola'])
             ->assertJsonPath('sambutan', [
                 'kutipan' => 'Kami ingin setiap warga datang sekali dan pulang dengan urusan selesai. PINTU adalah janji kami untuk informasi yang jelas, resmi, dan selalu terbaru.',
-                'nama' => '',
+                'nama' => 'Remmy Christian Pah, S.STP, M.Si',
                 'jabatan' => 'Kepala UPTD Pendapatan Daerah Wilayah Kota Kupang',
                 'foto' => null,
             ]);
@@ -61,7 +64,7 @@ class ProfileControllerTest extends TestCase
         $profile['kedudukan']['deskripsi'] = null;
         $profile['tugasFungsi'][0]['kataKunci'] = null;
         $profile['sambutan']['nama'] = null;
-        $profile['sambutan']['foto'] = [];
+        $profile['sambutan']['foto'] = null;
 
         $response = $this->actingAs($employee)->putJson('/api/pengaturan/profil', $profile);
 
@@ -91,17 +94,59 @@ class ProfileControllerTest extends TestCase
         $this->assertDatabaseCount('activities', 1);
     }
 
-    #[TestWith(['foto', 'Foto kantor belum bisa diunggah ke server.'])]
-    #[TestWith(['sambutan.foto', 'Foto Kepala UPTD belum bisa diunggah ke server.'])]
-    public function test_rejects_photos_until_uploads_are_stored_on_the_server(string $field, string $message): void
+    public function test_keeps_uploaded_photos_and_deletes_the_ones_it_replaces(): void
     {
+        Storage::fake('public');
+        $employee = $this->profilEmployee();
+        [$building, $head, $newBuilding] = Upload::factory()->count(3)->create(['tujuan' => UploadTarget::Profil])->all();
+        foreach ([$building, $head, $newBuilding] as $upload) {
+            Storage::disk('public')->put($upload->path, 'foto');
+        }
         $profile = $this->profile();
-        data_set($profile, $field, 'data:image/png;base64,iVBORw0KGgo=');
+        $profile['foto'] = $building->url();
+        $profile['sambutan']['foto'] = $head->url();
 
-        $response = $this->actingAs($this->profilEmployee())->putJson('/api/pengaturan/profil', $profile);
+        $this->actingAs($employee)->putJson('/api/pengaturan/profil', $profile)
+            ->assertOk()
+            ->assertJsonPath('foto', $building->url())
+            ->assertJsonPath('sambutan.foto', $head->url());
+        $this->assertNotNull($building->fresh()->dipakai_pada);
+        $this->assertNotNull($head->fresh()->dipakai_pada);
 
-        $response->assertUnprocessable()->assertJsonValidationErrors([$field => $message]);
+        // Saving other changes keeps the photos still in use
+        $profile['judul'] = 'Judul baru.';
+        $this->actingAs($employee)->putJson('/api/pengaturan/profil', $profile)->assertOk();
+        $this->assertModelExists($building);
+        $this->assertModelExists($head);
+        Storage::disk('public')->assertExists([$building->path, $head->path]);
+
+        $profile['foto'] = $newBuilding->url();
+        $profile['sambutan']['foto'] = null;
+        $this->actingAs($employee)->putJson('/api/pengaturan/profil', $profile)->assertOk();
+
+        $this->assertModelMissing($building);
+        $this->assertModelMissing($head);
+        Storage::disk('public')->assertMissing([$building->path, $head->path]);
+        $this->assertNotNull($newBuilding->fresh()->dipakai_pada);
+        Storage::disk('public')->assertExists($newBuilding->path);
+    }
+
+    #[TestWith(['foto', 'Foto kantor harus diunggah lewat dashboard.'])]
+    #[TestWith(['sambutan.foto', 'Foto Kepala UPTD harus diunggah lewat dashboard.'])]
+    public function test_rejects_photos_that_are_not_its_uploads(string $field, string $message): void
+    {
+        $news = Upload::factory()->create();
+
+        foreach (['data:image/png;base64,iVBORw0KGgo=', 'https://example.com/foto.jpg', $news->url(), ['url' => $news->url()]] as $value) {
+            $profile = $this->profile();
+            data_set($profile, $field, $value);
+
+            $this->actingAs($this->profilEmployee())->putJson('/api/pengaturan/profil', $profile)
+                ->assertUnprocessable()
+                ->assertJsonValidationErrors([$field => $message]);
+        }
         $this->assertDatabaseCount('settings', 0);
+        $this->assertNull($news->fresh()->dipakai_pada);
     }
 
     public function test_validates_the_opening_position_lists_and_welcome(): void

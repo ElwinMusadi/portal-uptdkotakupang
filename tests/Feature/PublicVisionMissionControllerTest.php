@@ -31,7 +31,7 @@ class PublicVisionMissionControllerTest extends TestCase
         $this->assertCount(7, $response->json('nilai'));
     }
 
-    public function test_returns_the_saved_document_without_item_ids_or_the_pledge_file(): void
+    public function test_returns_the_saved_document_without_item_ids(): void
     {
         $this->travelTo(Carbon::parse('2026-10-13 08:00:00', 'UTC'));
         (new Setting)->forceFill(['name' => Setting::VISION_MISSION, 'value' => [
@@ -40,7 +40,7 @@ class PublicVisionMissionControllerTest extends TestCase
             'misi' => [['id' => 'm1', 'teks' => 'Misi pertama.', 'kataKunci' => 'Maju']],
             'kontribusi' => [['id' => 'k1', 'misi' => 'Misi 01 · Maju', 'judul' => 'Tata kelola.', 'deskripsi' => 'Penjelasan.']],
             'nilai' => [['id' => 'n1', 'huruf' => 'B', 'judul' => 'Berorientasi pelayanan', 'deskripsi' => 'Ramah.']],
-            'maklumat' => ['teks' => 'Kami sanggup.', 'penandatangan' => 'Kepala UPTD', 'berkas' => null],
+            'maklumat' => ['teks' => 'Kami sanggup.', 'penandatangan' => 'Kepala UPTD', 'berkas' => ['nama' => 'Maklumat.pdf', 'ukuran' => 2048, 'tipe' => 'application/pdf', 'url' => 'https://bucket.example/visiMisi/2026/10/maklumat.pdf']],
         ]])->save();
 
         $response = $this->getJson('/api/public/visi-misi');
@@ -51,7 +51,7 @@ class PublicVisionMissionControllerTest extends TestCase
             'misi' => [['teks' => 'Misi pertama.', 'kataKunci' => 'Maju']],
             'kontribusi' => [['misi' => 'Misi 01 · Maju', 'judul' => 'Tata kelola.', 'deskripsi' => 'Penjelasan.']],
             'nilai' => [['huruf' => 'B', 'judul' => 'Berorientasi pelayanan', 'deskripsi' => 'Ramah.']],
-            'maklumat' => ['teks' => 'Kami sanggup.', 'penandatangan' => 'Kepala UPTD'],
+            'maklumat' => ['teks' => 'Kami sanggup.', 'penandatangan' => 'Kepala UPTD', 'berkas' => ['nama' => 'Maklumat.pdf', 'ukuran' => 2048, 'tipe' => 'application/pdf', 'url' => 'https://bucket.example/visiMisi/2026/10/maklumat.pdf']],
             'diperbarui' => '2026-10-13T08:00:00+00:00',
         ]);
     }

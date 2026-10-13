@@ -27,7 +27,7 @@ class UpdateStandardControllerTest extends TestCase
             ->assertJsonPath('*.modul', ['papan', 'keliling', 'dokumentasi', 'berita', 'jam', 'layanan', 'dokumen', 'profil'])
             ->assertJsonPath('*.intervalHari', [1, 7, 14, 15, 30, 90, 180, 365])
             ->assertJsonPath('1.konten', 'Jadwal Samsat Keliling')
-            ->assertJsonPath('1.unit', 'Seksi Penagihan & Pelaporan')
+            ->assertJsonPath('1.unit', 'Seksi Penetapan dan Penagihan')
             ->assertJsonPath('1.frekuensi', 'Mingguan, setiap Jumat')
             ->assertJsonPath('5.frekuensi', 'Saat regulasi berubah · tinjau tiap 3 bulan');
         $this->assertSame(['id', 'konten', 'modul', 'unit', 'frekuensi', 'intervalHari', 'urutan', 'dibuat', 'diperbarui'], array_keys($response->json('0')));

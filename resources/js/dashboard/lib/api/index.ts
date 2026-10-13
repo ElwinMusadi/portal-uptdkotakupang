@@ -1,12 +1,12 @@
 import type { ApiClient } from "./client"
 import { HttpApi } from "./http"
-import { HybridApi, KOLEKSI_SERVER, PENGATURAN_SERVER } from "./hybrid"
+import { HybridApi, KOLEKSI_SERVER, PENGATURAN_SERVER, UNGGAHAN_SERVER } from "./hybrid"
 import { LocalApi } from "./local"
-import type { NamaKoleksi, NamaPengaturan } from "./types"
+import type { NamaKoleksi, NamaPengaturan, TujuanUnggah } from "./types"
 
 export { ApiError } from "./client"
 export type { ApiClient } from "./client"
-export { KOLEKSI_SERVER, PENGATURAN_SERVER } from "./hybrid"
+export { KOLEKSI_SERVER, PENGATURAN_SERVER, UNGGAHAN_SERVER } from "./hybrid"
 export * from "./types"
 
 const apiUrl = import.meta.env.VITE_API_URL?.trim()
@@ -27,4 +27,9 @@ export function diServer(k: NamaKoleksi): boolean {
 /** Apakah pengaturan ini tersimpan di server */
 export function pengaturanDiServer(n: NamaPengaturan): boolean {
   return api.mode === "server" || (api.mode === "campuran" && PENGATURAN_SERVER.includes(n))
+}
+
+/** Apakah unggahan untuk tujuan ini disimpan di server, yang hanya menerima berkas unggahan PINTU (D-028) */
+export function unggahanDiServer(tujuan: TujuanUnggah): boolean {
+  return api.mode === "server" || (api.mode === "campuran" && UNGGAHAN_SERVER.includes(tujuan))
 }

@@ -182,7 +182,7 @@ export default function HalamanPemutakhiran() {
           opsi={Object.entries(MODUL_PANTAU).map(([nilai, m]) => ({ nilai, label: m.label }))}
           deskripsi="Waktu pembaruan terakhir diambil dari modul ini."
         />
-        <FieldTeks control={ed.form.control} name="unit" label="Penanggung jawab" wajib placeholder="Mis. Seksi Penagihan & Pelaporan" />
+        <FieldTeks control={ed.form.control} name="unit" label="Penanggung jawab" wajib placeholder="Mis. Seksi Penetapan dan Penagihan" />
         <Baris>
           <FieldTeks control={ed.form.control} name="frekuensi" label="Frekuensi (teks)" wajib placeholder="Mis. Mingguan, setiap Jumat" />
           <FieldAngka control={ed.form.control} name="intervalHari" label="Batas" satuan="hari" />

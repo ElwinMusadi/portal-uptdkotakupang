@@ -9,6 +9,7 @@ import type {
   NamaPengaturan,
   Pengaturan,
   Snapshot,
+  TujuanUnggah,
 } from "./types"
 
 /**
@@ -42,7 +43,7 @@ export interface ApiClient {
 
   activity(limit?: number): Promise<Aktivitas[]>
   clearActivity(): Promise<void>
-  upload(file: File | Blob, nama: string): Promise<Berkas>
+  upload(file: File | Blob, nama: string, tujuan: TujuanUnggah): Promise<Berkas>
 
   exportAll(): Promise<Snapshot>
   importAll(snapshot: Snapshot): Promise<void>

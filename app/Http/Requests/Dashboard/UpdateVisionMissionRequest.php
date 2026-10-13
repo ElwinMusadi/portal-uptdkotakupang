@@ -2,14 +2,17 @@
 
 namespace App\Http\Requests\Dashboard;
 
+use App\Enums\UploadTarget;
+use App\Models\Upload;
 use App\Rules\PlainText;
+use App\Rules\UploadUrl;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * The complete Visi & Misi document: the vision and its source, the
  * missions, PINTU's contributions, the core values (BerAKHLAK) and the
- * service pledge. The signed pledge file cannot be uploaded to the server
- * yet (D-020), so "maklumat.berkas" must stay empty.
+ * service pledge. The signed pledge is a PDF uploaded to PINTU for Visi &
+ * Misi (D-028), or empty; its name, size and type are taken from the upload.
  */
 class UpdateVisionMissionRequest extends FormRequest
 {
@@ -52,7 +55,8 @@ class UpdateVisionMissionRequest extends FormRequest
             'maklumat' => ['required', 'array'],
             'maklumat.teks' => ['required', 'string', 'max:600', new PlainText('Isi maklumat')],
             'maklumat.penandatangan' => ['nullable', 'string', 'max:120', new PlainText('Penandatangan')],
-            'maklumat.berkas' => ['prohibited'],
+            'maklumat.berkas' => ['nullable', 'array'],
+            'maklumat.berkas.url' => ['required_with:maklumat.berkas', 'string', new UploadUrl(UploadTarget::VisiMisi, 'Berkas maklumat harus diunggah lewat dashboard.')],
         ];
     }
 
@@ -120,15 +124,17 @@ class UpdateVisionMissionRequest extends FormRequest
             'maklumat.teks.max' => 'Isi maklumat maksimal :max karakter.',
             'maklumat.penandatangan.string' => 'Penandatangan tidak valid.',
             'maklumat.penandatangan.max' => 'Penandatangan maksimal :max karakter.',
-            'maklumat.berkas.prohibited' => 'Berkas maklumat belum bisa diunggah ke server.',
+            'maklumat.berkas.array' => 'Berkas maklumat tidak valid.',
+            'maklumat.berkas.url.required_with' => 'Berkas maklumat harus diunggah lewat dashboard.',
+            'maklumat.berkas.url.string' => 'Berkas maklumat harus diunggah lewat dashboard.',
         ];
     }
 
     /**
      * The document as it is stored, with empty optional fields as empty
-     * strings and no pledge file.
+     * strings and the pledge file as its upload describes it, or null.
      *
-     * @return array{sumberVisi: string, visi: string, misi: list<array{id: string, teks: string, kataKunci: string}>, kontribusi: list<array{id: string, misi: string, judul: string, deskripsi: string}>, nilai: list<array{id: string, huruf: string, judul: string, deskripsi: string}>, maklumat: array{teks: string, penandatangan: string, berkas: null}}
+     * @return array{sumberVisi: string, visi: string, misi: list<array{id: string, teks: string, kataKunci: string}>, kontribusi: list<array{id: string, misi: string, judul: string, deskripsi: string}>, nilai: list<array{id: string, huruf: string, judul: string, deskripsi: string}>, maklumat: array{teks: string, penandatangan: string, berkas: ?array{nama: string, ukuran: int, tipe: string, url: string}}}
      */
     public function visionMission(): array
     {
@@ -155,8 +161,27 @@ class UpdateVisionMissionRequest extends FormRequest
             'maklumat' => [
                 'teks' => $this->validated('maklumat.teks'),
                 'penandatangan' => $this->validated('maklumat.penandatangan') ?? '',
-                'berkas' => null,
+                'berkas' => $this->pledgeFile(),
             ],
+        ];
+    }
+
+    /**
+     * The pledge file as its upload describes it, whatever name, size or
+     * type the request claims.
+     *
+     * @return ?array{nama: string, ukuran: int, tipe: string, url: string}
+     */
+    private function pledgeFile(): ?array
+    {
+        $url = $this->validated('maklumat.berkas.url');
+        $upload = is_string($url) ? Upload::fromUrl($url, UploadTarget::VisiMisi) : null;
+
+        return $upload === null ? null : [
+            'nama' => $upload->nama,
+            'ukuran' => $upload->ukuran,
+            'tipe' => $upload->tipe,
+            'url' => $upload->url(),
         ];
     }
 }

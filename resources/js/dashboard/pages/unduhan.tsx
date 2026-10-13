@@ -256,7 +256,7 @@ export default function HalamanUnduhan() {
           <FieldTeks control={ed.form.control} name="nomor" label="Nomor" placeholder="Mis. 1" />
           <FieldTeks control={ed.form.control} name="tahun" label="Tahun" inputMode="numeric" maxLength={4} />
         </Baris>
-        <FieldBerkas control={ed.form.control} name="berkas" label="Berkas" />
+        <FieldBerkas control={ed.form.control} name="berkas" label="Berkas" tujuan="dokumen" />
         <FieldTeks
           control={ed.form.control}
           name="tautan"
