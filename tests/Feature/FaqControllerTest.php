@@ -246,7 +246,7 @@ class FaqControllerTest extends TestCase
         $response->assertCreated()->assertJsonPath('jawaban', $answer);
     }
 
-    // Characters that Laravel's TrimStrings leaves in place, so they reach FaqText.
+    // Characters that Laravel's TrimStrings leaves in place, so they reach PlainText.
     #[TestWith(["\u{0301}"])]
     #[TestWith(["\u{E000}"])]
     #[TestWith(["\u{FFF9}\u{0301}"])]

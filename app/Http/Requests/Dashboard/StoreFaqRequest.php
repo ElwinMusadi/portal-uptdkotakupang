@@ -4,7 +4,7 @@ namespace App\Http\Requests\Dashboard;
 
 use App\Enums\FaqStatus;
 use App\Models\Faq;
-use App\Rules\FaqText;
+use App\Rules\PlainText;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -31,8 +31,8 @@ class StoreFaqRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'pertanyaan' => ['required', 'string', 'max:'.Faq::MAX_QUESTION_LENGTH, new FaqText('Pertanyaan')],
-            'jawaban' => ['required', 'string', 'max:'.Faq::MAX_ANSWER_LENGTH, new FaqText('Jawaban')],
+            'pertanyaan' => ['required', 'string', 'max:'.Faq::MAX_QUESTION_LENGTH, new PlainText('Pertanyaan')],
+            'jawaban' => ['required', 'string', 'max:'.Faq::MAX_ANSWER_LENGTH, new PlainText('Jawaban')],
             'status' => ['required', Rule::enum(FaqStatus::class)],
             'publik' => ['required', 'boolean'],
             'tampil' => ['required', 'boolean'],

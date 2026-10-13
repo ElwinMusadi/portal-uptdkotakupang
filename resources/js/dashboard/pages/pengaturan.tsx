@@ -24,7 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { api, ApiError, type Snapshot } from "@/lib/api"
 import { keluar, LABEL_PERAN, sesi } from "@/lib/auth"
 import { tanggalJam } from "@/lib/format"
-import { KOLEKSI_LABEL } from "@/lib/meta"
+import { KOLEKSI_LABEL, LABEL_KOLEKSI_SERVER } from "@/lib/meta"
 import { laporGalat, useKoleksi } from "@/lib/queries"
 import * as v from "@/lib/validasi"
 
@@ -197,7 +197,7 @@ function TabData() {
   const { data: pesan } = useKoleksi("pesan")
   const lokal = api.sementara ? "Memori sementara" : "Lokal (IndexedDB)"
   // Mode campuran: pulihkan, kosongkan log, dan kembalikan hanya mengubah data di peramban ini.
-  const tetapDiServer = api.mode === "campuran" ? " Tanya Jawab tersimpan di server dan tidak ikut berubah." : ""
+  const tetapDiServer = api.mode === "campuran" ? ` ${LABEL_KOLEKSI_SERVER} tersimpan di server dan tidak ikut berubah.` : ""
 
   const jalan = async (kunci: string, fn: () => Promise<void>, sukses: string) => {
     setProses(kunci)
@@ -263,7 +263,7 @@ function TabData() {
           api.mode === "lokal"
             ? "Data tersimpan di IndexedDB peramban ini. Perangkat atau peramban lain tidak melihat perubahan yang sama."
             : api.mode === "campuran"
-              ? "Tanya Jawab tersimpan di server PINTU. Konten lain masih tersimpan di IndexedDB peramban ini; perangkat atau peramban lain tidak melihat perubahan yang sama."
+              ? `${LABEL_KOLEKSI_SERVER} tersimpan di server PINTU. Konten lain masih tersimpan di IndexedDB peramban ini; perangkat atau peramban lain tidak melihat perubahan yang sama.`
               : "Data tersimpan di server melalui REST API."
         }
       >
@@ -274,7 +274,7 @@ function TabData() {
             {api.mode === "lokal"
               ? lokal
               : api.mode === "campuran"
-                ? `Campuran (Tanya Jawab di server, lainnya ${lokal})`
+                ? `Campuran (${LABEL_KOLEKSI_SERVER} di server, lainnya ${lokal})`
                 : "Server (REST API)"}
           </strong>
         </p>

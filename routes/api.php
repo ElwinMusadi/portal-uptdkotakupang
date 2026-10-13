@@ -8,9 +8,13 @@ use App\Http\Controllers\Dashboard\ActivityController;
 use App\Http\Controllers\Dashboard\FaqController;
 use App\Http\Controllers\Dashboard\FaqDeletionController;
 use App\Http\Controllers\Dashboard\FaqOrderController;
+use App\Http\Controllers\Dashboard\MobileServiceStopController;
+use App\Http\Controllers\Dashboard\MobileServiceStopDeletionController;
 use App\Http\Controllers\PublicFaqController;
+use App\Http\Controllers\PublicMobileServiceStopController;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Models\Faq;
+use App\Models\MobileServiceStop;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Route;
@@ -64,6 +68,18 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::patch('/{faq}', [FaqController::class, 'update'])->can('update', 'faq')->name('update');
     });
 
+    /*
+     * Samsat Keliling stops (MobileServiceStopPolicy). The dashboard sorts
+     * them by day and time, so there is no reorder endpoint.
+     */
+    Route::prefix('koleksi/keliling')->name('koleksi.keliling.')->whereUlid('stop')->group(function (): void {
+        Route::get('/', [MobileServiceStopController::class, 'index'])->can('viewAny', MobileServiceStop::class)->name('index');
+        Route::post('/', [MobileServiceStopController::class, 'store'])->can('create', MobileServiceStop::class)->name('store');
+        Route::post('/hapus', [MobileServiceStopDeletionController::class, 'store'])->can('deleteAny', MobileServiceStop::class)->name('hapus');
+        Route::get('/{stop}', [MobileServiceStopController::class, 'show'])->can('view', 'stop')->name('show');
+        Route::patch('/{stop}', [MobileServiceStopController::class, 'update'])->can('update', 'stop')->name('update');
+    });
+
     Route::get('/aktivitas', ActivityController::class)->name('aktivitas');
 });
 
@@ -77,4 +93,5 @@ Route::prefix('public')
     ->withoutMiddleware([EnsureFrontendRequestsAreStateful::class, EnsureAccountIsActive::class])
     ->group(function (): void {
         Route::get('/faq', PublicFaqController::class)->name('faq.index');
+        Route::get('/keliling', PublicMobileServiceStopController::class)->name('keliling.index');
     });

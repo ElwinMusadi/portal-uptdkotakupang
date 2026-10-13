@@ -2,34 +2,21 @@
 
 namespace App\Http\Controllers\Dashboard;
 
-use App\Actions\RecordActivity;
+use App\Actions\DeleteEntries;
 use App\Enums\DashboardModule;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dashboard\DeleteFaqsRequest;
 use App\Models\Faq;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
 
 class FaqDeletionController extends Controller
 {
     /**
-     * Delete the listed entries; only administrators may (FaqPolicy). The
-     * deletion and its activity log entry are saved together.
+     * Delete the listed entries; only administrators may (FaqPolicy).
      */
-    public function store(DeleteFaqsRequest $request, RecordActivity $recordActivity): Response
+    public function store(DeleteFaqsRequest $request, DeleteEntries $deleteEntries): Response
     {
-        DB::transaction(function () use ($request, $recordActivity): void {
-            $faqs = Faq::query()->whereKey($request->ids())->get(['id', 'pertanyaan']);
-
-            if ($faqs->isEmpty()) {
-                return;
-            }
-
-            Faq::query()->whereKey($faqs->modelKeys())->delete();
-
-            $target = $faqs->count() === 1 ? $faqs->first()->pertanyaan : $faqs->count().' entri';
-            $recordActivity->handle($request->user(), DashboardModule::Faq, 'menghapus', $target);
-        });
+        $deleteEntries->handle($request->user(), DashboardModule::Faq, Faq::class, $request->ids(), fn (Faq $faq): string => $faq->pertanyaan);
 
         return response()->noContent();
     }

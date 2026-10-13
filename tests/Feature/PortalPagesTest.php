@@ -52,6 +52,18 @@ class PortalPagesTest extends TestCase
         $this->assertStringNotContainsString('<details', $outsideTemplate);
     }
 
+    public function test_leaves_the_samsat_keliling_schedule_to_the_public_api(): void
+    {
+        $home = $this->get('/')->assertOk()->getContent();
+        $schedule = $this->get('/jadwal')->assertOk()->getContent();
+
+        $this->assertSame(1, preg_match('/<ul[^>]*data-keliling-today>(.*?)<\/ul>/s', $home, $today));
+        $this->assertSame(1, preg_match('/<div[^>]*data-keliling-week[^>]*>(.*?)<\/div>/s', $schedule, $week));
+        $this->assertStringNotContainsString('Kantor Kelurahan', $today[1]);
+        $this->assertStringContainsString('Memuat jadwal', $today[1]);
+        $this->assertSame('<p class="muted" role="status">Memuat jadwal minggu ini…</p>', trim($week[1]));
+    }
+
     #[TestWith(['/'])]
     #[TestWith(['/login'])]
     #[TestWith(['/layanan'])]

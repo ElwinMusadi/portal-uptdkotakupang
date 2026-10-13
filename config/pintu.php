@@ -18,7 +18,7 @@ return [
     */
 
     'public_api' => [
-        'requests_per_minute' => filter_var(env('PINTU_PUBLIC_API_REQUESTS_PER_MINUTE'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 60,
+        'requests_per_minute' => filter_var(env('PINTU_PUBLIC_API_REQUESTS_PER_MINUTE'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 300,
     ],
 
     /*

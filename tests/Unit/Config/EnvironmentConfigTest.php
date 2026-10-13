@@ -50,7 +50,7 @@ class EnvironmentConfigTest extends TestCase
             'negative collection bound' => ['PINTU_PUBLIC_FAQ_MAX_ITEMS', 'public_faq.max_items', '-5', 100],
             'fractional collection bound' => ['PINTU_PUBLIC_FAQ_MAX_ITEMS', 'public_faq.max_items', '2.5', 100],
             'rate limit' => ['PINTU_PUBLIC_API_REQUESTS_PER_MINUTE', 'public_api.requests_per_minute', '120', 120],
-            'non-numeric rate limit' => ['PINTU_PUBLIC_API_REQUESTS_PER_MINUTE', 'public_api.requests_per_minute', 'banyak', 60],
+            'non-numeric rate limit' => ['PINTU_PUBLIC_API_REQUESTS_PER_MINUTE', 'public_api.requests_per_minute', 'banyak', 300],
         ];
     }
 

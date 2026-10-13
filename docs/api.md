@@ -6,6 +6,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 |---|---|---|---|
 | `GET` | `/api/health` | anonim | tersedia |
 | `GET` | `/api/public/faq` | anonim, hanya baca | tersedia |
+| `GET` | `/api/public/keliling` | anonim, hanya baca | tersedia |
 | `POST` | `/api/masuk` | halaman Login Pegawai | tersedia |
 | `GET` | `/api/sesi` | pegawai login | tersedia |
 | `POST` | `/api/keluar` | pegawai login | tersedia |
@@ -17,6 +18,9 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET`, `PATCH` | `/api/koleksi/faq/{id}` | Administrator, pengelola Tanya Jawab | tersedia |
 | `PUT` | `/api/koleksi/faq/urutan` | Administrator, pengelola Tanya Jawab | tersedia |
 | `POST` | `/api/koleksi/faq/hapus` | Administrator | tersedia |
+| `GET`, `POST` | `/api/koleksi/keliling` | Administrator, pengelola Samsat Keliling (daftar: juga pengelola Jadwal Pemutakhiran) | tersedia |
+| `GET`, `PATCH` | `/api/koleksi/keliling/{id}` | Administrator, pengelola Samsat Keliling | tersedia |
+| `POST` | `/api/koleksi/keliling/hapus` | Administrator, pengelola Samsat Keliling | tersedia |
 | `GET` | `/api/aktivitas` | pegawai login | tersedia |
 | — | koleksi lain di `/api/koleksi/…`, `/api/pengaturan/…` (kontrak dashboard) | pegawai login | belum dibuat, lihat [docs/dashboard.md](dashboard.md#menyambungkan-ke-server-rest-api) |
 
@@ -78,7 +82,7 @@ Kunci modul untuk `modul` ([D-010](decisions.md#d-010--2026-10-13--penugasan-mod
 | `jam` | Jam Pelayanan (termasuk koleksi `penyesuaian`) | `halaman` | Halaman Statis |
 | `keliling` | Samsat Keliling | `pemutakhiran` | Jadwal Pemutakhiran |
 
-Endpoint konten dashboard (`/api/koleksi/…`, `/api/pengaturan/…`) wajib menolak pegawai yang tidak mengelola modul koleksi atau pengaturan itu. `/api/koleksi/faq` sudah melakukannya.
+Endpoint konten dashboard (`/api/koleksi/…`, `/api/pengaturan/…`) wajib menolak pegawai yang tidak mengelola modul koleksi atau pengaturan itu. `/api/koleksi/faq` dan `/api/koleksi/keliling` sudah melakukannya.
 
 ## Tanya Jawab di dashboard
 
@@ -115,6 +119,28 @@ Log aktivitas dashboard di server, terbaru lebih dulu, sebatas modul yang dikelo
 
 Kode: `app/Http/Controllers/Dashboard/`, `app/Http/Requests/Dashboard/`, `app/Policies/FaqPolicy.php`, `app/Rules/FaqText.php`, `app/Actions/RecordActivity.php`, `app/Http/Resources/FaqResource.php`, `app/Http/Resources/ActivityResource.php`. Tes: `tests/Feature/FaqControllerTest.php`, `FaqOrderControllerTest.php`, `FaqDeletionControllerTest.php`, `FaqPolicyTest.php`, `ActivityControllerTest.php`.
 
+## Samsat Keliling di dashboard
+
+Dipakai halaman *Samsat Keliling* di dashboard ([D-013](decisions.md#d-013--2026-10-13--samsat-keliling-tersimpan-di-server-batas-laju-api-publik-300)). Tamu mendapat `401`; pegawai yang tidak mengelola modul `keliling` mendapat `403` `{"message": "Modul Samsat Keliling belum ditugaskan kepada Anda."}`. Pengelola Jadwal Pemutakhiran boleh memakai `GET /api/koleksi/keliling` saja.
+
+Data jadwal:
+
+```json
+{ "id": "01m4…", "hari": 1, "mulai": "08:00", "selesai": "12:00", "lokasi": "Kantor Kelurahan Oebobo", "kecamatan": "Kec. Oebobo", "layanan": "Pajak tahunan", "catatan": "", "aktif": true, "urutan": 0, "dibuat": "2026-10-13T08:00:00+00:00", "diperbarui": "2026-10-13T08:00:00+00:00" }
+```
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `GET /api/koleksi/keliling` | — | `200` semua jadwal, urut hari lalu jam. |
+| `GET /api/koleksi/keliling/{id}` | — | `200` data jadwal; `404` bila tidak ada. |
+| `POST /api/koleksi/keliling` | `{"hari", "mulai", "selesai", "lokasi", "kecamatan", "layanan", "aktif"}` wajib, `"catatan"` boleh kosong | `201` data jadwal. `id` dan `urutan` dari klien diabaikan. |
+| `PATCH /api/koleksi/keliling/{id}` | sebagian dari isian di atas | `200` data jadwal. Jam selesai dibandingkan dengan jam mulai yang akan tersimpan. |
+| `POST /api/koleksi/keliling/hapus` | `{"ids": ["…"]}` | `204`. ID yang sudah tidak ada dilewati. |
+
+Aturan isian (`422` dengan pesan per isian): `hari` 1 (Senin) sampai 6 (Sabtu); `mulai` dan `selesai` berformat `HH:MM`, selesai setelah mulai; `lokasi` maks. 120, `kecamatan` maks. 60, `layanan` maks. 80, dan `catatan` maks. 300 karakter, teks polos tanpa karakter kontrol dan berisi teks yang terlihat; `aktif` boolean. Catatan kosong disimpan sebagai `""`. Log aktivitas memakai aksi `menambahkan`, `memperbarui`, dan `menghapus` dengan target seperti "Senin · Kantor Kelurahan Oebobo".
+
+Kode: `app/Http/Controllers/Dashboard/MobileServiceStop*`, `app/Http/Requests/Dashboard/*MobileServiceStop*`, `app/Policies/MobileServiceStopPolicy.php`, `app/Models/MobileServiceStop.php`, `app/Actions/DeleteEntries.php`. Tes: `tests/Feature/MobileServiceStopControllerTest.php`, `MobileServiceStopDeletionControllerTest.php`.
+
 ## `GET /api/public/faq`
 
 Daftar tanya jawab untuk portal publik. Menjalankan keputusan pemilik produk GC18-01–09 ([Phase 2.19](phases/PHASE-2.19-GC18-DECISION-BINDING-AND-CLOSURE-EVIDENCE-COORDINATION.md)), dengan urutan menurut [D-003](decisions.md#d-003--2026-10-13--urutan-faq-publik-mengikuti-dashboard). Bagian Tanya Jawab di beranda memuatnya setiap kali halaman dibuka (`initFaq()` di `public/assets/js/main.js`, [D-012](decisions.md#d-012--2026-10-13--beranda-menampilkan-tanya-jawab-dari-api-publik)), jadi setiap kunjungan beranda ikut dihitung dalam batas laju di bawah.
@@ -133,7 +159,7 @@ Daftar tanya jawab untuk portal publik. Menjalankan keputusan pemilik produk GC1
 | Teks polos | Teks dikirim persis seperti tersimpan. Markup dan URL tidak dihapus, tidak di-escape dua kali, dan tidak dijadikan tautan; konsumen wajib menampilkannya sebagai teks. |
 | Urutan | `urutan` naik, lalu ID internal (ULID). |
 | Batas | Koleksi lengkap tanpa paginasi. Lebih dari `PINTU_PUBLIC_FAQ_MAX_ITEMS` (bawaan 100) entri layak → `503`, tidak pernah daftar terpotong. Entri yang ditahan tetap dihitung. |
-| Galat | `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah `PINTU_PUBLIC_API_REQUESTS_PER_MINUTE` (bawaan 60) permintaan per menit per IP; `503` bila tabel tidak bisa dibaca atau batas terlampaui. Penyebab `503` dicatat maksimal sekali per menit. |
+| Galat | `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah `PINTU_PUBLIC_API_REQUESTS_PER_MINUTE` (bawaan 300, [D-013](decisions.md#d-013--2026-10-13--samsat-keliling-tersimpan-di-server-batas-laju-api-publik-300)) permintaan per menit per IP, dipakai bersama semua API publik; `503` bila tabel tidak bisa dibaca atau batas terlampaui. Penyebab `503` dicatat maksimal sekali per menit. |
 | Cache | `Cache-Control: no-store` termasuk untuk galat `422`/`429`/`503`. `404`/`405` dari router, preflight CORS, dan mode pemeliharaan memakai bawaan Laravel `no-cache, private`. Tanpa `ETag`/`Last-Modified`, jadi tidak pernah `304`. |
 | CORS | Hanya origin persis (`scheme://host[:port]`) dari `CORS_ALLOWED_ORIGINS`; wildcard, path, dan garis miring di akhir diabaikan. Kosong = tidak ada akses lintas origin dari peramban. Portal dan dashboard satu origin dengan API, jadi tidak memerlukannya. |
 
@@ -150,3 +176,21 @@ Daftar tanya jawab untuk portal publik. Menjalankan keputusan pemilik produk GC1
 | `created_at`, `updated_at` | timestamp | |
 
 Kode: `app/Http/Controllers/PublicFaqController.php`, `app/Actions/ListPublicFaqs.php`, `app/Models/Faq.php`, `app/Enums/FaqStatus.php`, `app/Http/Middleware/PreventResponseCaching.php`, `config/pintu.php`, `config/cors.php`. Tes: `tests/Feature/PublicFaqControllerTest.php`, `tests/Unit/Models/FaqTest.php`, `tests/Unit/Config/EnvironmentConfigTest.php`.
+
+## `GET /api/public/keliling`
+
+Jadwal Samsat Keliling untuk portal publik ([D-013](decisions.md#d-013--2026-10-13--samsat-keliling-tersimpan-di-server-batas-laju-api-publik-300)). Beranda dan halaman Jadwal memuatnya setiap kali dibuka (`initKeliling()` di `public/assets/js/main.js`).
+
+```json
+[
+  { "hari": 1, "mulai": "08:00", "selesai": "12:00", "lokasi": "Kantor Kelurahan Oebobo", "kecamatan": "Kec. Oebobo", "layanan": "Pajak tahunan", "catatan": "" }
+]
+```
+
+| Hal | Perilaku |
+|---|---|
+| Berhasil | `200`, jadwal yang `aktif` saja, urut `hari`, `mulai`, `selesai`, lalu ID internal; `[]` bila tidak ada. Tanpa ID, `aktif`, `urutan`, atau waktu simpan. Teks dikirim persis seperti tersimpan dan wajib ditampilkan sebagai teks polos. |
+| Galat | `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah batas laju yang sama dengan `GET /api/public/faq`; `503` bila tabel tidak bisa dibaca, tidak pernah daftar kosong sebagai gantinya. |
+| Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
+
+Kode: `app/Http/Controllers/PublicMobileServiceStopController.php`, `app/Actions/ListPublicMobileServiceStops.php`. Tes: `tests/Feature/PublicMobileServiceStopControllerTest.php`.

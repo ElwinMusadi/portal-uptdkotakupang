@@ -779,19 +779,13 @@
                       <use href="#i-truck" />
                     </svg>
                   </p>
+                  <!-- Jadwal dari dashboard, dimuat main.js lewat GET /api/public/keliling -->
                   <ul class="board__stops" role="list" data-keliling-today>
                     <li>
-                      <span class="board__time mono">08.00–12.00</span
+                      <span class="board__time mono">—</span
                       ><span
-                        ><strong>Kantor Kelurahan Oesapa</strong
-                        ><small>Kec. Kelapa Lima</small></span
-                      >
-                    </li>
-                    <li>
-                      <span class="board__time mono">13.00–15.00</span
-                      ><span
-                        ><strong>Kantor Kelurahan Sikumana</strong
-                        ><small>Kec. Maulafa</small></span
+                        ><strong>Memuat jadwal…</strong
+                        ><small>Samsat Keliling hari ini</small></span
                       >
                     </li>
                   </ul>
@@ -1361,7 +1355,7 @@
               <svg class="i" aria-hidden="true"><use href="#i-truck" /></svg
               ><span
                 ><small>Samsat Keliling hari ini</small
-                ><strong data-keliling-count>2 titik</strong></span
+                ><strong data-keliling-count>Memuat…</strong></span
               >
             </div>
           </div>

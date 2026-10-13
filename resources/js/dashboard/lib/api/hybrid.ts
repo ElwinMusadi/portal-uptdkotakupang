@@ -13,10 +13,10 @@ import type {
 } from "./types"
 
 /**
- * Koleksi yang sudah tersimpan di server PINTU (D-011). Koleksi lain menyusul
+ * Koleksi yang sudah tersimpan di server PINTU (D-011, D-013). Koleksi lain menyusul
  * satu per satu; sampai saat itu tetap di IndexedDB peramban.
  */
-export const KOLEKSI_SERVER: readonly NamaKoleksi[] = ["faq"]
+export const KOLEKSI_SERVER: readonly NamaKoleksi[] = ["faq", "keliling"]
 
 /**
  * Mode campuran selama konten dipindahkan ke server secara bertahap. Koleksi

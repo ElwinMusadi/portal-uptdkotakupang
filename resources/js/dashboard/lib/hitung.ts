@@ -8,7 +8,7 @@ import type {
   StatusAlur,
 } from "@/lib/api"
 import type { KoleksiBeralur } from "@/lib/alur"
-import { sesi } from "@/lib/auth"
+import { bolehModul, sesi } from "@/lib/auth"
 import { selisihHari } from "@/lib/format"
 import { useKoleksi, usePengaturan, useWaktuPengaturan } from "@/lib/queries"
 
@@ -76,7 +76,8 @@ export function useTerakhirModul(): Partial<Record<ModulPantau, string>> {
   const dokumentasi = useKoleksi("dokumentasi").data
   const dokumen = useKoleksi("dokumen").data
   const layanan = useKoleksi("layanan").data
-  const keliling = useKoleksi("keliling").data
+  // Di server: hanya pengelola Samsat Keliling dan Jadwal Pemutakhiran yang boleh membacanya.
+  const keliling = useKoleksi("keliling", { aktif: bolehModul("keliling", "pemutakhiran") }).data
   const papan = usePengaturan("papan").data
 
   return React.useMemo(() => {

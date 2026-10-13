@@ -252,10 +252,10 @@
           <p class="trust" style="margin-top:14px"><svg class="i" aria-hidden="true"><use href="#i-info"/></svg>Samsat Keliling hanya melayani pajak tahunan.</p>
         </div>
       </div>
+      <!-- Jadwal dari dashboard, dimuat main.js lewat GET /api/public/keliling -->
       <div class="week" data-keliling-week data-reveal>
-        <p class="muted">Memuat jadwal minggu ini…</p>
+        <p class="muted" role="status">Memuat jadwal minggu ini…</p>
       </div>
-      <p class="proto-note" style="margin-top:20px">Lokasi contoh dengan rotasi otomatis. Data resmi diinput petugas lewat ruang pegawai.</p>
     </div>
   </section>
 </main>

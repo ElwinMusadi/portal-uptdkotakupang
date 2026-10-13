@@ -1,3 +1,4 @@
+import { KOLEKSI_SERVER } from "@/lib/api/hybrid"
 import type {
   Faq,
   Hari,
@@ -32,6 +33,14 @@ export const KOLEKSI_LABEL: Record<NamaKoleksi, string> = {
   halaman: "Halaman Statis",
   pemutakhiran: "Jadwal Pemutakhiran",
   absensi: "Absensi Lapangan",
+}
+
+/** Modul yang sudah tersimpan di server, mis. "Tanya Jawab dan Samsat Keliling" */
+export const LABEL_KOLEKSI_SERVER = daftarKata(KOLEKSI_SERVER.map((k) => KOLEKSI_LABEL[k]))
+
+function daftarKata(kata: string[]): string {
+  if (kata.length < 3) return kata.join(" dan ")
+  return `${kata.slice(0, -1).join(", ")}, dan ${kata[kata.length - 1]}`
 }
 
 export const PENGATURAN_LABEL: Record<NamaPengaturan, string> = {

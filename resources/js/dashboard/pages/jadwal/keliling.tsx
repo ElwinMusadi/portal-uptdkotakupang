@@ -1,5 +1,5 @@
 import * as React from "react"
-import { IconMapPin, IconPlus } from "@tabler/icons-react"
+import { IconMapPin, IconPlus, IconRefresh, IconServer } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { z } from "zod"
 
@@ -8,6 +8,7 @@ import { Baris, Halaman, PengantarHalaman } from "@/components/data/page"
 import { MenuBaris, TombolHapusMassal, useHapus } from "@/components/data/row-actions"
 import { EntriSheet, useEditorEntri } from "@/components/form/entri-sheet"
 import { FieldArea, FieldPilih, FieldSakelar, FieldTeks } from "@/components/form/fields"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
@@ -28,10 +29,10 @@ const schema = z
     hari: z.number(),
     mulai: v.jam.refine((x) => x !== "", "Isi jam mulai."),
     selesai: v.jam.refine((x) => x !== "", "Isi jam selesai."),
-    lokasi: v.wajib("Lokasi"),
-    kecamatan: v.wajib("Kecamatan"),
-    layanan: v.wajib("Layanan"),
-    catatan: v.teks,
+    lokasi: v.wajib("Lokasi").max(120, "Maksimal 120 karakter."),
+    kecamatan: v.wajib("Kecamatan").max(60, "Maksimal 60 karakter."),
+    layanan: v.wajib("Layanan").max(80, "Maksimal 80 karakter."),
+    catatan: v.teks.max(300, "Maksimal 300 karakter."),
     aktif: z.boolean(),
   })
   .refine((d) => d.selesai > d.mulai, { path: ["selesai"], message: "Jam selesai harus setelah jam mulai." })
@@ -92,7 +93,7 @@ function PratinjauMinggu({ data }: { data: JadwalKeliling[] }) {
 }
 
 export default function HalamanKeliling() {
-  const { data, isLoading } = useKoleksi("keliling")
+  const { data, isLoading, error, refetch, isRefetching } = useKoleksi("keliling")
   const ubah = useUbahEntri("keliling")
   const hapus = useHapus("keliling", "jadwal keliling")
 
@@ -198,45 +199,72 @@ export default function HalamanKeliling() {
           Tambah lokasi
         </Button>
       </PengantarHalaman>
-      {terurut && <PratinjauMinggu data={terurut} />}
-      <DataTable
-        data={terurut}
-        memuat={isLoading}
-        columns={kolom}
-        label="Daftar jadwal Samsat Keliling"
-        ukuranHalaman={20}
-        cari={{ placeholder: "Cari lokasi atau kecamatan…", teks: (j) => `${j.lokasi} ${j.kecamatan} ${j.catatan}` }}
-        filter={[
-          {
-            id: "hari",
-            label: "Hari",
-            opsi: HARI_KERJA.map((h) => ({ nilai: String(h), label: HARI_LABEL[h] })),
-            nilai: (j) => String(j.hari),
-          },
-          {
-            id: "kecamatan",
-            label: "Kecamatan",
-            opsi: KECAMATAN.map((x) => ({ nilai: x, label: x })),
-            nilai: (j) => j.kecamatan,
-          },
-        ]}
-        tindakanMassal={(baris, bersihkan) => (
-          <>
-            <Button variant="outline" size="sm" onClick={() => void setAktif(baris, true).then(bersihkan)}>
-              Aktifkan
+      <Alert>
+        <IconServer />
+        <AlertTitle>Tersimpan di server</AlertTitle>
+        <AlertDescription>
+          Jadwal ini dipakai bersama semua pengelola Samsat Keliling. Lokasi aktif langsung tampil di beranda dan
+          halaman Jadwal portal.
+        </AlertDescription>
+      </Alert>
+      {error ? (
+        <Alert variant="destructive">
+          <AlertTitle>Jadwal Samsat Keliling gagal dimuat</AlertTitle>
+          <AlertDescription>
+            <p>{error instanceof Error ? error.message : String(error)}</p>
+            <Button variant="outline" size="sm" className="mt-2" onClick={() => void refetch()} disabled={isRefetching}>
+              <IconRefresh />
+              Coba lagi
             </Button>
-            <Button variant="outline" size="sm" onClick={() => void setAktif(baris, false).then(bersihkan)}>
-              Nonaktifkan
-            </Button>
-            <TombolHapusMassal
-              onClick={async () => {
-                if (await hapus(baris.map((b) => b.id))) bersihkan()
-              }}
-            />
-          </>
-        )}
-        kosong={{ judul: "Belum ada jadwal keliling", deskripsi: "Tambahkan lokasi Samsat Keliling pertama." }}
-      />
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <>
+          {terurut && <PratinjauMinggu data={terurut} />}
+          <DataTable
+            data={terurut}
+            memuat={isLoading}
+            columns={kolom}
+            label="Daftar jadwal Samsat Keliling"
+            ukuranHalaman={20}
+            cari={{ placeholder: "Cari lokasi atau kecamatan…", teks: (j) => `${j.lokasi} ${j.kecamatan} ${j.catatan}` }}
+            filter={[
+              {
+                id: "hari",
+                label: "Hari",
+                opsi: HARI_KERJA.map((h) => ({ nilai: String(h), label: HARI_LABEL[h] })),
+                nilai: (j) => String(j.hari),
+              },
+              {
+                id: "kecamatan",
+                label: "Kecamatan",
+                opsi: KECAMATAN.map((x) => ({ nilai: x, label: x })),
+                nilai: (j) => j.kecamatan,
+              },
+            ]}
+            tindakanMassal={(baris, bersihkan) => (
+              <>
+                <Button variant="outline" size="sm" onClick={() => void setAktif(baris, true).then(bersihkan)}>
+                  Aktifkan
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => void setAktif(baris, false).then(bersihkan)}>
+                  Nonaktifkan
+                </Button>
+                <TombolHapusMassal
+                  onClick={async () => {
+                    if (await hapus(baris.map((b) => b.id))) bersihkan()
+                  }}
+                />
+              </>
+            )}
+            kosong={{
+              judul: "Belum ada jadwal keliling",
+              deskripsi:
+                "Jadwal contoh dari penyimpanan peramban tidak dipindahkan ke server. Tambahkan lokasi Samsat Keliling pertama.",
+            }}
+          />
+        </>
+      )}
       <EntriSheet
         terbuka={ed.terbuka}
         tutup={ed.tutup}

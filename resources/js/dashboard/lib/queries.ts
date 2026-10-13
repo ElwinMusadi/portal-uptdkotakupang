@@ -38,8 +38,14 @@ export function laporGalat(e: unknown, judul = "Gagal menyimpan") {
   toast.error(judul, { description: pesan })
 }
 
-export function useKoleksi<K extends NamaKoleksi>(k: K) {
-  return useQuery({ queryKey: qk.koleksi(k), queryFn: () => api.list(k), refetchOnWindowFocus: diServer(k) })
+/** `aktif: false` melewatkan koleksi server yang modulnya tidak boleh dibaca pengguna */
+export function useKoleksi<K extends NamaKoleksi>(k: K, { aktif = true }: { aktif?: boolean } = {}) {
+  return useQuery({
+    queryKey: qk.koleksi(k),
+    queryFn: () => api.list(k),
+    refetchOnWindowFocus: diServer(k),
+    enabled: aktif,
+  })
 }
 
 export function usePengaturan<N extends NamaPengaturan>(n: N) {
