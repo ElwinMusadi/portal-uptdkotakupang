@@ -53,6 +53,15 @@ class AppServiceProvider extends ServiceProvider
                 ], 429, $headers));
         });
 
+        // The portal's contact form (D-016): at most 5 messages per hour from one address.
+        RateLimiter::for('public-messages', function (Request $request): Limit {
+            return Limit::perHour(5)
+                ->by($request->ip())
+                ->response(fn (Request $request, array $headers): JsonResponse => response()->json([
+                    'message' => 'Terlalu banyak pesan dari jaringan ini. Coba lagi dalam satu jam, atau hubungi kami lewat kanal lain.',
+                ], 429, $headers));
+        });
+
         RateLimiter::for('login', function (Request $request): Limit {
             return Limit::perMinute(30)
                 ->by($request->ip())

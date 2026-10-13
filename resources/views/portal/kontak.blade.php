@@ -246,7 +246,8 @@
         <h2 class="h2" style="margin-top:20px">Ceritakan singkat. <span class="tone">Kami tindak lanjuti.</span></h2>
         <p class="body" style="margin-top:20px">Masukan Anda menjadi bahan evaluasi dan pemutakhiran portal serta layanan. Kami membalas paling lambat tiga hari kerja.</p>
       </div>
-      <form class="card card--xl form-card" data-demo-form novalidate data-reveal>
+      <!-- Dikirim main.js ke POST /api/public/pesan; masuk ke Pesan & Pengaduan di dashboard -->
+      <form class="card card--xl form-card" data-pesan-form novalidate data-reveal>
         <fieldset style="border:0;padding:0;margin:0">
           <legend class="label" style="margin-bottom:10px">Jenis pesan</legend>
           <div class="radio-chips">
@@ -261,11 +262,14 @@
         </div>
         <div class="field" style="margin-top:18px"><label class="label" for="f-layanan">Terkait layanan</label>
           <select class="select" id="f-layanan" name="layanan">
-            <option>Umum / portal PINTU</option><option>Pajak tahunan</option><option>Perpanjangan STNK 5&nbsp;tahun</option><option>Mutasi &amp; balik nama</option><option>Duplikat STNK</option><option>Samsat Keliling</option>
+            <option value="Umum / portal PINTU">Umum / portal PINTU</option><option value="Pajak tahunan">Pajak tahunan</option><option value="Perpanjangan STNK 5 tahun">Perpanjangan STNK 5&nbsp;tahun</option><option value="Mutasi &amp; balik nama">Mutasi &amp; balik nama</option><option value="Duplikat STNK">Duplikat STNK</option><option value="Samsat Keliling">Samsat Keliling</option>
           </select>
         </div>
-        <div class="field"><label class="label" for="f-pesan">Pesan</label><textarea class="textarea" id="f-pesan" name="pesan" required minlength="10" placeholder="Tuliskan pertanyaan, masukan, atau kronologi pengaduan."></textarea><p class="help">Jangan cantumkan nomor rekening, PIN, atau kata sandi.</p></div>
-        <label class="check" style="margin-top:18px"><input type="checkbox" required> Saya setuju data ini digunakan untuk menindaklanjuti pesan.</label>
+        <div class="field"><label class="label" for="f-pesan">Pesan</label><textarea class="textarea" id="f-pesan" name="isi" required minlength="10" maxlength="2000" placeholder="Tuliskan pertanyaan, masukan, atau kronologi pengaduan."></textarea><p class="help">Jangan cantumkan nomor rekening, PIN, atau kata sandi.</p></div>
+        <label class="check" style="margin-top:18px"><input type="checkbox" name="persetujuan" required> Saya setuju data ini digunakan untuk menindaklanjuti pesan.</label>
+        <div class="sr-only" aria-hidden="true"><label for="f-kode">Biarkan kosong</label><input id="f-kode" name="kode_tambahan" tabindex="-1" autocomplete="off"></div>
+        <div class="form-alert" role="alert" data-pesan-alert><svg class="i i--sm" aria-hidden="true" style="margin-top:2px"><use href="#i-alert"/></svg><span data-pesan-msg></span></div>
+        <div class="form-alert form-alert--ok" role="status" data-pesan-ok><svg class="i i--sm" aria-hidden="true" style="margin-top:2px"><use href="#i-check"/></svg><span data-pesan-ok-msg></span></div>
         <button class="btn btn--dark btn--block" type="submit" style="margin-top:24px">Kirim pesan<svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
         <p class="trust" style="margin-top:14px"><svg class="i" aria-hidden="true"><use href="#i-lock"/></svg>Data Anda hanya dibaca petugas yang berwenang.</p>
       </form>

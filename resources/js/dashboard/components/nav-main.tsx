@@ -41,8 +41,8 @@ export function NavMain({ items }: { items: ItemNav[] }) {
   const navigate = useNavigate()
   const tutup = useTutupSeluler()
   const { isMobile } = useSidebar()
-  const { data: pesan } = useKoleksi("pesan")
   const kelolaPesan = bolehModul("pesan")
+  const { data: pesan } = useKoleksi("pesan", { aktif: kelolaPesan })
   const baru = kelolaPesan ? (pesan?.filter((p) => p.status === "baru").length ?? 0) : 0
   const buatCepat = navUntuk(BUAT_CEPAT, sesi())
 

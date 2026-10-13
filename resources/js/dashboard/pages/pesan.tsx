@@ -1,5 +1,5 @@
 import * as React from "react"
-import { IconCheck, IconClipboardPlus, IconSend } from "@tabler/icons-react"
+import { IconCheck, IconClipboardPlus, IconRefresh, IconSend, IconServer } from "@tabler/icons-react"
 import { useSearchParams } from "react-router"
 import { toast } from "sonner"
 import { z } from "zod"
@@ -10,6 +10,7 @@ import { MenuBaris, TombolHapusMassal, useHapus } from "@/components/data/row-ac
 import { NadaBadge, TitikStatus } from "@/components/data/status-badge"
 import { EntriSheet, useEditorEntri } from "@/components/form/entri-sheet"
 import { FieldArea, FieldPilih, FieldTeks } from "@/components/form/fields"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -33,6 +34,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import type { JenisPesan, Pesan, StatusPesan, SumberPesan } from "@/lib/api"
+import { sesi } from "@/lib/auth"
 import { tanggalJam, waktuRelatif } from "@/lib/format"
 import { newId, newTiket } from "@/lib/id"
 import { LAYANAN_PESAN, PESAN_JENIS, PESAN_STATUS, PESAN_SUMBER } from "@/lib/meta"
@@ -198,9 +200,11 @@ function DetailPesan({ pesan, tutup }: { pesan: Pesan | null; tutup: () => void 
 
 export default function HalamanPesan() {
   const [params, setParams] = useSearchParams()
-  const { data, isLoading } = useKoleksi("pesan")
+  const { data, isLoading, error, refetch, isRefetching } = useKoleksi("pesan")
   const ubah = useUbahEntri("pesan")
   const hapus = useHapus("pesan", "pesan")
+  // Server hanya mengizinkan Administrator menghapus (D-016); pegawai menandai selesai.
+  const bolehHapus = sesi().peran === "administrator"
   const statusUrl = params.get("status") ?? "semua"
   const filterAwal = React.useMemo(() => ({ status: statusUrl }), [statusUrl])
 
@@ -299,7 +303,7 @@ export default function HalamanPesan() {
       cell: ({ row }) => (
         <MenuBaris
           label={row.original.tiket}
-          onHapus={() => void hapus([row.original.id], row.original.tiket)}
+          onHapus={bolehHapus ? () => void hapus([row.original.id], row.original.tiket) : undefined}
         >
           <DropdownMenuItem onSelect={() => bukaDetail(row.original.id)}>Buka & tanggapi</DropdownMenuItem>
           {row.original.status !== "selesai" && (
@@ -321,6 +325,15 @@ export default function HalamanPesan() {
           Catat pesan masuk
         </Button>
       </PengantarHalaman>
+      <Alert>
+        <IconServer />
+        <AlertTitle>Tersimpan di server</AlertTitle>
+        <AlertDescription>
+          Pesan dari formulir Kontak di portal masuk ke sini dan dipakai bersama semua pengelola Pesan &amp;
+          Pengaduan. Isi dan identitas pengirim tidak bisa diubah; tanggapan hanya bisa ditambah dan dicatat atas
+          nama akun Anda. Pesan tidak dihapus otomatis.
+        </AlertDescription>
+      </Alert>
       <ToggleGroup
         type="single"
         variant="outline"
@@ -346,50 +359,68 @@ export default function HalamanPesan() {
           </ToggleGroupItem>
         ))}
       </ToggleGroup>
-      <DataTable
-        data={terurut}
-        memuat={isLoading}
-        columns={kolom}
-        label="Kotak pesan dan pengaduan"
-        filterAwal={filterAwal}
-        cari={{ placeholder: "Cari tiket, isi, atau nama…", teks: (p) => `${p.tiket} ${p.isi} ${p.nama} ${p.kontak}` }}
-        filter={[
-          {
-            id: "status",
-            label: "Status",
-            opsi: (Object.keys(PESAN_STATUS) as StatusPesan[]).map((s) => ({ nilai: s, label: PESAN_STATUS[s].label })),
-            nilai: (p) => p.status,
-          },
-          {
-            id: "jenis",
-            label: "Jenis",
-            opsi: (Object.keys(PESAN_JENIS) as JenisPesan[]).map((j) => ({ nilai: j, label: PESAN_JENIS[j] })),
-            nilai: (p) => p.jenis,
-          },
-          {
-            id: "layanan",
-            label: "Layanan",
-            opsi: LAYANAN_PESAN.map((l) => ({ nilai: l, label: l })),
-            nilai: (p) => p.layanan,
-          },
-        ]}
-        tindakanMassal={(baris, bersihkan) => (
-          <>
-            <Button variant="outline" size="sm" onClick={() => void setStatus(baris, "diproses").then(bersihkan)}>
-              Tandai diproses
+      {error ? (
+        <Alert variant="destructive">
+          <AlertTitle>Pesan gagal dimuat</AlertTitle>
+          <AlertDescription>
+            <p>{error instanceof Error ? error.message : String(error)}</p>
+            <Button variant="outline" size="sm" className="mt-2" onClick={() => void refetch()} disabled={isRefetching}>
+              <IconRefresh />
+              Coba lagi
             </Button>
-            <Button variant="outline" size="sm" onClick={() => void setStatus(baris, "selesai").then(bersihkan)}>
-              Tandai selesai
-            </Button>
-            <TombolHapusMassal
-              onClick={async () => {
-                if (await hapus(baris.map((b) => b.id))) bersihkan()
-              }}
-            />
-          </>
-        )}
-        kosong={{ judul: "Belum ada pesan", deskripsi: "Pesan dari formulir portal akan muncul di sini." }}
-      />
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <DataTable
+          data={terurut}
+          memuat={isLoading}
+          columns={kolom}
+          label="Kotak pesan dan pengaduan"
+          filterAwal={filterAwal}
+          cari={{ placeholder: "Cari tiket, isi, atau nama…", teks: (p) => `${p.tiket} ${p.isi} ${p.nama} ${p.kontak}` }}
+          filter={[
+            {
+              id: "status",
+              label: "Status",
+              opsi: (Object.keys(PESAN_STATUS) as StatusPesan[]).map((s) => ({ nilai: s, label: PESAN_STATUS[s].label })),
+              nilai: (p) => p.status,
+            },
+            {
+              id: "jenis",
+              label: "Jenis",
+              opsi: (Object.keys(PESAN_JENIS) as JenisPesan[]).map((j) => ({ nilai: j, label: PESAN_JENIS[j] })),
+              nilai: (p) => p.jenis,
+            },
+            {
+              id: "layanan",
+              label: "Layanan",
+              opsi: LAYANAN_PESAN.map((l) => ({ nilai: l, label: l })),
+              nilai: (p) => p.layanan,
+            },
+          ]}
+          tindakanMassal={(baris, bersihkan) => (
+            <>
+              <Button variant="outline" size="sm" onClick={() => void setStatus(baris, "diproses").then(bersihkan)}>
+                Tandai diproses
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => void setStatus(baris, "selesai").then(bersihkan)}>
+                Tandai selesai
+              </Button>
+              {bolehHapus && (
+                <TombolHapusMassal
+                  onClick={async () => {
+                    if (await hapus(baris.map((b) => b.id))) bersihkan()
+                  }}
+                />
+              )}
+            </>
+          )}
+          kosong={{
+            judul: "Belum ada pesan",
+            deskripsi: "Pesan dari formulir Kontak di portal akan muncul di sini. Pesan contoh dari penyimpanan peramban tidak dipindahkan ke server.",
+          }}
+        />
+      )}
       <DetailPesan pesan={detail} tutup={tutupDetail} />
       <EntriSheet
         terbuka={ed.baru}

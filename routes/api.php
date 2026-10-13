@@ -8,6 +8,8 @@ use App\Http\Controllers\Dashboard\ActivityController;
 use App\Http\Controllers\Dashboard\FaqController;
 use App\Http\Controllers\Dashboard\FaqDeletionController;
 use App\Http\Controllers\Dashboard\FaqOrderController;
+use App\Http\Controllers\Dashboard\MessageController;
+use App\Http\Controllers\Dashboard\MessageDeletionController;
 use App\Http\Controllers\Dashboard\MobileServiceStopController;
 use App\Http\Controllers\Dashboard\MobileServiceStopDeletionController;
 use App\Http\Controllers\Dashboard\OpeningHoursController;
@@ -16,11 +18,13 @@ use App\Http\Controllers\Dashboard\ScheduleAdjustmentDeletionController;
 use App\Http\Controllers\Dashboard\ServiceBoardController;
 use App\Http\Controllers\Dashboard\SettingTimestampController;
 use App\Http\Controllers\PublicFaqController;
+use App\Http\Controllers\PublicMessageController;
 use App\Http\Controllers\PublicMobileServiceStopController;
 use App\Http\Controllers\PublicOpeningHoursController;
 use App\Http\Controllers\PublicServiceBoardController;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Models\Faq;
+use App\Models\Message;
 use App\Models\MobileServiceStop;
 use App\Models\ScheduleAdjustment;
 use App\Models\Setting;
@@ -121,6 +125,18 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::patch('/{adjustment}', [ScheduleAdjustmentController::class, 'update'])->can('update', 'adjustment')->name('update');
     });
 
+    /*
+     * Pesan & Pengaduan (MessagePolicy). Only administrators delete; the
+     * sender's fields cannot be changed, and responses are only added.
+     */
+    Route::prefix('koleksi/pesan')->name('koleksi.pesan.')->whereUlid('message')->group(function (): void {
+        Route::get('/', [MessageController::class, 'index'])->can('viewAny', Message::class)->name('index');
+        Route::post('/', [MessageController::class, 'store'])->can('create', Message::class)->name('store');
+        Route::post('/hapus', [MessageDeletionController::class, 'store'])->can('deleteAny', Message::class)->name('hapus');
+        Route::get('/{message}', [MessageController::class, 'show'])->can('view', 'message')->name('show');
+        Route::patch('/{message}', [MessageController::class, 'update'])->can('update', 'message')->name('update');
+    });
+
     Route::get('/aktivitas', ActivityController::class)->name('aktivitas');
 });
 
@@ -137,4 +153,6 @@ Route::prefix('public')
         Route::get('/keliling', PublicMobileServiceStopController::class)->name('keliling.index');
         Route::get('/jam', PublicOpeningHoursController::class)->name('jam.show');
         Route::get('/papan', PublicServiceBoardController::class)->name('papan.show');
+        // The contact form; also limited to 5 messages per hour per address (D-016).
+        Route::post('/pesan', PublicMessageController::class)->middleware('throttle:public-messages')->name('pesan.store');
     });

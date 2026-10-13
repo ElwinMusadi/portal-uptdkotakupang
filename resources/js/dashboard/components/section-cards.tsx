@@ -18,19 +18,23 @@ import {
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { MODUL_ALUR } from "@/app/nav"
+import type { Pesan } from "@/lib/api"
 import { bolehModul } from "@/lib/auth"
 import { angka, selisihHari } from "@/lib/format"
 import { sejakStatus, useItemAlur, usePemutakhiran } from "@/lib/hitung"
 import { useKoleksi } from "@/lib/queries"
 
 const HARI = 86400000
+const TANPA_PESAN: Pesan[] = []
 
 export function SectionCards() {
   const { data: alur } = useItemAlur()
-  const { data: pesan } = useKoleksi("pesan")
+  const lihatPesan = bolehModul("pesan")
+  const { data: dataPesan } = useKoleksi("pesan", { aktif: lihatPesan })
+  // Pegawai tanpa modul Pesan tidak memuatnya; kartu pesan tidak tampil bagi mereka.
+  const pesan = lihatPesan ? dataPesan : TANPA_PESAN
   const pantau = usePemutakhiran()
   const lihatAlur = bolehModul(...MODUL_ALUR)
-  const lihatPesan = bolehModul("pesan")
   const bukaPemutakhiran = bolehModul("pemutakhiran")
   const lihatPemutakhiran = bukaPemutakhiran || (pantau?.length ?? 0) > 0
 

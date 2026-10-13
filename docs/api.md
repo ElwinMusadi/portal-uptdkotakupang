@@ -9,6 +9,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET` | `/api/public/keliling` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/jam` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/papan` | anonim, hanya baca | tersedia |
+| `POST` | `/api/public/pesan` | anonim, formulir Kontak | tersedia |
 | `POST` | `/api/masuk` | halaman Login Pegawai | tersedia |
 | `GET` | `/api/sesi` | pegawai login | tersedia |
 | `POST` | `/api/keluar` | pegawai login | tersedia |
@@ -25,6 +26,9 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `POST` | `/api/koleksi/keliling/hapus` | Administrator, pengelola Samsat Keliling | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/jam` | Administrator, pengelola Jam Pelayanan | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/papan` | Administrator, pengelola Papan Layanan | tersedia |
+| `GET`, `POST` | `/api/koleksi/pesan` | Administrator, pengelola Pesan & Pengaduan | tersedia |
+| `GET`, `PATCH` | `/api/koleksi/pesan/{id}` | Administrator, pengelola Pesan & Pengaduan | tersedia |
+| `POST` | `/api/koleksi/pesan/hapus` | Administrator | tersedia |
 | `GET` | `/api/pengaturan` | pegawai login | tersedia |
 | `GET`, `POST` | `/api/koleksi/penyesuaian` | Administrator, pengelola Jam Pelayanan | tersedia |
 | `GET`, `PATCH` | `/api/koleksi/penyesuaian/{id}` | Administrator, pengelola Jam Pelayanan | tersedia |
@@ -90,7 +94,7 @@ Kunci modul untuk `modul` ([D-010](decisions.md#d-010--2026-10-13--penugasan-mod
 | `jam` | Jam Pelayanan (termasuk koleksi `penyesuaian`) | `halaman` | Halaman Statis |
 | `keliling` | Samsat Keliling | `pemutakhiran` | Jadwal Pemutakhiran |
 
-Endpoint konten dashboard (`/api/koleksi/…`, `/api/pengaturan/…`) wajib menolak pegawai yang tidak mengelola modul koleksi atau pengaturan itu. `/api/koleksi/faq`, `/api/koleksi/keliling`, `/api/koleksi/penyesuaian`, `/api/pengaturan/jam`, dan `/api/pengaturan/papan` sudah melakukannya.
+Endpoint konten dashboard (`/api/koleksi/…`, `/api/pengaturan/…`) wajib menolak pegawai yang tidak mengelola modul koleksi atau pengaturan itu. `/api/koleksi/faq`, `/api/koleksi/keliling`, `/api/koleksi/penyesuaian`, `/api/koleksi/pesan`, `/api/pengaturan/jam`, dan `/api/pengaturan/papan` sudah melakukannya.
 
 ## Tanya Jawab di dashboard
 
@@ -204,6 +208,32 @@ Penyimpanan tercatat di log aktivitas sebagai "memperbarui Papan Layanan".
 
 Kode: `app/Http/Controllers/Dashboard/ServiceBoardController.php`, `app/Http/Requests/Dashboard/UpdateServiceBoardRequest.php`, `app/Actions/SaveSetting.php`, `app/Models/Setting.php`. Tes: `tests/Feature/ServiceBoardControllerTest.php`.
 
+## Pesan & Pengaduan di dashboard
+
+Dipakai halaman *Pesan & Pengaduan* di dashboard ([D-016](decisions.md#d-016--2026-10-13--pesan--pengaduan-tersimpan-di-server)). Tamu mendapat `401`; pegawai yang tidak mengelola modul `pesan` mendapat `403` `{"message": "Modul Pesan & Pengaduan belum ditugaskan kepada Anda."}`.
+
+```json
+{
+  "id": "01m4…", "tiket": "PINTU-7KQ2MX", "jenis": "pengaduan", "nama": "Yohanes", "kontak": "081234567890",
+  "layanan": "Samsat Keliling", "isi": "…", "sumber": "formulir", "status": "diproses",
+  "diterima": "2026-10-13T08:00:00+00:00", "ditangani": "Maria Bria",
+  "tanggapan": [{ "id": "01m4…", "isi": "…", "oleh": "Maria Bria", "waktu": "2026-10-13T09:00:00+00:00" }],
+  "urutan": 0, "dibuat": "…", "diperbarui": "…"
+}
+```
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `GET /api/koleksi/pesan` | — | `200` semua pesan, terbaru lebih dulu, dengan tanggapannya. |
+| `GET /api/koleksi/pesan/{id}` | — | `200` satu pesan; `404` bila tidak ada. |
+| `POST /api/koleksi/pesan` | `{"jenis", "nama", "kontak", "layanan", "isi", "sumber"}`; nama dan kontak boleh kosong | `201`. Server mengisi tiket, status `baru`, dan waktu terima; nilai lain dari klien diabaikan. Dicatat sebagai "mencatat PINTU-…". |
+| `PATCH /api/koleksi/pesan/{id}` | sebagian dari `{"status", "tanggapan"}` | `200`. `status`: `baru`, `diproses`, atau `selesai`. `tanggapan` adalah daftar lengkap seperti di dashboard; butir yang ID-nya belum ada di server ditambahkan atas nama akun yang masuk (hanya `isi` yang dipakai, maks. 2.000 karakter teks polos), butir lama dibiarkan. Isian pengirim dan `ditangani` diabaikan. Pegawai yang pertama memproses atau menanggapi menjadi `ditangani`. Dicatat sebagai "menanggapi", "memproses", "menyelesaikan", atau "menandai baru", dengan target nomor tiket. |
+| `POST /api/koleksi/pesan/hapus` | `{"ids": ["…"]}` | `204`. Hanya Administrator; pegawai lain `403` `{"message": "Hanya Administrator yang dapat menghapus pesan. Tandai selesai untuk menutupnya."}`. Tanggapan ikut terhapus. |
+
+Kontak harus berupa email atau nomor telepon/WhatsApp (min. 9 angka); layanan salah satu dari *Umum / portal PINTU*, *Pajak tahunan*, *Perpanjangan STNK 5 tahun*, *Mutasi & balik nama*, *Duplikat STNK*, *Samsat Keliling*.
+
+Kode: `app/Http/Controllers/Dashboard/MessageController.php`, `MessageDeletionController.php`, `app/Http/Requests/Dashboard/*Message*`, `app/Actions/ReceiveMessage.php`, `UpdateMessage.php`, `app/Models/Message.php`, `MessageResponse.php`, `app/Policies/MessagePolicy.php`, `app/Rules/ContactAddress.php`. Tes: `tests/Feature/MessageControllerTest.php`.
+
 ## `GET /api/public/faq`
 
 Daftar tanya jawab untuk portal publik. Menjalankan keputusan pemilik produk GC18-01–09 ([Phase 2.19](phases/PHASE-2.19-GC18-DECISION-BINDING-AND-CLOSURE-EVIDENCE-COORDINATION.md)), dengan urutan menurut [D-003](decisions.md#d-003--2026-10-13--urutan-faq-publik-mengikuti-dashboard). Bagian Tanya Jawab di beranda memuatnya setiap kali halaman dibuka (`initFaq()` di `public/assets/js/main.js`, [D-012](decisions.md#d-012--2026-10-13--beranda-menampilkan-tanya-jawab-dari-api-publik)), jadi setiap kunjungan beranda ikut dihitung dalam batas laju di bawah.
@@ -291,3 +321,20 @@ Papan layanan untuk beranda portal ([D-015](decisions.md#d-015--2026-10-13--papa
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 
 Kode: `app/Http/Controllers/PublicServiceBoardController.php`, `app/Actions/ShowPublicServiceBoard.php`. Tes: `tests/Feature/PublicServiceBoardControllerTest.php`.
+
+## `POST /api/public/pesan`
+
+Formulir Kontak di portal ([D-016](decisions.md#d-016--2026-10-13--pesan--pengaduan-tersimpan-di-server), `initPesanForm()` di `public/assets/js/main.js`). Satu-satunya API publik yang menulis data.
+
+```json
+{ "jenis": "pengaduan", "nama": "Yohanes", "kontak": "+62 812-3456-7890", "layanan": "Samsat Keliling", "isi": "…", "persetujuan": true, "kode_tambahan": "" }
+```
+
+| Hal | Perilaku |
+|---|---|
+| Berhasil | `201` `{"tiket": "PINTU-7KQ2MX"}`. Pesan disimpan dengan sumber `formulir` dan status `baru`; sumber, status, atau isian lain dari pengunjung diabaikan. |
+| Validasi | `422` dengan pesan per isian bila jenis atau layanan tidak dikenal, kontak kosong atau bukan email/nomor telepon, isi kurang dari 10 atau lebih dari 2.000 karakter, berisi karakter kontrol, atau persetujuan tidak dicentang. |
+| Anti-spam | Bila `kode_tambahan` (isian tersembunyi) terisi, jawabannya tetap `201` dengan nomor tiket, tetapi pesan tidak disimpan. `429` setelah 5 pesan per jam dari satu IP: `{"message": "Terlalu banyak pesan dari jaringan ini. Coba lagi dalam satu jam, atau hubungi kami lewat kanal lain."}`. Batas laju API publik umum (D-013) juga berlaku. |
+| Privasi | Tidak memulai sesi dan tidak memasang cookie. Log hanya mencatat `message.received` dengan nomor tiket. |
+
+Kode: `app/Http/Controllers/PublicMessageController.php`, `app/Http/Requests/SubmitPublicMessageRequest.php`. Tes: `tests/Feature/PublicMessageControllerTest.php`.

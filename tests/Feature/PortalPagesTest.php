@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Message;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestWith;
 use Tests\TestCase;
@@ -85,6 +86,19 @@ class PortalPagesTest extends TestCase
         $this->assertStringNotContainsString('data contoh', $html);
         $this->assertStringContainsString('<ul class="board__counters" role="list" data-papan-loket></ul>', $html);
         $this->assertStringContainsString('<p class="tile__value board__big" data-papan-nomor>—</p>', $html);
+    }
+
+    public function test_sends_the_contact_form_to_the_message_api_with_the_services_it_accepts(): void
+    {
+        $html = $this->get('/kontak')->assertOk()->getContent();
+
+        $this->assertSame(1, preg_match('/<form[^>]*data-pesan-form[^>]*>(.*?)<\/form>/s', $html, $form));
+        $this->assertStringNotContainsString('data-demo-form', $html);
+        preg_match_all('/<option value="([^"]*)">/', $form[1], $options);
+        $this->assertSame(Message::SERVICES, array_map(fn (string $value): string => html_entity_decode($value), $options[1]));
+        foreach (['name="isi"', 'name="kontak"', 'name="persetujuan"', 'name="kode_tambahan" tabindex="-1" autocomplete="off"'] as $field) {
+            $this->assertStringContainsString($field, $form[1]);
+        }
     }
 
     public function test_fills_the_opening_hours_table_only_from_the_public_api(): void

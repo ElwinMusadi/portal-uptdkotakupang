@@ -931,14 +931,72 @@
         btn.textContent = label;
       });
     }
+  }
 
-    $$("[data-demo-form]").forEach((form) => form.addEventListener("submit", (e) => {
+  /* ---------- Formulir pesan & pengaduan ----------
+     Dikirim ke POST /api/public/pesan dan masuk ke Pesan & Pengaduan di
+     dashboard. Isian tersembunyi "kode_tambahan" hanya diisi bot. */
+  function initPesanForm() {
+    const form = $("[data-pesan-form]");
+    if (!form) return;
+    const alert = $("[data-pesan-alert]", form);
+    const ok = $("[data-pesan-ok]", form);
+    const btn = $("button[type=submit]", form);
+    const isiTombol = btn.innerHTML;
+
+    const galat = (teks, el) => {
+      ok.classList.remove("is-on");
+      $("[data-pesan-msg]", form).textContent = teks;
+      alert.classList.add("is-on");
+      if (el instanceof HTMLElement) { el.setAttribute("aria-invalid", "true"); el.focus(); }
+    };
+    form.addEventListener("input", (e) => {
+      e.target.removeAttribute?.("aria-invalid");
+      alert.classList.remove("is-on");
+    });
+
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (!form.checkValidity()) { form.reportValidity(); return; }
-      const ref = "PINTU-" + Date.now().toString(36).toUpperCase().slice(-6);
-      form.reset();
-      toast(`Terima kasih. Nomor tiket Anda ${ref}.`);
-    }));
+      const f = form.elements;
+      btn.disabled = true;
+      btn.setAttribute("aria-disabled", "true");
+      btn.textContent = "Mengirim…";
+      try {
+        const res = await fetch("/api/public/pesan", {
+          method: "POST",
+          credentials: "omit",
+          headers: { Accept: "application/json", "Content-Type": "application/json" },
+          body: JSON.stringify({
+            jenis: f.jenis.value,
+            nama: f.nama.value,
+            kontak: f.kontak.value,
+            layanan: f.layanan.value,
+            isi: f.isi.value,
+            persetujuan: f.persetujuan.checked,
+            kode_tambahan: f.kode_tambahan.value,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 201 && typeof data.tiket === "string") {
+          form.reset();
+          alert.classList.remove("is-on");
+          $("[data-pesan-ok-msg]", form).textContent = `Terima kasih, pesan Anda kami terima dengan nomor tiket ${data.tiket}. Simpan nomor ini; kami membalas ke kontak Anda paling lambat tiga hari kerja.`;
+          ok.classList.add("is-on");
+          toast(`Pesan terkirim. Nomor tiket ${data.tiket}.`);
+        } else if (res.status === 422 && data.errors) {
+          const [nama, daftar] = Object.entries(data.errors)[0];
+          galat(daftar[0], f[nama]);
+        } else {
+          galat(typeof data.message === "string" ? data.message : "Pesan belum terkirim. Coba lagi sebentar lagi.");
+        }
+      } catch {
+        galat("Pesan belum terkirim. Periksa koneksi lalu coba lagi.");
+      }
+      btn.disabled = false;
+      btn.removeAttribute("aria-disabled");
+      btn.innerHTML = isiTombol;
+    });
   }
 
   /* ---------- Login & aktivasi: kartu selalu muat dalam satu layar ---------- */
@@ -988,6 +1046,6 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling();
-    initDash(); initSim(); initDialogs(); initGag(); initFilters(); initGallery(); initFaq(); initForms(); initAuthFit(); initUtilities();
+    initDash(); initSim(); initDialogs(); initGag(); initFilters(); initGallery(); initFaq(); initForms(); initPesanForm(); initAuthFit(); initUtilities();
   });
 })();

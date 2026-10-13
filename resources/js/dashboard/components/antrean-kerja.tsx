@@ -151,7 +151,7 @@ const kolomAntrean = [
 export function AntreanKerja() {
   const [tab, setTab] = React.useState("antrean")
   const { data: alur } = useItemAlur()
-  const { data: pesan } = useKoleksi("pesan")
+  const { data: pesan } = useKoleksi("pesan", { aktif: bolehModul("pesan") })
   const pantau = usePemutakhiran()
   const { data: aktivitas } = useAktivitas(30)
 

@@ -21,8 +21,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { api, ApiError, type Snapshot } from "@/lib/api"
-import { keluar, LABEL_PERAN, sesi } from "@/lib/auth"
+import { api, ApiError, diServer, type Snapshot } from "@/lib/api"
+import { bolehModul, keluar, LABEL_PERAN, sesi } from "@/lib/auth"
 import { tanggalJam } from "@/lib/format"
 import { KOLEKSI_LABEL, LABEL_MODUL_SERVER } from "@/lib/meta"
 import { laporGalat, useKoleksi } from "@/lib/queries"
@@ -167,22 +167,25 @@ function JumlahKoleksi() {
   const dokumentasi = useKoleksi("dokumentasi").data?.length
   const dokumen = useKoleksi("dokumen").data?.length
   const layanan = useKoleksi("layanan").data?.length
-  const pesan = useKoleksi("pesan").data?.length
-  const keliling = useKoleksi("keliling").data?.length
-  const baris: [string, number | undefined][] = [
+  // Koleksi di server hanya dihitung bila modulnya boleh dibaca pengguna.
+  const bacaPesan = !diServer("pesan") || bolehModul("pesan")
+  const bacaKeliling = !diServer("keliling") || bolehModul("keliling", "pemutakhiran")
+  const pesan = useKoleksi("pesan", { aktif: bacaPesan }).data?.length
+  const keliling = useKoleksi("keliling", { aktif: bacaKeliling }).data?.length
+  const baris: [string, number | null | undefined][] = [
     [KOLEKSI_LABEL.berita, berita],
     [KOLEKSI_LABEL.dokumentasi, dokumentasi],
     [KOLEKSI_LABEL.dokumen, dokumen],
     [KOLEKSI_LABEL.layanan, layanan],
-    [KOLEKSI_LABEL.keliling, keliling],
-    [KOLEKSI_LABEL.pesan, pesan],
+    [KOLEKSI_LABEL.keliling, bacaKeliling ? keliling : null],
+    [KOLEKSI_LABEL.pesan, bacaPesan ? pesan : null],
   ]
   return (
     <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-3">
       {baris.map(([label, n]) => (
         <div key={label} className="flex justify-between gap-4 border-b pb-2">
           <dt className="text-muted-foreground">{label}</dt>
-          <dd className="tabular-nums">{n ?? "…"}</dd>
+          <dd className="tabular-nums">{n === null ? "—" : (n ?? "…")}</dd>
         </div>
       ))}
     </dl>
@@ -194,7 +197,9 @@ function TabData() {
   const konfirmasi = useKonfirmasi()
   const inputRef = React.useRef<HTMLInputElement>(null)
   const [proses, setProses] = React.useState<string | null>(null)
-  const { data: pesan } = useKoleksi("pesan")
+  // Pesan contoh hanya ada selama pesan tersimpan di peramban.
+  const pesanLokal = !diServer("pesan")
+  const { data: pesan } = useKoleksi("pesan", { aktif: pesanLokal })
   const lokal = api.sementara ? "Memori sementara" : "Lokal (IndexedDB)"
   // Mode campuran: pulihkan, kosongkan log, dan kembalikan hanya mengubah data di peramban ini.
   const tetapDiServer = api.mode === "campuran" ? ` ${LABEL_MODUL_SERVER} tersimpan di server dan tidak ikut berubah.` : ""
@@ -301,25 +306,34 @@ function TabData() {
           />
         </div>
       </Bagian>
-      <Bagian judul="Bersihkan data contoh" deskripsi="Sebelum dipakai sungguhan, hapus pesan dan log aktivitas contoh.">
+      <Bagian
+        judul="Bersihkan data contoh"
+        deskripsi={
+          pesanLokal
+            ? "Sebelum dipakai sungguhan, hapus pesan dan log aktivitas contoh."
+            : "Sebelum dipakai sungguhan, kosongkan log aktivitas contoh. Pesan tersimpan di server dan hanya dihapus Administrator dari halaman Pesan & Pengaduan."
+        }
+      >
         <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            disabled={!!proses || !pesan?.length}
-            onClick={async () => {
-              if (!pesan?.length) return
-              const ya = await konfirmasi({
-                judul: `Hapus ${pesan.length} pesan?`,
-                deskripsi: "Semua pesan dan tanggapannya akan dihapus permanen.",
-                label: "Hapus semua pesan",
-                bahaya: true,
-              })
-              if (ya) await jalan("pesan", () => api.remove("pesan", pesan.map((p) => p.id)), "Semua pesan dihapus")
-            }}
-          >
-            {proses === "pesan" ? <Spinner /> : <IconTrash />}
-            Hapus semua pesan
-          </Button>
+          {pesanLokal && (
+            <Button
+              variant="outline"
+              disabled={!!proses || !pesan?.length}
+              onClick={async () => {
+                if (!pesan?.length) return
+                const ya = await konfirmasi({
+                  judul: `Hapus ${pesan.length} pesan?`,
+                  deskripsi: "Semua pesan dan tanggapannya akan dihapus permanen.",
+                  label: "Hapus semua pesan",
+                  bahaya: true,
+                })
+                if (ya) await jalan("pesan", () => api.remove("pesan", pesan.map((p) => p.id)), "Semua pesan dihapus")
+              }}
+            >
+              {proses === "pesan" ? <Spinner /> : <IconTrash />}
+              Hapus semua pesan
+            </Button>
+          )}
           <Button
             variant="outline"
             disabled={!!proses}

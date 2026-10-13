@@ -186,3 +186,20 @@ Papan Layanan menjadi modul keempat yang tersimpan di server (D-011, D-013, D-01
 Satu kunjungan beranda kini memakai empat permintaan dari batas laju API publik (D-013).
 
 Belum dibuat: kotak *Pengumuman* di papan beranda masih contoh statis; isinya kelak dari Berita & Pengumuman.
+
+## D-016 · 2026-10-13 · Pesan & Pengaduan tersimpan di server
+
+Formulir Kontak di portal kini benar-benar mengirim pesan ke server, dan pesan dikelola dari halaman *Pesan & Pengaduan* di dashboard. Sebelumnya formulir itu hanya demo: tidak ada yang terkirim dan nomor tiketnya acak di peramban.
+
+| Hal | Keputusan |
+|---|---|
+| Formulir portal | `POST /api/public/pesan`: jenis, nama (opsional), email atau nomor WhatsApp (**wajib**, agar bisa dibalas), layanan, isi (10–2.000 karakter), dan persetujuan penggunaan data. Pengirim mendapat nomor tiket dari server, mis. `PINTU-7KQ2MX`. |
+| Anti-spam | Isian tersembunyi (*honeypot*) yang hanya diisi bot: kiriman seperti itu dijawab seolah berhasil tetapi tidak disimpan. Ditambah maks. **5 pesan per jam per IP**. Tanpa CAPTCHA, layanan pihak ketiga, atau cookie. |
+| Dashboard | Administrator dan pengelola Pesan & Pengaduan membaca pesan, mencatat pesan dari kanal lain (kotak saran, SP4N-LAPOR!, WhatsApp, telepon), mengubah status (Baru, Diproses, Selesai), dan menambah tanggapan. Pegawai lain ditolak `403`. |
+| Keutuhan | Isi dan identitas pengirim tidak bisa diubah setelah diterima. Tanggapan hanya bisa ditambah, tidak diubah atau dihapus, dan dicatat atas nama akun yang menulisnya. Pegawai yang pertama menangani pesan tercatat sebagai penanganannya. |
+| Hapus | **Hanya Administrator.** Pegawai menutup pesan dengan menandainya selesai. Tanggapan ikut terhapus. |
+| Masa simpan | **Tidak dihapus otomatis**, sesuai kebijakan privasi portal (mengikuti ketentuan kearsipan). Masa simpan pasti diputuskan kemudian. |
+| Data pribadi | Log aplikasi dan log aktivitas hanya mencatat nomor tiket, tidak pernah nama, kontak, atau isi pesan. |
+| Data contoh | Pesan contoh di peramban tidak dipindahkan ke server. |
+
+Belum dibuat: pemberitahuan surel atau WhatsApp kepada petugas saat pesan masuk, pengecekan status tiket oleh warga, dan masa simpan otomatis.
