@@ -16,6 +16,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET` | `/api/public/profil` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/layanan` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/beranda` | anonim, hanya baca | tersedia |
+| `GET` | `/api/public/halaman/{slug}` | anonim, hanya baca | tersedia |
 | `POST` | `/api/public/pesan` | anonim, formulir Kontak | tersedia |
 | `POST` | `/api/masuk` | halaman Login Pegawai | tersedia |
 | `GET` | `/api/sesi` | pegawai login | tersedia |
@@ -46,6 +47,8 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET`, `PATCH` | `/api/koleksi/layanan/{id}` | Administrator, pengelola Persyaratan Layanan; layanan yang menunggu persetujuan atau terbit hanya Administrator | tersedia |
 | `PUT` | `/api/koleksi/layanan/urutan` | Administrator | tersedia |
 | `POST` | `/api/koleksi/layanan/hapus` | Administrator | tersedia |
+| `GET` | `/api/koleksi/halaman` | Administrator, pengelola Halaman Statis | tersedia |
+| `GET`, `PATCH` | `/api/koleksi/halaman/{id}` | Administrator, pengelola Halaman Statis | tersedia |
 | `GET` | `/api/pengaturan` | pegawai login | tersedia |
 | `GET`, `POST` | `/api/koleksi/penyesuaian` | Administrator, pengelola Jam Pelayanan | tersedia |
 | `GET`, `PATCH` | `/api/koleksi/penyesuaian/{id}` | Administrator, pengelola Jam Pelayanan | tersedia |
@@ -111,7 +114,7 @@ Kunci modul untuk `modul` ([D-010](decisions.md#d-010--2026-10-13--penugasan-mod
 | `jam` | Jam Pelayanan (termasuk koleksi `penyesuaian`) | `halaman` | Halaman Statis |
 | `keliling` | Samsat Keliling | `pemutakhiran` | Jadwal Pemutakhiran |
 
-Endpoint konten dashboard (`/api/koleksi/…`, `/api/pengaturan/…`) wajib menolak pegawai yang tidak mengelola modul koleksi atau pengaturan itu. `/api/koleksi/faq`, `/api/koleksi/keliling`, `/api/koleksi/penyesuaian`, `/api/koleksi/pesan`, `/api/koleksi/layanan`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/tarif`, `/api/pengaturan/statistik`, `/api/pengaturan/kontak`, `/api/pengaturan/visiMisi`, `/api/pengaturan/profil`, dan `/api/pengaturan/beranda` sudah melakukannya; tarif boleh dibaca semua pegawai untuk Kalkulator PKB, tetapi hanya pengelolanya yang boleh menyimpan.
+Endpoint konten dashboard (`/api/koleksi/…`, `/api/pengaturan/…`) wajib menolak pegawai yang tidak mengelola modul koleksi atau pengaturan itu. `/api/koleksi/faq`, `/api/koleksi/keliling`, `/api/koleksi/penyesuaian`, `/api/koleksi/pesan`, `/api/koleksi/layanan`, `/api/koleksi/halaman`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/tarif`, `/api/pengaturan/statistik`, `/api/pengaturan/kontak`, `/api/pengaturan/visiMisi`, `/api/pengaturan/profil`, dan `/api/pengaturan/beranda` sudah melakukannya; tarif boleh dibaca semua pegawai untuk Kalkulator PKB, tetapi hanya pengelolanya yang boleh menyimpan.
 
 ## Tanya Jawab di dashboard
 
@@ -398,6 +401,32 @@ Penyimpanan tercatat di log aktivitas sebagai "memperbarui Beranda".
 
 Kode: `app/Http/Controllers/Dashboard/HomepageController.php`, `app/Http/Requests/Dashboard/UpdateHomepageRequest.php`, `app/Actions/SaveSetting.php`, `app/Models/Setting.php`. Tes: `tests/Feature/HomepageControllerTest.php`.
 
+## Halaman Statis di dashboard
+
+Dipakai halaman *Halaman Statis* di dashboard ([D-024](decisions.md#d-024--2026-10-14--halaman-statis-tersimpan-di-server-teks-html-tetap-sebagai-isi-awal)). Tamu mendapat `401`; pegawai yang tidak mengelola modul `halaman` mendapat `403` `{"message": "Modul Halaman Statis belum ditugaskan kepada Anda."}`.
+
+```json
+{
+  "id": "01m4…", "slug": "kebijakan-privasi",
+  "judul": "Data Anda secukupnya.", "judulLanjutan": "Dijaga sepenuhnya.",
+  "pengantar": "Kebijakan privasi · berlaku sejak [tanggal terbit]",
+  "isi": "<p>Kebijakan ini menjelaskan …</p><h2>Data yang kami kumpulkan.</h2><ul><li><p>…</p></li></ul>",
+  "urutan": 0, "dibuat": "…", "diperbarui": "…"
+}
+```
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `GET /api/koleksi/halaman` | — | `200` kedua halaman portal sesuai urutan. Halaman yang belum pernah disimpan memakai waktu dibuat sebagai `diperbarui`. |
+| `GET /api/koleksi/halaman/{id}` | — | `200` satu halaman; `404` bila tidak ada. |
+| `PATCH /api/koleksi/halaman/{id}` | sebagian dari `judul`, `judulLanjutan`, `pengantar`, `isi`, dan `slug` | `200`. Lanjutan judul dan teks kecil yang kosong disimpan sebagai `""`. `slug` boleh dikirim tetapi harus sama dengan nama berkas sekarang. Isi yang sama dengan yang tersimpan tidak disimpan dan tidak dicatat. `422` bila judul atau isi kosong, batas panjang terlampaui, nama berkas diubah (`{"slug": ["Nama berkas halaman tidak dapat diubah."]}`), teks berisi karakter kontrol, atau isi memuat HTML yang tidak ditulis editor, mis. `{"isi": ["Isi halaman memuat elemen <script> yang tidak didukung. Gunakan paragraf, subjudul, daftar, kutipan, dan tautan dari editor."]}`. |
+
+Halaman tidak bisa ditambah atau dihapus: `POST /api/koleksi/halaman` mendapat `405`, dan `PUT /urutan` serta `POST /hapus` tidak ada.
+
+Penyimpanan tercatat di log aktivitas sebagai "memperbarui Kebijakan Privasi" atau "memperbarui Syarat & Ketentuan".
+
+Kode: `app/Http/Controllers/Dashboard/StaticPageController.php`, `app/Http/Requests/Dashboard/UpdateStaticPageRequest.php`, `app/Rules/RichText.php`, `app/Models/StaticPage.php`, `app/Policies/StaticPagePolicy.php`, `database/migrations/*_insert_initial_static_pages.php`. Tes: `tests/Feature/StaticPageControllerTest.php`.
+
 ## Pesan & Pengaduan di dashboard
 
 Dipakai halaman *Pesan & Pengaduan* di dashboard ([D-016](decisions.md#d-016--2026-10-13--pesan--pengaduan-tersimpan-di-server)). Tamu mendapat `401`; pegawai yang tidak mengelola modul `pesan` mendapat `403` `{"message": "Modul Pesan & Pengaduan belum ditugaskan kepada Anda."}`.
@@ -595,6 +624,22 @@ Teks beranda portal ([D-023](decisions.md#d-023--2026-10-14--teks-beranda-tersim
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 
 Kode: `app/Http/Controllers/PublicHomepageController.php`, `app/Actions/ShowPublicHomepage.php`. Tes: `tests/Feature/PublicHomepageControllerTest.php`.
+
+## `GET /api/public/halaman/{slug}`
+
+Isi halaman Kebijakan Privasi (`kebijakan-privasi`) dan Syarat & Ketentuan (`syarat-ketentuan`) ([D-024](decisions.md#d-024--2026-10-14--halaman-statis-tersimpan-di-server-teks-html-tetap-sebagai-isi-awal), `initHalaman()` di `public/assets/js/main.js`).
+
+```json
+{ "judul": "Informasi resmi.", "judulLanjutan": "Dipakai dengan bijak.", "pengantar": "Syarat & ketentuan · berlaku sejak [tanggal terbit]", "isi": "<h2>Sifat informasi.</h2><p>…</p>", "diperbarui": null }
+```
+
+| Hal | Perilaku |
+|---|---|
+| Berhasil | `200`. `diperbarui` berisi waktu terakhir disimpan, atau `null` selama halaman belum pernah disimpan; portal lalu membiarkan teks HTML-nya. `isi` adalah HTML terbatas dari editor dashboard. Klien wajib membangunnya ulang hanya dari elemen yang diizinkan (lihat D-024), bukan memasangnya langsung sebagai HTML. |
+| Galat | `404` untuk nama halaman lain; `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah batas laju yang sama dengan `GET /api/public/faq`; `503` bila data tidak bisa dibaca. Halaman tetap menampilkan teks HTML-nya. |
+| Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
+
+Kode: `app/Http/Controllers/PublicStaticPageController.php`, `app/Actions/ShowPublicStaticPage.php`. Tes: `tests/Feature/PublicStaticPageControllerTest.php`.
 
 ## `POST /api/public/pesan`
 

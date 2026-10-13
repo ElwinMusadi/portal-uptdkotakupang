@@ -952,6 +952,66 @@
       .catch(() => {});
   }
 
+  /* ---------- Halaman statis ----------
+     Kebijakan Privasi dan Syarat & Ketentuan dikelola di dashboard (Halaman
+     Statis) dan dibaca dari GET /api/public/halaman/{slug} (D-024). Teks di
+     HTML sama dengan isi awal di server dan tetap tampil; skrip menggantinya
+     hanya bila halaman sudah pernah disimpan. Isi dibangun ulang hanya dari
+     elemen editor yang diizinkan: teks tetap teks, dan tautan hanya dengan
+     skema yang diizinkan. Bila API gagal, teks HTML tetap tampil. */
+  const ELEMEN_ISI = new Set(["P", "H2", "H3", "UL", "OL", "LI", "BLOCKQUOTE", "STRONG", "EM", "U", "S", "BR", "HR", "A"]);
+
+  function salinIsi(sumber, tujuan) {
+    for (const node of sumber.childNodes) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        tujuan.append(node.data);
+      } else if (node.nodeType === Node.ELEMENT_NODE && ELEMEN_ISI.has(node.tagName)) {
+        const el = document.createElement(node.tagName.toLowerCase());
+        if (node.tagName === "A") {
+          const url = tautanAman(node.getAttribute("href") ?? "");
+          if (url) el.setAttribute("href", url);
+        } else if (node.tagName === "OL") {
+          const mulai = node.getAttribute("start") ?? "";
+          const jenis = node.getAttribute("type") ?? "";
+          if (/^\d{1,6}$/.test(mulai)) el.setAttribute("start", mulai);
+          if (["1", "a", "A", "i", "I"].includes(jenis)) el.setAttribute("type", jenis);
+        }
+        salinIsi(node, el);
+        tujuan.append(el);
+      }
+    }
+  }
+
+  async function muatHalaman(slug) {
+    const h = await ambilJson(`/api/public/halaman/${encodeURIComponent(slug)}`);
+    const teks = (x) => typeof x === "string";
+    const valid = ["judul", "judulLanjutan", "pengantar", "isi"].every((f) => teks(h?.[f]))
+      && (h.diperbarui === null || teks(h.diperbarui));
+    if (!valid) throw new Error("Respons tidak dikenal");
+    return h;
+  }
+
+  function initHalaman() {
+    const isi = $("[data-halaman]");
+    if (!isi) return;
+
+    const tampilkan = (h) => {
+      const pengantar = $("[data-halaman-pengantar]");
+      pengantar.textContent = h.pengantar;
+      pengantar.hidden = !h.pengantar;
+      duaNada($("[data-halaman-judul]"), h.judulLanjutan ? `${h.judul} ` : h.judul, h.judulLanjutan);
+      // DOMParser tidak menjalankan skrip atau memuat berkas; yang dipasang hanya salinan elemen yang diizinkan
+      const dokumen = new DOMParser().parseFromString(h.isi, "text/html");
+      const baru = document.createDocumentFragment();
+      salinIsi(dokumen.body, baru);
+      isi.replaceChildren(baru);
+    };
+
+    muatHalaman(isi.dataset.halaman)
+      .then((h) => { if (typeof h.diperbarui === "string") tampilkan(h); })
+      .catch(() => {});
+  }
+
   /* ---------- Samsat Keliling ----------
      Jadwal dikelola di dashboard dan dibaca dari GET /api/public/keliling,
      yang hanya memberikan lokasi aktif. Teksnya di-escape sebelum dipasang.
@@ -1751,7 +1811,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil(); initLayanan(); initBeranda();
+    initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil(); initLayanan(); initBeranda(); initHalaman();
     initDash(); initSim(); initDialogs(); initGag(); initFilters(); initGallery(); initFaq(); initForms(); initPesanForm(); initAuthFit(); initUtilities();
   });
 })();

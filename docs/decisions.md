@@ -316,3 +316,18 @@ Teks beranda kini tersimpan di server: pembuka, nilai utama, judul *Layanan utam
 Beranda kini memakai delapan permintaan dari batas laju API publik (D-013).
 
 Belum dibuat: isi kartu harga biaya (Rp0, cek fisik), garis peta kanal yang menyesuaikan jumlah kelompok, dan teks lain di beranda yang tidak ada di dokumen ini masih statis.
+
+## D-024 · 2026-10-14 · Halaman Statis tersimpan di server; teks HTML tetap sebagai isi awal
+
+Kebijakan Privasi dan Syarat & Ketentuan kini tersimpan di server, dan halaman portalnya membaca isi dari API. Cara isi awal Beranda (D-023) diterapkan dengan cara yang sama.
+
+| Hal | Keputusan |
+|---|---|
+| Penyimpanan | Koleksi `halaman` (`/api/koleksi/halaman`, tabel `static_pages`) memuat judul (maks. 80 karakter), lanjutan judul (maks. 80), teks kecil di atas judul (maks. 120), nama berkas (`slug`), dan isi kaya-teks (HTML, maks. 100.000 karakter). |
+| Halaman tetap | **Hanya dua halaman portal yang ada, `kebijakan-privasi` dan `syarat-ketentuan`.** Setiap halaman adalah halaman portal, jadi halaman hanya disunting: tidak ditambah, diurutkan, atau dihapus, dan nama berkasnya tidak bisa diubah. Dashboard tidak lagi menawarkan *Tambah halaman* dan *Hapus halaman*. |
+| Isi awal | Teks yang tertulis di HTML kedua halaman tetap di sana dan menjadi isi awal lewat migrasi, dalam bentuk yang ditulis editor dashboard (catatan draf menjadi paragraf miring). Portal menggantinya dengan isi server hanya bila halaman sudah pernah disimpan, seperti Beranda (D-023). Bila API gagal, teks HTML yang tampil. Tes memastikan teks isi awal sama dengan teks di HTML. |
+| Akses | Administrator dan Pegawai UPTD yang mengelola Halaman Statis; pegawai lain ditolak `403`. Penyimpanan tercatat sebagai "memperbarui Kebijakan Privasi" atau "memperbarui Syarat & Ketentuan". |
+| Isi kaya-teks | Server hanya menerima HTML seperti yang ditulis editor (`RichText`): paragraf, subjudul (`h2`, `h3`), daftar berbutir dan bernomor, kutipan, tebal, miring, garis bawah, coret, baris baru, garis pemisah, dan tautan. Atribut hanya boleh pada tautan (`href`, `target`, `rel`, `class`, `title`) dan daftar bernomor (`start`, `type`). Tujuan tautan harus berupa tautan portal yang sah (`PortalLink`, D-019). Skrip, gambar, gaya, atribut event, komentar, dan karakter kontrol ditolak dengan `422`, tidak dibuang diam-diam. |
+| Portal | `GET /api/public/halaman/{slug}` (tanpa ID) dibaca halamannya. Portal tidak memasang HTML dari API secara langsung: isi diurai tanpa dijalankan (`DOMParser`), lalu dibangun ulang hanya dari elemen yang diizinkan, dengan teks sebagai teks dan tautan hanya dengan skema yang diizinkan. Teks kecil di atas judul disembunyikan bila kosong. |
+
+Belum dibuat: halaman statis baru di portal, pratinjau di dashboard, dan tanggal *berlaku sejak* yang terisi otomatis.

@@ -23,6 +23,7 @@ use App\Http\Controllers\Dashboard\ServiceController;
 use App\Http\Controllers\Dashboard\ServiceDeletionController;
 use App\Http\Controllers\Dashboard\ServiceOrderController;
 use App\Http\Controllers\Dashboard\SettingTimestampController;
+use App\Http\Controllers\Dashboard\StaticPageController;
 use App\Http\Controllers\Dashboard\StatisticsController;
 use App\Http\Controllers\Dashboard\TariffController;
 use App\Http\Controllers\Dashboard\VisionMissionController;
@@ -35,6 +36,7 @@ use App\Http\Controllers\PublicOpeningHoursController;
 use App\Http\Controllers\PublicProfileController;
 use App\Http\Controllers\PublicServiceBoardController;
 use App\Http\Controllers\PublicServiceController;
+use App\Http\Controllers\PublicStaticPageController;
 use App\Http\Controllers\PublicStatisticsController;
 use App\Http\Controllers\PublicTariffController;
 use App\Http\Controllers\PublicVisionMissionController;
@@ -45,6 +47,7 @@ use App\Models\MobileServiceStop;
 use App\Models\ScheduleAdjustment;
 use App\Models\Service;
 use App\Models\Setting;
+use App\Models\StaticPage;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Route;
@@ -222,6 +225,17 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::patch('/{service}', [ServiceController::class, 'update'])->can('update', 'service')->name('update');
     });
 
+    /*
+     * Halaman Statis (StaticPagePolicy): the portal's long-text pages. Each
+     * one is a page of the portal, so they are edited but not added,
+     * reordered or deleted (D-024).
+     */
+    Route::prefix('koleksi/halaman')->name('koleksi.halaman.')->whereUlid('page')->group(function (): void {
+        Route::get('/', [StaticPageController::class, 'index'])->can('viewAny', StaticPage::class)->name('index');
+        Route::get('/{page}', [StaticPageController::class, 'show'])->can('view', 'page')->name('show');
+        Route::patch('/{page}', [StaticPageController::class, 'update'])->can('update', 'page')->name('update');
+    });
+
     Route::get('/aktivitas', ActivityController::class)->name('aktivitas');
 });
 
@@ -245,6 +259,9 @@ Route::prefix('public')
         Route::get('/profil', PublicProfileController::class)->name('profil.show');
         Route::get('/layanan', PublicServiceController::class)->name('layanan.index');
         Route::get('/beranda', PublicHomepageController::class)->name('beranda.show');
+        Route::get('/halaman/{slug}', PublicStaticPageController::class)
+            ->whereIn('slug', array_keys(StaticPage::PAGES))
+            ->name('halaman.show');
         // The contact form; also limited to 5 messages per hour per address (D-016).
         Route::post('/pesan', PublicMessageController::class)->middleware('throttle:public-messages')->name('pesan.store');
     });

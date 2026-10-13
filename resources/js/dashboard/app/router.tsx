@@ -81,7 +81,6 @@ export const router = createHashRouter([
       { path: "kontak", ...halaman("Kontak & Kanal Pengaduan", () => import("@/pages/kontak")) },
       { path: "beranda", ...halaman("Beranda", () => import("@/pages/beranda")) },
       { path: "halaman", ...halaman("Halaman Statis", () => import("@/pages/halaman/daftar")) },
-      { path: "halaman/baru", ...halaman("Tambah halaman", () => import("@/pages/halaman/editor")) },
       { path: "halaman/:id", ...halaman("Sunting halaman", () => import("@/pages/halaman/editor")) },
       { path: "pemutakhiran", ...halaman("Jadwal Pemutakhiran", () => import("@/pages/pemutakhiran")) },
       { path: "absensi", ...halaman("Absensi Lapangan", () => import("@/pages/absensi")) },

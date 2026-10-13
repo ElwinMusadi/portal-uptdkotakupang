@@ -355,6 +355,8 @@
 .page-hero { padding-top: clamp(40px, 6vw, 80px); padding-bottom: clamp(48px, 6vw, 80px); }
 .page-hero .crumbs { margin-bottom: 28px; }
 .page-hero .eyebrow { margin-bottom: 20px; }
+/* Halaman statis tanpa teks kecil di atas judul (initHalaman) */
+.page-hero .eyebrow[hidden] { display: none; }
 .page-hero .h-display { max-width: 15ch; }
 .page-hero .lead { margin-top: 24px; }
 .page-hero--split { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: 48px; align-items: end; }

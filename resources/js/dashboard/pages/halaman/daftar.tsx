@@ -1,10 +1,9 @@
-import { IconExternalLink, IconPlus } from "@tabler/icons-react"
+import { IconExternalLink } from "@tabler/icons-react"
 import { Link, useNavigate } from "react-router"
 
 import { DataTable, pembantuKolom } from "@/components/data/data-table"
 import { Halaman, PengantarHalaman } from "@/components/data/page"
-import { MenuBaris, useHapus } from "@/components/data/row-actions"
-import { Button } from "@/components/ui/button"
+import { MenuBaris } from "@/components/data/row-actions"
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import type { Halaman as HalamanStatis } from "@/lib/api"
 import { menitBaca, waktuRelatif } from "@/lib/format"
@@ -16,7 +15,6 @@ const k = pembantuKolom<HalamanStatis>()
 export default function DaftarHalaman() {
   const navigate = useNavigate()
   const { data, isLoading } = useKoleksi("halaman")
-  const hapus = useHapus("halaman", "halaman")
 
   const kolom = [
     k.accessor("judul", {
@@ -49,11 +47,7 @@ export default function DaftarHalaman() {
     k.display({
       id: "aksi",
       cell: ({ row }) => (
-        <MenuBaris
-          label={row.original.judul}
-          onSunting={() => navigate(`/halaman/${row.original.id}`)}
-          onHapus={() => void hapus([row.original.id], row.original.judul)}
-        >
+        <MenuBaris label={row.original.judul} onSunting={() => navigate(`/halaman/${row.original.id}`)}>
           <DropdownMenuItem asChild>
             <a href={urlPortal(`${row.original.slug}.html`)} target="_blank" rel="noopener">
               <IconExternalLink />
@@ -67,21 +61,14 @@ export default function DaftarHalaman() {
 
   return (
     <Halaman>
-      <PengantarHalaman deskripsi="Halaman berisi teks panjang seperti Kebijakan Privasi dan Syarat & Ketentuan. Wajib ditinjau unit hukum sebelum diterbitkan.">
-        <Button asChild>
-          <Link to="/halaman/baru">
-            <IconPlus />
-            Tambah halaman
-          </Link>
-        </Button>
-      </PengantarHalaman>
+      <PengantarHalaman deskripsi="Halaman berisi teks panjang seperti Kebijakan Privasi dan Syarat & Ketentuan. Wajib ditinjau unit hukum sebelum diterbitkan." />
       <DataTable
         data={data}
         memuat={isLoading}
         columns={kolom}
         label="Daftar halaman statis"
         pilih={false}
-        kosong={{ judul: "Belum ada halaman", deskripsi: "Tambahkan halaman kebijakan atau ketentuan." }}
+        kosong={{ judul: "Belum ada halaman", deskripsi: "Halaman kebijakan dan ketentuan portal belum tersedia." }}
       />
     </Halaman>
   )

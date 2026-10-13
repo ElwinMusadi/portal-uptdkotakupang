@@ -17,6 +17,15 @@ class PortalLink implements ValidationRule
     public function __construct(private string $label) {}
 
     /**
+     * Whether the portal may put the value in an href.
+     */
+    public static function allows(string $value): bool
+    {
+        return preg_match('/^(https?:\/\/[^\/\s]+|mailto:\S|tel:\+?[0-9]|#|\.{1,2}\/|[\w-]+\.html(?:[#?]|\z))/i', $value) === 1
+            && preg_match('/[\s\x00-\x1F\x7F]/', $value) !== 1;
+    }
+
+    /**
      * Run the validation rule.
      *
      * @param  Closure(string, ?string=): PotentiallyTranslatedString  $fail
@@ -27,9 +36,7 @@ class PortalLink implements ValidationRule
             return;
         }
 
-        $isLink = preg_match('/^(https?:\/\/[^\/\s]+|mailto:\S|tel:\+?[0-9]|#|\.{1,2}\/|[\w-]+\.html(?:[#?]|\z))/i', $value) === 1;
-
-        if (! $isLink || preg_match('/[\s\x00-\x1F\x7F]/', $value) === 1) {
+        if (! self::allows($value)) {
             $fail("{$this->label}: gunakan alamat lengkap (https://…) atau nama halaman portal (mis. jadwal.html).");
         }
     }

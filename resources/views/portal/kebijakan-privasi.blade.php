@@ -188,11 +188,11 @@
 <main id="main">
   <section class="container page-hero">
     <ol class="crumbs" role="list"><li><a href="index.html">Beranda</a></li><li aria-current="page">Kebijakan Privasi</li></ol>
-    <p class="eyebrow">Kebijakan privasi · berlaku sejak [tanggal terbit]</p>
-    <h1 class="h-display">Data Anda secukupnya. <span class="tone">Dijaga sepenuhnya.</span></h1>
+    <p class="eyebrow" data-halaman-pengantar>Kebijakan privasi · berlaku sejak [tanggal terbit]</p>
+    <h1 class="h-display" data-halaman-judul>Data Anda secukupnya. <span class="tone">Dijaga sepenuhnya.</span></h1>
   </section>
   <section class="section section--flush-top">
-    <div class="container container--narrow prose">
+    <div class="container container--narrow prose" data-halaman="kebijakan-privasi">
       <p>Kebijakan ini menjelaskan data apa yang dikumpulkan portal PINTU, untuk apa, dan bagaimana kami melindunginya. Kebijakan mengacu pada Undang-Undang Nomor 27 Tahun 2022 tentang Pelindungan Data Pribadi.</p>
       <h2>Data yang kami kumpulkan.</h2>
       <ul><li>Data yang Anda isi di formulir masukan: nama (opsional), email atau nomor WhatsApp, dan isi pesan.</li><li>Data teknis anonim: halaman yang dikunjungi dan jenis perangkat, untuk mengukur kebutuhan informasi.</li><li>Portal tidak meminta NIK, nomor rekening, atau data kendaraan untuk sekadar membaca informasi.</li></ul>

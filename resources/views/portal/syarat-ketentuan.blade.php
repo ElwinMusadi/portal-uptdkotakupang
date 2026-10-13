@@ -188,11 +188,11 @@
 <main id="main">
   <section class="container page-hero">
     <ol class="crumbs" role="list"><li><a href="index.html">Beranda</a></li><li aria-current="page">Syarat &amp; Ketentuan</li></ol>
-    <p class="eyebrow">Syarat &amp; ketentuan · berlaku sejak [tanggal terbit]</p>
-    <h1 class="h-display">Informasi resmi. <span class="tone">Dipakai dengan bijak.</span></h1>
+    <p class="eyebrow" data-halaman-pengantar>Syarat &amp; ketentuan · berlaku sejak [tanggal terbit]</p>
+    <h1 class="h-display" data-halaman-judul>Informasi resmi. <span class="tone">Dipakai dengan bijak.</span></h1>
   </section>
   <section class="section section--flush-top">
-    <div class="container container--narrow prose">
+    <div class="container container--narrow prose" data-halaman="syarat-ketentuan">
       <h2>Sifat informasi.</h2>
       <p>Informasi di portal ini bersifat panduan. Nilai pajak yang mengikat adalah yang tercetak pada notis pajak resmi. Hasil simulasi hanya perkiraan.</p>
       <h2>Pemutakhiran.</h2>
