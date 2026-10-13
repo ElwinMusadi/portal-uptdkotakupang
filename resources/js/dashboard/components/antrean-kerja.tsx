@@ -92,7 +92,7 @@ function AksiBaris({ item }: { item: ItemAlur }) {
             Buka penyunting
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <MenuAksiAlur item={item} jalankan={(i, a) => void jalankan(i, a)} />
+          <MenuAksiAlur koleksi={item.koleksi} item={item} jalankan={(i, a) => void jalankan(i, a)} />
         </DropdownMenuContent>
       </DropdownMenu>
       {dialog}

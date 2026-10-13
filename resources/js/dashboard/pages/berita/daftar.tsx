@@ -83,7 +83,7 @@ export default function DaftarBerita() {
           onHapus={() => void hapus([row.original.id], row.original.judul)}
         >
           <DropdownMenuSeparator />
-          <MenuAksiAlur item={row.original} jalankan={(i, a) => void jalankan(i, a)} />
+          <MenuAksiAlur koleksi="berita" item={row.original} jalankan={(i, a) => void jalankan(i, a)} />
         </MenuBaris>
       ),
     }),

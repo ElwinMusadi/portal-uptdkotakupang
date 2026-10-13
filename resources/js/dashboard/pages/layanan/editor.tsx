@@ -1,6 +1,6 @@
 import * as React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { IconArrowLeft, IconCheckbox, IconTrash } from "@tabler/icons-react"
+import { IconArrowLeft, IconCheckbox, IconLock, IconTrash } from "@tabler/icons-react"
 import { useForm, type Resolver } from "react-hook-form"
 import { Link, useNavigate, useParams } from "react-router"
 import { toast } from "sonner"
@@ -14,12 +14,13 @@ import { FieldArea, FieldPilih, FieldSakelar, FieldTeks } from "@/components/for
 import { DaftarObjek, FieldLabel } from "@/components/form/list-fields"
 import { BilahSimpan, KerangkaMemuat } from "@/components/form/settings-form"
 import { JagaPerubahan } from "@/components/form/unsaved"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import type { Layanan } from "@/lib/api"
-import { alurBaru } from "@/lib/alur"
+import { alurBaru, bolehUbahAlur, khususAdministrator } from "@/lib/alur"
 import { slugify } from "@/lib/format"
 import { validasiFormulir } from "@/lib/formulir"
 import { newId } from "@/lib/id"
@@ -109,6 +110,9 @@ function IsiEditor({ entri, semua }: { entri: Layanan | null; semua: Layanan[] }
   const { data: akun } = usePengaturan("akun")
   const hapus = useHapus("layanan", "layanan")
   const { jalankan, dialog, memproses } = useAksiAlur("layanan")
+  // Layanan yang menunggu persetujuan atau sudah terbit, urutan, dan penghapusan hanya untuk Administrator (D-022)
+  const terkunci = !!entri && !bolehUbahAlur("layanan", entri.status)
+  const bolehHapus = !khususAdministrator("layanan")
 
   const form = useForm<FormLayanan>({
     defaultValues: entri ? dariEntri(entri) : kosong(),
@@ -165,7 +169,7 @@ function IsiEditor({ entri, semua }: { entri: Layanan | null; semua: Layanan[] }
             Semua layanan
           </Link>
         </Button>
-        {entri && (
+        {entri && bolehHapus && (
           <Button
             variant="ghost"
             size="sm"
@@ -182,6 +186,16 @@ function IsiEditor({ entri, semua }: { entri: Layanan | null; semua: Layanan[] }
           </Button>
         )}
       </div>
+      {terkunci && (
+        <Alert>
+          <IconLock />
+          <AlertTitle>Hanya Administrator yang dapat mengubah layanan ini</AlertTitle>
+          <AlertDescription>
+            Layanan ini {entri.status === "terbit" ? "sudah terbit di portal" : "menunggu persetujuan"}. Isinya dan
+            langkah berikutnya dijalankan Administrator.
+          </AlertDescription>
+        </Alert>
+      )}
       <Form {...form}>
         <form
           noValidate
@@ -192,7 +206,7 @@ function IsiEditor({ entri, semua }: { entri: Layanan | null; semua: Layanan[] }
           }}
         >
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
-            <div className="grid min-w-0 gap-4">
+            <fieldset disabled={terkunci} className="grid min-w-0 gap-4">
               <Bagian judul="Identitas layanan">
                 <FieldTeks control={form.control} name="nama" label="Nama layanan" wajib placeholder="Mis. Pajak tahunan" />
                 <FieldArea control={form.control} name="ringkasan" label="Ringkasan" wajib rows={2} maks={200} />
@@ -255,26 +269,29 @@ function IsiEditor({ entri, semua }: { entri: Layanan | null; semua: Layanan[] }
                 ) : null}
                 <FieldArea control={form.control} name="catatan" label="Catatan di bawah tabel" rows={2} placeholder="Mis. Jika dikuasakan, sertakan surat kuasa bermeterai." />
               </Bagian>
-            </div>
+            </fieldset>
 
             <div className="grid min-w-0 gap-4">
               <PanelAlur
+                koleksi="layanan"
                 item={entri}
                 entriBaru={!entri}
                 jalankan={jalankan}
                 memproses={memproses || menyimpan}
                 sebelumAksi={async () => (berubah ? simpan() : true)}
               />
-              <Bagian judul="Ketentuan">
-                <FieldSakelar control={form.control} name="cekFisik" label="Wajib cek fisik" deskripsi="Kendaraan dibawa untuk gesek nomor rangka & mesin." />
-                <FieldSakelar control={form.control} name="nonTunai" label="Bisa non-tunai" />
-                <FieldSakelar control={form.control} name="diwakilkan" label="Dapat diwakilkan" />
-                <FieldSakelar control={form.control} name="unggulan" label="Tampil di beranda" deskripsi="Menjadi tab Layanan utama di beranda." />
-              </Bagian>
-              <Bagian judul="Penanggung jawab">
-                <FieldPilih control={form.control} name="penyedia" label="Unit penyedia" opsi={UNIT_PENYEDIA.map((u) => ({ nilai: u, label: u }))} />
-                <FieldPilih control={form.control} name="pemeriksa" label="Pemeriksa" opsi={PEMERIKSA.map((u) => ({ nilai: u, label: u }))} />
-              </Bagian>
+              <fieldset disabled={terkunci} className="grid min-w-0 gap-4">
+                <Bagian judul="Ketentuan">
+                  <FieldSakelar control={form.control} name="cekFisik" label="Wajib cek fisik" deskripsi="Kendaraan dibawa untuk gesek nomor rangka & mesin." />
+                  <FieldSakelar control={form.control} name="nonTunai" label="Bisa non-tunai" />
+                  <FieldSakelar control={form.control} name="diwakilkan" label="Dapat diwakilkan" />
+                  <FieldSakelar control={form.control} name="unggulan" label="Tampil di beranda" deskripsi="Menjadi tab Layanan utama di beranda." />
+                </Bagian>
+                <Bagian judul="Penanggung jawab">
+                  <FieldPilih control={form.control} name="penyedia" label="Unit penyedia" opsi={UNIT_PENYEDIA.map((u) => ({ nilai: u, label: u }))} />
+                  <FieldPilih control={form.control} name="pemeriksa" label="Pemeriksa" opsi={PEMERIKSA.map((u) => ({ nilai: u, label: u }))} />
+                </Bagian>
+              </fieldset>
               <Bagian judul="Pratinjau" deskripsi="Daftar “Bawa saat datang” di portal.">
                 <div className="rounded-lg border bg-muted/30 p-3 text-sm">
                   <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">

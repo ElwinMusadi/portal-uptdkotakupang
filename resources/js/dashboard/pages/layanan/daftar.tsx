@@ -7,6 +7,7 @@ import { Halaman, PengantarHalaman } from "@/components/data/page"
 import { MenuBaris, TombolHapusMassal, useHapus } from "@/components/data/row-actions"
 import { StatusAlurBadge } from "@/components/data/status-badge"
 import { Badge } from "@/components/ui/badge"
+import { khususAdministrator } from "@/lib/alur"
 import { Button } from "@/components/ui/button"
 import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import type { Layanan } from "@/lib/api"
@@ -21,6 +22,8 @@ export default function DaftarLayanan() {
   const urutkan = useUrutkanEntri("layanan")
   const hapus = useHapus("layanan", "layanan")
   const { jalankan, dialog } = useAksiAlur("layanan")
+  // Urutan portal dan penghapusan hanya untuk Administrator (D-022)
+  const khususAdmin = khususAdministrator("layanan")
 
   const kolom = [
     k.accessor("nama", {
@@ -82,10 +85,10 @@ export default function DaftarLayanan() {
         <MenuBaris
           label={row.original.nama}
           onSunting={() => navigate(`/layanan/${row.original.id}`)}
-          onHapus={() => void hapus([row.original.id], row.original.nama)}
+          onHapus={khususAdmin ? undefined : () => void hapus([row.original.id], row.original.nama)}
         >
           <DropdownMenuSeparator />
-          <MenuAksiAlur item={row.original} jalankan={(i, a) => void jalankan(i, a)} />
+          <MenuAksiAlur koleksi="layanan" item={row.original} jalankan={(i, a) => void jalankan(i, a)} />
         </MenuBaris>
       ),
     }),
@@ -106,7 +109,8 @@ export default function DaftarLayanan() {
         memuat={isLoading}
         columns={kolom}
         label="Daftar layanan dan persyaratan"
-        urutkan={(ids) => urutkan.mutate(ids)}
+        urutkan={khususAdmin ? undefined : (ids) => urutkan.mutate(ids)}
+        pilih={!khususAdmin}
         cari={{
           placeholder: "Cari layanan atau berkas…",
           teks: (l) => `${l.nama} ${l.ringkasan} ${l.persyaratan.map((p) => p.dokumen).join(" ")}`,
@@ -119,13 +123,17 @@ export default function DaftarLayanan() {
             nilai: (l) => l.status,
           },
         ]}
-        tindakanMassal={(baris, bersihkan) => (
-          <TombolHapusMassal
-            onClick={async () => {
-              if (await hapus(baris.map((b) => b.id))) bersihkan()
-            }}
-          />
-        )}
+        tindakanMassal={
+          khususAdmin
+            ? undefined
+            : (baris, bersihkan) => (
+                <TombolHapusMassal
+                  onClick={async () => {
+                    if (await hapus(baris.map((b) => b.id))) bersihkan()
+                  }}
+                />
+              )
+        }
         kosong={{ judul: "Belum ada layanan", deskripsi: "Tambahkan layanan dan daftar persyaratannya." }}
       />
       {dialog}

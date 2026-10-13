@@ -207,13 +207,7 @@
     <div class="container svc-layout">
       <aside class="svc-nav no-print" aria-label="Daftar layanan">
         <p class="eyebrow" style="margin-bottom:12px">Pilih layanan</p>
-        <nav class="catlist" data-spy>
-          <a href="#pajak-tahunan"><span class="catlist__txt">Pajak tahunan</span><svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
-          <a href="#lima-tahun"><span class="catlist__txt">Perpanjangan 5&nbsp;tahun</span><svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
-          <a href="#mutasi-tetap"><span class="catlist__txt">Mutasi, pemilik tetap</span><svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
-          <a href="#mutasi-bbn"><span class="catlist__txt">Mutasi, ganti pemilik</span><svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
-          <a href="#duplikat"><span class="catlist__txt">Duplikat STNK</span><svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
-        </nav>
+        <nav class="catlist" data-spy data-layanan-nav></nav>
         <div class="svc-nav__tools">
           <button class="btn btn--ghost btn--sm" type="button" data-print><svg class="i" aria-hidden="true"><use href="#i-printer"/></svg>Cetak halaman</button>
           <a class="btn btn--ghost btn--sm" href="unduhan.html"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Unduh formulir</a>
@@ -221,119 +215,11 @@
       </aside>
 
       <div>
-        <article class="card svc" id="pajak-tahunan" data-reveal>
-          <div class="svc__head">
-            <div><p class="smallcaps">Loket 1</p><h2 class="h3">Pajak tahunan.</h2></div>
-            <svg class="i i--lg" aria-hidden="true"><use href="#i-ticket"/></svg>
-          </div>
-          <p class="svc__desc">Pembayaran PKB dan pengesahan STNK setiap tahun.</p>
-          <div class="svc__meta"><span class="tag tag--ok"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Tanpa cek fisik</span><span class="tag tag--line">Bisa non-tunai</span><span class="tag tag--line">Dapat diwakilkan</span></div>
-          <div class="table-wrap"><table class="table">
-            <thead><tr><th scope="col">No</th><th scope="col">Kelengkapan dokumen</th><th scope="col" class="num">Jumlah</th></tr></thead>
-            <tbody>
-              <tr><td>1</td><td>Fotokopi STNK dan notis pajak <span class="muted">(lampirkan asli)</span></td><td class="num">2 lembar</td></tr>
-              <tr><td>2</td><td>Fotokopi BPKB halaman 2–3</td><td class="num">2 lembar</td></tr>
-              <tr><td>3</td><td>Fotokopi KTP pemilik <span class="muted">(sesuai alamat di STNK dan BPKB)</span></td><td class="num">2 lembar</td></tr>
-              <tr><td>4</td><td>Map</td><td class="num">1 buah</td></tr>
-            </tbody>
-          </table></div>
-        </article>
+        <div data-layanan-daftar>
+          <p class="muted" role="status" data-layanan-status>Memuat persyaratan layanan…</p>
+        </div>
 
-        <article class="card svc" id="lima-tahun" data-reveal>
-          <div class="svc__head">
-            <div><p class="smallcaps">Loket 2</p><h2 class="h3">Perpanjangan STNK 5&nbsp;tahun.</h2></div>
-            <svg class="i i--lg" aria-hidden="true"><use href="#i-refresh"/></svg>
-          </div>
-          <p class="svc__desc">Penggantian STNK dan pelat nomor setiap lima tahun.</p>
-          <div class="svc__meta"><span class="tag tag--warn"><svg class="i" aria-hidden="true"><use href="#i-alert"/></svg>Wajib cek fisik</span><span class="tag tag--line">Bisa non-tunai</span></div>
-          <div class="table-wrap"><table class="table">
-            <thead><tr><th scope="col">No</th><th scope="col">Kelengkapan dokumen</th><th scope="col" class="num">Jumlah</th></tr></thead>
-            <tbody>
-              <tr><td>1</td><td>Fotokopi STNK dan notis pajak <span class="muted">(lampirkan asli)</span></td><td class="num">2 lembar</td></tr>
-              <tr><td>2</td><td>Fotokopi BPKB halaman 2–3</td><td class="num">2 lembar</td></tr>
-              <tr><td>3</td><td>Fotokopi KTP pemilik <span class="muted">(sesuai alamat di STNK dan BPKB)</span></td><td class="num">2 lembar</td></tr>
-              <tr><td>4</td><td>Map</td><td class="num">1 buah</td></tr>
-              <tr><td>5</td><td>Hadirkan kendaraan untuk cek fisik</td><td class="num">—</td></tr>
-            </tbody>
-          </table></div>
-          <p class="svc__note"><svg class="i" aria-hidden="true"><use href="#i-info"/></svg><span>Jika dikuasakan, sertakan surat kuasa bertanda tangan di atas meterai Rp10.000 (1 lembar).</span></p>
-        </article>
-
-        <article class="card svc" id="mutasi-tetap" data-reveal>
-          <div class="svc__head">
-            <div><p class="smallcaps">Loket 3</p><h2 class="h3">Mutasi keluar, pemilik tetap.</h2></div>
-            <svg class="i i--lg" aria-hidden="true"><use href="#i-arrow-up-right"/></svg>
-          </div>
-          <p class="svc__desc">Pindah alamat kendaraan ke luar Kota Kupang tanpa ganti pemilik.</p>
-          <div class="svc__meta"><span class="tag tag--warn"><svg class="i" aria-hidden="true"><use href="#i-alert"/></svg>Wajib cek fisik</span></div>
-          <div class="table-wrap"><table class="table">
-            <thead><tr><th scope="col">No</th><th scope="col">Kelengkapan dokumen</th><th scope="col" class="num">Jumlah</th></tr></thead>
-            <tbody>
-              <tr><td>1</td><td>Fotokopi KTP alamat tujuan yang baru</td><td class="num">2 lembar</td></tr>
-              <tr><td>2</td><td>Fotokopi STNK dan BPKB <span class="muted">(lampirkan yang asli)</span></td><td class="num">2 lembar</td></tr>
-              <tr><td>3</td><td>Bawa kendaraan untuk cek fisik</td><td class="num">—</td></tr>
-              <tr><td>4</td><td>Map</td><td class="num">1 buah</td></tr>
-            </tbody>
-          </table></div>
-        </article>
-
-        <article class="card svc" id="mutasi-bbn" data-reveal>
-          <div class="svc__head">
-            <div><p class="smallcaps">Loket 3</p><h2 class="h3">Mutasi keluar, ganti pemilik.</h2></div>
-            <svg class="i i--lg" aria-hidden="true"><use href="#i-users"/></svg>
-          </div>
-          <p class="svc__desc">Pindah alamat ke luar daerah sekaligus balik nama (BBN).</p>
-          <div class="svc__meta"><span class="tag tag--warn"><svg class="i" aria-hidden="true"><use href="#i-alert"/></svg>Wajib cek fisik</span><span class="tag tag--line">Meterai Rp10.000</span></div>
-          <div class="table-wrap"><table class="table">
-            <thead><tr><th scope="col">No</th><th scope="col">Kelengkapan dokumen</th><th scope="col" class="num">Jumlah</th></tr></thead>
-            <tbody>
-              <tr><td>1</td><td>Fotokopi KTP pemilik kendaraan lama</td><td class="num">2 lembar</td></tr>
-              <tr><td>2</td><td>Fotokopi KTP alamat tujuan yang baru</td><td class="num">2 lembar</td></tr>
-              <tr><td>3</td><td>Fotokopi STNK dan BPKB <span class="muted">(lampirkan yang asli)</span></td><td class="num">2 lembar</td></tr>
-              <tr><td>4</td><td>Bawa kendaraan untuk cek fisik</td><td class="num">—</td></tr>
-              <tr><td>5</td><td>Kuitansi pembelian bertanda tangan di atas meterai Rp10.000</td><td class="num">1 lembar</td></tr>
-              <tr><td>6</td><td>Map</td><td class="num">1 buah</td></tr>
-            </tbody>
-          </table></div>
-          <p class="svc__note"><svg class="i" aria-hidden="true"><use href="#i-info"/></svg><span>Kendaraan sudah berada di tempat baru? Ajukan permohonan cek fisik bantuan di Samsat tujuan.</span></p>
-        </article>
-
-        <article class="card svc" id="duplikat" data-reveal>
-          <div class="svc__head">
-            <div><p class="smallcaps">Loket 2</p><h2 class="h3">Duplikat STNK hilang atau rusak.</h2></div>
-            <svg class="i i--lg" aria-hidden="true"><use href="#i-file"/></svg>
-          </div>
-          <p class="svc__desc">Penerbitan ulang STNK yang hilang atau rusak.</p>
-          <div class="svc__meta"><span class="tag tag--warn"><svg class="i" aria-hidden="true"><use href="#i-alert"/></svg>Wajib cek fisik</span><span class="tag tag--line">Laporan polisi asli</span></div>
-          <div class="table-wrap"><table class="table">
-            <thead><tr><th scope="col">No</th><th scope="col">Kelengkapan dokumen</th><th scope="col" class="num">Jumlah</th></tr></thead>
-            <tbody>
-              <tr><td>1</td><td>Surat keterangan STNK hilang/rusak dari kepolisian <span class="muted">(asli)</span></td><td class="num">1 lembar</td></tr>
-              <tr><td>2</td><td>Surat pernyataan pribadi STNK hilang/rusak bermeterai Rp10.000</td><td class="num">1 lembar</td></tr>
-              <tr><td>3</td><td>Fotokopi KTP pemilik <span class="muted">(sesuai alamat di STNK dan BPKB)</span></td><td class="num">2 lembar</td></tr>
-              <tr><td>4</td><td>Fotokopi BPKB halaman 2–3 <span class="muted">(lampirkan yang asli)</span></td><td class="num">2 lembar</td></tr>
-              <tr><td>5</td><td>Map</td><td class="num">1 buah</td></tr>
-              <tr><td>6</td><td>Bawa kendaraan untuk cek fisik</td><td class="num">—</td></tr>
-            </tbody>
-          </table></div>
-          <p class="svc__note"><svg class="i" aria-hidden="true"><use href="#i-info"/></svg><span>Jika mewakili, sertakan surat kuasa bertanda tangan di atas meterai Rp10.000 (1 lembar).</span></p>
-          <details class="svc__extra">
-            <summary>Tambahan untuk badan hukum<svg class="i i--sm" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
-            <div class="table-wrap"><table class="table">
-              <thead><tr><th scope="col">No</th><th scope="col">Kelengkapan dokumen</th><th scope="col" class="num">Jumlah</th></tr></thead>
-              <tbody>
-                <tr><td>1</td><td>Fotokopi akta pendirian perusahaan</td><td class="num">1 lembar</td></tr>
-                <tr><td>2</td><td>Fotokopi SITU/SIUP</td><td class="num">1 lembar</td></tr>
-                <tr><td>3</td><td>Fotokopi NIB (Nomor Induk Berusaha)</td><td class="num">1 lembar</td></tr>
-                <tr><td>4</td><td>Fotokopi NPWP</td><td class="num">1 lembar</td></tr>
-                <tr><td>5</td><td>Keterangan domisili perusahaan dari kelurahan setempat</td><td class="num">1 lembar</td></tr>
-                <tr><td>6</td><td>Fotokopi KTP penanggung jawab perusahaan</td><td class="num">1 lembar</td></tr>
-              </tbody>
-            </table></div>
-          </details>
-        </article>
-
-        <p class="micro muted" style="margin-top:20px">Sumber: papan persyaratan loket UPTD · diverifikasi petugas, Oktober 2026. Layanan lain (mis. balik nama dalam daerah) dapat ditanyakan di meja informasi.</p>
+        <p class="micro muted" style="margin-top:20px">Sumber: papan persyaratan loket UPTD<span data-layanan-verifikasi></span>. Layanan lain (mis. balik nama dalam daerah) dapat ditanyakan di meja informasi.</p>
       </div>
     </div>
   </section>

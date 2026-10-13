@@ -169,6 +169,23 @@ class PortalPagesTest extends TestCase
         $this->assertStringContainsString('<div data-profil-tetap><dt>Dasar hukum</dt>', $html);
     }
 
+    public function test_leaves_the_service_requirements_to_the_public_api(): void
+    {
+        $services = $this->get('/layanan')->assertOk()->getContent();
+        $home = $this->get('/')->assertOk()->getContent();
+
+        foreach ([$services, $home] as $html) {
+            $this->assertStringNotContainsString('Fotokopi BPKB', $html);
+            $this->assertStringNotContainsString('Fotokopi KTP', $html);
+        }
+        $this->assertStringContainsString('<nav class="catlist" data-spy data-layanan-nav></nav>', $services);
+        $this->assertStringContainsString('<p class="muted" role="status" data-layanan-status>Memuat persyaratan layanan…</p>', $services);
+        $this->assertStringNotContainsString('diverifikasi petugas, Oktober 2026', $services);
+        $this->assertSame(1, preg_match('/<section[^>]*\bid="layanan-utama"[^>]*>.*?<\/section>/s', $home, $section));
+        $this->assertStringNotContainsString('role="tab"', $section[0]);
+        $this->assertStringContainsString('<p class="muted" role="status">Memuat persyaratan layanan…</p>', $section[0]);
+    }
+
     public function test_sends_the_contact_form_to_the_message_api_with_the_services_it_accepts(): void
     {
         $html = $this->get('/kontak')->assertOk()->getContent();

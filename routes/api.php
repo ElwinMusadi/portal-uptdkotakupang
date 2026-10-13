@@ -18,6 +18,9 @@ use App\Http\Controllers\Dashboard\ProfileController;
 use App\Http\Controllers\Dashboard\ScheduleAdjustmentController;
 use App\Http\Controllers\Dashboard\ScheduleAdjustmentDeletionController;
 use App\Http\Controllers\Dashboard\ServiceBoardController;
+use App\Http\Controllers\Dashboard\ServiceController;
+use App\Http\Controllers\Dashboard\ServiceDeletionController;
+use App\Http\Controllers\Dashboard\ServiceOrderController;
 use App\Http\Controllers\Dashboard\SettingTimestampController;
 use App\Http\Controllers\Dashboard\StatisticsController;
 use App\Http\Controllers\Dashboard\TariffController;
@@ -29,6 +32,7 @@ use App\Http\Controllers\PublicMobileServiceStopController;
 use App\Http\Controllers\PublicOpeningHoursController;
 use App\Http\Controllers\PublicProfileController;
 use App\Http\Controllers\PublicServiceBoardController;
+use App\Http\Controllers\PublicServiceController;
 use App\Http\Controllers\PublicStatisticsController;
 use App\Http\Controllers\PublicTariffController;
 use App\Http\Controllers\PublicVisionMissionController;
@@ -37,6 +41,7 @@ use App\Models\Faq;
 use App\Models\Message;
 use App\Models\MobileServiceStop;
 use App\Models\ScheduleAdjustment;
+use App\Models\Service;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -192,6 +197,20 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::patch('/{message}', [MessageController::class, 'update'])->can('update', 'message')->name('update');
     });
 
+    /*
+     * Persyaratan Layanan (ServicePolicy) with the publication workflow:
+     * module managers prepare, submit and review; administrators approve,
+     * withdraw, reorder and delete (D-022).
+     */
+    Route::prefix('koleksi/layanan')->name('koleksi.layanan.')->whereUlid('service')->group(function (): void {
+        Route::get('/', [ServiceController::class, 'index'])->can('viewAny', Service::class)->name('index');
+        Route::post('/', [ServiceController::class, 'store'])->can('create', Service::class)->name('store');
+        Route::put('/urutan', [ServiceOrderController::class, 'update'])->can('reorder', Service::class)->name('urutan');
+        Route::post('/hapus', [ServiceDeletionController::class, 'store'])->can('deleteAny', Service::class)->name('hapus');
+        Route::get('/{service}', [ServiceController::class, 'show'])->can('view', 'service')->name('show');
+        Route::patch('/{service}', [ServiceController::class, 'update'])->can('update', 'service')->name('update');
+    });
+
     Route::get('/aktivitas', ActivityController::class)->name('aktivitas');
 });
 
@@ -213,6 +232,7 @@ Route::prefix('public')
         Route::get('/kontak', PublicContactController::class)->name('kontak.show');
         Route::get('/visi-misi', PublicVisionMissionController::class)->name('visi-misi.show');
         Route::get('/profil', PublicProfileController::class)->name('profil.show');
+        Route::get('/layanan', PublicServiceController::class)->name('layanan.index');
         // The contact form; also limited to 5 messages per hour per address (D-016).
         Route::post('/pesan', PublicMessageController::class)->middleware('throttle:public-messages')->name('pesan.store');
     });

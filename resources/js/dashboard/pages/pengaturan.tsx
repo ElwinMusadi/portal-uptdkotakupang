@@ -166,17 +166,18 @@ function JumlahKoleksi() {
   const berita = useKoleksi("berita").data?.length
   const dokumentasi = useKoleksi("dokumentasi").data?.length
   const dokumen = useKoleksi("dokumen").data?.length
-  const layanan = useKoleksi("layanan").data?.length
   // Koleksi di server hanya dihitung bila modulnya boleh dibaca pengguna.
   const bacaPesan = !diServer("pesan") || bolehModul("pesan")
   const bacaKeliling = !diServer("keliling") || bolehModul("keliling", "pemutakhiran")
+  const bacaLayanan = !diServer("layanan") || bolehModul("layanan", "pemutakhiran")
   const pesan = useKoleksi("pesan", { aktif: bacaPesan }).data?.length
   const keliling = useKoleksi("keliling", { aktif: bacaKeliling }).data?.length
+  const layanan = useKoleksi("layanan", { aktif: bacaLayanan }).data?.length
   const baris: [string, number | null | undefined][] = [
     [KOLEKSI_LABEL.berita, berita],
     [KOLEKSI_LABEL.dokumentasi, dokumentasi],
     [KOLEKSI_LABEL.dokumen, dokumen],
-    [KOLEKSI_LABEL.layanan, layanan],
+    [KOLEKSI_LABEL.layanan, bacaLayanan ? layanan : null],
     [KOLEKSI_LABEL.keliling, bacaKeliling ? keliling : null],
     [KOLEKSI_LABEL.pesan, bacaPesan ? pesan : null],
   ]

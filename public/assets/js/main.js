@@ -23,6 +23,7 @@
 
   const HARI = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
   const BULAN = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+  const BULAN_PENUH = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
   /* ---------- Toast ---------- */
   let toastTimer;
@@ -91,38 +92,44 @@
 
   /* ---------- Tab (role=tablist) dengan keyboard ---------- */
   function initTabs() {
-    $$("[data-tabs]").forEach((list) => {
-      const tabs = $$('[role="tab"]', list);
-      const select = (tab, focus) => {
-        tabs.forEach((t) => {
-          const on = t === tab;
-          t.setAttribute("aria-selected", String(on));
-          t.tabIndex = on ? 0 : -1;
-          const panel = document.getElementById(t.getAttribute("aria-controls"));
-          if (panel) panel.hidden = !on;
-        });
-        if (focus) tab.focus();
-      };
-      tabs.forEach((tab, i) => {
-        tab.addEventListener("click", () => select(tab));
-        tab.addEventListener("keydown", (e) => {
-          const dir = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
-          if (dir) { e.preventDefault(); select(tabs[(i + dir + tabs.length) % tabs.length], true); }
-          if (e.key === "Home") { e.preventDefault(); select(tabs[0], true); }
-          if (e.key === "End") { e.preventDefault(); select(tabs[tabs.length - 1], true); }
-        });
+    $$("[data-tabs]").forEach(pasangTab);
+  }
+
+  /** Tab dan panelnya; dipanggil lagi untuk tab yang dibuat dari API */
+  function pasangTab(list) {
+    const tabs = $$('[role="tab"]', list);
+    const select = (tab, focus) => {
+      tabs.forEach((t) => {
+        const on = t === tab;
+        t.setAttribute("aria-selected", String(on));
+        t.tabIndex = on ? 0 : -1;
+        const panel = document.getElementById(t.getAttribute("aria-controls"));
+        if (panel) panel.hidden = !on;
+      });
+      if (focus) tab.focus();
+    };
+    tabs.forEach((tab, i) => {
+      tab.addEventListener("click", () => select(tab));
+      tab.addEventListener("keydown", (e) => {
+        const dir = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+        if (dir) { e.preventDefault(); select(tabs[(i + dir + tabs.length) % tabs.length], true); }
+        if (e.key === "Home") { e.preventDefault(); select(tabs[0], true); }
+        if (e.key === "End") { e.preventDefault(); select(tabs[tabs.length - 1], true); }
       });
     });
   }
 
   /* ---------- Checklist persyaratan ---------- */
   function initChecklists() {
-    $$("[data-checklist]").forEach((box) => {
-      const out = $("[data-check-count]", box);
-      const update = () => { if (out) out.textContent = $$("input:checked", box).length; };
-      box.addEventListener("change", update);
-      update();
-    });
+    $$("[data-checklist]").forEach(pasangChecklist);
+  }
+
+  /** Penghitung centang; dipanggil lagi untuk daftar yang dibuat dari API */
+  function pasangChecklist(box) {
+    const out = $("[data-check-count]", box);
+    const update = () => { if (out) out.textContent = $$("input:checked", box).length; };
+    box.addEventListener("change", update);
+    update();
   }
 
   /* ---------- Waktu WITA & status loket ----------
@@ -712,6 +719,151 @@
     };
 
     muat(false);
+  }
+
+  /* ---------- Persyaratan Layanan ----------
+     Layanan dan persyaratannya dikelola di dashboard (Persyaratan Layanan) dan
+     dibaca dari GET /api/public/layanan, yang hanya memberikan layanan terbit
+     (D-022). Halaman Layanan menampilkan semuanya; beranda menampilkan layanan
+     unggulan sebagai tab dengan daftar centang. Teks di-escape; bila API
+     gagal, keterangan dan tombol coba lagi. */
+  async function muatLayanan() {
+    const data = await ambilJson("/api/public/layanan");
+    const teks = (x) => typeof x === "string";
+    const valid = Array.isArray(data) && data.every((l) =>
+      ["nama", "slug", "ringkasan", "loket", "jenis", "catatan"].every((f) => teks(l?.[f]))
+      && ["cekFisik", "nonTunai", "diwakilkan", "unggulan"].every((f) => typeof l[f] === "boolean")
+      && Array.isArray(l.label) && l.label.every(teks)
+      && Array.isArray(l.persyaratan) && l.persyaratan.every((p) => teks(p?.dokumen) && teks(p.jumlah))
+      && (l.terbitPada === null || teks(l.terbitPada)));
+    if (!valid) throw new Error("Respons tidak dikenal");
+    return data;
+  }
+
+  // Keterangan dalam kurung di akhir nama berkas ditampilkan redup, mis. "Fotokopi KTP pemilik (sesuai alamat di STNK)"
+  const pisahKeterangan = (dokumen) => {
+    const m = dokumen.match(/^(.*\S)\s*\(([^()]+)\)$/);
+    return m ? [m[1], m[2]] : [dokumen, ""];
+  };
+  const bertitik = (t) => (/[.!?]$/.test(t) ? t : `${t}.`);
+  // Ikon layanan menurut namanya; hanya hiasan
+  const ikonLayanan = (nama) => (/pajak/i.test(nama) ? "ticket" : /5\s*tahun|perpanjangan/i.test(nama) ? "refresh"
+    : /ganti pemilik|balik nama|bbn/i.test(nama) ? "users" : /mutasi/i.test(nama) ? "arrow-up-right" : "file");
+  const tagLayanan = (l, denganLoket) => [
+    l.cekFisik
+      ? '<span class="tag tag--warn"><svg class="i" aria-hidden="true"><use href="#i-alert"/></svg>Wajib cek fisik</span>'
+      : '<span class="tag tag--ok"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Tanpa cek fisik</span>',
+    ...(denganLoket ? [`<span class="tag tag--line">${esc(l.loket)}</span>`] : []),
+    ...(l.nonTunai ? ['<span class="tag tag--line">Bisa non-tunai</span>'] : []),
+    ...(l.diwakilkan ? ['<span class="tag tag--line">Dapat diwakilkan</span>'] : []),
+    ...l.label.map((t) => `<span class="tag tag--line">${esc(t)}</span>`),
+  ].join("");
+  const tabelPersyaratan = (persyaratan) => `<div class="table-wrap"><table class="table">
+    <thead><tr><th scope="col">No</th><th scope="col">Kelengkapan dokumen</th><th scope="col" class="num">Jumlah</th></tr></thead>
+    <tbody>${persyaratan.map((p, i) => {
+      const [utama, ket] = pisahKeterangan(p.dokumen);
+      return `<tr><td>${i + 1}</td><td>${esc(utama)}${ket ? ` <span class="muted">(${esc(ket)})</span>` : ""}</td><td class="num">${esc(p.jumlah || "—")}</td></tr>`;
+    }).join("")}</tbody>
+  </table></div>`;
+  const catatanLayanan = (catatan) => (catatan ? `<p class="svc__note"><svg class="i" aria-hidden="true"><use href="#i-info"/></svg><span>${esc(catatan)}</span></p>` : "");
+
+  function initLayanan() {
+    const daftar = $("[data-layanan-daftar]");
+    const nav = $("[data-layanan-nav]");
+    const tabList = $("[data-layanan-tab]");
+    const panel = $("[data-layanan-panel]");
+    if (!daftar && !panel) return;
+
+    // Halaman Layanan: kartu per layanan; persyaratan tambahan (mis. badan hukum) dilipat di kartu terakhir
+    const tampilkanHalaman = (data) => {
+      const layanan = data.filter((l) => l.jenis === "layanan");
+      const tambahan = data.filter((l) => l.jenis !== "layanan");
+      const lipatan = tambahan.map((l) => `<details class="svc__extra">
+          <summary>${esc(l.nama)}<svg class="i i--sm" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
+          ${tabelPersyaratan(l.persyaratan)}${catatanLayanan(l.catatan)}
+        </details>`).join("");
+      daftar.innerHTML = layanan.length
+        ? layanan.map((l, i) => `<article class="card svc" id="${esc(l.slug)}">
+          <div class="svc__head">
+            <div><p class="smallcaps">${esc(l.loket)}</p><h2 class="h3">${esc(bertitik(l.nama))}</h2></div>
+            <svg class="i i--lg" aria-hidden="true"><use href="#i-${ikonLayanan(l.nama)}"/></svg>
+          </div>
+          <p class="svc__desc">${esc(l.ringkasan)}</p>
+          <div class="svc__meta">${tagLayanan(l, false)}</div>
+          ${tabelPersyaratan(l.persyaratan)}${catatanLayanan(l.catatan)}${i === layanan.length - 1 ? lipatan : ""}
+        </article>`).join("")
+        : '<p class="muted" role="status">Persyaratan layanan belum tersedia. Tanyakan di meja informasi kantor.</p>';
+      if (nav) {
+        nav.innerHTML = layanan.map((l) => `<a href="#${esc(l.slug)}"><span class="catlist__txt">${esc(l.nama)}</span><svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>`).join("");
+        pasangSpy(nav);
+      }
+      // Bulan terbit terakhir sebagai tanda verifikasi petugas
+      const terakhir = data.map((l) => l.terbitPada).filter(Boolean).sort().pop();
+      const verifikasi = $("[data-layanan-verifikasi]");
+      if (verifikasi && terakhir) {
+        const w = nowWita(new Date(terakhir));
+        verifikasi.textContent = ` · diverifikasi petugas, ${BULAN_PENUH[w.mo - 1]} ${w.y}`;
+      }
+      if (location.hash) document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView();
+    };
+
+    // Beranda: tab layanan unggulan dengan daftar centang
+    const tampilkanBeranda = (data) => {
+      const unggulan = data.filter((l) => l.unggulan && l.jenis === "layanan");
+      const bagian = panel.closest("section");
+      if (bagian) bagian.hidden = !unggulan.length;
+      tabList.innerHTML = unggulan.map((l, i) => `<button class="numtab" role="tab" id="vt-${i + 1}" aria-controls="vp-${i + 1}" aria-selected="${i === 0}"${i ? ' tabindex="-1"' : ""}><span class="numtab__num">${pad(i + 1)}</span><span class="numtab__label">${esc(l.nama)}</span></button>`).join("");
+      panel.innerHTML = unggulan.map((l, i) => {
+        const w = l.terbitPada && nowWita(new Date(l.terbitPada));
+        return `<div class="views__panel" role="tabpanel" id="vp-${i + 1}" aria-labelledby="vt-${i + 1}"${i ? " hidden" : ""}>
+          <p class="smallcaps views__label">Bawa saat datang</p>
+          <div class="checklist" data-checklist>
+            <div class="checklist__head"><p><strong>Persyaratan</strong> · ${esc(l.nama)}</p><p class="checklist__progress"><span data-check-count>0</span> dari ${l.persyaratan.length} siap</p></div>
+            <ul role="list">${l.persyaratan.map((p) => {
+              const [utama, ket] = pisahKeterangan(p.dokumen);
+              return `<li><label><input type="checkbox"><span>${esc(utama)}${ket ? ` <em>${esc(ket)}</em>` : ""}</span><b>${esc(p.jumlah || "—")}</b></label></li>`;
+            }).join("")}</ul>
+            <div class="checklist__foot">${tagLayanan(l, true)}</div>
+          </div>
+          <div class="views__foot">
+            <p class="views__caption"><strong>${esc(bertitik(l.nama))}</strong> ${esc(l.ringkasan)}</p>
+            <p class="micro muted">Sumber: papan persyaratan loket${w ? ` · diverifikasi ${BULAN[w.mo - 1]} ${w.y}` : ""}</p>
+          </div>
+        </div>`;
+      }).join("");
+      pasangTab(tabList);
+      $$("[data-checklist]", panel).forEach(pasangChecklist);
+    };
+
+    const gagal = (wadah, pesan, muat) => {
+      const retry = document.createElement("button");
+      retry.type = "button";
+      retry.className = "link";
+      retry.textContent = "Coba lagi";
+      retry.addEventListener("click", () => muat(retry));
+      const p = document.createElement("p");
+      p.className = "muted";
+      p.setAttribute("role", "status");
+      p.append(pesan, retry);
+      wadah.replaceChildren(p);
+      return retry;
+    };
+
+    const muat = async (dariTombol) => {
+      try {
+        const data = await muatLayanan();
+        if (daftar) tampilkanHalaman(data);
+        if (panel && tabList) tampilkanBeranda(data);
+      } catch {
+        const tombol = [
+          ...(daftar ? [gagal(daftar, "Persyaratan layanan belum dapat dimuat. ", muat)] : []),
+          ...(panel ? [gagal(panel, "Persyaratan layanan belum dapat dimuat. ", muat)] : []),
+        ];
+        if (dariTombol) tombol[0]?.focus();
+      }
+    };
+
+    muat(null);
   }
 
   /* ---------- Samsat Keliling ----------
@@ -1492,25 +1644,28 @@
     $$("[data-year]").forEach((el) => (el.textContent = nowWita().y));
     $$("[data-today]").forEach((el) => {
       const t = nowWita();
-      el.textContent = `${HARI[t.wd]}, ${t.d} ${["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"][t.mo - 1]} ${t.y}`;
+      el.textContent = `${HARI[t.wd]}, ${t.d} ${BULAN_PENUH[t.mo - 1]} ${t.y}`;
     });
-    // Sorot layanan aktif di navigasi samping saat menggulir
-    const links = $$("[data-spy] a[href^='#']");
-    if (links.length && "IntersectionObserver" in window) {
-      const map = new Map(links.map((a) => [a.getAttribute("href").slice(1), a]));
-      const io = new IntersectionObserver((entries) => {
-        entries.forEach((en) => {
-          if (!en.isIntersecting) return;
-          links.forEach((a) => a.removeAttribute("aria-current"));
-          map.get(en.target.id)?.setAttribute("aria-current", "true");
-        });
-      }, { rootMargin: "-30% 0px -60% 0px" });
-      map.forEach((_, id) => { const el = document.getElementById(id); if (el) io.observe(el); });
-    }
+    $$("[data-spy]").forEach(pasangSpy);
+  }
+
+  /** Sorot layanan aktif di navigasi samping saat menggulir; dipanggil lagi untuk navigasi dari API */
+  function pasangSpy(nav) {
+    const links = $$("a[href^='#']", nav);
+    if (!links.length || !("IntersectionObserver" in window)) return;
+    const map = new Map(links.map((a) => [a.getAttribute("href").slice(1), a]));
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((en) => {
+        if (!en.isIntersecting) return;
+        links.forEach((a) => a.removeAttribute("aria-current"));
+        map.get(en.target.id)?.setAttribute("aria-current", "true");
+      });
+    }, { rootMargin: "-30% 0px -60% 0px" });
+    map.forEach((_, id) => { const el = document.getElementById(id); if (el) io.observe(el); });
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil();
+    initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil(); initLayanan();
     initDash(); initSim(); initDialogs(); initGag(); initFilters(); initGallery(); initFaq(); initForms(); initPesanForm(); initAuthFit(); initUtilities();
   });
 })();

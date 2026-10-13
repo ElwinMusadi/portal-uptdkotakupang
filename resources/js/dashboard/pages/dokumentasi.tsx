@@ -126,7 +126,7 @@ export default function HalamanDokumentasi() {
           onHapus={() => void hapus([row.original.id], row.original.judul)}
         >
           <DropdownMenuSeparator />
-          <MenuAksiAlur item={row.original} jalankan={(i, a) => void jalankan(i, a)} />
+          <MenuAksiAlur koleksi="dokumentasi" item={row.original} jalankan={(i, a) => void jalankan(i, a)} />
         </MenuBaris>
       ),
     }),
@@ -220,6 +220,7 @@ export default function HalamanDokumentasi() {
         {ed.entri && (
           <>
             <PanelAlur
+              koleksi="dokumentasi"
               item={ed.entri}
               jalankan={jalankan}
               memproses={memproses || ed.menyimpan}

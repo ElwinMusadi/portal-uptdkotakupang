@@ -282,3 +282,21 @@ Tentang UPTD kini tersimpan di server, dan halaman Profil di portal membaca isin
 | Portal | `GET /api/public/profil` (tanpa ID butir dan tanpa foto) mengisi judul, pengantar, keterangan foto, kedudukan, tabel identitas, tugas dan fungsi, serta sambutan. Baris "Dasar hukum" yang menautkan ke Regulasi & Unduhan tetap di akhir tabel identitas. Bagian tampil setelah isinya dimuat; tugas tanpa butir disembunyikan. Lanjutan judul dan kalimat terakhir sambutan tetap bernada redup. Bila API gagal, keterangan dan tombol coba lagi tampil di bawah judul. |
 
 Belum dibuat: unggahan foto ke server. Keterangan "Senin–Sabtu · jam layanan di halaman Jadwal" di bawah foto gedung masih teks statis.
+
+## D-022 · 2026-10-14 · Persyaratan Layanan tersimpan di server dengan alur persetujuan
+
+Persyaratan Layanan kini tersimpan di server. Ini koleksi pertama yang memakai alur publikasi di server: Draf → Diperiksa → Menunggu persetujuan → Terbit, dengan Dikembalikan dan Arsip. Halaman Layanan dan bagian *Layanan utama* di beranda membaca layanan yang terbit dari API.
+
+| Hal | Keputusan |
+|---|---|
+| Penyimpanan | Tabel `services` menyimpan nama, slug (juga jangkar di halaman Layanan), ringkasan, loket, jenis (`layanan` atau `tambahan`), cek fisik, non-tunai, dapat diwakilkan, label (maks. 6), persyaratan (1–20 berkas dengan jumlah), catatan, tanda unggulan (tab beranda), urutan, serta kolom alur: status, unit penyedia, pemeriksa, catatan revisi, waktu terbit, dan riwayat langkah. |
+| Alur dan akses | **Administrator yang menerbitkan** (keputusan pemilik). Pengelola Persyaratan Layanan menyiapkan draf, mengajukan, memeriksa, meneruskan ke penyetuju, mengembalikan dari tahap pemeriksaan (dengan catatan), mengajukan ulang, dan memulihkan arsip ke draf. Hanya Administrator yang boleh mengubah layanan yang menunggu persetujuan atau sudah terbit: isinya, menyetujui-dan-menerbitkan, mengembalikan dari tahap persetujuan, dan menarik dari portal. Mengubah urutan dan menghapus juga khusus Administrator. Server hanya menerima langkah yang ada di alur, dan mengembalikan wajib disertai catatan revisi. Riwayat dan waktu terbit ditulis server atas nama akun yang masuk; kiriman klien untuk keduanya diabaikan. |
+| Pembaca lain | Pengelola Jadwal Pemutakhiran boleh membaca daftar layanan untuk melihat kapan terakhir diperbarui, seperti Samsat Keliling (D-013). |
+| Data awal | **Enam entri yang sudah tampil di halaman Layanan dimasukkan lewat migrasi berstatus Terbit** (keputusan pemilik). Isinya lima layanan dan tambahan untuk badan hukum, dengan teks persis seperti di halaman (diverifikasi petugas, Oktober 2026), serta tanda cek fisik, non-tunai, diwakilkan, label, dan unggulan dari model data dashboard. Migrasi ini ikut berjalan saat deploy. |
+| Portal | `GET /api/public/layanan` memberikan layanan terbit sesuai urutan, tanpa ID dan tanpa kolom alur selain waktu terbit. Halaman Layanan menampilkan kartu tiap layanan, navigasi samping, dan persyaratan tambahan yang dilipat di kartu terakhir. Catatan sumber mencantumkan bulan terbit terakhir. Beranda menampilkan layanan unggulan sebagai tab dengan daftar centang (**keputusan pemilik: beranda ikut**). Keterangan dalam kurung di akhir nama berkas ditampilkan redup. Bila API gagal, keterangan dan tombol coba lagi. |
+| Perubahan tampilan | Tag mengikuti data: "Dapat diwakilkan" kini juga tampil di Perpanjangan STNK 5 tahun dan Duplikat STNK, dan "Kuasa: meterai Rp10.000" di Perpanjangan. Navigasi samping dan tab beranda memakai nama layanan lengkap. Keterangan di beranda memakai ringkasan layanan, sehingga kalimat khusus beranda dan tag "Ganti pemilik: lihat BBN" tidak ada lagi. |
+| Dashboard | Langkah khusus Administrator tidak ditawarkan kepada pegawai lain. Penyunting layanan terkunci bagi mereka selama layanan menunggu persetujuan atau terbit. Ringkasan, antrean kerja, menu perintah, dan *Pengaturan › Data* hanya membaca layanan bila pengguna boleh membacanya. |
+
+Kontrak alur ini (`WorkflowStatus`) disiapkan untuk dipakai juga oleh Berita, Dokumentasi, dan Regulasi & Unduhan saat pindah ke server.
+
+Belum dibuat: peran terpisah per langkah (penyedia, pemeriksa, penyetuju, pengelola publikasi) dan versi draf untuk layanan yang sudah terbit. Saat ini layanan terbit diubah langsung oleh Administrator, atau ditarik ke arsip lalu dipulihkan ke draf.

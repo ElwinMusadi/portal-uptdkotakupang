@@ -169,7 +169,7 @@ export default function HalamanUnduhan() {
           onHapus={() => void hapus([row.original.id], row.original.judul)}
         >
           <DropdownMenuSeparator />
-          <MenuAksiAlur item={row.original} jalankan={(i, a) => void jalankan(i, a)} />
+          <MenuAksiAlur koleksi="dokumen" item={row.original} jalankan={(i, a) => void jalankan(i, a)} />
         </MenuBaris>
       ),
     }),
@@ -282,6 +282,7 @@ export default function HalamanUnduhan() {
         {ed.entri && (
           <>
             <PanelAlur
+              koleksi="dokumen"
               item={ed.entri}
               jalankan={jalankan}
               memproses={memproses || ed.menyimpan}

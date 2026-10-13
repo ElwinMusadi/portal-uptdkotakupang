@@ -243,6 +243,7 @@ function IsiEditor({ entri, semua }: { entri: Berita | null; semua: Berita[] }) 
 
             <div className="grid min-w-0 gap-4">
               <PanelAlur
+                koleksi="berita"
                 item={entri}
                 entriBaru={!entri}
                 jalankan={jalankan}

@@ -54,7 +54,7 @@ function KartuAlur({ item }: { item: ItemAlur }) {
               <Link to={item.url}>Buka penyunting</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <MenuAksiAlur item={item} jalankan={(i, a) => void jalankan(i, a)} />
+            <MenuAksiAlur koleksi={item.koleksi} item={item} jalankan={(i, a) => void jalankan(i, a)} />
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

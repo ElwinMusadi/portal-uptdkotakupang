@@ -25,7 +25,7 @@ import { Label } from "@/components/ui/label"
 import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
 import type { Beralur, Riwayat } from "@/lib/api"
-import { patchAlur, type KoleksiBeralur } from "@/lib/alur"
+import { bolehUbahAlur, patchAlur, type KoleksiBeralur } from "@/lib/alur"
 import { tanggalJam, waktuRelatif } from "@/lib/format"
 import { AKSI_ALUR, STATUS_ALUR, TAHAP_ALUR, type AksiAlur } from "@/lib/meta"
 import { usePengaturan, useUbahEntri } from "@/lib/queries"
@@ -111,14 +111,17 @@ export function useAksiAlur(koleksi: KoleksiBeralur) {
   return { jalankan, dialog, memproses: ubah.isPending }
 }
 
-/** Item menu untuk baris tabel */
+/** Item menu untuk baris tabel; kosong bila langkahnya khusus Administrator */
 export function MenuAksiAlur({
+  koleksi,
   item,
   jalankan,
 }: {
+  koleksi: KoleksiBeralur
   item: ItemBeralur
   jalankan: (item: ItemBeralur, aksi: AksiAlur) => void
 }) {
+  if (!bolehUbahAlur(koleksi, item.status)) return null
   return (
     <>
       {AKSI_ALUR[item.status].map((aksi) => {
@@ -217,12 +220,14 @@ export function RiwayatAlur({ riwayat, batas = 6 }: { riwayat: Riwayat[]; batas?
  * `sebelumAksi` dipanggil dulu (mis. menyimpan formulir); bila false, aksi batal.
  */
 export function PanelAlur({
+  koleksi,
   item,
   jalankan,
   memproses,
   sebelumAksi,
   entriBaru,
 }: {
+  koleksi: KoleksiBeralur
   item: ItemBeralur | null
   jalankan: (item: ItemBeralur, aksi: AksiAlur) => Promise<boolean> | void
   memproses?: boolean
@@ -253,6 +258,8 @@ export function PanelAlur({
           <p className="text-sm text-muted-foreground">
             Simpan sebagai draf terlebih dahulu, lalu ajukan untuk diperiksa.
           </p>
+        ) : !bolehUbahAlur(koleksi, item.status) ? (
+          <p className="text-sm text-muted-foreground">Langkah berikutnya dijalankan Administrator.</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {AKSI_ALUR[item.status].map((aksi) => (

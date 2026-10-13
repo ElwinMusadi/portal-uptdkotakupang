@@ -62,7 +62,7 @@ function CommandMenu({ open, setOpen }: CommandMenuContext) {
   const navigate = useNavigate()
   const { setTheme } = useTheme()
   const { data: berita } = useKoleksi("berita")
-  const { data: layanan } = useKoleksi("layanan")
+  const { data: layanan } = useKoleksi("layanan", { aktif: bolehModul("layanan") })
   const { data: dokumen } = useKoleksi("dokumen")
   const buatCepat = navUntuk(BUAT_CEPAT, sesi())
   const konten = {
