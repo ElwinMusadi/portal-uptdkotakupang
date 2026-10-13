@@ -753,8 +753,11 @@
                       <use href="#i-ticket" />
                     </svg>
                   </p>
-                  <p class="tile__value board__big">A-042</p>
-                  <p class="tile__meta"><span>Loket 1 · Pajak tahunan</span></p>
+                  <!-- Papan dari dashboard, dimuat main.js lewat GET /api/public/papan -->
+                  <p class="tile__value board__big" data-papan-nomor>—</p>
+                  <p class="tile__meta">
+                    <span data-papan-layanan>Memuat papan layanan…</span>
+                  </p>
                 </div>
                 <div class="tile board__wait">
                   <p class="tile__label">
@@ -763,13 +766,15 @@
                       <use href="#i-clock" />
                     </svg>
                   </p>
-                  <p class="tile__value board__big">18<small>menit</small></p>
-                  <p class="tile__meta">
-                    <span class="delta delta--up"
+                  <p class="tile__value board__big">
+                    <span data-papan-tunggu>—</span><small>menit</small>
+                  </p>
+                  <p class="tile__meta" data-papan-selisih hidden>
+                    <span class="delta delta--up" data-papan-selisih-arah
                       ><svg class="i" aria-hidden="true">
                         <use href="#i-trend-down" /></svg
-                      >6 mnt</span
-                    ><span>lebih cepat dari kemarin</span>
+                      ><span data-papan-selisih-menit></span> mnt</span
+                    ><span data-papan-selisih-teks></span>
                   </p>
                 </div>
                 <div class="tile board__keliling">
@@ -810,28 +815,7 @@
                   </p>
                 </div>
                 <div class="tile board__loket">
-                  <ul class="board__counters" role="list">
-                    <li>
-                      <span class="board__lnum mono">L1</span
-                      ><span>Pajak tahunan</span
-                      ><span class="board__ok">Buka</span>
-                    </li>
-                    <li>
-                      <span class="board__lnum mono">L2</span
-                      ><span>Perpanjangan 5&nbsp;tahun</span
-                      ><span class="board__ok">Buka</span>
-                    </li>
-                    <li>
-                      <span class="board__lnum mono">L3</span
-                      ><span>Mutasi &amp; balik nama</span
-                      ><span class="board__ok">Buka</span>
-                    </li>
-                    <li>
-                      <span class="board__lnum mono">L4</span
-                      ><span>Kasir non-tunai</span
-                      ><span class="board__ok">Buka</span>
-                    </li>
-                  </ul>
+                  <ul class="board__counters" role="list" data-papan-loket></ul>
                 </div>
               </div>
               <button
@@ -843,13 +827,13 @@
                   ><svg aria-hidden="true"><use href="#i-play" /></svg></span
                 >Tonton alur pelayanan <small>2:14</small>
               </button>
-              <span class="board__tag">Pratinjau · data contoh</span>
+              <span class="board__tag" data-papan-waktu>Memuat…</span>
             </div>
             <figcaption class="caption-row">
               <p>
                 Dari kertas di kaca loket ke satu layar yang selalu terbaru.
               </p>
-              <p>Diperbarui petugas setiap hari kerja · 07.45 WITA</p>
+              <p data-papan-catatan></p>
             </figcaption>
           </figure>
         </div>

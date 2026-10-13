@@ -78,7 +78,8 @@ export function useTerakhirModul(): Partial<Record<ModulPantau, string>> {
   const layanan = useKoleksi("layanan").data
   // Di server: hanya pengelola Samsat Keliling dan Jadwal Pemutakhiran yang boleh membacanya.
   const keliling = useKoleksi("keliling", { aktif: bolehModul("keliling", "pemutakhiran") }).data
-  const papan = usePengaturan("papan").data
+  // Di server hanya pengelola Papan Layanan yang boleh membacanya; yang lain memakai waktu simpannya.
+  const papan = usePengaturan("papan", { aktif: bolehModul("papan") }).data
 
   return React.useMemo(() => {
     const maks = (arr?: { diperbarui: string }[]) =>

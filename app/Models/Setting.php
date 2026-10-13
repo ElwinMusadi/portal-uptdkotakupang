@@ -16,6 +16,11 @@ class Setting extends Model
      */
     public const string OPENING_HOURS = 'jam';
 
+    /**
+     * The service board on the portal's homepage (Papan Layanan).
+     */
+    public const string SERVICE_BOARD = 'papan';
+
     protected $primaryKey = 'name';
 
     protected $keyType = 'string';
@@ -50,6 +55,25 @@ class Setting extends Model
             'batasBerkasMenit' => 60,
             'catatan' => '',
             'pemberitahuan' => '',
+        ];
+    }
+
+    /**
+     * The service board as the dashboard edits it. Until it is first saved it
+     * is empty and "diperbarui" is null.
+     *
+     * @return array{nomorAntrean: string, layananAntrean: string, waktuTunggu: int, selisihKemarin: int, loket: list<array{id: string, kode: string, nama: string, status: string}>, catatan: string, diperbarui: ?string}
+     */
+    public static function serviceBoard(): array
+    {
+        return self::query()->find(self::SERVICE_BOARD)?->value ?? [
+            'nomorAntrean' => '',
+            'layananAntrean' => '',
+            'waktuTunggu' => 0,
+            'selisihKemarin' => 0,
+            'loket' => [],
+            'catatan' => '',
+            'diperbarui' => null,
         ];
     }
 }

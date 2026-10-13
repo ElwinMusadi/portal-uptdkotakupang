@@ -1,9 +1,11 @@
+import { IconServer } from "@tabler/icons-react"
 import { z } from "zod"
 
 import { Bagian, Baris, Halaman, PengantarHalaman } from "@/components/data/page"
 import { FieldAngka, FieldTeks } from "@/components/form/fields"
 import { DaftarObjek } from "@/components/form/list-fields"
 import { FormPengaturan } from "@/components/form/settings-form"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import {
@@ -34,7 +36,7 @@ const schema = z.object({
     })
   ),
   catatan: v.teks,
-  diperbarui: z.string(),
+  diperbarui: z.string().nullable(),
 })
 
 /** Pratinjau papan gelap seperti di beranda portal */
@@ -87,6 +89,15 @@ export default function HalamanPapan() {
   return (
     <Halaman>
       <PengantarHalaman deskripsi="Papan layanan di beranda portal: nomor antrean, waktu tunggu, dan status setiap loket. Perbarui setiap hari kerja sebelum loket buka, dan bila ada perubahan selama jam layanan." />
+      <Alert>
+        <IconServer />
+        <AlertTitle>Tersimpan di server</AlertTitle>
+        <AlertDescription>
+          Papan ini dipakai bersama semua pengelola Papan Layanan dan langsung tampil di beranda portal. Nomor
+          antrean, waktu tunggu, dan status loket hanya ditampilkan pada hari yang sama dengan pembaruannya; papan
+          yang belum diperbarui hari ini menampilkan waktu pembaruan terakhirnya saja.
+        </AlertDescription>
+      </Alert>
       <FormPengaturan
         nama="papan"
         schema={schema}

@@ -170,3 +170,19 @@ Jam Pelayanan menjadi modul ketiga yang tersimpan di server (D-011, D-013) dan p
 Satu kunjungan beranda kini memakai tiga permintaan dari batas laju API publik (D-013).
 
 Belum dibuat: modul lain di server, dan pengumuman otomatis di portal saat penyesuaian ditambahkan.
+
+## D-015 · 2026-10-13 · Papan Layanan tersimpan di server
+
+Papan Layanan menjadi modul keempat yang tersimpan di server (D-011, D-013, D-014). Papan layanan di beranda kini menampilkan isi dari dashboard, bukan data contoh.
+
+| Hal | Keputusan |
+|---|---|
+| Penyimpanan | Nomor antrean yang dilayani, loket dan layanannya, perkiraan waktu tunggu, selisihnya dari kemarin, status tiap loket (Buka, Istirahat, Tutup; maks. 12 loket), dan catatan disimpan sebagai dokumen pengaturan `papan` (`/api/pengaturan/papan`). |
+| Waktu pembaruan | Server mengisi waktu *diperbarui* setiap kali isi papan berubah; waktu dari peramban diabaikan. Menyimpan isi yang sama tidak mengubah waktunya dan tidak dicatat. |
+| Akses | Administrator dan Pegawai UPTD yang mengelola Papan Layanan. Pegawai lain ditolak `403`; Ringkasan mereka memakai waktu simpan papan saja. |
+| Portal | `GET /api/public/papan` memberikan isi papan tanpa ID loket. Beranda menampilkan nomor antrean, waktu tunggu, selisih, dan status loket **hanya pada hari yang sama dengan pembaruannya** (WITA); papan yang belum diperbarui hari ini menampilkan "Belum diperbarui hari ini" dan waktu pembaruan terakhirnya, agar antrean kemarin tidak tampil sebagai antrean sekarang. Sebelum pertama kali disimpan, papan menyatakan belum tersedia. Label "Pratinjau · data contoh" diganti waktu pembaruan. |
+| Data contoh | Isi papan contoh di peramban tidak dipindahkan ke server. |
+
+Satu kunjungan beranda kini memakai empat permintaan dari batas laju API publik (D-013).
+
+Belum dibuat: kotak *Pengumuman* di papan beranda masih contoh statis; isinya kelak dari Berita & Pengumuman.

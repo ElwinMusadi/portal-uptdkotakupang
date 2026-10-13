@@ -366,7 +366,8 @@ export interface PapanLayanan {
   selisihKemarin: number
   loket: { id: Id; kode: string; nama: string; status: StatusLoket }[]
   catatan: string
-  diperbarui: IsoDateTime
+  /** Diisi server saat disimpan; null bila belum pernah disimpan */
+  diperbarui: IsoDateTime | null
 }
 
 export interface JamPelayanan {

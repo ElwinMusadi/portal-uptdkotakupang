@@ -48,8 +48,14 @@ export function useKoleksi<K extends NamaKoleksi>(k: K, { aktif = true }: { akti
   })
 }
 
-export function usePengaturan<N extends NamaPengaturan>(n: N) {
-  return useQuery({ queryKey: qk.pengaturan(n), queryFn: () => api.getSetting(n), refetchOnWindowFocus: pengaturanDiServer(n) })
+/** `aktif: false` melewatkan pengaturan server yang modulnya tidak boleh dibaca pengguna */
+export function usePengaturan<N extends NamaPengaturan>(n: N, { aktif = true }: { aktif?: boolean } = {}) {
+  return useQuery({
+    queryKey: qk.pengaturan(n),
+    queryFn: () => api.getSetting(n),
+    refetchOnWindowFocus: pengaturanDiServer(n),
+    enabled: aktif,
+  })
 }
 
 export function useWaktuPengaturan() {

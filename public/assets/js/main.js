@@ -139,11 +139,11 @@
      reguler pada tanggalnya. Selama dimuat, atau bila gagal, status dan daftar
      jam tidak menebak: tampil pesan, bukan jam contoh. Teks di-escape sebelum
      dipasang. */
-  function nowWita() {
+  function nowWita(saat = new Date()) {
     const parts = new Intl.DateTimeFormat("en-US", {
       timeZone: CONFIG.timeZone, hourCycle: "h23",
       year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric", weekday: "short",
-    }).formatToParts(new Date());
+    }).formatToParts(saat);
     const get = (t) => parts.find((p) => p.type === t)?.value;
     const wd = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(get("weekday"));
     return { y: +get("year"), mo: +get("month"), d: +get("day"), h: +get("hour"), m: +get("minute"), s: +get("second"), wd };
@@ -323,6 +323,73 @@
       tick();
       setInterval(tick, 1000);
     }, gagal);
+  }
+
+  /* ---------- Papan layanan di beranda ----------
+     Dikelola di dashboard dan dibaca dari GET /api/public/papan. Nomor
+     antrean, waktu tunggu, dan status loket hanya ditampilkan pada hari yang
+     sama dengan pembaruannya (WITA); papan yang belum diperbarui hari ini
+     hanya menyebut waktu pembaruan terakhirnya. */
+  const STATUS_LOKET = { buka: ["Buka", "board__ok"], istirahat: ["Istirahat", "board__off"], tutup: ["Tutup", "board__off"] };
+
+  function initPapan() {
+    const nomor = $("[data-papan-nomor]");
+    if (!nomor) return;
+    const layanan = $("[data-papan-layanan]");
+    const tunggu = $("[data-papan-tunggu]");
+    const selisih = $("[data-papan-selisih]");
+    const loket = $("[data-papan-loket]");
+    const waktu = $("[data-papan-waktu]");
+    const catatan = $("[data-papan-catatan]");
+
+    const kosongkan = (pesan) => {
+      nomor.textContent = "—";
+      layanan.textContent = pesan;
+      tunggu.textContent = "—";
+      selisih.hidden = true;
+      loket.innerHTML = "";
+    };
+
+    const tampilkan = (p) => {
+      if (typeof p?.diperbarui !== "string") {
+        kosongkan("Papan layanan belum tersedia.");
+        waktu.textContent = "Belum diperbarui";
+        return;
+      }
+      const w = nowWita(new Date(p.diperbarui));
+      const t = nowWita();
+      const hariIni = w.y === t.y && w.mo === t.mo && w.d === t.d;
+      const jam = `${pad(w.h)}.${pad(w.m)} WITA`;
+      waktu.textContent = hariIni ? `Diperbarui ${jam}` : `Diperbarui ${w.d} ${BULAN[w.mo - 1]} ${w.y} · ${jam}`;
+      if (catatan) catatan.textContent = typeof p.catatan === "string" ? p.catatan : "";
+      if (!hariIni) {
+        kosongkan("Belum diperbarui hari ini.");
+        return;
+      }
+      nomor.textContent = p.nomorAntrean || "—";
+      layanan.textContent = typeof p.layananAntrean === "string" ? p.layananAntrean : "";
+      tunggu.textContent = Number.isInteger(p.waktuTunggu) ? String(p.waktuTunggu) : "—";
+      const beda = Number.isInteger(p.selisihKemarin) ? p.selisihKemarin : 0;
+      selisih.hidden = beda === 0;
+      if (beda !== 0) {
+        const cepat = beda < 0;
+        const arah = $("[data-papan-selisih-arah]", selisih);
+        arah.classList.toggle("delta--up", cepat);
+        arah.classList.toggle("delta--down", !cepat);
+        $("use", arah).setAttribute("href", cepat ? "#i-trend-down" : "#i-trend-up");
+        $("[data-papan-selisih-menit]", selisih).textContent = String(Math.abs(beda));
+        $("[data-papan-selisih-teks]", selisih).textContent = cepat ? "lebih cepat dari kemarin" : "lebih lama dari kemarin";
+      }
+      loket.innerHTML = (Array.isArray(p.loket) ? p.loket : []).map((l) => {
+        const [label, kelas] = STATUS_LOKET[l?.status] ?? ["—", "board__off"];
+        return `<li><span class="board__lnum mono">${esc(l.kode)}</span><span>${esc(l.nama)}</span><span class="${kelas}">${label}</span></li>`;
+      }).join("");
+    };
+
+    ambilJson("/api/public/papan").then(tampilkan, () => {
+      kosongkan("Papan layanan belum dapat dimuat.");
+      waktu.textContent = "Tidak tersedia";
+    });
   }
 
   /* ---------- Samsat Keliling ----------
@@ -920,7 +987,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initKeliling();
+    initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling();
     initDash(); initSim(); initDialogs(); initGag(); initFilters(); initGallery(); initFaq(); initForms(); initAuthFit(); initUtilities();
   });
 })();

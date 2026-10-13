@@ -13,10 +13,12 @@ use App\Http\Controllers\Dashboard\MobileServiceStopDeletionController;
 use App\Http\Controllers\Dashboard\OpeningHoursController;
 use App\Http\Controllers\Dashboard\ScheduleAdjustmentController;
 use App\Http\Controllers\Dashboard\ScheduleAdjustmentDeletionController;
+use App\Http\Controllers\Dashboard\ServiceBoardController;
 use App\Http\Controllers\Dashboard\SettingTimestampController;
 use App\Http\Controllers\PublicFaqController;
 use App\Http\Controllers\PublicMobileServiceStopController;
 use App\Http\Controllers\PublicOpeningHoursController;
+use App\Http\Controllers\PublicServiceBoardController;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Models\Faq;
 use App\Models\MobileServiceStop;
@@ -102,6 +104,15 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->can('update', [Setting::class, $openingHours])
         ->name('pengaturan.jam.update');
 
+    // Papan Layanan, the homepage's service board (SettingPolicy).
+    $serviceBoard = "'".Setting::SERVICE_BOARD."'";
+    Route::get('/pengaturan/papan', [ServiceBoardController::class, 'show'])
+        ->can('view', [Setting::class, $serviceBoard])
+        ->name('pengaturan.papan.show');
+    Route::put('/pengaturan/papan', [ServiceBoardController::class, 'update'])
+        ->can('update', [Setting::class, $serviceBoard])
+        ->name('pengaturan.papan.update');
+
     Route::prefix('koleksi/penyesuaian')->name('koleksi.penyesuaian.')->whereUlid('adjustment')->group(function (): void {
         Route::get('/', [ScheduleAdjustmentController::class, 'index'])->can('viewAny', ScheduleAdjustment::class)->name('index');
         Route::post('/', [ScheduleAdjustmentController::class, 'store'])->can('create', ScheduleAdjustment::class)->name('store');
@@ -125,4 +136,5 @@ Route::prefix('public')
         Route::get('/faq', PublicFaqController::class)->name('faq.index');
         Route::get('/keliling', PublicMobileServiceStopController::class)->name('keliling.index');
         Route::get('/jam', PublicOpeningHoursController::class)->name('jam.show');
+        Route::get('/papan', PublicServiceBoardController::class)->name('papan.show');
     });

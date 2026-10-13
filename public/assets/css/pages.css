@@ -43,6 +43,8 @@
 .board__counters li > span:nth-child(2) { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .board__lnum { font-size: 11.5px; color: var(--night-muted); }
 .board__ok { font-size: 11.5px; color: var(--ok-night); }
+.board__off { font-size: 11.5px; color: var(--night-muted); }
+.board .tile__meta[hidden] { display: none; }
 .board__tag { position: absolute; right: 26px; bottom: 34px; font-size: 11.5px; color: var(--night-muted); letter-spacing: .02em; }
 @media (max-width: 980px) {
   .board__queue, .board__wait { grid-column: span 6; }

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Dashboard;
 
-use App\Actions\SaveOpeningHours;
+use App\Actions\SaveSetting;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dashboard\UpdateOpeningHoursRequest;
 use App\Models\Setting;
@@ -25,9 +25,9 @@ class OpeningHoursController extends Controller
     /**
      * Replace the opening hours.
      */
-    public function update(UpdateOpeningHoursRequest $request, SaveOpeningHours $saveOpeningHours): JsonResponse
+    public function update(UpdateOpeningHoursRequest $request, SaveSetting $saveSetting): JsonResponse
     {
-        $setting = $saveOpeningHours->handle($request->user(), $request->openingHours());
+        $setting = $saveSetting->handle($request->user(), Setting::OPENING_HOURS, $request->openingHours());
 
         return response()->json($setting->value);
     }

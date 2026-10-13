@@ -77,6 +77,16 @@ class PortalPagesTest extends TestCase
         $this->assertStringContainsString('<ul role="list" data-jam-ringkas>', $html);
     }
 
+    public function test_leaves_the_service_board_to_the_public_api(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('A-042', $html);
+        $this->assertStringNotContainsString('data contoh', $html);
+        $this->assertStringContainsString('<ul class="board__counters" role="list" data-papan-loket></ul>', $html);
+        $this->assertStringContainsString('<p class="tile__value board__big" data-papan-nomor>—</p>', $html);
+    }
+
     public function test_fills_the_opening_hours_table_only_from_the_public_api(): void
     {
         $html = $this->get('/jadwal')->assertOk()->getContent();
