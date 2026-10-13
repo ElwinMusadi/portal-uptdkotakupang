@@ -1,7 +1,7 @@
 import { IconCirclePlusFilled, IconMail } from "@tabler/icons-react"
 import { Link, useLocation, useNavigate } from "react-router"
 
-import { BUAT_CEPAT, type ItemNav } from "@/app/nav"
+import { BUAT_CEPAT, navUntuk, type ItemNav } from "@/app/nav"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -20,6 +20,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { bolehModul, sesi } from "@/lib/auth"
 import { useKoleksi } from "@/lib/queries"
 
 export function ruteAktif(url: string, pathname: string) {
@@ -41,70 +42,76 @@ export function NavMain({ items }: { items: ItemNav[] }) {
   const tutup = useTutupSeluler()
   const { isMobile } = useSidebar()
   const { data: pesan } = useKoleksi("pesan")
-  const baru = pesan?.filter((p) => p.status === "baru").length ?? 0
+  const kelolaPesan = bolehModul("pesan")
+  const baru = kelolaPesan ? (pesan?.filter((p) => p.status === "baru").length ?? 0) : 0
+  const buatCepat = navUntuk(BUAT_CEPAT, sesi())
 
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
-        <SidebarMenu>
-          <SidebarMenuItem className="flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                  tooltip="Buat konten"
-                  className="min-w-8 bg-primary text-primary-foreground duration-200 ease-linear hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground data-[state=open]:bg-primary/90 data-[state=open]:text-primary-foreground"
+        {buatCepat.length > 0 && (
+          <SidebarMenu>
+            <SidebarMenuItem className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton
+                    tooltip="Buat konten"
+                    className="min-w-8 bg-primary text-primary-foreground duration-200 ease-linear hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground data-[state=open]:bg-primary/90 data-[state=open]:text-primary-foreground"
+                  >
+                    <IconCirclePlusFilled />
+                    <span>Buat konten</span>
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-60 rounded-lg"
+                  side={isMobile ? "bottom" : "right"}
+                  align="start"
+                  sideOffset={4}
                 >
-                  <IconCirclePlusFilled />
-                  <span>Buat konten</span>
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-60 rounded-lg"
-                side={isMobile ? "bottom" : "right"}
-                align="start"
-                sideOffset={4}
-              >
-                <DropdownMenuLabel className="text-xs text-muted-foreground">
-                  Buat baru
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {BUAT_CEPAT.map((b) => (
-                  <DropdownMenuItem
-                    key={b.url}
-                    onSelect={() => {
-                      tutup()
-                      navigate(b.url)
-                    }}
-                  >
-                    <b.ikon />
-                    {b.judul}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button
-              asChild
-              size="icon"
-              className="relative size-8 group-data-[collapsible=icon]:opacity-0"
-              variant="outline"
-            >
-              <Link to="/pesan?status=baru" onClick={tutup}>
-                <IconMail />
-                <span className="sr-only">
-                  Pesan masuk{baru ? `, ${baru} belum dibaca` : ""}
-                </span>
-                {baru > 0 && (
-                  <span
-                    aria-hidden="true"
-                    className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-semibold text-white tabular-nums dark:text-[#0f1319]"
-                  >
-                    {baru > 99 ? "99+" : baru}
-                  </span>
-                )}
-              </Link>
-            </Button>
-          </SidebarMenuItem>
-        </SidebarMenu>
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">
+                    Buat baru
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {buatCepat.map((b) => (
+                    <DropdownMenuItem
+                      key={b.url}
+                      onSelect={() => {
+                        tutup()
+                        navigate(b.url)
+                      }}
+                    >
+                      <b.ikon />
+                      {b.judul}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              {kelolaPesan && (
+                <Button
+                  asChild
+                  size="icon"
+                  className="relative size-8 group-data-[collapsible=icon]:opacity-0"
+                  variant="outline"
+                >
+                  <Link to="/pesan?status=baru" onClick={tutup}>
+                    <IconMail />
+                    <span className="sr-only">
+                      Pesan masuk{baru ? `, ${baru} belum dibaca` : ""}
+                    </span>
+                    {baru > 0 && (
+                      <span
+                        aria-hidden="true"
+                        className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-semibold text-white tabular-nums dark:text-[#0f1319]"
+                      >
+                        {baru > 99 ? "99+" : baru}
+                      </span>
+                    )}
+                  </Link>
+                </Button>
+              )}
+            </SidebarMenuItem>
+          </SidebarMenu>
+        )}
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.url}>

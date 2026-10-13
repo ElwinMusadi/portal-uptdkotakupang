@@ -8,6 +8,7 @@ import type {
   StatusAlur,
 } from "@/lib/api"
 import type { KoleksiBeralur } from "@/lib/alur"
+import { sesi } from "@/lib/auth"
 import { selisihHari } from "@/lib/format"
 import { useKoleksi, usePengaturan, useWaktuPengaturan } from "@/lib/queries"
 
@@ -27,7 +28,7 @@ export const JENIS_KOLEKSI: Record<KoleksiBeralur, string> = {
   layanan: "Persyaratan",
 }
 
-/** Semua konten yang melewati alur publikasi, digabung dari empat koleksi */
+/** Konten yang melewati alur publikasi dari empat koleksi, terbatas pada modul pengguna */
 export function useItemAlur() {
   const berita = useKoleksi("berita")
   const dokumentasi = useKoleksi("dokumentasi")
@@ -37,12 +38,15 @@ export function useItemAlur() {
   const data = React.useMemo<ItemAlur[] | undefined>(() => {
     if (!berita.data || !dokumentasi.data || !dokumen.data || !layanan.data) return undefined
     const jenisBerita = (k: string) => (k === "pengumuman" ? "Pengumuman" : "Berita")
+    const modul = sesi().modul
     return [
       ...berita.data.map((b) => ({ ...b, koleksi: "berita" as const, jenis: jenisBerita(b.kategori), url: `/berita/${b.id}` })),
       ...dokumentasi.data.map((d) => ({ ...d, koleksi: "dokumentasi" as const, jenis: "Dokumentasi", url: `/dokumentasi?ubah=${d.id}` })),
       ...dokumen.data.map((d) => ({ ...d, koleksi: "dokumen" as const, jenis: "Unduhan", url: `/unduhan?ubah=${d.id}` })),
       ...layanan.data.map((l) => ({ ...l, judul: l.nama, koleksi: "layanan" as const, jenis: "Persyaratan", url: `/layanan/${l.id}` })),
-    ].sort((a, b) => b.diperbarui.localeCompare(a.diperbarui))
+    ]
+      .filter((x) => modul.includes(x.koleksi))
+      .sort((a, b) => b.diperbarui.localeCompare(a.diperbarui))
   }, [berita.data, dokumentasi.data, dokumen.data, layanan.data])
 
   return { data, memuat: !data }
@@ -93,12 +97,17 @@ export function useTerakhirModul(): Partial<Record<ModulPantau, string>> {
   }, [berita, dokumentasi, dokumen, layanan, keliling, waktu, papan])
 }
 
+/**
+ * Jadwal pemutakhiran. Pengelola modul Jadwal Pemutakhiran memantau semua modul;
+ * pegawai lain hanya melihat jadwal modul yang mereka kelola.
+ */
 export function usePemutakhiran() {
   const { data } = useKoleksi("pemutakhiran")
   const terakhir = useTerakhirModul()
-  return React.useMemo(
-    () =>
-      data?.map((p) => ({ ...p, ...nilaiPemutakhiran(p, terakhir[p.modul]) })) ?? undefined,
-    [data, terakhir]
-  )
+  return React.useMemo(() => {
+    const modul = sesi().modul
+    return data
+      ?.filter((p) => modul.includes("pemutakhiran") || modul.includes(p.modul))
+      .map((p) => ({ ...p, ...nilaiPemutakhiran(p, terakhir[p.modul]) }))
+  }, [data, terakhir])
 }

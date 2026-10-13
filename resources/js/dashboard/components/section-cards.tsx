@@ -17,6 +17,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { MODUL_ALUR } from "@/app/nav"
+import { bolehModul } from "@/lib/auth"
 import { angka, selisihHari } from "@/lib/format"
 import { sejakStatus, useItemAlur, usePemutakhiran } from "@/lib/hitung"
 import { useKoleksi } from "@/lib/queries"
@@ -27,6 +29,10 @@ export function SectionCards() {
   const { data: alur } = useItemAlur()
   const { data: pesan } = useKoleksi("pesan")
   const pantau = usePemutakhiran()
+  const lihatAlur = bolehModul(...MODUL_ALUR)
+  const lihatPesan = bolehModul("pesan")
+  const bukaPemutakhiran = bolehModul("pemutakhiran")
+  const lihatPemutakhiran = bukaPemutakhiran || (pantau?.length ?? 0) > 0
 
   const m = React.useMemo(() => {
     if (!alur || !pesan || !pantau) return null
@@ -74,6 +80,8 @@ export function SectionCards() {
     }
   }, [alur, pesan, pantau])
 
+  if (m && !lihatAlur && !lihatPesan && !lihatPemutakhiran) return null
+
   if (!m) {
     return (
       <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
@@ -88,98 +96,110 @@ export function SectionCards() {
 
   return (
     <div className="grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card">
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>Menunggu persetujuan</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            <Link to="/alur" className="hover:underline">
-              {angka(m.menunggu)}
-              <span className="sr-only"> konten menunggu persetujuan, buka alur publikasi</span>
-            </Link>
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <IconClockHour4 />
-              {m.lama > 0 ? `${m.lama} lewat 2 hari` : "Tepat waktu"}
-            </Badge>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">Perlu izin terbit atasan langsung</div>
-          <div className="text-muted-foreground">
-            {m.diperiksa} diperiksa · {m.draf} draf atau revisi
-          </div>
-        </CardFooter>
-      </Card>
+      {lihatAlur && (
+        <>
+          <Card className="@container/card">
+            <CardHeader>
+              <CardDescription>Menunggu persetujuan</CardDescription>
+              <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+                <Link to="/alur" className="hover:underline">
+                  {angka(m.menunggu)}
+                  <span className="sr-only"> konten menunggu persetujuan, buka alur publikasi</span>
+                </Link>
+              </CardTitle>
+              <CardAction>
+                <Badge variant="outline">
+                  <IconClockHour4 />
+                  {m.lama > 0 ? `${m.lama} lewat 2 hari` : "Tepat waktu"}
+                </Badge>
+              </CardAction>
+            </CardHeader>
+            <CardFooter className="flex-col items-start gap-1.5 text-sm">
+              <div className="line-clamp-1 flex gap-2 font-medium">Perlu izin terbit atasan langsung</div>
+              <div className="text-muted-foreground">
+                {m.diperiksa} diperiksa · {m.draf} draf atau revisi
+              </div>
+            </CardFooter>
+          </Card>
 
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>Terbit 30 hari terakhir</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {angka(m.terbit30)}
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              {naik ? <IconTrendingUp /> : <IconTrendingDown />}
-              {m.perubahan === null ? `+${angka(m.terbit30)}` : `${naik ? "+" : ""}${angka(m.perubahan, 0)}%`}
-            </Badge>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            {naik ? "Lebih aktif dari bulan lalu" : "Lebih sepi dari bulan lalu"}
-            {naik ? <IconTrendingUp className="size-4" /> : <IconTrendingDown className="size-4" />}
-          </div>
-          <div className="text-muted-foreground">Berita, unduhan, dokumentasi, persyaratan</div>
-        </CardFooter>
-      </Card>
+          <Card className="@container/card">
+            <CardHeader>
+              <CardDescription>Terbit 30 hari terakhir</CardDescription>
+              <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+                {angka(m.terbit30)}
+              </CardTitle>
+              <CardAction>
+                <Badge variant="outline">
+                  {naik ? <IconTrendingUp /> : <IconTrendingDown />}
+                  {m.perubahan === null ? `+${angka(m.terbit30)}` : `${naik ? "+" : ""}${angka(m.perubahan, 0)}%`}
+                </Badge>
+              </CardAction>
+            </CardHeader>
+            <CardFooter className="flex-col items-start gap-1.5 text-sm">
+              <div className="line-clamp-1 flex gap-2 font-medium">
+                {naik ? "Lebih aktif dari bulan lalu" : "Lebih sepi dari bulan lalu"}
+                {naik ? <IconTrendingUp className="size-4" /> : <IconTrendingDown className="size-4" />}
+              </div>
+              <div className="text-muted-foreground">Berita, unduhan, dokumentasi, persyaratan</div>
+            </CardFooter>
+          </Card>
+        </>
+      )}
 
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>Pesan belum selesai</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            <Link to="/pesan" className="hover:underline">
-              {angka(m.terbuka)}
-              <span className="sr-only"> pesan belum selesai, buka kotak pesan</span>
-            </Link>
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">{m.baru} baru</Badge>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">Target balasan 3 hari kerja</div>
-          <div className="text-muted-foreground">
-            {m.rataJam === null
-              ? "Belum ada pesan yang dijawab"
-              : `Rata-rata dijawab dalam ${angka(m.rataJam, m.rataJam < 10 ? 1 : 0)} jam`}
-          </div>
-        </CardFooter>
-      </Card>
+      {lihatPesan && (
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>Pesan belum selesai</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+              <Link to="/pesan" className="hover:underline">
+                {angka(m.terbuka)}
+                <span className="sr-only"> pesan belum selesai, buka kotak pesan</span>
+              </Link>
+            </CardTitle>
+            <CardAction>
+              <Badge variant="outline">{m.baru} baru</Badge>
+            </CardAction>
+          </CardHeader>
+          <CardFooter className="flex-col items-start gap-1.5 text-sm">
+            <div className="line-clamp-1 flex gap-2 font-medium">Target balasan 3 hari kerja</div>
+            <div className="text-muted-foreground">
+              {m.rataJam === null
+                ? "Belum ada pesan yang dijawab"
+                : `Rata-rata dijawab dalam ${angka(m.rataJam, m.rataJam < 10 ? 1 : 0)} jam`}
+            </div>
+          </CardFooter>
+        </Card>
+      )}
 
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>Jatuh tempo pemutakhiran</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            <Link to="/pemutakhiran" className="hover:underline">
-              {angka(m.jatuhTempo)}
-              <span className="sr-only"> konten jatuh tempo, buka jadwal pemutakhiran</span>
-            </Link>
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              {m.jatuhTempo > 0 && <IconAlertTriangle />}
-              {m.segera} segera
-            </Badge>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            {m.jatuhTempo ? m.jatuhTempoNama.join(", ") : "Semua konten terkini"}
-          </div>
-          <div className="text-muted-foreground">Sesuai standar frekuensi SOP</div>
-        </CardFooter>
-      </Card>
+      {lihatPemutakhiran && (
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>Jatuh tempo pemutakhiran</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+              {bukaPemutakhiran ? (
+                <Link to="/pemutakhiran" className="hover:underline">
+                  {angka(m.jatuhTempo)}
+                  <span className="sr-only"> konten jatuh tempo, buka jadwal pemutakhiran</span>
+                </Link>
+              ) : (
+                angka(m.jatuhTempo)
+              )}
+            </CardTitle>
+            <CardAction>
+              <Badge variant="outline">
+                {m.jatuhTempo > 0 && <IconAlertTriangle />}
+                {m.segera} segera
+              </Badge>
+            </CardAction>
+          </CardHeader>
+          <CardFooter className="flex-col items-start gap-1.5 text-sm">
+            <div className="line-clamp-1 flex gap-2 font-medium">
+              {m.jatuhTempo ? m.jatuhTempoNama.join(", ") : "Semua konten terkini"}
+            </div>
+            <div className="text-muted-foreground">Sesuai standar frekuensi SOP</div>
+          </CardFooter>
+        </Card>
+      )}
     </div>
   )
 }

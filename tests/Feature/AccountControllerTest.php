@@ -3,9 +3,11 @@
 namespace Tests\Feature;
 
 use App\Enums\AccountStatus;
+use App\Enums\DashboardModule;
 use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -70,16 +72,20 @@ class AccountControllerTest extends TestCase
         $this->travelTo(Carbon::parse('2026-10-13 08:00:00', 'UTC'));
         $administrator = User::factory()->administrator()->create(['nip' => '198501012010011001', 'name' => 'Agustina Lay', 'email' => 'agustina@uptd.test']);
         $pending = User::factory()->withStatus(AccountStatus::Pending)->create(['nip' => '199501012020011002', 'name' => 'Yohanes Bili', 'email' => null]);
-        $suspended = User::factory()->withStatus(AccountStatus::Suspended)->create(['nip' => '199001012015011003', 'name' => 'Maria Bria', 'email' => 'maria@uptd.test']);
+        $suspended = User::factory()
+            ->withStatus(AccountStatus::Suspended)
+            ->withModules(DashboardModule::Keliling, DashboardModule::Berita)
+            ->create(['nip' => '199001012015011003', 'name' => 'Maria Bria', 'email' => 'maria@uptd.test']);
 
         $response = $this->actingAs($administrator)->getJson('/api/akun');
 
         $response->assertOk()->assertExactJson([
             $this->accountJson($administrator, '198501012010011001', 'Agustina Lay', 'agustina@uptd.test', 'administrator', 'active'),
-            $this->accountJson($suspended, '199001012015011003', 'Maria Bria', 'maria@uptd.test', 'pegawai', 'suspended'),
+            $this->accountJson($suspended, '199001012015011003', 'Maria Bria', 'maria@uptd.test', 'pegawai', 'suspended', ['berita', 'keliling']),
             $this->accountJson($pending, '199501012020011002', 'Yohanes Bili', null, 'pegawai', 'pending'),
         ]);
         $this->assertSame(['Agustina Lay', 'Maria Bria', 'Yohanes Bili'], $response->json('*.nama'));
+        $this->assertSame(['berita', 'keliling'], $response->json('1.modul'));
     }
 
     public function test_creates_a_pending_account_and_returns_its_activation_link_with_201(): void
@@ -90,7 +96,7 @@ class AccountControllerTest extends TestCase
 
         $account = User::query()->where('nip', self::NIP)->sole();
         $response->assertCreated()
-            ->assertJsonPath('akun', $this->accountJson($account, self::NIP, 'Maria Bria', 'maria@uptd.test', 'pegawai', 'pending'))
+            ->assertJsonPath('akun', $this->accountJson($account, self::NIP, 'Maria Bria', 'maria@uptd.test', 'pegawai', 'pending', ['berita', 'faq']))
             ->assertJsonPath('kedaluwarsa', '2026-10-13T09:00:00+00:00');
         $this->assertStringStartsWith(config('app.url').'/aktivasi/'.$account->id.'?', $response->json('tautan'));
         $this->assertSame(AccountStatus::Pending, $account->status);
@@ -121,8 +127,41 @@ class AccountControllerTest extends TestCase
             'actor' => $administrator->id,
             'user' => $account->id,
             'role' => 'pegawai',
+            'modules' => ['berita', 'faq'],
             'ip' => '127.0.0.1',
         ]);
+    }
+
+    public function test_stores_each_chosen_module_once_in_a_fixed_order(): void
+    {
+        $response = $this->actingAs($this->administrator())->postJson('/api/akun', ['modul' => ['pesan', 'faq', 'berita', 'faq']] + $this->newAccount());
+
+        $response->assertCreated()->assertJsonPath('akun.modul', ['pesan', 'berita', 'faq']);
+        $this->assertSame(['pesan', 'berita', 'faq'], User::query()->where('nip', self::NIP)->sole()->modules);
+    }
+
+    public function test_creates_an_account_without_modules_when_none_are_chosen(): void
+    {
+        $response = $this->actingAs($this->administrator())->postJson('/api/akun', Arr::except($this->newAccount(), 'modul'));
+
+        $response->assertCreated()->assertJsonPath('akun.modul', []);
+        $this->assertSame([], User::query()->where('nip', self::NIP)->sole()->modules);
+    }
+
+    public function test_rejects_a_module_it_does_not_know(): void
+    {
+        $response = $this->actingAs($this->administrator())->postJson('/api/akun', ['modul' => ['berita', 'keuangan']] + $this->newAccount());
+
+        $response->assertUnprocessable()->assertJsonValidationErrors(['modul.1' => 'Modul tidak dikenal.']);
+        $this->assertDatabaseCount('users', 1);
+    }
+
+    public function test_rejects_modules_that_are_not_a_list(): void
+    {
+        $response = $this->actingAs($this->administrator())->postJson('/api/akun', ['modul' => 'berita'] + $this->newAccount());
+
+        $response->assertUnprocessable()->assertJsonValidationErrors(['modul' => 'Daftar modul tidak valid.']);
+        $this->assertDatabaseCount('users', 1);
     }
 
     public function test_requires_a_nip_a_name_and_a_role(): void
@@ -188,6 +227,7 @@ class AccountControllerTest extends TestCase
             'status' => 'active',
             'password' => 'kata-sandi-titipan-2026',
             'role' => 'administrator',
+            'modules' => ['pesan'],
         ] + $this->newAccount());
 
         $response->assertCreated();
@@ -195,6 +235,7 @@ class AccountControllerTest extends TestCase
         $this->assertNotSame('01kaaaaaaaaaaaaaaaaaaaaaaa', $account->id);
         $this->assertSame(AccountStatus::Pending, $account->status);
         $this->assertSame(UserRole::Pegawai, $account->role);
+        $this->assertSame(['berita', 'faq'], $account->modules);
         $this->assertFalse(Hash::check('kata-sandi-titipan-2026', $account->password));
     }
 
@@ -220,7 +261,7 @@ class AccountControllerTest extends TestCase
 
     public function test_keeps_the_fields_that_are_not_sent(): void
     {
-        $account = User::factory()->create(['name' => 'Maria Bria', 'email' => 'maria@uptd.test']);
+        $account = User::factory()->withModules(DashboardModule::Faq)->create(['name' => 'Maria Bria', 'email' => 'maria@uptd.test']);
 
         $response = $this->actingAs($this->administrator())->patchJson("/api/akun/{$account->id}", ['nama' => 'Maria Bria Kana']);
 
@@ -228,6 +269,37 @@ class AccountControllerTest extends TestCase
         $account->refresh();
         $this->assertSame('maria@uptd.test', $account->email);
         $this->assertSame(UserRole::Pegawai, $account->role);
+        $this->assertSame(['faq'], $account->modules);
+    }
+
+    public function test_replaces_the_assigned_modules(): void
+    {
+        $account = User::factory()->withModules(DashboardModule::Berita, DashboardModule::Faq)->create();
+
+        $response = $this->actingAs($this->administrator())->patchJson("/api/akun/{$account->id}", ['modul' => ['keliling', 'jam']]);
+
+        $response->assertOk()->assertJsonPath('modul', ['jam', 'keliling']);
+        $this->assertSame(['jam', 'keliling'], $account->fresh()->modules);
+    }
+
+    public function test_removes_every_module_when_sent_an_empty_list(): void
+    {
+        $account = User::factory()->withModules(DashboardModule::Berita)->create();
+
+        $response = $this->actingAs($this->administrator())->patchJson("/api/akun/{$account->id}", ['modul' => []]);
+
+        $response->assertOk()->assertJsonPath('modul', []);
+        $this->assertSame([], $account->fresh()->modules);
+    }
+
+    public function test_rejects_a_module_it_does_not_know_when_editing(): void
+    {
+        $account = User::factory()->withModules(DashboardModule::Berita)->create();
+
+        $response = $this->actingAs($this->administrator())->patchJson("/api/akun/{$account->id}", ['modul' => ['keuangan']]);
+
+        $response->assertUnprocessable()->assertJsonValidationErrors(['modul.0' => 'Modul tidak dikenal.']);
+        $this->assertSame(['berita'], $account->fresh()->modules);
     }
 
     public function test_removes_the_email_when_it_is_sent_empty(): void
@@ -303,15 +375,19 @@ class AccountControllerTest extends TestCase
     public function test_logs_which_fields_changed(): void
     {
         $administrator = $this->administrator();
-        $account = User::factory()->create(['name' => 'Maria Bria']);
+        $account = User::factory()->withModules(DashboardModule::Faq)->create(['name' => 'Maria Bria']);
         Log::spy();
 
-        $this->actingAs($administrator)->patchJson("/api/akun/{$account->id}", ['nama' => 'Maria Bria Kana', 'peran' => 'pegawai']);
+        $this->actingAs($administrator)->patchJson("/api/akun/{$account->id}", [
+            'nama' => 'Maria Bria Kana',
+            'peran' => 'pegawai',
+            'modul' => ['faq', 'berita'],
+        ]);
 
         Log::shouldHaveReceived('info')->once()->with('account.updated', [
             'actor' => $administrator->id,
             'user' => $account->id,
-            'fields' => ['name'],
+            'fields' => ['name', 'modules'],
             'ip' => '127.0.0.1',
         ]);
     }
@@ -336,17 +412,18 @@ class AccountControllerTest extends TestCase
     }
 
     /**
-     * @return array{nip: string, nama: string, surel: string, peran: string}
+     * @return array{nip: string, nama: string, surel: string, peran: string, modul: list<string>}
      */
     private function newAccount(): array
     {
-        return ['nip' => self::NIP, 'nama' => 'Maria Bria', 'surel' => 'maria@uptd.test', 'peran' => 'pegawai'];
+        return ['nip' => self::NIP, 'nama' => 'Maria Bria', 'surel' => 'maria@uptd.test', 'peran' => 'pegawai', 'modul' => ['faq', 'berita']];
     }
 
     /**
-     * @return array<string, ?string>
+     * @param  list<string>  $modules
+     * @return array<string, mixed>
      */
-    private function accountJson(User $account, string $nip, string $name, ?string $email, string $role, string $status): array
+    private function accountJson(User $account, string $nip, string $name, ?string $email, string $role, string $status, array $modules = []): array
     {
         return [
             'id' => $account->id,
@@ -355,6 +432,7 @@ class AccountControllerTest extends TestCase
             'surel' => $email,
             'peran' => $role,
             'status' => $status,
+            'modul' => $modules,
             'dibuat' => '2026-10-13T08:00:00+00:00',
             'diperbarui' => '2026-10-13T08:00:00+00:00',
         ];

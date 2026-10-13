@@ -14,7 +14,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { mintaServer } from "@/lib/api/http"
-import type { Peran } from "@/lib/auth"
+import type { Modul, Peran } from "@/lib/auth"
 import type { Nada } from "@/lib/meta"
 
 export type StatusAkun = "pending" | "active" | "suspended" | "deactivated"
@@ -26,6 +26,8 @@ export interface Akun {
   surel: string | null
   peran: Peran
   status: StatusAkun
+  /** Modul yang ditugaskan; Administrator selalu mengelola semua modul */
+  modul: Modul[]
   dibuat: string
   diperbarui: string
 }
@@ -36,6 +38,7 @@ export interface DataAkun {
   nama: string
   surel: string
   peran: Peran
+  modul: Modul[]
 }
 
 /** Tautan aktivasi yang baru diterbitkan. Hanya ditampilkan sekali; server tidak menyimpannya. */

@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Enums\AccountStatus;
+use App\Enums\DashboardModule;
 use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -54,6 +55,16 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes): array => [
             'status' => $status,
+        ]);
+    }
+
+    /**
+     * An account assigned the given dashboard modules.
+     */
+    public function withModules(DashboardModule ...$modules): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'modules' => array_map(fn (DashboardModule $module): string => $module->value, $modules),
         ]);
     }
 }

@@ -17,7 +17,7 @@ class AccountResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @return array{id: string, nip: string, nama: string, surel: ?string, peran: string, status: string, dibuat: ?string, diperbarui: ?string}
+     * @return array{id: string, nip: string, nama: string, surel: ?string, peran: string, status: string, modul: list<string>, dibuat: ?string, diperbarui: ?string}
      */
     public function toArray(Request $request): array
     {
@@ -28,6 +28,7 @@ class AccountResource extends JsonResource
             'surel' => $this->email,
             'peran' => $this->role->value,
             'status' => $this->status->value,
+            'modul' => $this->assignedModules(),
             'dibuat' => $this->created_at?->toIso8601String(),
             'diperbarui' => $this->updated_at?->toIso8601String(),
         ];

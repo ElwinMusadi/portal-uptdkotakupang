@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\AccountStatus;
+use App\Enums\DashboardModule;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -31,7 +32,9 @@ class AuthenticatedSessionControllerTest extends TestCase
     public function test_signs_in_an_active_employee_and_returns_the_session(): void
     {
         $this->travelTo(Carbon::parse('2026-10-13 08:00:00', 'UTC'));
-        $user = User::factory()->create(['nip' => self::NIP, 'name' => 'Maria Bria']);
+        $user = User::factory()
+            ->withModules(DashboardModule::Faq, DashboardModule::Berita)
+            ->create(['nip' => self::NIP, 'name' => 'Maria Bria']);
 
         $response = $this->postJson('/api/masuk', ['nip' => self::NIP, 'sandi' => 'password']);
 
@@ -39,8 +42,10 @@ class AuthenticatedSessionControllerTest extends TestCase
             'nip' => self::NIP,
             'nama' => 'Maria Bria',
             'peran' => 'pegawai',
+            'modul' => ['berita', 'faq'],
             'masuk' => '2026-10-13T08:00:00+00:00',
         ]);
+        $response->assertJsonPath('modul', ['berita', 'faq']);
         $this->assertAuthenticatedAs($user);
     }
 
@@ -310,7 +315,7 @@ class AuthenticatedSessionControllerTest extends TestCase
         $response->assertUnauthorized();
     }
 
-    public function test_returns_the_signed_in_employee(): void
+    public function test_returns_the_signed_in_administrator_with_every_module(): void
     {
         $user = User::factory()->administrator()->create(['nip' => self::NIP, 'name' => 'Admin PINTU']);
 
@@ -320,8 +325,30 @@ class AuthenticatedSessionControllerTest extends TestCase
             'nip' => self::NIP,
             'nama' => 'Admin PINTU',
             'peran' => 'administrator',
+            'modul' => [
+                'pesan', 'statistik', 'berita', 'dokumentasi', 'dokumen', 'faq', 'layanan', 'jam', 'keliling',
+                'papan', 'tarif', 'profil', 'visiMisi', 'unit', 'kontak', 'beranda', 'halaman', 'pemutakhiran',
+            ],
             'masuk' => null,
         ]);
+    }
+
+    public function test_returns_no_modules_for_an_employee_without_assignments(): void
+    {
+        $user = User::factory()->create(['modules' => null]);
+
+        $response = $this->actingAs($user)->getJson('/api/sesi');
+
+        $response->assertOk()->assertJsonPath('modul', []);
+    }
+
+    public function test_ignores_module_values_it_does_not_know(): void
+    {
+        $user = User::factory()->create(['modules' => ['keuangan', 'keliling', 7]]);
+
+        $response = $this->actingAs($user)->getJson('/api/sesi');
+
+        $response->assertOk()->assertJsonPath('modul', ['keliling']);
     }
 
     public function test_returns_401_to_guests_asking_for_the_session(): void

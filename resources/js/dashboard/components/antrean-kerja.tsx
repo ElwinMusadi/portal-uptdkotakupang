@@ -2,6 +2,7 @@ import * as React from "react"
 import { IconArrowRight, IconDotsVertical, IconExternalLink } from "@tabler/icons-react"
 import { Link, useNavigate } from "react-router"
 
+import { MODUL_ALUR } from "@/app/nav"
 import { MenuAksiAlur, useAksiAlur } from "@/components/alur/alur"
 import { DataTable, pembantuKolom } from "@/components/data/data-table"
 import { NadaBadge, StatusAlurBadge, TitikStatus } from "@/components/data/status-badge"
@@ -32,6 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { bolehModul } from "@/lib/auth"
 import { tanggalJam, waktuRelatif } from "@/lib/format"
 import { useItemAlur, usePemutakhiran, type ItemAlur } from "@/lib/hitung"
 import { MODUL_PANTAU, PEMERIKSA, PESAN_JENIS, PESAN_STATUS } from "@/lib/meta"
@@ -164,25 +166,27 @@ export function AntreanKerja() {
   const pesanBaru = pesan?.filter((p) => p.status === "baru").length ?? 0
   const jatuhTempo = pantau?.filter((p) => p.status !== "terkini").length ?? 0
 
-  const TABS = [
-    { nilai: "antrean", label: "Antrean kerja", jumlah: antrean?.length },
-    { nilai: "pesan", label: "Pesan terbaru", jumlah: pesanBaru },
-    { nilai: "pemutakhiran", label: "Pemutakhiran", jumlah: jatuhTempo },
-    { nilai: "aktivitas", label: "Aktivitas" },
-  ]
+  const lihatAlur = bolehModul(...MODUL_ALUR)
+  const tersedia = [
+    { nilai: "antrean", label: "Antrean kerja", jumlah: antrean?.length, tampil: lihatAlur },
+    { nilai: "pesan", label: "Pesan terbaru", jumlah: pesanBaru, tampil: bolehModul("pesan") },
+    { nilai: "pemutakhiran", label: "Pemutakhiran", jumlah: jatuhTempo, tampil: bolehModul("pemutakhiran") || (pantau?.length ?? 0) > 0 },
+    { nilai: "aktivitas", label: "Aktivitas", tampil: true },
+  ].filter((t) => t.tampil)
+  const aktif = tersedia.some((t) => t.nilai === tab) ? tab : tersedia[0].nilai
 
   return (
-    <Tabs value={tab} onValueChange={setTab} className="w-full flex-col justify-start gap-6">
+    <Tabs value={aktif} onValueChange={setTab} className="w-full flex-col justify-start gap-6">
       <div className="flex items-center justify-between px-4 lg:px-6">
         <Label htmlFor="view-selector" className="sr-only">
           Tampilan
         </Label>
-        <Select value={tab} onValueChange={setTab}>
+        <Select value={aktif} onValueChange={setTab}>
           <SelectTrigger className="flex w-fit @4xl/main:hidden" size="sm" id="view-selector">
             <SelectValue placeholder="Pilih tampilan" />
           </SelectTrigger>
           <SelectContent>
-            {TABS.map((t) => (
+            {tersedia.map((t) => (
               <SelectItem key={t.nilai} value={t.nilai}>
                 {t.label}
               </SelectItem>
@@ -190,20 +194,22 @@ export function AntreanKerja() {
           </SelectContent>
         </Select>
         <TabsList className="hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:bg-muted-foreground/30 **:data-[slot=badge]:px-1 @4xl/main:flex">
-          {TABS.map((t) => (
+          {tersedia.map((t) => (
             <TabsTrigger key={t.nilai} value={t.nilai}>
               {t.label}
               {!!t.jumlah && <Badge variant="secondary">{t.jumlah}</Badge>}
             </TabsTrigger>
           ))}
         </TabsList>
-        <Button variant="outline" size="sm" asChild>
-          <Link to="/alur">
-            <span className="hidden lg:inline">Buka papan alur</span>
-            <span className="lg:hidden">Papan alur</span>
-            <IconArrowRight />
-          </Link>
-        </Button>
+        {lihatAlur && (
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/alur">
+              <span className="hidden lg:inline">Buka papan alur</span>
+              <span className="lg:hidden">Papan alur</span>
+              <IconArrowRight />
+            </Link>
+          </Button>
+        )}
       </div>
 
       <TabsContent value="antrean" className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6">

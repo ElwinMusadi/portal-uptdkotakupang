@@ -31,9 +31,9 @@ class UserPolicy
     }
 
     /**
-     * Determine whether the user can change an account's name, email or role.
-     * Administrators cannot change their own role; UpdateAccountRequest
-     * reports that on the role field.
+     * Determine whether the user can change an account's name, email, role or
+     * assigned modules. Administrators cannot change their own role;
+     * UpdateAccountRequest reports that on the role field.
      */
     public function update(User $user, User $account): Response
     {

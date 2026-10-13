@@ -75,7 +75,7 @@ Login diperiksa server dengan sesi cookie Laravel Sanctum ([D-007](docs/decision
 php artisan db:seed
 ```
 
-Akun pegawai, termasuk Administrator lain, dibuat Administrator dari halaman *Akun Pegawai* di dashboard ([D-008](docs/decisions.md#d-008--2026-10-13--manajemen-akun-oleh-administrator)). Di sana juga tersedia penangguhan, penonaktifan, dan atur ulang kata sandi lewat tautan aktivasi.
+Akun pegawai, termasuk Administrator lain, dibuat Administrator dari halaman *Akun Pegawai* di dashboard ([D-008](docs/decisions.md#d-008--2026-10-13--manajemen-akun-oleh-administrator)). Di sana juga tersedia penugasan modul untuk Pegawai UPTD ([D-010](docs/decisions.md#d-010--2026-10-13--penugasan-modul-untuk-pegawai-uptd)), penangguhan, penonaktifan, dan atur ulang kata sandi lewat tautan aktivasi.
 
 Administrator pertama di produksi dibuat dengan perintah berikut. Di terminal, kata sandi diminta tanpa ditampilkan dan akun langsung aktif.
 

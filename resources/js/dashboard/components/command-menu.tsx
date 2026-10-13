@@ -21,7 +21,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command"
-import { keluar, sesi } from "@/lib/auth"
+import { bolehModul, keluar, sesi } from "@/lib/auth"
 import { useKoleksi } from "@/lib/queries"
 import { urlPortal } from "@/lib/portal"
 
@@ -64,6 +64,12 @@ function CommandMenu({ open, setOpen }: CommandMenuContext) {
   const { data: berita } = useKoleksi("berita")
   const { data: layanan } = useKoleksi("layanan")
   const { data: dokumen } = useKoleksi("dokumen")
+  const buatCepat = navUntuk(BUAT_CEPAT, sesi())
+  const konten = {
+    berita: bolehModul("berita") ? berita : undefined,
+    layanan: bolehModul("layanan") ? layanan : undefined,
+    dokumen: bolehModul("dokumen") ? dokumen : undefined,
+  }
 
   const jalankan = (fn: () => void) => {
     setOpen(false)
@@ -81,7 +87,7 @@ function CommandMenu({ open, setOpen }: CommandMenuContext) {
       <CommandList>
         <CommandEmpty>Tidak ada yang cocok.</CommandEmpty>
         <CommandGroup heading="Halaman">
-          {navUntuk(SEMUA_NAV, sesi().peran).map((item) => (
+          {navUntuk(SEMUA_NAV, sesi()).map((item) => (
             <CommandItem
               key={item.url}
               value={`halaman ${item.judul} ${item.keterangan ?? ""}`}
@@ -93,21 +99,23 @@ function CommandMenu({ open, setOpen }: CommandMenuContext) {
           ))}
         </CommandGroup>
         <CommandSeparator />
-        <CommandGroup heading="Buat baru">
-          {BUAT_CEPAT.map((b) => (
-            <CommandItem
-              key={b.url}
-              value={`buat baru tambah ${b.judul}`}
-              onSelect={() => jalankan(() => navigate(b.url))}
-            >
-              <b.ikon />
-              Buat {b.judul.toLowerCase()}
-            </CommandItem>
-          ))}
-        </CommandGroup>
+        {buatCepat.length > 0 && (
+          <CommandGroup heading="Buat baru">
+            {buatCepat.map((b) => (
+              <CommandItem
+                key={b.url}
+                value={`buat baru tambah ${b.judul}`}
+                onSelect={() => jalankan(() => navigate(b.url))}
+              >
+                <b.ikon />
+                Buat {b.judul.toLowerCase()}
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        )}
         <CommandSeparator />
         <CommandGroup heading="Konten">
-          {berita?.map((b) => (
+          {konten.berita?.map((b) => (
             <CommandItem
               key={b.id}
               value={`berita ${b.judul} ${b.id}`}
@@ -117,7 +125,7 @@ function CommandMenu({ open, setOpen }: CommandMenuContext) {
               <span className="truncate">{b.judul}</span>
             </CommandItem>
           ))}
-          {layanan?.map((l) => (
+          {konten.layanan?.map((l) => (
             <CommandItem
               key={l.id}
               value={`layanan persyaratan ${l.nama} ${l.id}`}
@@ -127,7 +135,7 @@ function CommandMenu({ open, setOpen }: CommandMenuContext) {
               <span className="truncate">Persyaratan · {l.nama}</span>
             </CommandItem>
           ))}
-          {dokumen?.map((d) => (
+          {konten.dokumen?.map((d) => (
             <CommandItem
               key={d.id}
               value={`dokumen unduhan ${d.judul} ${d.id}`}

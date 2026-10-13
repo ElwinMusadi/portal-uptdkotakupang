@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\AccountStatus;
+use App\Enums\DashboardModule;
 use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -13,8 +14,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 /**
- * Role and status are deliberately not mass assignable: they are set
- * explicitly by the code paths allowed to change them.
+ * Role, status and modules are deliberately not mass assignable: they are
+ * set explicitly by the code paths allowed to change them.
  */
 #[Fillable(['nip', 'name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
@@ -34,6 +35,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'role' => UserRole::class,
             'status' => AccountStatus::class,
+            'modules' => 'array',
         ];
     }
 
@@ -54,6 +56,30 @@ class User extends Authenticatable
     public function isAdministrator(): bool
     {
         return ($this->getAttributes()['role'] ?? null) === UserRole::Administrator->value;
+    }
+
+    /**
+     * The dashboard modules assigned to this account, in the order of the
+     * DashboardModule cases. Unknown stored values are ignored.
+     *
+     * @return list<string>
+     */
+    public function assignedModules(): array
+    {
+        return DashboardModule::ordered(array_filter((array) $this->modules, 'is_string'));
+    }
+
+    /**
+     * The dashboard modules this account may manage: every module for an
+     * administrator, the assigned ones for an employee.
+     *
+     * @return list<string>
+     */
+    public function managedModules(): array
+    {
+        return $this->isAdministrator()
+            ? array_map(fn (DashboardModule $module): string => $module->value, DashboardModule::cases())
+            : $this->assignedModules();
     }
 
     /**

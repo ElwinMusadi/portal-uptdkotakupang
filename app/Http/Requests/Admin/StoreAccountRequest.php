@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Enums\DashboardModule;
 use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
@@ -30,6 +31,8 @@ class StoreAccountRequest extends FormRequest
             'nama' => ['required', 'string', 'max:255'],
             'surel' => ['nullable', 'string', 'email', 'max:255', Rule::unique(User::class, 'email')],
             'peran' => ['required', Rule::enum(UserRole::class)],
+            'modul' => ['sometimes', 'list'],
+            'modul.*' => ['string', Rule::enum(DashboardModule::class)],
         ];
     }
 
@@ -52,6 +55,9 @@ class StoreAccountRequest extends FormRequest
             'surel.unique' => 'Surel ini sudah dipakai akun lain.',
             'peran.required' => 'Pilih peran akun.',
             'peran.enum' => 'Peran tidak valid.',
+            'modul.list' => 'Daftar modul tidak valid.',
+            'modul.*.string' => 'Modul tidak dikenal.',
+            'modul.*.enum' => 'Modul tidak dikenal.',
         ];
     }
 }

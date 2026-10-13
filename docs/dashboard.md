@@ -223,8 +223,17 @@ Halaman *Akun Pegawai* (`#/akun`, `pages/akun.tsx`) hanya tampil di menu dan pen
 
 - Data akun selalu dibaca dari server (`lib/akun.ts`), apa pun sumber data konten dashboard; tidak ada salinannya di IndexedDB.
 - *Tambah akun* membuat akun yang menunggu aktivasi, lalu menampilkan tautan aktivasi sekali saja untuk disalin dan dikirim kepada pemiliknya.
-- Menu tiap baris: *Sunting* (nama, surel, peran), *Tangguhkan* / *Aktifkan kembali*, *Atur ulang kata sandi* atau *Tautan aktivasi baru*, dan *Nonaktifkan*. Setiap tindakan yang mengubah akses meminta konfirmasi yang menjelaskan akibatnya. Baris akun sendiri hanya bisa disunting, dan perannya tidak bisa diubah.
+- Menu tiap baris: *Sunting* (nama, surel, peran, modul), *Tangguhkan* / *Aktifkan kembali*, *Atur ulang kata sandi* atau *Tautan aktivasi baru*, dan *Nonaktifkan*. Setiap tindakan yang mengubah akses meminta konfirmasi yang menjelaskan akibatnya. Baris akun sendiri hanya bisa disunting, dan perannya tidak bisa diubah.
 - Galat validasi dari server ditampilkan di isian yang bersangkutan (`ApiError.isian`).
+
+## Modul pegawai
+
+Pegawai UPTD hanya melihat modul yang ditugaskan Administrator ([D-010](decisions.md#d-010--2026-10-13--penugasan-modul-untuk-pegawai-uptd)); Administrator melihat semuanya. Daftar modul pengguna datang dari server lewat `sesi().modul`.
+
+- `app/nav.ts` adalah satu-satunya sumber: setiap item menu konten punya `modul`, item khusus Administrator punya `khusus`. `navUntuk()` menyaring menu samping, pencarian, dan "Buat konten"; `GRUP_MODUL` menyusun centang modul di panel akun dengan judul dan kelompok yang sama dengan menu.
+- `Layout` mencocokkan alamat yang dibuka dengan item menu. Bila item itu tidak boleh dilihat, halaman diganti pesan "Modul ini belum ditugaskan kepada Anda" atau "Khusus Administrator".
+- `useItemAlur()` dan `usePemutakhiran()` di `lib/hitung.ts` menyaring konten dan jadwal per modul, sehingga Ringkasan dan Alur Publikasi ikut terbatas. Kartu dan grafik pesan hanya tampil bagi pengelola Pesan & Pengaduan.
+- Pembatasan ini mengatur tampilan. Selama konten tersimpan di IndexedDB, server belum bisa menegakkannya; endpoint konten di server kelak wajib memeriksa modul yang sama.
 
 ## Pemeriksaan sebelum commit
 

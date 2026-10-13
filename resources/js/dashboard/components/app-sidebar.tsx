@@ -49,11 +49,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={NAV_UTAMA} />
-        {NAV_GRUP.map((grup) => (
-          <NavDocuments key={grup.label} label={grup.label} items={grup.item} />
-        ))}
-        <NavSecondary items={navUntuk(NAV_SEKUNDER, sesi().peran)} className="mt-auto" />
+        <NavMain items={navUntuk(NAV_UTAMA, sesi())} />
+        {NAV_GRUP.map((grup) => ({ ...grup, item: navUntuk(grup.item, sesi()) }))
+          .filter((grup) => grup.item.length > 0)
+          .map((grup) => (
+            <NavDocuments key={grup.label} label={grup.label} items={grup.item} />
+          ))}
+        <NavSecondary items={navUntuk(NAV_SEKUNDER, sesi())} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser />

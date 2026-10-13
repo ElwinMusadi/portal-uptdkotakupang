@@ -3,18 +3,18 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import {
   IconCopy,
   IconLink,
-  IconLock,
   IconPlayerPause,
   IconPlayerPlay,
   IconRefresh,
   IconUserOff,
   IconUserPlus,
 } from "@tabler/icons-react"
-import { useForm, type DefaultValues } from "react-hook-form"
+import { useForm, type Control, type DefaultValues } from "react-hook-form"
 import { useSearchParams } from "react-router"
 import { toast } from "sonner"
 import { z } from "zod"
 
+import { GRUP_MODUL } from "@/app/nav"
 import { useKonfirmasi } from "@/components/data/confirm"
 import { DataTable, pembantuKolom } from "@/components/data/data-table"
 import { Halaman, PengantarHalaman } from "@/components/data/page"
@@ -25,6 +25,7 @@ import { FieldPilih, FieldTeks } from "@/components/form/fields"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -34,7 +35,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
+import { FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import {
   STATUS_AKUN,
@@ -48,7 +49,7 @@ import {
   type TautanAktivasi,
 } from "@/lib/akun"
 import { ApiError } from "@/lib/api"
-import { LABEL_PERAN, sesi } from "@/lib/auth"
+import { LABEL_PERAN, SEMUA_MODUL, sesi, type Modul } from "@/lib/auth"
 import { tanggalJam, waktuRelatif } from "@/lib/format"
 import { validasiFormulir } from "@/lib/formulir"
 import { laporGalat } from "@/lib/queries"
@@ -59,10 +60,14 @@ const schema = z.object({
   nama: v.wajib("Nama").max(255, "Maksimal 255 karakter."),
   surel: v.email,
   peran: z.enum(["pegawai", "administrator"], { error: "Pilih peran akun." }),
+  modul: z.array(z.enum(SEMUA_MODUL)),
 })
 type FormAkun = z.infer<typeof schema>
 
-const KOSONG: FormAkun = { nip: "", nama: "", surel: "", peran: "pegawai" }
+const KOSONG: FormAkun = { nip: "", nama: "", surel: "", peran: "pegawai", modul: [] }
+
+/** Judul modul seperti di menu samping */
+const JUDUL_MODUL = Object.fromEntries(GRUP_MODUL.flatMap((g) => g.modul.map((m) => [m.kunci, m.judul]))) as Record<Modul, string>
 
 const OPSI_PERAN = [
   { nilai: "pegawai", label: LABEL_PERAN.pegawai },
@@ -79,28 +84,8 @@ const LABEL_TAUTAN: Record<StatusAkun, string> = {
 
 const k = pembantuKolom<Akun>()
 
+/** Khusus Administrator; Layout menolak pengguna lain lewat menu "Akun Pegawai" (khusus: administrator) */
 export default function HalamanAkun() {
-  if (sesi().peran !== "administrator") {
-    return (
-      <Halaman>
-        <Empty className="border py-16">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <IconLock />
-            </EmptyMedia>
-            <EmptyTitle>Khusus Administrator</EmptyTitle>
-            <EmptyDescription>
-              Akun pegawai dikelola oleh Administrator di Sub Bagian Tata Usaha.
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
-      </Halaman>
-    )
-  }
-  return <KelolaAkun />
-}
-
-function KelolaAkun() {
   const { nip: nipSaya } = sesi()
   const { data, isLoading, error, refetch, isRefetching } = useDaftarAkun()
   const ubahStatus = useUbahStatusAkun()
@@ -199,6 +184,21 @@ function KelolaAkun() {
       header: "Peran",
       cell: ({ row }) => LABEL_PERAN[row.original.peran],
     }),
+    k.accessor("modul", {
+      header: "Modul",
+      enableSorting: false,
+      cell: ({ row }) => {
+        const akun = row.original
+        if (akun.peran === "administrator") return <span className="text-sm">Semua modul</span>
+        if (akun.modul.length === 0) return <span className="text-sm text-muted-foreground">Belum ada</span>
+        const judul = akun.modul.map((m) => JUDUL_MODUL[m])
+        return (
+          <span className="block max-w-56 truncate text-sm" title={judul.join(", ")}>
+            {judul.length > 2 ? `${judul.slice(0, 2).join(", ")} +${judul.length - 2}` : judul.join(", ")}
+          </span>
+        )
+      },
+    }),
     k.accessor("status", {
       header: "Status",
       cell: ({ row }) => {
@@ -286,7 +286,10 @@ function KelolaAkun() {
           label="Daftar akun pegawai"
           pilih={false}
           ukuranHalaman={20}
-          cari={{ placeholder: "Cari nama, NIP, atau surel…", teks: (a) => `${a.nama} ${a.nip} ${a.surel ?? ""}` }}
+          cari={{
+            placeholder: "Cari nama, NIP, surel, atau modul…",
+            teks: (a) => `${a.nama} ${a.nip} ${a.surel ?? ""} ${a.modul.map((m) => JUDUL_MODUL[m]).join(" ")}`,
+          }}
           filter={[
             {
               id: "status",
@@ -356,8 +359,16 @@ function KelolaAkun() {
             label="Peran"
             wajib
             opsi={OPSI_PERAN}
-            deskripsi="Administrator dapat mengelola akun pegawai."
+            deskripsi="Administrator dapat mengelola akun pegawai dan semua modul."
           />
+        )}
+        {editor.peran === "pegawai" ? (
+          <PilihModul control={editor.form.control} />
+        ) : (
+          <div className="grid gap-2 text-sm">
+            <p className="font-medium">Modul</p>
+            <p className="text-muted-foreground">Administrator mengelola semua modul.</p>
+          </div>
         )}
       </EntriSheet>
       <DialogTautan hasil={tautan} tutup={() => setTautan(null)} />
@@ -388,7 +399,11 @@ function useEditorAkun(data: Akun[] | undefined) {
   const kunciTerbuka = baru ? "baru" : (akun?.id ?? "")
   React.useEffect(() => {
     if (!kunciTerbuka) return
-    form.reset(akun ? { nip: akun.nip, nama: akun.nama, surel: akun.surel ?? "", peran: akun.peran } : KOSONG)
+    form.reset(
+      akun
+        ? { nip: akun.nip, nama: akun.nama, surel: akun.surel ?? "", peran: akun.peran, modul: akun.modul }
+        : KOSONG
+    )
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kunciTerbuka])
 
@@ -422,7 +437,10 @@ function useEditorAkun(data: Akun[] | undefined) {
     const nilai = form.getValues()
     try {
       if (akun) {
-        await ubah.mutateAsync({ id: akun.id, data: { nama: nilai.nama, surel: nilai.surel, peran: nilai.peran } })
+        await ubah.mutateAsync({
+          id: akun.id,
+          data: { nama: nilai.nama, surel: nilai.surel, peran: nilai.peran, modul: nilai.modul },
+        })
         toast.success("Perubahan akun disimpan")
       } else {
         tampilkanTautan(await tambah.mutateAsync(nilai))
@@ -435,7 +453,9 @@ function useEditorAkun(data: Akun[] | undefined) {
         laporGalat(galat)
         return
       }
-      for (const [nama, pesan] of isian) {
+      for (const [kunci, pesan] of isian) {
+        // Galat daftar datang per butir (modul.0); tampilkan di isiannya.
+        const nama = kunci.split(".")[0]
         if (nama in KOSONG) form.setError(nama as keyof FormAkun, { message: pesan }, { shouldFocus: true })
       }
       toast.error("Periksa kembali isian yang ditandai merah.")
@@ -445,6 +465,8 @@ function useEditorAkun(data: Akun[] | undefined) {
   return {
     form,
     akun,
+    /** Peran yang sedang dipilih di formulir */
+    peran: form.watch("peran"),
     terbuka,
     bukaBaru: () => buka("baru", "1"),
     bukaUbah: (id: string) => buka("ubah", id),
@@ -452,6 +474,53 @@ function useEditorAkun(data: Akun[] | undefined) {
     simpan,
     menyimpan: tambah.isPending || ubah.isPending,
   }
+}
+
+/** Centang modul yang dikelola pegawai, dikelompokkan seperti menu samping */
+function PilihModul({ control }: { control: Control<FormAkun> }) {
+  return (
+    <FormField
+      control={control}
+      name="modul"
+      render={({ field }) => {
+        const dipilih = new Set(field.value)
+        const ubah = (kunci: Modul, centang: boolean) => {
+          if (centang) dipilih.add(kunci)
+          else dipilih.delete(kunci)
+          field.onChange(SEMUA_MODUL.filter((m) => dipilih.has(m)))
+        }
+        return (
+          <FormItem>
+            <FormLabel>Modul yang dikelola</FormLabel>
+            <FormDescription>
+              Pegawai hanya melihat menu dan ringkasan untuk modul yang dicentang. Absensi, kalkulator, dan panduan
+              selalu tersedia.
+            </FormDescription>
+            <div className="grid gap-4 pt-1">
+              {GRUP_MODUL.map((grup) => (
+                <fieldset key={grup.label} className="grid gap-2">
+                  <legend className="mb-1 text-xs font-medium text-muted-foreground">{grup.label}</legend>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {grup.modul.map((m) => (
+                      <label key={m.kunci} className="flex items-center gap-2 text-sm">
+                        <Checkbox
+                          checked={dipilih.has(m.kunci)}
+                          onCheckedChange={(c) => ubah(m.kunci, c === true)}
+                          onBlur={field.onBlur}
+                        />
+                        {m.judul}
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+              ))}
+            </div>
+            <FormMessage />
+          </FormItem>
+        )
+      }}
+    />
+  )
 }
 
 /** Tautan aktivasi hanya ditampilkan sekali, tepat setelah diterbitkan */

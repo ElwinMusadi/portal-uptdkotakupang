@@ -10,10 +10,40 @@ import { toast } from "sonner"
 
 export type Peran = "administrator" | "pegawai"
 
+/**
+ * Modul dashboard yang ditugaskan Administrator kepada pegawai (D-010), dalam
+ * urutan yang sama dengan DashboardModule di server. Nilainya nama koleksi atau
+ * pengaturan utama modul.
+ */
+export const SEMUA_MODUL = [
+  "pesan",
+  "statistik",
+  "berita",
+  "dokumentasi",
+  "dokumen",
+  "faq",
+  "layanan",
+  "jam",
+  "keliling",
+  "papan",
+  "tarif",
+  "profil",
+  "visiMisi",
+  "unit",
+  "kontak",
+  "beranda",
+  "halaman",
+  "pemutakhiran",
+] as const
+
+export type Modul = (typeof SEMUA_MODUL)[number]
+
 export interface Sesi {
   nip: string
   nama: string
   peran: Peran
+  /** Modul yang boleh dikelola; Administrator selalu mendapat semuanya */
+  modul: Modul[]
   /** Waktu login (ISO 8601); null bila belum tercatat di sesi ini */
   masuk: string | null
 }
@@ -53,6 +83,16 @@ export async function muatSesi(): Promise<Sesi | null> {
 export function sesi(): Sesi {
   if (!sesiAktif) throw new Error("Sesi login belum dimuat.")
   return sesiAktif
+}
+
+/**
+ * Apakah pengguna ini mengelola salah satu modul tersebut. Hanya mengatur
+ * tampilan dashboard; selama konten tersimpan di peramban, pembatasan ini
+ * belum ditegakkan server.
+ */
+export function bolehModul(...modul: Modul[]): boolean {
+  const milik = sesi().modul
+  return modul.some((m) => milik.includes(m))
 }
 
 /** URL halaman Login Pegawai di portal, relatif terhadap dashboard */

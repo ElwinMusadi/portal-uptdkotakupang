@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\IssueActivationLink;
+use App\Enums\DashboardModule;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreAccountRequest;
@@ -39,6 +40,7 @@ class AccountController extends Controller
             'name' => $request->validated('nama'),
             'email' => $request->validated('surel'),
             'role' => $request->enum('peran', UserRole::class),
+            'modules' => DashboardModule::ordered($request->validated('modul', [])),
         ]);
         $link = $issueActivationLink->handle($account);
 
@@ -46,6 +48,7 @@ class AccountController extends Controller
             'actor' => $request->user()->getKey(),
             'user' => $account->getKey(),
             'role' => $account->role->value,
+            'modules' => $account->assignedModules(),
             'ip' => $request->ip(),
         ]);
 
@@ -57,7 +60,7 @@ class AccountController extends Controller
     }
 
     /**
-     * Change an account's name, email or role.
+     * Change an account's name, email, role or assigned modules.
      */
     public function update(UpdateAccountRequest $request, User $user): AccountResource
     {

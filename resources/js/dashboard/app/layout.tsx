@@ -1,18 +1,56 @@
 import * as React from "react"
-import { IconAlertTriangle } from "@tabler/icons-react"
-import { Outlet, ScrollRestoration } from "react-router"
+import { IconAlertTriangle, IconLock } from "@tabler/icons-react"
+import { Link, Outlet, ScrollRestoration, useLocation } from "react-router"
 
+import { bolehDilihat, SEMUA_NAV, type ItemNav } from "@/app/nav"
 import { AppSidebar } from "@/components/app-sidebar"
 import { CommandMenuProvider } from "@/components/command-menu"
 import { KonfirmasiProvider } from "@/components/data/confirm"
 import { KerangkaMemuat } from "@/components/form/settings-form"
+import { ruteAktif } from "@/components/nav-main"
 import { SiteHeader } from "@/components/site-header"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { api } from "@/lib/api"
-import { muatSesi, urlLogin } from "@/lib/auth"
+import { muatSesi, sesi, urlLogin } from "@/lib/auth"
 import { aturBasisPortal } from "@/lib/portal"
 import { usePengaturan } from "@/lib/queries"
+
+/** Item menu halaman ini bila pengguna tidak boleh membukanya (modul tidak ditugaskan atau khusus Administrator) */
+function useHalamanTerkunci(): ItemNav | null {
+  const { pathname } = useLocation()
+  const item = [...SEMUA_NAV]
+    .sort((a, b) => b.url.length - a.url.length)
+    .find((n) => n.url !== "/" && ruteAktif(n.url, pathname))
+  return item && !bolehDilihat(item, sesi()) ? item : null
+}
+
+function HalamanTerkunci({ item }: { item: ItemNav }) {
+  return (
+    <div className="px-4 py-4 md:py-6 lg:px-6">
+      <Empty className="border py-16">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <IconLock />
+          </EmptyMedia>
+          <EmptyTitle>{item.khusus ? "Khusus Administrator" : "Modul ini belum ditugaskan kepada Anda"}</EmptyTitle>
+          <EmptyDescription>
+            {item.khusus
+              ? "Akun pegawai dikelola oleh Administrator di Sub Bagian Tata Usaha."
+              : `${item.judul} hanya untuk pegawai yang ditugaskan mengelolanya. Minta Administrator di Sub Bagian Tata Usaha menambahkan modulnya ke akun Anda.`}
+          </EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <Button asChild variant="outline">
+            <Link to="/">Kembali ke Ringkasan</Link>
+          </Button>
+        </EmptyContent>
+      </Empty>
+    </div>
+  )
+}
 
 /**
  * Kembali ke halaman login bila sesi di server sudah berakhir (keluar di tab lain,
@@ -39,6 +77,7 @@ function useJagaSesi() {
 export function Layout() {
   useJagaSesi()
   const { data: situs } = usePengaturan("situs")
+  const terkunci = useHalamanTerkunci()
 
   React.useEffect(() => {
     aturBasisPortal(situs?.urlPortal)
@@ -79,7 +118,7 @@ export function Layout() {
                     </div>
                   }
                 >
-                  <Outlet />
+                  {terkunci ? <HalamanTerkunci item={terkunci} /> : <Outlet />}
                 </React.Suspense>
               </div>
             </div>

@@ -52,7 +52,10 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
-     * @return array{nip: string, nama: string, peran: string, masuk: string|null}
+     * The signed-in account as the dashboard sees it; modul lists the
+     * dashboard modules it may manage (all of them for administrators).
+     *
+     * @return array{nip: string, nama: string, peran: string, modul: list<string>, masuk: string|null}
      */
     private function session(Request $request, User $user): array
     {
@@ -60,6 +63,7 @@ class AuthenticatedSessionController extends Controller
             'nip' => $user->nip,
             'nama' => $user->name,
             'peran' => $user->role->value,
+            'modul' => $user->managedModules(),
             'masuk' => $request->hasSession() ? $request->session()->get('pintu.masuk') : null,
         ];
     }
