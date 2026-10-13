@@ -118,9 +118,10 @@ export default function HalamanPanduan() {
           <>
             {api.mode === "campuran" ? (
               <p>
-                <strong>Tanya Jawab</strong> sudah tersimpan di server PINTU, sehingga perubahannya langsung
-                terlihat oleh pengelola lain. Konten lain masih disimpan di IndexedDB peramban yang sedang Anda
-                pakai: perubahannya belum tampil di portal publik dan tidak terlihat dari perangkat lain.
+                <strong>Tanya Jawab</strong> sudah tersimpan di server PINTU: perubahannya langsung terlihat
+                oleh pengelola lain, dan entri yang Di portal tampil di beranda. Konten lain masih disimpan di
+                IndexedDB peramban yang sedang Anda pakai: perubahannya belum tampil di portal publik dan tidak
+                terlihat dari perangkat lain.
               </p>
             ) : (
               <p>

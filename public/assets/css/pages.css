@@ -213,6 +213,9 @@
 
 /* ================= 11 · FAQ ================= */
 .faq__list { margin-top: var(--inner-y); }
+.faq__status { padding: 22px 0; border-bottom: var(--hairline); color: var(--text-2); }
+/* Jawaban dari dashboard berupa teks polos; baris barunya dipertahankan. */
+.faq__list .acc__body p { white-space: pre-line; }
 
 /* ================= 12 · Penutup ================= */
 .outro__inner { display: grid; grid-template-columns: 1fr auto; gap: 48px; align-items: end; }

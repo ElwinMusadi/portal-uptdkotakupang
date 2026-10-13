@@ -124,9 +124,9 @@ export default function HalamanFaq() {
         <IconServer />
         <AlertTitle>Tersimpan di server</AlertTitle>
         <AlertDescription>
-          Daftar ini dipakai bersama semua pengelola Tanya Jawab. Entri berstatus Di portal (terbit, untuk
-          warga, dan ditampilkan) sudah tersedia lewat API publik, tetapi beranda portal masih menampilkan
-          tanya jawab lama sampai disambungkan ke API tersebut.
+          Daftar ini dipakai bersama semua pengelola Tanya Jawab. Hanya entri berstatus Di portal (terbit,
+          untuk warga, dan ditampilkan) yang tampil di beranda; bila tidak ada, bagian Tanya Jawab di beranda
+          disembunyikan.
         </AlertDescription>
       </Alert>
       {error ? (

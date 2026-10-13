@@ -552,6 +552,62 @@
     });
   }
 
+  /* ---------- Tanya jawab di beranda ----------
+     Dikelola di dashboard dan dibaca dari GET /api/public/faq, yang hanya
+     memberikan tanya jawab terbit, untuk warga, dan ditampilkan. Teksnya
+     dipasang sebagai teks polos. Tidak ada daftar cadangan: bila API gagal,
+     pengunjung melihat pesan dan tombol coba lagi; bila kosong, bagian ini
+     disembunyikan. */
+  function initFaq() {
+    const section = $("[data-faq]");
+    if (!section) return;
+    const list = $("[data-faq-list]", section);
+    const status = $("[data-faq-status]", section);
+    const template = $("template[data-faq-item]", section);
+
+    const retry = document.createElement("button");
+    retry.type = "button";
+    retry.className = "link";
+    retry.textContent = "Coba lagi";
+
+    const tampilkan = (entri) => {
+      list.textContent = "";
+      list.append(...entri.map(({ pertanyaan, jawaban }) => {
+        const item = template.content.firstElementChild.cloneNode(true);
+        $("[data-faq-question]", item).textContent = pertanyaan;
+        $("[data-faq-answer]", item).textContent = jawaban;
+        return item;
+      }));
+    };
+
+    const muat = async (fokus) => {
+      const batas = new AbortController();
+      const waktu = setTimeout(() => batas.abort(), 10000);
+      list.setAttribute("aria-busy", "true");
+      status.textContent = "Memuat tanya jawab…";
+      status.hidden = false;
+      try {
+        const res = await fetch("/api/public/faq", { headers: { Accept: "application/json" }, credentials: "omit", signal: batas.signal });
+        if (!res.ok) throw new Error(`Status ${res.status}`);
+        const data = await res.json();
+        if (!Array.isArray(data)) throw new Error("Respons bukan daftar");
+        const entri = data.filter((f) => typeof f?.pertanyaan === "string" && typeof f?.jawaban === "string");
+        if (entri.length) tampilkan(entri);
+        else section.hidden = true;
+      } catch {
+        status.textContent = "Tanya jawab belum dapat dimuat. ";
+        status.append(retry);
+        if (fokus) retry.focus();
+      } finally {
+        clearTimeout(waktu);
+        list.removeAttribute("aria-busy");
+      }
+    };
+
+    retry.addEventListener("click", () => muat(true));
+    muat(false);
+  }
+
   /* ---------- Login Pegawai ----------
      NIP dan kata sandi diperiksa server. Sesinya berupa cookie Laravel Sanctum
      yang juga dipakai dashboard (satu origin); lihat routes/api.php. */
@@ -715,6 +771,6 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initKeliling();
-    initDash(); initSim(); initDialogs(); initGag(); initFilters(); initGallery(); initForms(); initAuthFit(); initUtilities();
+    initDash(); initSim(); initDialogs(); initGag(); initFilters(); initGallery(); initFaq(); initForms(); initAuthFit(); initUtilities();
   });
 })();

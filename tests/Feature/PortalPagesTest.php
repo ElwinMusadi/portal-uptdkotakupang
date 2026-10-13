@@ -42,6 +42,16 @@ class PortalPagesTest extends TestCase
         $this->assertSame(file_get_contents(resource_path("views/portal/{$view}.blade.php")), $response->getContent());
     }
 
+    public function test_leaves_the_home_page_faq_entries_to_the_public_api(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+
+        $this->assertSame(1, preg_match('/<section[^>]*\bid="faq"[^>]*>.*?<\/section>/s', $html, $faq));
+        $outsideTemplate = preg_replace('/<template data-faq-item>.*?<\/template>/s', '', $faq[0]);
+        $this->assertStringContainsString('data-faq-list', $outsideTemplate);
+        $this->assertStringNotContainsString('<details', $outsideTemplate);
+    }
+
     #[TestWith(['/'])]
     #[TestWith(['/login'])]
     #[TestWith(['/layanan'])]

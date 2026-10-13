@@ -246,7 +246,7 @@ Halaman *Tanya Jawab* (`#/faq`, `pages/faq.tsx`) adalah modul pertama yang tersi
 - Formulir berisi Pertanyaan, Jawaban, Status (*Draf*, *Terbit*, *Ditarik*), *Untuk warga*, dan *Tampilkan di portal*. Entri baru mulai sebagai draf yang belum untuk warga. Kalimat di bawah formulir menjelaskan apakah isian itu membuat entri tampil di portal.
 - Kolom *Status* menandai entri *Di portal* bila terbit, untuk warga, dan ditampilkan (`keadaanPortalFaq()` di `lib/meta.ts`), sama dengan syarat `GET /api/public/faq`. Selain itu kolom ini menyebut alasannya: draf, ditarik, bukan untuk warga, atau disembunyikan.
 - Hapus, per baris maupun massal, hanya untuk Administrator. Pegawai UPTD menyembunyikan entri dengan sakelar atau menariknya dari portal.
-- Beranda portal belum membaca `GET /api/public/faq`; sampai disambungkan, beranda masih menampilkan tanya jawab lama.
+- Beranda portal membaca `GET /api/public/faq` ([D-012](decisions.md#d-012--2026-10-13--beranda-menampilkan-tanya-jawab-dari-api-publik)). Bila tidak ada entri yang *Di portal*, bagian Tanya Jawab di beranda disembunyikan.
 
 ## Pemeriksaan sebelum commit
 

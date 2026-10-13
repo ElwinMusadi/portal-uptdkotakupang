@@ -1764,7 +1764,7 @@
       </section>
 
       <!-- 11 · FAQ -->
-      <section class="section section--flush-top faq" id="faq">
+      <section class="section section--flush-top faq" id="faq" data-faq>
         <div class="container container--narrow">
           <div class="center" data-reveal>
             <p class="eyebrow">Tanya jawab</p>
@@ -1772,142 +1772,27 @@
               Perlu diketahui. <span class="tone">Sebelum ke loket.</span>
             </h2>
           </div>
-          <div class="accordion faq__list" data-reveal>
-            <details class="acc">
-              <summary>
-                Apakah pembayaran pajak tahunan bisa diwakilkan?<span
-                  class="acc__plus"
-                  aria-hidden="true"
-                  ><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg
-                ></span>
-              </summary>
-              <div class="acc__body">
-                <div>
-                  <p>
-                    Bisa. Bawa berkas lengkap atas nama pemilik. Untuk
-                    perpanjangan STNK 5&nbsp;tahun dan duplikat STNK, sertakan
-                    surat kuasa bermeterai Rp10.000.
-                  </p>
-                </div>
-              </div>
-            </details>
-            <details class="acc">
-              <summary>
-                Kapan kendaraan harus dibawa untuk cek fisik?<span
-                  class="acc__plus"
-                  aria-hidden="true"
-                  ><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg
-                ></span>
-              </summary>
-              <div class="acc__body">
-                <div>
-                  <p>
-                    Untuk perpanjangan STNK 5&nbsp;tahun, mutasi keluar, balik
-                    nama, dan duplikat STNK. Pajak tahunan tidak memerlukan cek
-                    fisik.
-                  </p>
-                </div>
-              </div>
-            </details>
-            <details class="acc">
-              <summary>
-                Berapa lembar fotokopi yang perlu disiapkan?<span
-                  class="acc__plus"
-                  aria-hidden="true"
-                  ><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg
-                ></span>
-              </summary>
-              <div class="acc__body">
-                <div>
-                  <p>
-                    Umumnya dua lembar untuk setiap dokumen. Jumlah pasti untuk
-                    tiap layanan tercantum di
-                    <a class="link" href="layanan.html">halaman persyaratan</a>.
-                  </p>
-                </div>
-              </div>
-            </details>
-            <details class="acc">
-              <summary>
-                Apakah saya bisa membayar tanpa uang tunai?<span
-                  class="acc__plus"
-                  aria-hidden="true"
-                  ><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg
-                ></span>
-              </summary>
-              <div class="acc__body">
-                <div>
-                  <p>
-                    Bisa. Ikuti
-                    <a class="link" href="layanan.html#alur"
-                      >alur pembayaran non-tunai</a
-                    >
-                    di kasir. Simpan bukti transaksi sampai STNK selesai
-                    disahkan.
-                  </p>
-                </div>
-              </div>
-            </details>
-            <details class="acc">
-              <summary>
-                STNK saya hilang. Apa yang harus disiapkan?<span
-                  class="acc__plus"
-                  aria-hidden="true"
-                  ><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg
-                ></span>
-              </summary>
-              <div class="acc__body">
-                <div>
-                  <p>
-                    Surat keterangan kehilangan asli dari kepolisian, surat
-                    pernyataan bermeterai, fotokopi KTP dan BPKB, serta
-                    kendaraan untuk cek fisik. Badan hukum menambahkan dokumen
-                    perusahaan.
-                  </p>
-                </div>
-              </div>
-            </details>
-            <details class="acc">
-              <summary>
-                Di mana jadwal Samsat Keliling diumumkan?<span
-                  class="acc__plus"
-                  aria-hidden="true"
-                  ><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg
-                ></span>
-              </summary>
-              <div class="acc__body">
-                <div>
-                  <p>
-                    Di
-                    <a class="link" href="jadwal.html#keliling"
-                      >halaman jadwal</a
-                    >. Petugas memperbarui lokasi setiap Jumat untuk minggu
-                    berikutnya.
-                  </p>
-                </div>
-              </div>
-            </details>
-            <details class="acc">
-              <summary>
-                Bagaimana cara menyampaikan pengaduan?<span
-                  class="acc__plus"
-                  aria-hidden="true"
-                  ><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg
-                ></span>
-              </summary>
-              <div class="acc__body">
-                <div>
-                  <p>
-                    Lewat
-                    <a class="link" href="kontak.html#pengaduan"
-                      >formulir kontak</a
-                    >, kotak saran di kantor, atau SP4N-LAPOR!. Identitas
-                    pelapor kami jaga kerahasiaannya.
-                  </p>
-                </div>
-              </div>
-            </details>
+          <!-- Tanya jawab dari dashboard, dimuat main.js lewat GET /api/public/faq -->
+          <div class="accordion faq__list" data-reveal data-faq-list>
+            <p class="faq__status" role="status" data-faq-status hidden>Memuat tanya jawab…</p>
+            <noscript><p class="faq__status">Aktifkan JavaScript untuk melihat tanya jawab.</p></noscript>
           </div>
+          <template data-faq-item>
+            <details class="acc">
+              <summary>
+                <span data-faq-question></span><span
+                  class="acc__plus"
+                  aria-hidden="true"
+                  ><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg
+                ></span>
+              </summary>
+              <div class="acc__body">
+                <div>
+                  <p data-faq-answer></p>
+                </div>
+              </div>
+            </details>
+          </template>
         </div>
       </section>
 
