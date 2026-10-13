@@ -90,6 +90,49 @@ class Setting extends Model
         'kanalPengaduan' => [],
     ];
 
+    /**
+     * The vision, missions, contributions, core values and service pledge on
+     * the portal's Visi & Misi page (Visi & Misi).
+     */
+    public const string VISION_MISSION = 'visiMisi';
+
+    /**
+     * The Visi & Misi document until it is first saved: the official text the
+     * portal showed before the page was managed from the dashboard (D-020).
+     * The signed pledge file is not stored on the server yet.
+     *
+     * @var array{sumberVisi: string, visi: string, misi: list<array{id: string, teks: string, kataKunci: string}>, kontribusi: list<array{id: string, misi: string, judul: string, deskripsi: string}>, nilai: list<array{id: string, huruf: string, judul: string, deskripsi: string}>, maklumat: array{teks: string, penandatangan: string, berkas: null}}
+     */
+    public const array INITIAL_VISION_MISSION = [
+        'sumberVisi' => 'Visi Pemerintah Provinsi NTT',
+        'visi' => 'NTT Maju, Sehat, Cerdas, Sejahtera dan Berkelanjutan.',
+        'misi' => [
+            ['id' => 'misi-1', 'teks' => 'Memastikan infrastruktur berkelanjutan demi mewujudkan ekonomi berbasis potensi daerah yang berdaya saing.', 'kataKunci' => 'Maju'],
+            ['id' => 'misi-2', 'teks' => 'Memperluas pelayanan kesehatan dan jaminan sosial yang lebih inklusif, terjangkau, dan mudah diakses.', 'kataKunci' => 'Sehat'],
+            ['id' => 'misi-3', 'teks' => 'Menghadirkan pendidikan berkualitas yang merata, partisipatif, dan tepat sasaran.', 'kataKunci' => 'Cerdas'],
+            ['id' => 'misi-4', 'teks' => 'Mewujudkan kesejahteraan sosial, kesetaraan akses, serta kualitas hidup yang berkeadilan dan madani bagi seluruh lapisan masyarakat.', 'kataKunci' => 'Sejahtera'],
+            ['id' => 'misi-5', 'teks' => 'Mewujudkan pembangunan berkelanjutan melalui pengelolaan sumber daya alam dan manusia yang bijak serta pemenuhan hak asasi manusia untuk masa depan yang inklusif.', 'kataKunci' => 'Berkelanjutan'],
+        ],
+        'kontribusi' => [
+            ['id' => 'kontribusi-1', 'misi' => 'Misi 01 · Maju', 'judul' => 'Tata kelola informasi yang tertib.', 'deskripsi' => 'Alur pengumpulan, verifikasi, persetujuan, dan publikasi informasi menjadi fondasi sistem informasi pelayanan yang berkelanjutan.'],
+            ['id' => 'kontribusi-2', 'misi' => 'Misi 04 · Sejahtera', 'judul' => 'Akses informasi yang setara.', 'deskripsi' => 'Persyaratan, jadwal, dan lokasi layanan dapat dibuka siapa saja, kapan saja, tanpa harus bertanya ke loket lebih dulu.'],
+        ],
+        'nilai' => [
+            ['id' => 'nilai-1', 'huruf' => 'B', 'judul' => 'Berorientasi pelayanan', 'deskripsi' => 'Memahami kebutuhan wajib pajak. Ramah, cekatan, dan solutif.'],
+            ['id' => 'nilai-2', 'huruf' => 'A', 'judul' => 'Akuntabel', 'deskripsi' => 'Jujur, cermat, disiplin, dan bertanggung jawab atas setiap transaksi.'],
+            ['id' => 'nilai-3', 'huruf' => 'K', 'judul' => 'Kompeten', 'deskripsi' => 'Terus belajar agar layanan makin cepat dan tepat.'],
+            ['id' => 'nilai-4', 'huruf' => 'H', 'judul' => 'Harmonis', 'deskripsi' => 'Saling menghargai, di antara rekan kerja dan dengan masyarakat.'],
+            ['id' => 'nilai-5', 'huruf' => 'L', 'judul' => 'Loyal', 'deskripsi' => 'Berdedikasi dan menjaga rahasia jabatan serta nama baik instansi.'],
+            ['id' => 'nilai-6', 'huruf' => 'A', 'judul' => 'Adaptif', 'deskripsi' => 'Terbuka pada perubahan dan inovasi digital.'],
+            ['id' => 'nilai-7', 'huruf' => 'K', 'judul' => 'Kolaboratif', 'deskripsi' => 'Bersinergi dengan Polri, Jasa Raharja, dan bank mitra.'],
+        ],
+        'maklumat' => [
+            'teks' => 'Dengan ini, kami menyatakan sanggup menyelenggarakan pelayanan sesuai standar pelayanan yang telah ditetapkan. Apabila tidak menepati janji ini, kami siap menerima sanksi sesuai peraturan perundang-undangan yang berlaku.',
+            'penandatangan' => 'Kepala UPTD Pendapatan Daerah Wilayah Kota Kupang',
+            'berkas' => null,
+        ],
+    ];
+
     protected $primaryKey = 'name';
 
     protected $keyType = 'string';
@@ -164,6 +207,16 @@ class Setting extends Model
     public static function contact(): array
     {
         return self::query()->find(self::CONTACT)?->value ?? self::UNSAVED_CONTACT;
+    }
+
+    /**
+     * The Visi & Misi document as the dashboard edits it.
+     *
+     * @return array{sumberVisi: string, visi: string, misi: list<array{id: string, teks: string, kataKunci: string}>, kontribusi: list<array{id: string, misi: string, judul: string, deskripsi: string}>, nilai: list<array{id: string, huruf: string, judul: string, deskripsi: string}>, maklumat: array{teks: string, penandatangan: string, berkas: null}}
+     */
+    public static function visionMission(): array
+    {
+        return self::query()->find(self::VISION_MISSION)?->value ?? self::INITIAL_VISION_MISSION;
     }
 
     /**

@@ -200,72 +200,49 @@
   <section class="section section--tight statement" style="border-top: var(--hairline); border-bottom: var(--hairline);">
     <div class="container center" data-reveal>
       <svg class="i statement__icon" aria-hidden="true"><use href="#i-target"/></svg>
-      <p class="eyebrow">Visi Pemerintah Provinsi NTT</p>
-      <p class="h-giant statement__title">NTT Maju, Sehat, Cerdas, <span class="tone">Sejahtera dan Berkelanjutan.</span></p>
+      <p class="eyebrow" data-visi-sumber>Visi</p>
+      <p class="h-giant statement__title" data-visi></p>
+      <p class="small muted" style="margin-top:16px" role="status" data-visi-status>Memuat visi dan misi…</p>
     </div>
   </section>
 
-  <section class="section">
+  <section class="section" data-visi-bagian="misi" hidden>
     <div class="container">
       <div class="split split--middle" style="margin-bottom: var(--inner-y)">
         <div data-reveal>
           <p class="eyebrow">Misi</p>
-          <h2 class="h2" style="margin-top:20px">Lima misi. <span class="tone">Satu kata kunci masing-masing.</span></h2>
+          <h2 class="h2" style="margin-top:20px"><span data-visi-judul-misi>Misi.</span> <span class="tone">Satu kata kunci masing-masing.</span></h2>
         </div>
         <p class="body" data-reveal>Kata kunci di sebelah kanan membantu kami mengingat misi saat menyusun program dan inovasi layanan.</p>
       </div>
-      <ol class="numlist" role="list" data-reveal>
-        <li><span class="numlist__n">01</span><p class="numlist__t">Memastikan infrastruktur berkelanjutan demi mewujudkan ekonomi berbasis potensi daerah yang berdaya saing.</p><span class="numlist__k">Maju</span></li>
-        <li><span class="numlist__n">02</span><p class="numlist__t">Memperluas pelayanan kesehatan dan jaminan sosial yang lebih inklusif, terjangkau, dan mudah diakses.</p><span class="numlist__k">Sehat</span></li>
-        <li><span class="numlist__n">03</span><p class="numlist__t">Menghadirkan pendidikan berkualitas yang merata, partisipatif, dan tepat sasaran.</p><span class="numlist__k">Cerdas</span></li>
-        <li><span class="numlist__n">04</span><p class="numlist__t">Mewujudkan kesejahteraan sosial, kesetaraan akses, serta kualitas hidup yang berkeadilan dan madani bagi seluruh lapisan masyarakat.</p><span class="numlist__k">Sejahtera</span></li>
-        <li><span class="numlist__n">05</span><p class="numlist__t">Mewujudkan pembangunan berkelanjutan melalui pengelolaan sumber daya alam dan manusia yang bijak serta pemenuhan hak asasi manusia untuk masa depan yang inklusif.</p><span class="numlist__k">Berkelanjutan</span></li>
-      </ol>
+      <ol class="numlist" role="list" data-visi-misi data-reveal></ol>
     </div>
   </section>
 
-  <section class="section section--flush-top">
+  <section class="section section--flush-top" data-visi-bagian="kontribusi" hidden>
     <div class="container split">
       <div class="split__sticky" data-reveal>
         <p class="eyebrow">Kontribusi PINTU</p>
         <h2 class="h2" style="margin-top:20px">Dari misi. <span class="tone">Menjadi layanan nyata.</span></h2>
-        <p class="body" style="margin-top:20px">Portal ini adalah cara UPTD mendukung dua misi provinsi secara langsung.</p>
+        <p class="body" style="margin-top:20px">Portal ini adalah cara UPTD mendukung <span data-visi-jumlah-kontribusi></span>misi provinsi secara langsung.</p>
       </div>
-      <div style="display:grid;gap:16px" data-reveal>
-        <article class="card card--pad">
-          <p class="smallcaps">Misi 01 · Maju</p>
-          <h3 class="h3" style="margin-top:12px">Tata kelola informasi yang tertib.</h3>
-          <p class="body" style="margin-top:10px;max-width:none">Alur pengumpulan, verifikasi, persetujuan, dan publikasi informasi menjadi fondasi sistem informasi pelayanan yang berkelanjutan.</p>
-        </article>
-        <article class="card card--pad">
-          <p class="smallcaps">Misi 04 · Sejahtera</p>
-          <h3 class="h3" style="margin-top:12px">Akses informasi yang setara.</h3>
-          <p class="body" style="margin-top:10px;max-width:none">Persyaratan, jadwal, dan lokasi layanan dapat dibuka siapa saja, kapan saja, tanpa harus bertanya ke loket lebih dulu.</p>
-        </article>
-      </div>
+      <div style="display:grid;gap:16px" data-visi-kontribusi data-reveal></div>
     </div>
   </section>
 
-  <section class="section section--flush-top">
+  <section class="section section--flush-top" data-visi-bagian="nilai" hidden>
     <div class="container">
       <div class="center" style="margin-bottom: var(--inner-y)" data-reveal>
         <p class="eyebrow">Nilai dasar ASN</p>
         <h2 class="h2" style="margin-top:20px">Cara kami bekerja. <span class="tone">BerAKHLAK.</span></h2>
       </div>
-      <div class="values" data-reveal>
-        <div class="values__intro"><span class="values__l">7</span><h3>Nilai inti ASN</h3><p>Dipakai sebagai ukuran sikap dan perilaku setiap pegawai saat melayani.</p></div>
-        <div><span class="values__l">B</span><h3>Berorientasi pelayanan</h3><p>Memahami kebutuhan wajib pajak. Ramah, cekatan, dan solutif.</p></div>
-        <div><span class="values__l">A</span><h3>Akuntabel</h3><p>Jujur, cermat, disiplin, dan bertanggung jawab atas setiap transaksi.</p></div>
-        <div><span class="values__l">K</span><h3>Kompeten</h3><p>Terus belajar agar layanan makin cepat dan tepat.</p></div>
-        <div><span class="values__l">H</span><h3>Harmonis</h3><p>Saling menghargai, di antara rekan kerja dan dengan masyarakat.</p></div>
-        <div><span class="values__l">L</span><h3>Loyal</h3><p>Berdedikasi dan menjaga rahasia jabatan serta nama baik instansi.</p></div>
-        <div><span class="values__l">A</span><h3>Adaptif</h3><p>Terbuka pada perubahan dan inovasi digital.</p></div>
-        <div><span class="values__l">K</span><h3>Kolaboratif</h3><p>Bersinergi dengan Polri, Jasa Raharja, dan bank mitra.</p></div>
+      <div class="values" data-visi-nilai data-reveal>
+        <div class="values__intro"><span class="values__l" data-visi-jumlah-nilai></span><h3>Nilai inti ASN</h3><p>Dipakai sebagai ukuran sikap dan perilaku setiap pegawai saat melayani.</p></div>
       </div>
     </div>
   </section>
 
-  <section class="section section--flush-top" id="maklumat">
+  <section class="section section--flush-top" id="maklumat" data-visi-bagian="maklumat" hidden>
     <div class="container">
       <div class="card--sunken" style="padding: clamp(28px, 6vw, 80px);" data-reveal>
         <div class="split split--middle">
@@ -275,8 +252,8 @@
             <p style="margin-top:28px"><a class="btn btn--ghost btn--sm" href="unduhan.html"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Unduh maklumat (PDF)</a></p>
           </div>
           <div>
-            <p class="quote">“Dengan ini, kami menyatakan sanggup menyelenggarakan pelayanan sesuai standar pelayanan yang telah ditetapkan. <span class="tone">Apabila tidak menepati janji ini, kami siap menerima sanksi sesuai peraturan perundang-undangan yang berlaku.”</span></p>
-            <div class="person"><span class="avatar">KU</span><span><strong>Kepala UPTD Pendapatan Daerah Wilayah Kota Kupang</strong><span>Kupang · ditandatangani pada dokumen resmi</span></span></div>
+            <p class="quote" data-visi-maklumat></p>
+            <div class="person" data-visi-penandatangan><span class="avatar" data-visi-inisial></span><span><strong data-visi-penandatangan-nama></strong><span>Kupang · ditandatangani pada dokumen resmi</span></span></div>
           </div>
         </div>
       </div>

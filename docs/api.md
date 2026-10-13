@@ -12,6 +12,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET` | `/api/public/tarif` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/statistik` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/kontak` | anonim, hanya baca | tersedia |
+| `GET` | `/api/public/visi-misi` | anonim, hanya baca | tersedia |
 | `POST` | `/api/public/pesan` | anonim, formulir Kontak | tersedia |
 | `POST` | `/api/masuk` | halaman Login Pegawai | tersedia |
 | `GET` | `/api/sesi` | pegawai login | tersedia |
@@ -32,6 +33,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET`, `PUT` | `/api/pengaturan/tarif` | baca: semua pegawai login; simpan: Administrator, pengelola Tarif & Simulasi | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/statistik` | Administrator, pengelola Statistik Layanan | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/kontak` | Administrator, pengelola Kontak & Kanal | tersedia |
+| `GET`, `PUT` | `/api/pengaturan/visiMisi` | Administrator, pengelola Visi & Misi | tersedia |
 | `GET`, `POST` | `/api/koleksi/pesan` | Administrator, pengelola Pesan & Pengaduan | tersedia |
 | `GET`, `PATCH` | `/api/koleksi/pesan/{id}` | Administrator, pengelola Pesan & Pengaduan | tersedia |
 | `POST` | `/api/koleksi/pesan/hapus` | Administrator | tersedia |
@@ -100,7 +102,7 @@ Kunci modul untuk `modul` ([D-010](decisions.md#d-010--2026-10-13--penugasan-mod
 | `jam` | Jam Pelayanan (termasuk koleksi `penyesuaian`) | `halaman` | Halaman Statis |
 | `keliling` | Samsat Keliling | `pemutakhiran` | Jadwal Pemutakhiran |
 
-Endpoint konten dashboard (`/api/koleksi/…`, `/api/pengaturan/…`) wajib menolak pegawai yang tidak mengelola modul koleksi atau pengaturan itu. `/api/koleksi/faq`, `/api/koleksi/keliling`, `/api/koleksi/penyesuaian`, `/api/koleksi/pesan`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/tarif`, `/api/pengaturan/statistik`, dan `/api/pengaturan/kontak` sudah melakukannya; tarif boleh dibaca semua pegawai untuk Kalkulator PKB, tetapi hanya pengelolanya yang boleh menyimpan.
+Endpoint konten dashboard (`/api/koleksi/…`, `/api/pengaturan/…`) wajib menolak pegawai yang tidak mengelola modul koleksi atau pengaturan itu. `/api/koleksi/faq`, `/api/koleksi/keliling`, `/api/koleksi/penyesuaian`, `/api/koleksi/pesan`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/tarif`, `/api/pengaturan/statistik`, `/api/pengaturan/kontak`, dan `/api/pengaturan/visiMisi` sudah melakukannya; tarif boleh dibaca semua pegawai untuk Kalkulator PKB, tetapi hanya pengelolanya yang boleh menyimpan.
 
 ## Tanya Jawab di dashboard
 
@@ -284,6 +286,29 @@ Penyimpanan tercatat di log aktivitas sebagai "memperbarui Kontak & Kanal".
 
 Kode: `app/Http/Controllers/Dashboard/ContactController.php`, `app/Http/Requests/Dashboard/UpdateContactRequest.php`, `app/Rules/PortalLink.php`, `app/Actions/SaveSetting.php`, `app/Models/Setting.php`. Tes: `tests/Feature/ContactControllerTest.php`.
 
+## Visi & Misi di dashboard
+
+Dipakai halaman *Visi & Misi* di dashboard ([D-020](decisions.md#d-020--2026-10-13--visi--misi-tersimpan-di-server-unggahan-maklumat-ditunda)). Alamatnya memakai nama pengaturan dashboard, `visiMisi`. Tamu mendapat `401`; pegawai yang tidak mengelola modul `visiMisi` mendapat `403` `{"message": "Modul Visi & Misi belum ditugaskan kepada Anda."}`.
+
+```json
+{
+  "sumberVisi": "Visi Pemerintah Provinsi NTT", "visi": "NTT Maju, Sehat, Cerdas, Sejahtera dan Berkelanjutan.",
+  "misi": [{ "id": "misi-1", "teks": "…", "kataKunci": "Maju" }],
+  "kontribusi": [{ "id": "kontribusi-1", "misi": "Misi 01 · Maju", "judul": "…", "deskripsi": "…" }],
+  "nilai": [{ "id": "nilai-1", "huruf": "B", "judul": "Berorientasi pelayanan", "deskripsi": "…" }],
+  "maklumat": { "teks": "…", "penandatangan": "Kepala UPTD Pendapatan Daerah Wilayah Kota Kupang", "berkas": null }
+}
+```
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `GET /api/pengaturan/visiMisi` | — | `200` dokumen di atas. Sebelum pertama kali disimpan: teks resmi yang sudah tampil di portal. |
+| `PUT /api/pengaturan/visiMisi` | dokumen lengkap | `200` dokumen tersimpan; isian opsional yang kosong disimpan sebagai `""` dan `maklumat.berkas` selalu `null`. Isi yang sama dengan yang tersimpan tidak dicatat. `422` bila visi (maks. 300 karakter) atau isi maklumat (maks. 600) kosong, misi tanpa teks, kontribusi tanpa judul, nilai tanpa nama, huruf nilai lebih dari 2 karakter, lebih dari 10 misi, 6 kontribusi, atau 10 nilai, ID butir ganda, teks berisi karakter kontrol, atau `maklumat.berkas` berisi berkas: `{"maklumat.berkas": ["Berkas maklumat belum bisa diunggah ke server."]}`. |
+
+Penyimpanan tercatat di log aktivitas sebagai "memperbarui Visi & Misi".
+
+Kode: `app/Http/Controllers/Dashboard/VisionMissionController.php`, `app/Http/Requests/Dashboard/UpdateVisionMissionRequest.php`, `app/Actions/SaveSetting.php`, `app/Models/Setting.php`. Tes: `tests/Feature/VisionMissionControllerTest.php`.
+
 ## Pesan & Pengaduan di dashboard
 
 Dipakai halaman *Pesan & Pengaduan* di dashboard ([D-016](decisions.md#d-016--2026-10-13--pesan--pengaduan-tersimpan-di-server)). Tamu mendapat `401`; pegawai yang tidak mengelola modul `pesan` mendapat `403` `{"message": "Modul Pesan & Pengaduan belum ditugaskan kepada Anda."}`.
@@ -433,6 +458,18 @@ Alamat, kontak, dan kanal pengaduan untuk footer semua halaman dan halaman Konta
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 
 Kode: `app/Http/Controllers/PublicContactController.php`, `app/Actions/ShowPublicContact.php`. Tes: `tests/Feature/PublicContactControllerTest.php`.
+
+## `GET /api/public/visi-misi`
+
+Halaman Visi & Misi di portal ([D-020](decisions.md#d-020--2026-10-13--visi--misi-tersimpan-di-server-unggahan-maklumat-ditunda), `initVisiMisi()` di `public/assets/js/main.js`). Bentuknya sama dengan dokumen dashboard tanpa `id` butir dan tanpa `maklumat.berkas`, ditambah `diperbarui`: waktu terakhir disimpan, atau `null` selama isinya masih teks resmi awal.
+
+| Hal | Perilaku |
+|---|---|
+| Berhasil | `200`. Teks wajib ditampilkan sebagai teks polos. |
+| Galat | `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah batas laju yang sama dengan `GET /api/public/faq`; `503` bila data tidak bisa dibaca, tidak pernah teks lain sebagai gantinya. |
+| Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
+
+Kode: `app/Http/Controllers/PublicVisionMissionController.php`, `app/Actions/ShowPublicVisionMission.php`. Tes: `tests/Feature/PublicVisionMissionControllerTest.php`.
 
 ## `POST /api/public/pesan`
 

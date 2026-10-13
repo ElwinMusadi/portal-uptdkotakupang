@@ -254,3 +254,17 @@ Kontak & Kanal kini tersimpan di server. Footer semua halaman portal dan halaman
 Setiap kunjungan halaman portal kini memakai satu permintaan tambahan dari batas laju API publik (D-013); beranda memakai tujuh.
 
 Belum dibuat: ringkasan "3 kanal" di halaman Layanan dan peta kanal di beranda masih teks statis.
+
+## D-020 · 2026-10-13 · Visi & Misi tersimpan di server; unggahan maklumat ditunda
+
+Visi & Misi kini tersimpan di server, dan halaman Visi & Misi di portal membaca isinya dari API.
+
+| Hal | Keputusan |
+|---|---|
+| Penyimpanan | Dokumen pengaturan `visiMisi` (`/api/pengaturan/visiMisi`) memuat sumber dan rumusan visi, misi (maks. 10, dengan kata kunci), kontribusi PINTU (maks. 6), nilai dasar ASN (maks. 10, huruf satu atau dua karakter), serta maklumat pelayanan (isi dan penandatangan). |
+| Isi awal | **Teks resmi yang sudah tampil di portal menjadi isi awal** (keputusan pemilik): visi Pemerintah Provinsi NTT, lima misi, dua kontribusi, tujuh nilai BerAKHLAK, dan maklumat. Halaman tidak pernah kosong; petugas cukup mengubah bila ada perubahan. |
+| Akses | Administrator dan Pegawai UPTD yang mengelola Visi & Misi; pegawai lain ditolak `403`. |
+| Berkas maklumat | **Unggahan PDF ditunda** (keputusan pemilik). Server menolak berkas pada maklumat, dan dashboard menampilkan keterangan sebagai pengganti isian unggahan. Tombol "Unduh maklumat (PDF)" di portal tetap mengarah ke halaman Regulasi & Unduhan. Unggahan dirancang bersama Berita dan Regulasi & Unduhan, termasuk tempat penyimpanan berkas di Laravel Cloud. |
+| Portal | `GET /api/public/visi-misi` (tanpa ID butir dan tanpa berkas) mengisi visi, misi, kontribusi, nilai, dan maklumat. Bagian tampil setelah isinya dimuat; bagian tanpa butir disembunyikan. Jumlah pada judul ("Lima misi.", "mendukung dua misi provinsi", angka nilai inti) mengikuti isinya. Bagian akhir visi dan kalimat terakhir maklumat tetap bernada redup seperti desain sebelumnya. Bila API gagal, keterangan dan tombol coba lagi tampil di bawah visi. |
+
+Belum dibuat: unggahan berkas maklumat ke server.

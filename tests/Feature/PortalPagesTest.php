@@ -144,6 +144,19 @@ class PortalPagesTest extends TestCase
         $this->assertStringContainsString('<span data-kontak-alamat-baris>Memuat alamat…</span>', $html);
     }
 
+    public function test_leaves_the_vision_missions_values_and_pledge_to_the_public_api(): void
+    {
+        $html = $this->get('/visi-misi')->assertOk()->getContent();
+
+        foreach (['NTT Maju', 'Memastikan infrastruktur', 'Lima misi', 'Tata kelola informasi', 'Berorientasi pelayanan', 'Dengan ini, kami menyatakan'] as $text) {
+            $this->assertStringNotContainsString($text, $html);
+        }
+        $this->assertStringContainsString('<p class="small muted" style="margin-top:16px" role="status" data-visi-status>Memuat visi dan misi…</p>', $html);
+        $this->assertStringContainsString('<ol class="numlist" role="list" data-visi-misi data-reveal></ol>', $html);
+        $this->assertSame(4, preg_match_all('/<section [^>]*data-visi-bagian="[a-z]+"[^>]* hidden>/', $html));
+        $this->assertStringContainsString('href="unduhan.html"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Unduh maklumat (PDF)</a>', $html);
+    }
+
     public function test_sends_the_contact_form_to_the_message_api_with_the_services_it_accepts(): void
     {
         $html = $this->get('/kontak')->assertOk()->getContent();

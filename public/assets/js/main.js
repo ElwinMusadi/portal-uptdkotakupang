@@ -531,6 +531,103 @@
     muat(false);
   }
 
+  /* ---------- Visi & Misi ----------
+     Visi, misi, kontribusi, nilai BerAKHLAK, dan maklumat dikelola di
+     dashboard (Visi & Misi) dan dibaca dari GET /api/public/visi-misi (D-020).
+     Sebelum disimpan, API memberikan teks resmi yang sama dengan halaman
+     sebelumnya. Teks dipasang sebagai teks polos; bagian halaman tampil
+     setelah isinya dimuat. Bila API gagal, keterangan dan tombol coba lagi. */
+  const KATA_ANGKA = ["Nol", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh"];
+  const kataAngka = (n) => KATA_ANGKA[n] ?? String(n);
+
+  async function muatVisiMisi() {
+    const d = await ambilJson("/api/public/visi-misi");
+    const teks = (x) => typeof x === "string";
+    const daftar = (xs, isian) => Array.isArray(xs) && xs.every((x) => isian.every((f) => teks(x?.[f])));
+    if (!teks(d?.sumberVisi) || !teks(d.visi) || !teks(d.maklumat?.teks) || !teks(d.maklumat.penandatangan)
+      || !daftar(d.misi, ["teks", "kataKunci"]) || !daftar(d.kontribusi, ["misi", "judul", "deskripsi"]) || !daftar(d.nilai, ["huruf", "judul", "deskripsi"])) {
+      throw new Error("Respons tidak dikenal");
+    }
+    return d;
+  }
+
+  // Bagian akhir diberi nada redup seperti desain halaman: visi setelah koma terakhir, maklumat pada kalimat terakhir
+  function duaNada(el, awal, akhir) {
+    const nada = document.createElement("span");
+    nada.className = "tone";
+    nada.textContent = akhir;
+    el.replaceChildren(...(awal ? [awal] : []), ...(akhir ? [nada] : []));
+  }
+
+  function initVisiMisi() {
+    const visi = $("[data-visi]");
+    if (!visi) return;
+    const status = $("[data-visi-status]");
+    const bagian = (k) => $(`[data-visi-bagian="${k}"]`);
+    const nilaiWadah = $("[data-visi-nilai]");
+
+    const tampilkan = (d) => {
+      $("[data-visi-sumber]").textContent = d.sumberVisi || "Visi";
+      const koma = d.visi.lastIndexOf(", ");
+      if (koma > 0) duaNada(visi, d.visi.slice(0, koma + 2), d.visi.slice(koma + 2));
+      else visi.textContent = d.visi;
+
+      $("[data-visi-judul-misi]").textContent = `${kataAngka(d.misi.length)} misi.`;
+      $("[data-visi-misi]").innerHTML = d.misi.map((m, i) =>
+        `<li><span class="numlist__n">${pad(i + 1)}</span><p class="numlist__t">${esc(m.teks)}</p><span class="numlist__k">${esc(m.kataKunci)}</span></li>`).join("");
+      bagian("misi").hidden = !d.misi.length;
+
+      const misiDidukung = new Set(d.kontribusi.map((k) => k.misi).filter(Boolean)).size;
+      $("[data-visi-jumlah-kontribusi]").textContent = misiDidukung ? `${kataAngka(misiDidukung).toLowerCase()} ` : "";
+      $("[data-visi-kontribusi]").innerHTML = d.kontribusi.map((k) => `<article class="card card--pad">
+          ${k.misi ? `<p class="smallcaps">${esc(k.misi)}</p>` : ""}
+          <h3 class="h3"${k.misi ? ' style="margin-top:12px"' : ""}>${esc(k.judul)}</h3>
+          ${k.deskripsi ? `<p class="body" style="margin-top:10px;max-width:none">${esc(k.deskripsi)}</p>` : ""}
+        </article>`).join("");
+      bagian("kontribusi").hidden = !d.kontribusi.length;
+
+      $("[data-visi-jumlah-nilai]").textContent = String(d.nilai.length);
+      $$(":scope > :not(.values__intro)", nilaiWadah).forEach((el) => el.remove());
+      nilaiWadah.insertAdjacentHTML("beforeend", d.nilai.map((n) =>
+        `<div><span class="values__l">${esc(n.huruf || n.judul.charAt(0))}</span><h3>${esc(n.judul)}</h3>${n.deskripsi ? `<p>${esc(n.deskripsi)}</p>` : ""}</div>`).join(""));
+      bagian("nilai").hidden = !d.nilai.length;
+
+      // Kalimat terakhir maklumat bernada redup, dengan tanda kutip mengapit seluruh maklumat; satu kalimat tetap polos
+      const kalimat = d.maklumat.teks.match(/^([\s\S]*[.!?])\s+(\S[\s\S]*)$/);
+      if (kalimat) duaNada($("[data-visi-maklumat]"), `“${kalimat[1]} `, `${kalimat[2]}”`);
+      else $("[data-visi-maklumat]").textContent = `“${d.maklumat.teks}”`;
+      const penandatangan = $("[data-visi-penandatangan]");
+      penandatangan.hidden = !d.maklumat.penandatangan;
+      $("[data-visi-penandatangan-nama]").textContent = d.maklumat.penandatangan;
+      $("[data-visi-inisial]").textContent = d.maklumat.penandatangan.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w.charAt(0).toUpperCase()).join("");
+      bagian("maklumat").hidden = false;
+
+      status.hidden = true;
+      // Tautan seperti visi-misi.html#maklumat baru bisa dituju setelah bagiannya tampil
+      if (location.hash) document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView();
+    };
+
+    const muat = async (fokus) => {
+      status.hidden = false;
+      status.textContent = "Memuat visi dan misi…";
+      try {
+        tampilkan(await muatVisiMisi());
+      } catch {
+        ["misi", "kontribusi", "nilai", "maklumat"].forEach((k) => (bagian(k).hidden = true));
+        const retry = document.createElement("button");
+        retry.type = "button";
+        retry.className = "link";
+        retry.textContent = "Coba lagi";
+        retry.addEventListener("click", () => muat(true));
+        status.textContent = "Visi dan misi belum dapat dimuat. ";
+        status.append(retry);
+        if (fokus) retry.focus();
+      }
+    };
+
+    muat(false);
+  }
+
   /* ---------- Samsat Keliling ----------
      Jadwal dikelola di dashboard dan dibaca dari GET /api/public/keliling,
      yang hanya memberikan lokasi aktif. Teksnya di-escape sebelum dipasang.
@@ -1327,7 +1424,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak();
+    initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi();
     initDash(); initSim(); initDialogs(); initGag(); initFilters(); initGallery(); initFaq(); initForms(); initPesanForm(); initAuthFit(); initUtilities();
   });
 })();

@@ -20,6 +20,7 @@ use App\Http\Controllers\Dashboard\ServiceBoardController;
 use App\Http\Controllers\Dashboard\SettingTimestampController;
 use App\Http\Controllers\Dashboard\StatisticsController;
 use App\Http\Controllers\Dashboard\TariffController;
+use App\Http\Controllers\Dashboard\VisionMissionController;
 use App\Http\Controllers\PublicContactController;
 use App\Http\Controllers\PublicFaqController;
 use App\Http\Controllers\PublicMessageController;
@@ -28,6 +29,7 @@ use App\Http\Controllers\PublicOpeningHoursController;
 use App\Http\Controllers\PublicServiceBoardController;
 use App\Http\Controllers\PublicStatisticsController;
 use App\Http\Controllers\PublicTariffController;
+use App\Http\Controllers\PublicVisionMissionController;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Models\Faq;
 use App\Models\Message;
@@ -150,6 +152,15 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->can('update', [Setting::class, $contact])
         ->name('pengaturan.kontak.update');
 
+    // Visi & Misi, named as the dashboard's setting (SettingPolicy).
+    $visionMission = "'".Setting::VISION_MISSION."'";
+    Route::get('/pengaturan/visiMisi', [VisionMissionController::class, 'show'])
+        ->can('view', [Setting::class, $visionMission])
+        ->name('pengaturan.visi-misi.show');
+    Route::put('/pengaturan/visiMisi', [VisionMissionController::class, 'update'])
+        ->can('update', [Setting::class, $visionMission])
+        ->name('pengaturan.visi-misi.update');
+
     Route::prefix('koleksi/penyesuaian')->name('koleksi.penyesuaian.')->whereUlid('adjustment')->group(function (): void {
         Route::get('/', [ScheduleAdjustmentController::class, 'index'])->can('viewAny', ScheduleAdjustment::class)->name('index');
         Route::post('/', [ScheduleAdjustmentController::class, 'store'])->can('create', ScheduleAdjustment::class)->name('store');
@@ -189,6 +200,7 @@ Route::prefix('public')
         Route::get('/tarif', PublicTariffController::class)->name('tarif.show');
         Route::get('/statistik', PublicStatisticsController::class)->name('statistik.show');
         Route::get('/kontak', PublicContactController::class)->name('kontak.show');
+        Route::get('/visi-misi', PublicVisionMissionController::class)->name('visi-misi.show');
         // The contact form; also limited to 5 messages per hour per address (D-016).
         Route::post('/pesan', PublicMessageController::class)->middleware('throttle:public-messages')->name('pesan.store');
     });

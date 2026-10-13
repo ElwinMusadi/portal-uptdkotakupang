@@ -286,6 +286,8 @@
 .avatar--lg { width: 64px; height: 64px; font-size: 18px; }
 .person strong { display: block; font-size: 15px; }
 .person span { display: block; font-size: 13px; color: var(--text-2); }
+/* Visi & Misi tanpa penandatangan (initVisiMisi) */
+.person[hidden] { display: none; }
 
 /* ---------- Bagan organisasi ---------- */
 .org { display: grid; justify-items: center; gap: 0; }
