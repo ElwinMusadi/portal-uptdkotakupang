@@ -92,7 +92,7 @@ PINTU
 ├── Kontak & Pengaduan (kontak.html)
 ├── Ruang Pegawai
 │   ├── Login Pegawai (login.html)
-│   └── Dashboard pengelolaan konten (dashboard/, sumber di dashboard-app/)
+│   └── Dashboard pengelolaan konten (/dashboard, sumber di resources/js/dashboard/)
 │       ├── Ringkasan · Alur publikasi (kanban) · Pesan & pengaduan · Statistik layanan
 │       ├── Konten: berita & pengumuman, dokumentasi, regulasi & unduhan, tanya jawab
 │       ├── Layanan: persyaratan, jam pelayanan, Samsat Keliling, papan layanan, tarif & simulasi
@@ -277,29 +277,33 @@ Data persyaratan lima layanan diambil dari foto papan persyaratan loket dalam do
 
 ## 11. Implementasi teknis
 
+Sejak 13 Oktober 2026 seluruh proyek adalah satu aplikasi Laravel ([D-002](decisions.md#d-002--2026-10-13--satu-aplikasi-laravel-di-root-repository)):
+
 ```
 /
-├── index.html, profil.html, … (halaman siap buka, tanpa build)
-├── assets/
-│   ├── css/tokens.css      ← token design system
-│   ├── css/base.css        ← reset, tipografi, tata letak
-│   ├── css/components.css  ← komponen
-│   ├── css/pages.css       ← pola halaman
-│   ├── js/main.js          ← interaksi, login pegawai + CONFIG konten dinamis
-│   └── img/                ← lambang NTT (logo utama), favicon, logo cadangan PINTU
-├── partials/               ← header, footer, sprite ikon (sumber tunggal)
-├── dashboard/              ← hasil build dashboard (siap dibuka dari server statis)
-├── dashboard-app/          ← sumber dashboard: React + TypeScript + Tailwind CSS + shadcn/ui
+├── resources/views/portal/   ← halaman portal (index, profil, …) sebagai Blade, isi sama dengan HTML asli
+│   └── partials/             ← header, footer, sprite ikon (sumber tunggal)
+├── resources/views/errors/404.blade.php
+├── resources/js/dashboard/   ← sumber dashboard: React + TypeScript + Tailwind CSS + shadcn/ui
+├── public/assets/
+│   ├── css/tokens.css        ← token design system
+│   ├── css/base.css          ← reset, tipografi, tata letak
+│   ├── css/components.css    ← komponen
+│   ├── css/pages.css         ← pola halaman
+│   ├── js/main.js            ← interaksi, login pegawai + CONFIG konten dinamis
+│   └── img/                  ← lambang NTT (logo utama), favicon, logo cadangan PINTU
+├── public/build/             ← hasil build dashboard (dibuat saat deploy)
+├── app/, routes/, database/  ← Laravel: rute halaman, API, model
 ├── scripts/sync-partials.mjs
 └── docs/RANCANGAN-UIUX.md
 ```
 
-- **Mengubah header/footer/ikon:** edit `partials/*.html`, lalu jalankan `node scripts/sync-partials.mjs`. Skrip menyalin isi partial ke semua halaman dan menandai menu aktif dari atribut `data-page`/`data-group` pada `<body>`.
-- **Menjalankan lokal:** buka `index.html` langsung, atau `npx http-server .` lalu kunjungi `http://localhost:8080`. Dashboard (`/dashboard/`) harus dibuka lewat server.
-- **Dashboard:** dibangun dari template shadcn/ui *dashboard-01* dengan Vite, React, TypeScript, dan Tailwind CSS. Data disimpan di IndexedDB peramban (mode lokal) sampai `VITE_API_URL` diisi; model data, kontrak REST API, dan format cadangan ada di `dashboard-app/README.md`. Login memakai akun prototipe statis yang diperiksa di peramban, jadi belum aman untuk produksi.
+- **Mengubah header/footer/ikon:** edit `resources/views/portal/partials/*.html`, lalu jalankan `node scripts/sync-partials.mjs`. Skrip menyalin isi partial ke semua halaman dan menandai menu aktif dari atribut `data-page`/`data-group` pada `<body>`.
+- **Menjalankan lokal:** lewat Laravel Herd (`http://portal-uptdkotakupang.test`) atau `composer dev`. Halaman dilayani Laravel di alamat bersih (`/profil`); alamat lama `profil.html` dialihkan.
+- **Dashboard:** dibangun dari template shadcn/ui *dashboard-01* dengan Vite, React, TypeScript, dan Tailwind CSS, disajikan di `/dashboard`. Data disimpan di IndexedDB peramban (mode lokal) sampai `VITE_API_URL` diisi; model data, kontrak REST API, dan format cadangan ada di `docs/dashboard.md`. Login memakai akun prototipe statis yang diperiksa di peramban, jadi belum aman untuk produksi.
 - **Status loket** dihitung dari zona waktu `Asia/Makassar` (WITA), jadi tetap benar meski pengunjung berada di zona lain.
 - **Tanpa JavaScript** semua konten tetap terbaca (akordeon memakai `<details>`, navigasi berupa tautan biasa).
-- **Tahap berikut (pasca-aktualisasi):** sediakan backend (mis. Laravel) yang memenuhi kontrak REST di `dashboard-app/README.md`, pindahkan login ke server (NIP/SSO) dengan akun per pegawai sesuai 4 peran di atas, simpan log audit dan foto absensi beserta koordinat di server, lalu ubah halaman portal agar membaca konten dari API yang sama.
+- **Tahap berikut (pasca-aktualisasi):** lengkapi backend Laravel agar memenuhi kontrak REST di `docs/dashboard.md`, pindahkan login ke server (NIP/SSO) dengan akun per pegawai sesuai 4 peran di atas, simpan log audit dan foto absensi beserta koordinat di server, lalu ubah halaman portal agar membaca konten dari API yang sama.
 
 ### Checklist aksesibilitas
 

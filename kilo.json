@@ -1,0 +1,23 @@
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "skills": {
+    "paths": [
+      ".agents/skills"
+    ]
+  },
+  "mcp": {
+    "laravel-boost": {
+      "type": "local",
+      "command": [
+        "php",
+        "artisan",
+        "boost:mcp"
+      ],
+      "enabled": true
+    }
+  },
+  "permission": {
+    "laravel-boost_*": "ask",
+    "laravel_boost_*": "ask"
+  }
+}

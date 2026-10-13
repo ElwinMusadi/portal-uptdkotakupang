@@ -1,24 +1,34 @@
 #!/usr/bin/env node
-// Menyalin isi partials/*.html ke setiap halaman di root repo.
+// Menyalin isi resources/views/portal/partials/*.html ke setiap halaman portal
+// (resources/views/portal/*.blade.php dan resources/views/errors/404.blade.php).
 // Halaman menandai area dengan komentar, mis.:
 //   <!-- @header --> ... <!-- /@header -->
 // Penanda halaman aktif dibaca dari <body data-page="..." data-group="...">.
 //
-// Pemakaian:  node scripts/sync-partials.mjs
+// Pemakaian:  node scripts/sync-partials.mjs           (menulis perubahan)
+//             node scripts/sync-partials.mjs --check   (hanya melaporkan)
 import { readFileSync, writeFileSync, readdirSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { join, dirname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const views = join(root, "resources", "views");
+const portal = join(views, "portal");
+const check = process.argv.includes("--check");
+
 const partials = Object.fromEntries(
-  ["icons", "header", "footer"].map((name) => [name, readFileSync(join(root, "partials", `${name}.html`), "utf8").trim()])
+  ["icons", "header", "footer"].map((name) => [name, readFileSync(join(portal, "partials", `${name}.html`), "utf8").trim()])
 );
 
-const pages = readdirSync(root).filter((f) => f.endsWith(".html"));
-let changed = 0;
+const pages = [
+  ...readdirSync(portal)
+    .filter((f) => f.endsWith(".blade.php"))
+    .map((f) => join(portal, f)),
+  join(views, "errors", "404.blade.php"),
+];
+const changed = [];
 
-for (const file of pages) {
-  const path = join(root, file);
+for (const path of pages) {
   const src = readFileSync(path, "utf8");
   const page = src.match(/<body[^>]*\sdata-page="([^"]+)"/)?.[1] ?? "";
   const group = src.match(/<body[^>]*\sdata-group="([^"]+)"/)?.[1] ?? "";
@@ -34,8 +44,11 @@ for (const file of pages) {
     out = out.replace(re, `$1\n${body}\n$2`);
   }
   if (out !== src) {
-    writeFileSync(path, out);
-    changed++;
+    changed.push(relative(root, path));
+    if (!check) writeFileSync(path, out);
   }
 }
-console.log(`partials disinkronkan: ${changed} dari ${pages.length} halaman diperbarui`);
+
+const verb = check ? "akan diperbarui" : "diperbarui";
+console.log(`partials: ${changed.length} dari ${pages.length} halaman ${verb}`);
+for (const file of changed) console.log(`  ${file}`);

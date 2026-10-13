@@ -1,7 +1,36 @@
-# Dependensi dashboard (pasang ulang dengan `npm install` di dashboard-app/)
+# Rahasia & konfigurasi lokal (jangan pernah di-commit)
+.env
+.env.backup
+.env.production
+/auth.json
+
+# Dependensi (pasang ulang dengan `composer install` dan `npm install`)
+/vendor
 node_modules/
+
+# Hasil build Vite dan berkas runtime Laravel
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+.phpunit.result.cache
+/.phpunit.cache
+
+# Editor & alat lokal
+/.vscode
+.phpactor.json
+/.fleet
+/.idea
+/.nova
+/.zed
+Homestead.json
+Homestead.yaml
 
 # Log & berkas sistem
 *.log
 .DS_Store
 Thumbs.db
+
+# Keluaran node scripts/stage-frontend.mjs (berkas publik untuk hosting statis)
+/_site/
