@@ -168,6 +168,7 @@ export function EntriSheet<F extends FieldValues>({
   lebar = "sm:max-w-xl",
   kiri,
   labelSimpan = "Simpan",
+  hanyaBaca = false,
 }: {
   terbuka: boolean
   tutup: () => void
@@ -181,6 +182,8 @@ export function EntriSheet<F extends FieldValues>({
   /** Isi tambahan di kiri bilah bawah (mis. tombol hapus) */
   kiri?: React.ReactNode
   labelSimpan?: string
+  /** Tanpa tombol simpan, mis. entri yang hanya boleh diubah Administrator */
+  hanyaBaca?: boolean
 }) {
   const konfirmasi = useKonfirmasi()
 
@@ -217,12 +220,14 @@ export function EntriSheet<F extends FieldValues>({
               {kiri}
               <div className="ml-auto flex gap-2">
                 <Button type="button" variant="outline" onClick={() => void minta(false)}>
-                  Batal
+                  {hanyaBaca ? "Tutup" : "Batal"}
                 </Button>
-                <Button type="submit" disabled={menyimpan}>
-                  {menyimpan ? <Spinner /> : <IconDeviceFloppy />}
-                  {labelSimpan}
-                </Button>
+                {!hanyaBaca && (
+                  <Button type="submit" disabled={menyimpan}>
+                    {menyimpan ? <Spinner /> : <IconDeviceFloppy />}
+                    {labelSimpan}
+                  </Button>
+                )}
               </div>
             </SheetFooter>
           </form>

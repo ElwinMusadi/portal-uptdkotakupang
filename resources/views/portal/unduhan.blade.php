@@ -198,7 +198,7 @@
 
   <section class="section section--flush-top">
     <div class="container">
-      <div class="toolbar" style="margin-bottom:28px" data-reveal>
+      <div class="toolbar" style="margin-bottom:28px" data-reveal data-dokumen-saringan hidden>
         <div class="chips" role="group" aria-label="Saring dokumen" data-filter-group="docs">
           <button class="chip" type="button" aria-pressed="true" data-filter="semua">Semua</button>
           <button class="chip" type="button" aria-pressed="false" data-filter="regulasi">Regulasi</button>
@@ -209,19 +209,10 @@
         <label class="search"><span class="sr-only">Cari dokumen</span><svg class="i" aria-hidden="true"><use href="#i-search"/></svg><input class="input" type="search" placeholder="Cari nama dokumen" data-filter-search="docs"></label>
       </div>
 
-      <ul class="docs" id="docs" role="list" data-reveal>
-        <li class="doc" data-cat="regulasi"><span class="doc__ic">PDF</span><span><strong>Undang-Undang Nomor 1 Tahun 2022</strong><span>Hubungan Keuangan antara Pemerintah Pusat dan Pemerintahan Daerah</span></span><span class="doc__size">PDF · tautan JDIH</span><a class="btn btn--ghost btn--xs" href="#"><svg class="i i--sm" aria-hidden="true"><use href="#i-external"/></svg>Buka</a></li>
-        <li class="doc" data-cat="regulasi"><span class="doc__ic">PDF</span><span><strong>Peraturan Daerah Provinsi NTT tentang Pajak Daerah dan Retribusi Daerah</strong><span>Tarif PKB, BBNKB, dan opsen</span></span><span class="doc__size">PDF · [ukuran]</span><a class="btn btn--ghost btn--xs" href="#"><svg class="i i--sm" aria-hidden="true"><use href="#i-download"/></svg>Unduh</a></li>
-        <li class="doc" data-cat="regulasi"><span class="doc__ic">PDF</span><span><strong>Peraturan Gubernur NTT tentang Organisasi dan Tata Kerja UPTD</strong><span>Kedudukan, susunan organisasi, dan uraian tugas</span></span><span class="doc__size">PDF · [ukuran]</span><a class="btn btn--ghost btn--xs" href="#"><svg class="i i--sm" aria-hidden="true"><use href="#i-download"/></svg>Unduh</a></li>
-        <li class="doc" data-cat="standar"><span class="doc__ic">PDF</span><span><strong>Standar Pelayanan UPTD Pendapatan Daerah Wilayah Kota Kupang</strong><span>Persyaratan, prosedur, waktu, biaya, produk, dan pengaduan</span></span><span class="doc__size">PDF · [ukuran]</span><a class="btn btn--ghost btn--xs" href="#"><svg class="i i--sm" aria-hidden="true"><use href="#i-download"/></svg>Unduh</a></li>
-        <li class="doc" data-cat="standar"><span class="doc__ic">PDF</span><span><strong>Maklumat Pelayanan</strong><span>Janji layanan yang ditandatangani Kepala UPTD</span></span><span class="doc__size">PDF · [ukuran]</span><a class="btn btn--ghost btn--xs" href="#"><svg class="i i--sm" aria-hidden="true"><use href="#i-download"/></svg>Unduh</a></li>
-        <li class="doc" data-cat="standar"><span class="doc__ic">PDF</span><span><strong>SOP Pengelolaan dan Publikasi Informasi PINTU</strong><span>Alur pengumpulan, verifikasi, persetujuan, publikasi, dan pemutakhiran</span></span><span class="doc__size">PDF · [ukuran]</span><a class="btn btn--ghost btn--xs" href="#"><svg class="i i--sm" aria-hidden="true"><use href="#i-download"/></svg>Unduh</a></li>
-        <li class="doc" data-cat="formulir"><span class="doc__ic doc__ic--doc">DOC</span><span><strong>Formulir surat kuasa</strong><span>Untuk perpanjangan 5&nbsp;tahun dan duplikat STNK · meterai Rp10.000</span></span><span class="doc__size">DOCX · [ukuran]</span><a class="btn btn--ghost btn--xs" href="#"><svg class="i i--sm" aria-hidden="true"><use href="#i-download"/></svg>Unduh</a></li>
-        <li class="doc" data-cat="formulir"><span class="doc__ic doc__ic--doc">DOC</span><span><strong>Formulir surat pernyataan STNK hilang/rusak</strong><span>Ditandatangani di atas meterai Rp10.000</span></span><span class="doc__size">DOCX · [ukuran]</span><a class="btn btn--ghost btn--xs" href="#"><svg class="i i--sm" aria-hidden="true"><use href="#i-download"/></svg>Unduh</a></li>
-        <li class="doc" data-cat="laporan"><span class="doc__ic">PDF</span><span><strong>Laporan Survei Kepuasan Masyarakat Semester I 2026</strong><span>Indeks kepuasan dan tindak lanjut</span></span><span class="doc__size">PDF · [ukuran]</span><a class="btn btn--ghost btn--xs" href="#"><svg class="i i--sm" aria-hidden="true"><use href="#i-download"/></svg>Unduh</a></li>
-      </ul>
+      <ul class="docs" id="docs" role="list" data-reveal data-dokumen-daftar></ul>
+      <p class="center muted" role="status" data-dokumen-status style="padding:48px 0">Memuat dokumen…</p>
       <p class="center muted" data-filter-empty="docs" hidden style="padding:48px 0">Dokumen tidak ditemukan.</p>
-      <p class="proto-note" style="margin-top:20px">Judul regulasi bersifat rujukan. Tautan dan berkas diisi dari JDIH setelah verifikasi.</p>
+      <p class="micro muted" style="margin-top:20px">Setiap dokumen terbit setelah berkas atau tautannya diverifikasi petugas UPTD.</p>
     </div>
   </section>
 </main>

@@ -114,7 +114,7 @@ draf → diperiksa → persetujuan → terbit → arsip
 - Pemeriksa dan penyetuju bisa **mengembalikan** konten dengan catatan revisi (`dikembalikan`), lalu penyedia mengajukannya ulang ke `diperiksa`.
 - Konten `terbit` bisa ditarik dari portal ke `arsip`, dan arsip bisa dipulihkan ke `draf`.
 
-Peran tiap tahap mengikuti rancangan: **penyedia** (unit pemilik data), **pemeriksa** (kepala seksi/subbag), **penyetuju** (atasan langsung), dan **pengelola publikasi**. Setiap langkah dicatat di `riwayat` entri dan di log aktivitas. Untuk koleksi yang sudah di server (saat ini Persyaratan Layanan, [D-022](decisions.md#d-022--2026-10-14--persyaratan-layanan-tersimpan-di-server-dengan-alur-persetujuan)), hanya Administrator yang mengubah entri yang menunggu persetujuan atau sudah terbit, termasuk menyetujui, mengembalikan dari tahap persetujuan, dan menarik dari portal; tombol langkah itu tidak ditawarkan kepada pegawai lain (`bolehUbahAlur` di `lib/alur.ts`). Halaman satu-dokumen (profil, kontak, jam, dan sejenisnya) langsung berlaku saat disimpan.
+Peran tiap tahap mengikuti rancangan: **penyedia** (unit pemilik data), **pemeriksa** (kepala seksi/subbag), **penyetuju** (atasan langsung), dan **pengelola publikasi**. Setiap langkah dicatat di `riwayat` entri dan di log aktivitas. Untuk koleksi yang sudah di server (saat ini Persyaratan Layanan, [D-022](decisions.md#d-022--2026-10-14--persyaratan-layanan-tersimpan-di-server-dengan-alur-persetujuan), dan Regulasi & Unduhan, [D-030](decisions.md#d-030--2026-10-14--regulasi--unduhan-tersimpan-di-server-dengan-alur-persetujuan)), hanya Administrator yang mengubah entri yang menunggu persetujuan atau sudah terbit, termasuk menyetujui, mengembalikan dari tahap persetujuan, dan menarik dari portal; tombol langkah itu tidak ditawarkan kepada pegawai lain (`bolehUbahAlur` di `lib/alur.ts`). Halaman satu-dokumen (profil, kontak, jam, dan sejenisnya) langsung berlaku saat disimpan.
 
 ### Alat bantu
 
@@ -152,7 +152,7 @@ Contoh entri `faq`:
 
 Tanpa `VITE_API_URL`, dashboard berjalan dalam **mode campuran** (`lib/api/hybrid.ts`, [D-011](decisions.md#d-011--2026-10-13--tanya-jawab-tersimpan-di-server)):
 
-- Koleksi di `KOLEKSI_SERVER` (saat ini `faq`, `keliling`, `penyesuaian`, `pesan`, `layanan`, `halaman`, dan `pemutakhiran`) dan pengaturan di `PENGATURAN_SERVER` (saat ini `jam`, `papan`, `tarif`, `statistik`, `kontak`, `visiMisi`, `profil`, `beranda`, `situs`, dan `akun`) dibaca dan ditulis lewat API PINTU (`/api/koleksi/…`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/tarif`, `/api/pengaturan/statistik`, `/api/pengaturan/kontak`, `/api/pengaturan/visiMisi`, `/api/pengaturan/profil`, `/api/pengaturan/beranda`, `/api/pengaturan/situs`, `/api/pengaturan/akun`, lihat [docs/api.md](api.md#tanya-jawab-di-dashboard)). Perubahan pegawai lain muncul saat tab kembali dilihat, dan server memeriksa modul pengguna. Waktu simpan pengaturan server (`GET /api/pengaturan`) menggantikan waktu di peramban untuk pengaturan itu.
+- Koleksi di `KOLEKSI_SERVER` (saat ini `faq`, `keliling`, `penyesuaian`, `pesan`, `layanan`, `halaman`, `pemutakhiran`, dan `dokumen`) dan pengaturan di `PENGATURAN_SERVER` (saat ini `jam`, `papan`, `tarif`, `statistik`, `kontak`, `visiMisi`, `profil`, `beranda`, `situs`, dan `akun`) dibaca dan ditulis lewat API PINTU (`/api/koleksi/…`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/tarif`, `/api/pengaturan/statistik`, `/api/pengaturan/kontak`, `/api/pengaturan/visiMisi`, `/api/pengaturan/profil`, `/api/pengaturan/beranda`, `/api/pengaturan/situs`, `/api/pengaturan/akun`, lihat [docs/api.md](api.md#tanya-jawab-di-dashboard)). Perubahan pegawai lain muncul saat tab kembali dilihat, dan server memeriksa modul pengguna. Waktu simpan pengaturan server (`GET /api/pengaturan`) menggantikan waktu di peramban untuk pengaturan itu.
 - Koleksi dan pengaturan lain serta unggahan tersimpan di IndexedDB peramban: database `pintu-dashboard`, store `data`, dengan kunci `koleksi:<nama>`, `pengaturan:<nama>`, `aktivitas`, dan `meta`.
 - Saat pertama dibuka, dashboard mengisi data lokal awal dari isi portal yang sudah ada (`resources/js/dashboard/lib/api/seed.ts`). Tanya jawab contoh di sana tidak dipakai lagi dan tidak dipindahkan ke server.
 - Foto dan berkas disimpan sebagai data URL. Foto dikecilkan dulu menjadi maks. 1600 px.
@@ -174,7 +174,7 @@ Tanpa `VITE_API_URL`, dashboard berjalan dalam **mode campuran** (`lib/api/hybri
 
 ## Menyambungkan ke server (REST API)
 
-> **Sebagian tersedia.** Laravel sudah menyediakan koleksi `faq`, `keliling`, `penyesuaian`, `pesan`, `layanan`, `halaman`, dan `pemutakhiran` (tanpa `PUT /urutan` untuk `keliling` dan `penyesuaian`, yang diurutkan menurut hari, jam, atau tanggal; `halaman` hanya dibaca dan disunting), pengaturan `jam`, `papan`, `tarif`, `statistik`, `kontak`, `visiMisi`, `profil`, `beranda`, `situs`, dan `akun`, `GET /pengaturan`, serta `GET /aktivitas` ([docs/api.md](api.md#tanya-jawab-di-dashboard)); mode campuran memakainya otomatis. Endpoint lain di bawah adalah sasaran modul berikutnya, jadi `VITE_API_URL` baru berguna setelah semuanya tersedia. `DELETE /aktivitas` sengaja tidak dibuat: log aktivitas server tidak bisa dikosongkan dari dashboard.
+> **Sebagian tersedia.** Laravel sudah menyediakan koleksi `faq`, `keliling`, `penyesuaian`, `pesan`, `layanan`, `halaman`, `pemutakhiran`, dan `dokumen` (tanpa `PUT /urutan` untuk `keliling` dan `penyesuaian`, yang diurutkan menurut hari, jam, atau tanggal, dan untuk `dokumen`, yang diurutkan per kategori; `halaman` hanya dibaca dan disunting), pengaturan `jam`, `papan`, `tarif`, `statistik`, `kontak`, `visiMisi`, `profil`, `beranda`, `situs`, dan `akun`, `GET /pengaturan`, serta `GET /aktivitas` ([docs/api.md](api.md#tanya-jawab-di-dashboard)); mode campuran memakainya otomatis. Endpoint lain di bawah adalah sasaran modul berikutnya, jadi `VITE_API_URL` baru berguna setelah semuanya tersedia. `DELETE /aktivitas` sengaja tidak dibuat: log aktivitas server tidak bisa dikosongkan dari dashboard.
 
 Build dengan alamat API, lalu semua baca/tulis memakai REST. Karena dashboard dan API kini satu origin, alamatnya cukup `/api`:
 
@@ -197,7 +197,7 @@ Server perlu menyediakan endpoint berikut. Bentuk JSON-nya sama dengan model dat
 | `GET` | `/pengaturan` | — | `{ "situs": "<waktu ISO>", … }`, waktu terakhir tiap pengaturan disimpan |
 | `GET` | `/aktivitas?limit=50` | — | Log aktivitas terbaru `{ id, waktu, oleh, aksi, modul, target }` |
 | `DELETE` | `/aktivitas` | — | 204 |
-| `POST` | `/unggah` | `multipart/form-data`, field `modul` (tujuan) dan `berkas` | `{ nama, ukuran, tipe, url }`; tersedia di server ([D-028](decisions.md#d-028--2026-10-14--unggahan-disimpan-di-laravel-cloud-object-storage)). Mode campuran memakainya untuk tujuan di `UNGGAHAN_SERVER` (saat ini `visiMisi` dan `profil`) |
+| `POST` | `/unggah` | `multipart/form-data`, field `modul` (tujuan) dan `berkas` | `{ nama, ukuran, tipe, url }`; tersedia di server ([D-028](decisions.md#d-028--2026-10-14--unggahan-disimpan-di-laravel-cloud-object-storage)). Mode campuran memakainya untuk tujuan di `UNGGAHAN_SERVER` (saat ini `visiMisi`, `profil`, dan `dokumen`) |
 | `GET` | `/ekspor` | — | Cadangan lengkap (format di atas) |
 | `POST` | `/impor` | Cadangan lengkap | 204 |
 | `POST` | `/reset` | — | 204 |
@@ -313,6 +313,14 @@ Halaman *Persyaratan Layanan* (`#/layanan`, `pages/layanan/`) tersimpan di serve
 - Pengelola modul menyiapkan draf, mengajukan, memeriksa, dan meneruskan ke penyetuju. Administrator menyetujui-dan-menerbitkan, mengembalikan dari tahap persetujuan, menarik dari portal, mengubah urutan, dan menghapus. Penyunting terkunci bagi pegawai lain selama layanan menunggu persetujuan atau terbit.
 - Hanya layanan terbit yang tampil di halaman Layanan dan, bila bertanda *Tampil di beranda*, sebagai tab *Layanan utama* di beranda (`GET /api/public/layanan`).
 - Enam layanan yang sudah tampil di portal dimasukkan sebagai data awal berstatus Terbit lewat migrasi. Layanan contoh dari penyimpanan peramban tidak dipindahkan.
+
+## Regulasi & Unduhan
+
+Halaman *Regulasi & Unduhan* (`#/unduhan`, `pages/unduhan.tsx`) tersimpan di server sejak [D-030](decisions.md#d-030--2026-10-14--regulasi--unduhan-tersimpan-di-server-dengan-alur-persetujuan) sebagai koleksi `dokumen`, dengan alur publikasi yang sama dengan Persyaratan Layanan.
+
+- Berkas diunggah ke server (tujuan `dokumen`). Format dokumen mengikuti jenis berkasnya; dokumen tanpa berkas dapat menautkan sumber resmi seperti JDIH.
+- Pengelola modul menyiapkan, mengajukan, dan memeriksa. Administrator menerbitkan, menarik, dan menghapus. Penyunting terkunci bagi pegawai lain selama dokumen menunggu persetujuan atau terbit. Dokumen terbit wajib memiliki berkas atau tautan.
+- Sembilan dokumen yang tercantum di portal menjadi data awal berstatus Draf tanpa berkas, dengan judul resmi untuk regulasinya. Portal menampilkan "Dokumen sedang disiapkan" sampai ada dokumen terbit (`GET /api/public/dokumen`).
 
 ## Beranda
 

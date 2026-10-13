@@ -408,3 +408,20 @@ Unggahan yang ditunda di D-020 dan D-021 kini disimpan di server dengan fondasi 
 | Unggahan dashboard | Setiap unggahan menyebut tujuannya. Mode campuran mengirim unggahan `visiMisi` dan `profil` ke server; tujuan lain tetap di peramban sampai modulnya pindah. Isian foto tidak menawarkan "Pakai URL" untuk tujuan yang sudah di server. |
 
 Sumber resmi susunan dan tugas UPTD adalah Pergub NTT No. 96 Tahun 2023; Renstra meringkasnya, dan Pergub-nya belum dicocokkan langsung.
+
+## D-030 · 2026-10-14 · Regulasi & Unduhan tersimpan di server dengan alur persetujuan
+
+Regulasi & Unduhan kini tersimpan di server dengan alur publikasi yang sama dengan Persyaratan Layanan (D-022). Halaman Regulasi & Unduhan membaca dokumen yang terbit dari API.
+
+| Hal | Keputusan |
+|---|---|
+| Penyimpanan | Tabel `documents` menyimpan judul, keterangan, kategori (`regulasi`, `standar`, `formulir`, `laporan`), format (PDF, DOCX, XLSX, JPG, atau Tautan), nomor, tahun, berkas, tautan luar, urutan masuk, serta kolom alur seperti layanan. |
+| Berkas dan tautan | Berkas diunggah dari dashboard (tujuan `dokumen`, D-028): PDF, DOCX, atau XLSX maks. 10 MB, atau gambar maks. 5 MB. Nama, ukuran, dan tipenya diambil dari catatan unggahan, dan formatnya mengikuti jenis berkas yang dikenali server. Satu unggahan hanya dipakai satu dokumen. Berkas yang diganti atau dikosongkan, dan berkas dokumen yang dihapus, ikut terhapus. Dokumen tanpa berkas dapat menautkan sumber resmi seperti JDIH; tautan hanya alamat `http(s)`. |
+| Alur dan akses | **Sama dengan Persyaratan Layanan** (keputusan pemilik). Pengelola Regulasi & Unduhan menyiapkan, mengajukan, dan memeriksa. Administrator menyetujui dan menerbitkan, mengembalikan dari tahap persetujuan, menarik dari portal, dan menghapus. Dokumen yang menunggu persetujuan atau terbit hanya dapat diubah Administrator. **Dokumen terbit wajib memiliki berkas atau tautan.** Tidak ada pengurutan manual karena portal mengurutkan per kategori. Pengelola Jadwal Pemutakhiran boleh membaca daftarnya. |
+| Data awal | **Sembilan dokumen yang tercantum di halaman Unduhan dimasukkan lewat migrasi sebagai draf tanpa berkas, dengan judul resmi** (keputusan pemilik). Judul regulasi diambil dari dasar hukum Renstra BPAD 2025–2029: UU No. 1 Tahun 2022 (Hubungan Keuangan antara Pemerintah Pusat dan Pemerintahan Daerah), Perda Provinsi NTT No. 1 Tahun 2024 (Pajak Daerah dan Retribusi Daerah), dan Pergub NTT No. 96 Tahun 2023 (Kedudukan, Susunan Organisasi, Tugas dan Fungsi serta Tata Kerja BPAD). Enam dokumen lain (standar pelayanan, maklumat, SOP, dua formulir, dan laporan SKM) memakai judul di halaman. Penyedianya Subbagian Tata Usaha, kecuali formulir (Seksi Verifikasi); pemeriksanya Kepala Subbagian Tata Usaha. |
+| Portal | `GET /api/public/dokumen` memberikan dokumen terbit tanpa ID dan tanpa kolom alur selain waktu terbit. Halaman Regulasi & Unduhan menyusun daftar dengan tampilan yang sama: tombol "Unduh" untuk berkas dan "Buka" di tab baru untuk tautan. Saringan kategori dan pencarian tetap bekerja. Sampai ada dokumen terbit, halaman menyatakan dokumen sedang disiapkan dan menyembunyikan saringan. Bila API gagal, tampil keterangan dan tombol coba lagi. Catatan prototipe diganti keterangan bahwa dokumen terbit setelah diverifikasi petugas. |
+| Dashboard | Unggahan `dokumen` dikirim ke server dan formulir hanya menerima format yang diterima server. Penghapusan hanya ditawarkan kepada Administrator. Penyunting terkunci bagi pegawai lain selama dokumen menunggu persetujuan atau terbit. Ringkasan, antrean kerja, menu perintah, Jadwal Pemutakhiran, dan *Pengaturan › Data* hanya membaca dokumen bila pengguna boleh membacanya. |
+
+Alur publikasi kini dipakai bersama oleh layanan dan dokumen: status dan riwayat di model, pemeriksaan langkah di permintaan, dan aksi pembaruan yang sama. Berita dan Dokumentasi dapat memakainya saat pindah ke server.
+
+Belum dibuat: berkas atau tautan untuk sembilan dokumen awal. Administrator perlu mengunggahnya dari naskah resmi, mencocokkan judul dan keterangannya, lalu menerbitkannya.

@@ -1,5 +1,5 @@
 import * as React from "react"
-import { IconAlertTriangle, IconExternalLink, IconFileDescription, IconPaperclip, IconPlus } from "@tabler/icons-react"
+import { IconAlertTriangle, IconExternalLink, IconFileDescription, IconLock, IconPaperclip, IconPlus } from "@tabler/icons-react"
 import { z } from "zod"
 
 import { MenuAksiAlur, PanelAlur, RiwayatAlur, useAksiAlur } from "@/components/alur/alur"
@@ -10,11 +10,12 @@ import { StatusAlurBadge } from "@/components/data/status-badge"
 import { EntriSheet, useEditorEntri } from "@/components/form/entri-sheet"
 import { FieldArea, FieldPilih, FieldTeks } from "@/components/form/fields"
 import { FieldBerkas } from "@/components/form/media-fields"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import type { Dokumen, FormatDokumen } from "@/lib/api"
-import { alurBaru } from "@/lib/alur"
+import { alurBaru, bolehUbahAlur, khususAdministrator } from "@/lib/alur"
 import { sesi } from "@/lib/auth"
 import { ukuranBerkas } from "@/lib/format"
 import { KATEGORI_DOKUMEN, PEMERIKSA, STATUS_ALUR, UNIT_PENYEDIA } from "@/lib/meta"
@@ -25,14 +26,19 @@ const FORMAT: FormatDokumen[] = ["PDF", "DOCX", "XLSX", "JPG", "Tautan"]
 
 const schema = z
   .object({
-    judul: v.wajib("Judul dokumen"),
-    keterangan: v.teks,
+    judul: v.wajib("Judul dokumen").max(200, "Judul dokumen maksimal 200 karakter."),
+    keterangan: v.teks.max(300, "Keterangan maksimal 300 karakter."),
     kategori: z.enum(["regulasi", "standar", "formulir", "laporan"]),
     format: z.enum(["PDF", "DOCX", "XLSX", "JPG", "Tautan"]),
-    nomor: v.teks,
+    nomor: v.teks.max(60, "Nomor maksimal 60 karakter."),
     tahun: z.string().trim().refine((t) => t === "" || /^(19|20)\d{2}$/.test(t), "Tahun 4 angka, mis. 2026."),
     berkas: v.berkas,
-    tautan: v.tautan,
+    // Portal membuka tautan di tab baru, jadi hanya alamat web lengkap (D-030)
+    tautan: z
+      .string()
+      .trim()
+      .max(500, "Tautan maksimal 500 karakter.")
+      .refine((t) => t === "" || /^https?:\/\/\S+$/i.test(t), "Gunakan alamat lengkap yang diawali http:// atau https://."),
     penyedia: v.wajib("Unit penyedia"),
     pemeriksa: v.teks,
   })
@@ -42,12 +48,16 @@ const schema = z
   })
 type FormDokumen = z.infer<typeof schema>
 
+/** Format menurut jenis berkas yang dikenali server, lalu menurut ekstensinya; sama dengan server (D-030) */
 function formatDariBerkas(nama: string, tipe: string): FormatDokumen {
+  if (tipe === "application/pdf") return "PDF"
+  if (tipe === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") return "DOCX"
+  if (tipe === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") return "XLSX"
+  if (tipe.startsWith("image/")) return "JPG"
   const ext = nama.split(".").pop()?.toLowerCase() ?? ""
-  if (ext === "pdf" || tipe === "application/pdf") return "PDF"
+  if (ext === "pdf") return "PDF"
   if (ext === "doc" || ext === "docx") return "DOCX"
   if (ext === "xls" || ext === "xlsx") return "XLSX"
-  if (tipe.startsWith("image/")) return "JPG"
   return "PDF"
 }
 
@@ -57,6 +67,8 @@ export default function HalamanUnduhan() {
   const { data, isLoading } = useKoleksi("dokumen")
   const hapus = useHapus("dokumen", "dokumen")
   const { jalankan, dialog, memproses } = useAksiAlur("dokumen")
+  // Penghapusan hanya untuk Administrator (D-030)
+  const khususAdmin = khususAdministrator("dokumen")
 
   const ed = useEditorEntri({
     koleksi: "dokumen",
@@ -88,6 +100,9 @@ export default function HalamanUnduhan() {
     }),
     keEntriBaru: (f) => ({ ...alurBaru(sesi().nama, f.penyedia, f.pemeriksa), ...f }),
   })
+
+  // Dokumen yang menunggu persetujuan atau sudah terbit hanya diubah Administrator (D-030)
+  const terkunci = !!ed.entri && !bolehUbahAlur("dokumen", ed.entri.status)
 
   // format mengikuti berkas yang diunggah
   const berkas = ed.form.watch("berkas")
@@ -166,7 +181,7 @@ export default function HalamanUnduhan() {
         <MenuBaris
           label={row.original.judul}
           onSunting={() => ed.bukaUbah(row.original.id)}
-          onHapus={() => void hapus([row.original.id], row.original.judul)}
+          onHapus={khususAdmin ? undefined : () => void hapus([row.original.id], row.original.judul)}
         >
           <DropdownMenuSeparator />
           <MenuAksiAlur koleksi="dokumen" item={row.original} jalankan={(i, a) => void jalankan(i, a)} />
@@ -217,13 +232,18 @@ export default function HalamanUnduhan() {
             nilai: (d) => d.status,
           },
         ]}
-        tindakanMassal={(baris, bersihkan) => (
-          <TombolHapusMassal
-            onClick={async () => {
-              if (await hapus(baris.map((b) => b.id))) bersihkan()
-            }}
-          />
-        )}
+        pilih={!khususAdmin}
+        tindakanMassal={
+          khususAdmin
+            ? undefined
+            : (baris, bersihkan) => (
+                <TombolHapusMassal
+                  onClick={async () => {
+                    if (await hapus(baris.map((b) => b.id))) bersihkan()
+                  }}
+                />
+              )
+        }
         kosong={{ judul: "Belum ada dokumen", deskripsi: "Unggah regulasi atau formulir pertama." }}
       />
 
@@ -235,50 +255,70 @@ export default function HalamanUnduhan() {
         form={ed.form}
         simpan={ed.simpan}
         menyimpan={ed.menyimpan}
+        hanyaBaca={terkunci}
       >
-        <FieldTeks control={ed.form.control} name="judul" label="Judul dokumen" wajib />
-        <FieldArea control={ed.form.control} name="keterangan" label="Keterangan singkat" rows={2} />
-        <Baris>
-          <FieldPilih
+        {terkunci && (
+          <Alert>
+            <IconLock />
+            <AlertTitle>Hanya Administrator yang dapat mengubah dokumen ini</AlertTitle>
+            <AlertDescription>
+              Dokumen ini {ed.entri?.status === "terbit" ? "sudah terbit di portal" : "menunggu persetujuan"}. Isinya dan
+              langkah berikutnya dijalankan Administrator.
+            </AlertDescription>
+          </Alert>
+        )}
+        <fieldset disabled={terkunci} className="grid min-w-0 gap-5">
+          <FieldTeks control={ed.form.control} name="judul" label="Judul dokumen" wajib />
+          <FieldArea control={ed.form.control} name="keterangan" label="Keterangan singkat" rows={2} />
+          <Baris>
+            <FieldPilih
+              control={ed.form.control}
+              name="kategori"
+              label="Kategori"
+              opsi={Object.entries(KATEGORI_DOKUMEN).map(([nilai, label]) => ({ nilai, label }))}
+            />
+            <FieldPilih
+              control={ed.form.control}
+              name="format"
+              label="Format"
+              opsi={FORMAT.map((f) => ({ nilai: f, label: f }))}
+            />
+          </Baris>
+          <Baris>
+            <FieldTeks control={ed.form.control} name="nomor" label="Nomor" placeholder="Mis. 1" />
+            <FieldTeks control={ed.form.control} name="tahun" label="Tahun" inputMode="numeric" maxLength={4} />
+          </Baris>
+          <FieldBerkas
             control={ed.form.control}
-            name="kategori"
-            label="Kategori"
-            opsi={Object.entries(KATEGORI_DOKUMEN).map(([nilai, label]) => ({ nilai, label }))}
+            name="berkas"
+            label="Berkas"
+            tujuan="dokumen"
+            terima=".pdf,.docx,.xlsx,.jpg,.jpeg,.png,.webp"
+            petunjuk="PDF, Word (DOCX), atau Excel (XLSX) maks. 10 MB · gambar maks. 5 MB"
           />
-          <FieldPilih
+          <FieldTeks
             control={ed.form.control}
-            name="format"
-            label="Format"
-            opsi={FORMAT.map((f) => ({ nilai: f, label: f }))}
+            name="tautan"
+            label="Atau tautan luar"
+            type="url"
+            placeholder="https://jdih.nttprov.go.id/…"
+            deskripsi="Untuk dokumen yang sudah tersedia di JDIH atau situs resmi lain. Dokumen terbit harus memiliki berkas atau tautan."
           />
-        </Baris>
-        <Baris>
-          <FieldTeks control={ed.form.control} name="nomor" label="Nomor" placeholder="Mis. 1" />
-          <FieldTeks control={ed.form.control} name="tahun" label="Tahun" inputMode="numeric" maxLength={4} />
-        </Baris>
-        <FieldBerkas control={ed.form.control} name="berkas" label="Berkas" tujuan="dokumen" />
-        <FieldTeks
-          control={ed.form.control}
-          name="tautan"
-          label="Atau tautan luar"
-          type="url"
-          placeholder="https://jdih.nttprov.go.id/…"
-          deskripsi="Untuk dokumen yang sudah tersedia di JDIH atau situs resmi lain."
-        />
-        <Baris>
-          <FieldPilih
-            control={ed.form.control}
-            name="penyedia"
-            label="Unit penyedia"
-            opsi={UNIT_PENYEDIA.map((u) => ({ nilai: u, label: u }))}
-          />
-          <FieldPilih
-            control={ed.form.control}
-            name="pemeriksa"
-            label="Pemeriksa"
-            opsi={PEMERIKSA.map((u) => ({ nilai: u, label: u }))}
-          />
-        </Baris>
+          <Baris>
+            <FieldPilih
+              control={ed.form.control}
+              name="penyedia"
+              label="Unit penyedia"
+              opsi={UNIT_PENYEDIA.map((u) => ({ nilai: u, label: u }))}
+            />
+            <FieldPilih
+              control={ed.form.control}
+              name="pemeriksa"
+              label="Pemeriksa"
+              opsi={PEMERIKSA.map((u) => ({ nilai: u, label: u }))}
+            />
+          </Baris>
+        </fieldset>
         {ed.entri && (
           <>
             <PanelAlur

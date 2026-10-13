@@ -6,6 +6,8 @@ use App\Http\Controllers\Admin\AccountStatusController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Dashboard\ActivityController;
 use App\Http\Controllers\Dashboard\ContactController;
+use App\Http\Controllers\Dashboard\DocumentController;
+use App\Http\Controllers\Dashboard\DocumentDeletionController;
 use App\Http\Controllers\Dashboard\FaqController;
 use App\Http\Controllers\Dashboard\FaqDeletionController;
 use App\Http\Controllers\Dashboard\FaqOrderController;
@@ -34,6 +36,7 @@ use App\Http\Controllers\Dashboard\UpdateStandardOrderController;
 use App\Http\Controllers\Dashboard\UploadController;
 use App\Http\Controllers\Dashboard\VisionMissionController;
 use App\Http\Controllers\PublicContactController;
+use App\Http\Controllers\PublicDocumentController;
 use App\Http\Controllers\PublicFaqController;
 use App\Http\Controllers\PublicHomepageController;
 use App\Http\Controllers\PublicMessageController;
@@ -48,6 +51,7 @@ use App\Http\Controllers\PublicStatisticsController;
 use App\Http\Controllers\PublicTariffController;
 use App\Http\Controllers\PublicVisionMissionController;
 use App\Http\Middleware\EnsureAccountIsActive;
+use App\Models\Document;
 use App\Models\Faq;
 use App\Models\Message;
 use App\Models\MobileServiceStop;
@@ -248,6 +252,20 @@ Route::middleware('auth:sanctum')->group(function (): void {
     });
 
     /*
+     * Regulasi & Unduhan (DocumentPolicy) with the publication workflow, as
+     * for services: module managers prepare, submit and review; administrators
+     * approve, withdraw and delete (D-030). The portal sorts documents by
+     * category, so there is no reorder endpoint.
+     */
+    Route::prefix('koleksi/dokumen')->name('koleksi.dokumen.')->whereUlid('document')->group(function (): void {
+        Route::get('/', [DocumentController::class, 'index'])->can('viewAny', Document::class)->name('index');
+        Route::post('/', [DocumentController::class, 'store'])->can('create', Document::class)->name('store');
+        Route::post('/hapus', [DocumentDeletionController::class, 'store'])->can('deleteAny', Document::class)->name('hapus');
+        Route::get('/{document}', [DocumentController::class, 'show'])->can('view', 'document')->name('show');
+        Route::patch('/{document}', [DocumentController::class, 'update'])->can('update', 'document')->name('update');
+    });
+
+    /*
      * Halaman Statis (StaticPagePolicy): the portal's long-text pages. Each
      * one is a page of the portal, so they are edited but not added,
      * reordered or deleted (D-024).
@@ -302,6 +320,7 @@ Route::prefix('public')
         Route::get('/visi-misi', PublicVisionMissionController::class)->name('visi-misi.show');
         Route::get('/profil', PublicProfileController::class)->name('profil.show');
         Route::get('/layanan', PublicServiceController::class)->name('layanan.index');
+        Route::get('/dokumen', PublicDocumentController::class)->name('dokumen.index');
         Route::get('/beranda', PublicHomepageController::class)->name('beranda.show');
         Route::get('/situs', PublicSiteController::class)->name('situs.show');
         Route::get('/halaman/{slug}', PublicStaticPageController::class)

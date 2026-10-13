@@ -15,6 +15,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET` | `/api/public/visi-misi` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/profil` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/layanan` | anonim, hanya baca | tersedia |
+| `GET` | `/api/public/dokumen` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/beranda` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/halaman/{slug}` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/situs` | anonim, hanya baca | tersedia |
@@ -53,6 +54,9 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET`, `PATCH` | `/api/koleksi/layanan/{id}` | Administrator, pengelola Persyaratan Layanan; layanan yang menunggu persetujuan atau terbit hanya Administrator | tersedia |
 | `PUT` | `/api/koleksi/layanan/urutan` | Administrator | tersedia |
 | `POST` | `/api/koleksi/layanan/hapus` | Administrator | tersedia |
+| `GET`, `POST` | `/api/koleksi/dokumen` | Administrator, pengelola Regulasi & Unduhan (daftar: juga pengelola Jadwal Pemutakhiran) | tersedia |
+| `GET`, `PATCH` | `/api/koleksi/dokumen/{id}` | Administrator, pengelola Regulasi & Unduhan; dokumen yang menunggu persetujuan atau terbit hanya Administrator | tersedia |
+| `POST` | `/api/koleksi/dokumen/hapus` | Administrator | tersedia |
 | `GET` | `/api/koleksi/halaman` | Administrator, pengelola Halaman Statis | tersedia |
 | `GET`, `PATCH` | `/api/koleksi/halaman/{id}` | Administrator, pengelola Halaman Statis | tersedia |
 | `GET` | `/api/koleksi/pemutakhiran` | semua pegawai; daftarnya sebatas modul pengguna, lengkap bagi Administrator dan pengelola Jadwal Pemutakhiran | tersedia |
@@ -384,7 +388,39 @@ Dipakai halaman *Persyaratan Layanan* di dashboard ([D-022](decisions.md#d-022--
 
 Isi divalidasi seperti formulir dashboard: nama (maks. 120 karakter), slug unik (huruf kecil, angka, tanda hubung; maks. 80), ringkasan (maks. 200), loket (maks. 60), dan penyedia wajib; jenis `layanan` atau `tambahan`; maks. 6 label (label kosong dibuang); 1–20 berkas persyaratan dengan nama wajib (maks. 200) dan ID unik; catatan maks. 400; tanpa karakter kontrol.
 
-Kode: `app/Http/Controllers/Dashboard/Service*`, `app/Http/Requests/Dashboard/*Service*`, `app/Actions/UpdateService.php`, `app/Models/Service.php`, `app/Enums/WorkflowStatus.php`, `app/Policies/ServicePolicy.php`, `database/migrations/*_insert_initial_services.php`. Tes: `tests/Feature/ServiceControllerTest.php`, `ServiceWorkflowTest.php`.
+Kode: `app/Http/Controllers/Dashboard/Service*`, `app/Http/Requests/Dashboard/*Service*`, `app/Http/Requests/Dashboard/Concerns/TakesWorkflowStep.php`, `app/Actions/UpdateWorkflowEntry.php`, `app/Models/Service.php`, `app/Models/Concerns/HasPublicationWorkflow.php`, `app/Enums/WorkflowStatus.php`, `app/Policies/ServicePolicy.php`, `database/migrations/*_insert_initial_services.php`. Tes: `tests/Feature/ServiceControllerTest.php`, `ServiceWorkflowTest.php`.
+
+## Regulasi & Unduhan di dashboard
+
+Dipakai halaman *Regulasi & Unduhan* di dashboard ([D-030](decisions.md#d-030--2026-10-14--regulasi--unduhan-tersimpan-di-server-dengan-alur-persetujuan)), dengan alur publikasi yang sama dengan Persyaratan Layanan. Tamu mendapat `401`; pegawai yang tidak mengelola modul `dokumen` mendapat `403` `{"message": "Modul Regulasi & Unduhan belum ditugaskan kepada Anda."}`. Pengelola Jadwal Pemutakhiran boleh memakai `GET /api/koleksi/dokumen` saja.
+
+```json
+{
+  "id": "01m4…", "judul": "Undang-Undang Nomor 1 Tahun 2022",
+  "keterangan": "Hubungan Keuangan antara Pemerintah Pusat dan Pemerintahan Daerah",
+  "kategori": "regulasi", "format": "PDF", "nomor": "1", "tahun": "2022",
+  "berkas": { "nama": "UU 1 2022.pdf", "ukuran": 245760, "tipe": "application/pdf", "url": "…" },
+  "tautan": "",
+  "status": "terbit", "penyedia": "Subbagian Tata Usaha", "pemeriksa": "Kepala Subbagian Tata Usaha", "catatanRevisi": "",
+  "terbitPada": "2026-10-14T01:00:00+00:00",
+  "riwayat": [{ "waktu": "…", "oleh": "Yohanes Admin", "aksi": "menyetujui dan menerbitkan", "ke": "terbit" }],
+  "urutan": 0, "dibuat": "…", "diperbarui": "…"
+}
+```
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `GET /api/koleksi/dokumen` | — | `200` semua dokumen sesuai urutan masuk, termasuk yang belum terbit. |
+| `GET /api/koleksi/dokumen/{id}` | — | `200` satu dokumen; `404` bila tidak ada. |
+| `POST /api/koleksi/dokumen` | isi dokumen seperti di atas, tanpa kolom alur; `berkas` cukup `{"url": "…"}` hasil `POST /api/unggah` | `201` sebagai draf di akhir daftar, dengan riwayat "menyiapkan draf" atas nama akun yang masuk. Status, riwayat, catatan revisi, dan waktu terbit dari klien diabaikan. |
+| `PATCH /api/koleksi/dokumen/{id}` | sebagian isi, `status` untuk langkah alur, `catatanRevisi` saat mengembalikan | `200`. Langkah alur dan pesannya sama dengan layanan (`"Langkah ini tidak tersedia untuk dokumen berstatus Draf."`). `422` `{"berkas": ["Lampirkan berkas atau tautan sebelum dokumen diterbitkan."]}` bila dokumen akan terbit, atau tetap terbit, tanpa berkas dan tautan. `403` bila pegawai bukan Administrator mengubah dokumen yang menunggu persetujuan atau sudah terbit: `{"message": "Dokumen yang menunggu persetujuan atau sudah terbit hanya dapat diubah Administrator."}`. |
+| `POST /api/koleksi/dokumen/hapus` | `{"ids": ["…"]}` | `204`; berkas dokumen yang dihapus ikut terhapus. Hanya Administrator; pegawai lain `403` `{"message": "Hanya Administrator yang dapat menghapus dokumen."}`. |
+
+Tidak ada `PUT /api/koleksi/dokumen/urutan`: portal mengurutkan dokumen per kategori.
+
+Isi divalidasi seperti formulir dashboard: judul (maks. 200 karakter) dan penyedia wajib; keterangan maks. 300; kategori `regulasi`, `standar`, `formulir`, atau `laporan`; format `PDF`, `DOCX`, `XLSX`, `JPG`, atau `Tautan`; nomor maks. 60; tahun empat angka (19xx atau 20xx) atau kosong; tautan hanya `http://` atau `https://`, maks. 500; tanpa karakter kontrol. Berkas harus alamat unggahan PINTU untuk tujuan `dokumen` (`{"berkas.url": ["Berkas dokumen harus diunggah lewat dashboard."]}`) yang belum dipakai dokumen lain (`"Berkas ini sudah dipakai dokumen lain. Unggah ulang berkasnya."`). Nama, ukuran, dan tipenya diambil dari catatan unggahan, dan `format` mengikuti tipenya (gambar menjadi `JPG`). Dokumen tanpa berkas berformat `Tautan` wajib memiliki tautan. Berkas yang diganti atau dikosongkan dihapus bersama catatannya.
+
+Kode: `app/Http/Controllers/Dashboard/Document*`, `app/Http/Requests/Dashboard/*Document*`, `app/Http/Requests/Dashboard/Concerns/TakesWorkflowStep.php`, `app/Actions/UpdateWorkflowEntry.php`, `app/Models/Document.php`, `app/Models/Concerns/HasPublicationWorkflow.php`, `app/Policies/DocumentPolicy.php`, `database/migrations/*_insert_initial_documents.php`. Tes: `tests/Feature/DocumentControllerTest.php`, `DocumentWorkflowTest.php`.
 
 ## Beranda di dashboard
 
@@ -507,7 +543,7 @@ Kode: `app/Http/Controllers/Dashboard/OwnAccountController.php`, `app/Http/Reque
 
 ## Unggahan di dashboard
 
-Penyimpanan berkas dari dashboard ([D-028](decisions.md#d-028--2026-10-14--unggahan-disimpan-di-laravel-cloud-object-storage)). Tamu mendapat `401`. Dashboard memakainya untuk tujuan yang modulnya sudah di server, saat ini `visiMisi` dan `profil` ([D-029](decisions.md#d-029--2026-10-14--foto-tentang-uptd-dan-maklumat-diunggah-ke-server-profil-disusun-dari-renstra-dan-rpjmd)); unggahan lain tetap di peramban sampai modulnya pindah.
+Penyimpanan berkas dari dashboard ([D-028](decisions.md#d-028--2026-10-14--unggahan-disimpan-di-laravel-cloud-object-storage)). Tamu mendapat `401`. Dashboard memakainya untuk tujuan yang modulnya sudah di server, saat ini `visiMisi`, `profil` ([D-029](decisions.md#d-029--2026-10-14--foto-tentang-uptd-dan-maklumat-diunggah-ke-server-profil-disusun-dari-renstra-dan-rpjmd)), dan `dokumen` ([D-030](decisions.md#d-030--2026-10-14--regulasi--unduhan-tersimpan-di-server-dengan-alur-persetujuan)); unggahan lain tetap di peramban sampai modulnya pindah.
 
 | Alamat | Permintaan | Respons |
 |---|---|---|
@@ -705,6 +741,18 @@ Halaman Layanan dan bagian *Layanan utama* di beranda ([D-022](decisions.md#d-02
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 
 Kode: `app/Http/Controllers/PublicServiceController.php`, `app/Actions/ListPublicServices.php`. Tes: `tests/Feature/PublicServiceControllerTest.php`.
+
+## `GET /api/public/dokumen`
+
+Halaman Regulasi & Unduhan ([D-030](decisions.md#d-030--2026-10-14--regulasi--unduhan-tersimpan-di-server-dengan-alur-persetujuan), `initDokumen()` di `public/assets/js/main.js`). Daftar dokumen berstatus `terbit`, per kategori (`regulasi`, `standar`, `formulir`, `laporan`) lalu sesuai urutan masuk, dengan bentuk dokumen dashboard tanpa `id` dan tanpa kolom alur selain `terbitPada`.
+
+| Hal | Perilaku |
+|---|---|
+| Berhasil | `200` daftar dokumen, `[]` bila belum ada yang terbit. Dokumen dengan `berkas` diunduh dari `berkas.url`; dokumen lain dibuka lewat `tautan` di tab baru. Portal hanya memakai alamat `http(s)` dan menampilkan teks sebagai teks polos. |
+| Galat | `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah batas laju yang sama dengan `GET /api/public/faq`; `503` bila data tidak bisa dibaca, tidak pernah daftar kosong sebagai gantinya. |
+| Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
+
+Kode: `app/Http/Controllers/PublicDocumentController.php`, `app/Actions/ListPublicDocuments.php`. Tes: `tests/Feature/PublicDocumentControllerTest.php`.
 
 ## `GET /api/public/beranda`
 

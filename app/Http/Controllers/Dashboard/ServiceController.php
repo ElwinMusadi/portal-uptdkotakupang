@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Actions\RecordActivity;
-use App\Actions\UpdateService;
+use App\Actions\UpdateWorkflowEntry;
 use App\Enums\DashboardModule;
 use App\Enums\WorkflowStatus;
 use App\Http\Controllers\Controller;
@@ -64,13 +64,15 @@ class ServiceController extends Controller
     }
 
     /**
-     * Change a service, take a workflow step, or both (UpdateService).
+     * Change a service, take a workflow step, or both (UpdateWorkflowEntry).
      */
-    public function update(UpdateServiceRequest $request, Service $service, UpdateService $updateService): ServiceResource
+    public function update(UpdateServiceRequest $request, Service $service, UpdateWorkflowEntry $updateEntry): ServiceResource
     {
-        return new ServiceResource($updateService->handle(
+        return new ServiceResource($updateEntry->handle(
             $request->user(),
             $service,
+            DashboardModule::Layanan,
+            'nama',
             $request->content(),
             $request->nextStatus(),
             $request->revisionNote(),

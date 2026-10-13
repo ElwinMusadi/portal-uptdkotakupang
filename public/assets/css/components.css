@@ -148,6 +148,7 @@
 .link-arrow:hover .i { transform: translateX(3px); }
 /* Bilah pengumuman tanpa tujuan tautan (initSitus) */
 .link-arrow[hidden] { display: none; }
+.toolbar[hidden] { display: none; }
 .link-ink { color: var(--ink); text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 4px; transition: text-decoration-color var(--dur-1) var(--ease); }
 .link-ink:hover { text-decoration-color: var(--ink); }
 

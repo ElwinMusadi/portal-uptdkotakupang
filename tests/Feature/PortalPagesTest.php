@@ -223,6 +223,18 @@ class PortalPagesTest extends TestCase
         $this->assertStringContainsString('<p class="muted" role="status">Memuat persyaratan layanan…</p>', $section[0]);
     }
 
+    public function test_leaves_the_documents_to_the_public_api(): void
+    {
+        $html = $this->get('/unduhan')->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('class="doc"', $html);
+        $this->assertStringNotContainsString('[ukuran]', $html);
+        $this->assertStringNotContainsString('class="proto-note"', $html);
+        $this->assertStringContainsString('<ul class="docs" id="docs" role="list" data-reveal data-dokumen-daftar></ul>', $html);
+        $this->assertStringContainsString('<p class="center muted" role="status" data-dokumen-status style="padding:48px 0">Memuat dokumen…</p>', $html);
+        $this->assertStringContainsString('<div class="toolbar" style="margin-bottom:28px" data-reveal data-dokumen-saringan hidden>', $html);
+    }
+
     public function test_keeps_the_initial_homepage_texts_in_the_markup_for_the_public_api_to_replace(): void
     {
         $html = $this->get('/')->assertOk()->getContent();

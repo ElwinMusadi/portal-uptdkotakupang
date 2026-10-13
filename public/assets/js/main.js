@@ -892,6 +892,77 @@
     muat(null);
   }
 
+  /* ---------- Regulasi & unduhan ----------
+     Dokumen dikelola di dashboard (Regulasi & Unduhan) dan dibaca dari
+     GET /api/public/dokumen, yang hanya memberikan dokumen terbit, urut per
+     kategori (D-030). Teksnya dipasang sebagai teks; berkas dan tautan hanya
+     dipakai bila beralamat http(s). Bila belum ada dokumen terbit, halaman
+     memberi tahu bahwa dokumen sedang disiapkan; bila API gagal, pengunjung
+     melihat pesan dan tombol coba lagi. Saringan dan pencarian di atasnya
+     diterapkan ulang setelah daftar tampil. */
+  async function muatDokumen() {
+    const data = await ambilJson("/api/public/dokumen");
+    const teks = (x) => typeof x === "string";
+    const valid = Array.isArray(data) && data.every((d) =>
+      ["judul", "keterangan", "kategori", "format", "nomor", "tahun", "tautan"].every((f) => teks(d?.[f]))
+      && (d.berkas === null || (teks(d.berkas?.url) && Number.isFinite(d.berkas.ukuran)))
+      && (d.terbitPada === null || teks(d.terbitPada)));
+    if (!valid) throw new Error("Respons tidak dikenal");
+    return data;
+  }
+
+  const IKON_DOKUMEN = { PDF: "PDF", DOCX: "DOC", XLSX: "XLS", JPG: "JPG", Tautan: "URL" };
+  const ukuranBerkas = (b) => (b < 1048576
+    ? `${fmt.format(Math.max(1, Math.round(b / 1024)))} KB`
+    : `${new Intl.NumberFormat("id-ID", { maximumFractionDigits: 1 }).format(b / 1048576)} MB`);
+
+  function initDokumen() {
+    const daftar = $("[data-dokumen-daftar]");
+    if (!daftar) return;
+    const status = $("[data-dokumen-status]");
+    const saringan = $("[data-dokumen-saringan]");
+    const cari = $('[data-filter-search="docs"]');
+
+    const tampilkan = (data) => {
+      const dokumen = data.map((d) => ({ ...d, unduh: gambarAman(d.berkas?.url), buka: gambarAman(d.tautan) }))
+        .filter((d) => d.unduh || d.buka);
+      daftar.innerHTML = dokumen.map((d) => {
+        const ikon = IKON_DOKUMEN[d.format] || "DOC";
+        const keterangan = d.unduh ? `${d.format} · ${ukuranBerkas(d.berkas.ukuran)}` : d.format === "Tautan" ? "Tautan luar" : `${d.format} · tautan`;
+        const tombol = d.unduh
+          ? `<a class="btn btn--ghost btn--xs" href="${esc(d.unduh)}" download target="_blank" rel="noopener" aria-label="Unduh ${esc(d.judul)}"><svg class="i i--sm" aria-hidden="true"><use href="#i-download"/></svg>Unduh</a>`
+          : `<a class="btn btn--ghost btn--xs" href="${esc(d.buka)}" target="_blank" rel="noopener" aria-label="Buka ${esc(d.judul)}"><svg class="i i--sm" aria-hidden="true"><use href="#i-external"/></svg>Buka</a>`;
+        return `<li class="doc" data-cat="${esc(d.kategori)}"><span class="doc__ic${ikon === "PDF" ? "" : " doc__ic--doc"}">${ikon}</span><span><strong>${esc(d.judul)}</strong><span>${esc(d.keterangan)}</span></span><span class="doc__size">${esc(keterangan)}</span>${tombol}</li>`;
+      }).join("");
+      if (saringan) saringan.hidden = !dokumen.length;
+      status.hidden = dokumen.length > 0;
+      status.textContent = "Dokumen sedang disiapkan. Untuk sementara, tanyakan dokumen yang Anda perlukan di meja informasi kantor.";
+      // Terapkan saringan dan pencarian yang sudah dipilih pengunjung
+      if (dokumen.length) cari?.dispatchEvent(new Event("input"));
+    };
+
+    const muat = async (fokus) => {
+      status.hidden = false;
+      status.textContent = "Memuat dokumen…";
+      try {
+        tampilkan(await muatDokumen());
+      } catch {
+        daftar.textContent = "";
+        if (saringan) saringan.hidden = true;
+        const retry = document.createElement("button");
+        retry.type = "button";
+        retry.className = "link";
+        retry.textContent = "Coba lagi";
+        retry.addEventListener("click", () => muat(true));
+        status.textContent = "Dokumen belum dapat dimuat. ";
+        status.append(retry);
+        if (fokus) retry.focus();
+      }
+    };
+
+    muat(false);
+  }
+
   /* ---------- Beranda ----------
      Teks beranda dikelola di dashboard (Beranda) dan dibaca dari
      GET /api/public/beranda (D-023). Teks di HTML sama dengan isi awal di
@@ -1882,7 +1953,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil(); initLayanan(); initBeranda(); initHalaman(); initSitus();
+    initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil(); initLayanan(); initDokumen(); initBeranda(); initHalaman(); initSitus();
     initDash(); initSim(); initDialogs(); initGag(); initFilters(); initGallery(); initFaq(); initForms(); initPesanForm(); initAuthFit(); initUtilities();
   });
 })();
