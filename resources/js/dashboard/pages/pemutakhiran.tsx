@@ -17,11 +17,14 @@ import { MODUL_PANTAU } from "@/lib/meta"
 import { useUrutkanEntri } from "@/lib/queries"
 import * as v from "@/lib/validasi"
 
+const maks = (n: number) => `Maksimal ${n} karakter.`
+
+// Batas yang sama dengan server (D-025)
 const schema = z.object({
-  konten: v.wajib("Nama konten"),
+  konten: v.wajib("Nama konten").max(120, maks(120)),
   modul: z.enum(["keliling", "dokumentasi", "jam", "layanan", "berita", "dokumen", "papan", "profil"]),
-  unit: v.wajib("Penanggung jawab"),
-  frekuensi: v.wajib("Frekuensi"),
+  unit: v.wajib("Penanggung jawab").max(120, maks(120)),
+  frekuensi: v.wajib("Frekuensi").max(120, maks(120)),
   intervalHari: v.angka({ min: 1, maks: 730, bulat: true }),
 })
 type FormPantau = z.infer<typeof schema>

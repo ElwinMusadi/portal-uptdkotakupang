@@ -49,6 +49,11 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `POST` | `/api/koleksi/layanan/hapus` | Administrator | tersedia |
 | `GET` | `/api/koleksi/halaman` | Administrator, pengelola Halaman Statis | tersedia |
 | `GET`, `PATCH` | `/api/koleksi/halaman/{id}` | Administrator, pengelola Halaman Statis | tersedia |
+| `GET` | `/api/koleksi/pemutakhiran` | semua pegawai; daftarnya sebatas modul pengguna, lengkap bagi Administrator dan pengelola Jadwal Pemutakhiran | tersedia |
+| `POST` | `/api/koleksi/pemutakhiran` | Administrator, pengelola Jadwal Pemutakhiran | tersedia |
+| `GET`, `PATCH` | `/api/koleksi/pemutakhiran/{id}` | baca: juga pengelola modul standar itu; ubah: Administrator, pengelola Jadwal Pemutakhiran | tersedia |
+| `PUT` | `/api/koleksi/pemutakhiran/urutan` | Administrator, pengelola Jadwal Pemutakhiran | tersedia |
+| `POST` | `/api/koleksi/pemutakhiran/hapus` | Administrator, pengelola Jadwal Pemutakhiran | tersedia |
 | `GET` | `/api/pengaturan` | pegawai login | tersedia |
 | `GET`, `POST` | `/api/koleksi/penyesuaian` | Administrator, pengelola Jam Pelayanan | tersedia |
 | `GET`, `PATCH` | `/api/koleksi/penyesuaian/{id}` | Administrator, pengelola Jam Pelayanan | tersedia |
@@ -114,7 +119,7 @@ Kunci modul untuk `modul` ([D-010](decisions.md#d-010--2026-10-13--penugasan-mod
 | `jam` | Jam Pelayanan (termasuk koleksi `penyesuaian`) | `halaman` | Halaman Statis |
 | `keliling` | Samsat Keliling | `pemutakhiran` | Jadwal Pemutakhiran |
 
-Endpoint konten dashboard (`/api/koleksi/…`, `/api/pengaturan/…`) wajib menolak pegawai yang tidak mengelola modul koleksi atau pengaturan itu. `/api/koleksi/faq`, `/api/koleksi/keliling`, `/api/koleksi/penyesuaian`, `/api/koleksi/pesan`, `/api/koleksi/layanan`, `/api/koleksi/halaman`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/tarif`, `/api/pengaturan/statistik`, `/api/pengaturan/kontak`, `/api/pengaturan/visiMisi`, `/api/pengaturan/profil`, dan `/api/pengaturan/beranda` sudah melakukannya; tarif boleh dibaca semua pegawai untuk Kalkulator PKB, tetapi hanya pengelolanya yang boleh menyimpan.
+Endpoint konten dashboard (`/api/koleksi/…`, `/api/pengaturan/…`) wajib menolak pegawai yang tidak mengelola modul koleksi atau pengaturan itu. `/api/koleksi/faq`, `/api/koleksi/keliling`, `/api/koleksi/penyesuaian`, `/api/koleksi/pesan`, `/api/koleksi/layanan`, `/api/koleksi/halaman`, `/api/koleksi/pemutakhiran`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/tarif`, `/api/pengaturan/statistik`, `/api/pengaturan/kontak`, `/api/pengaturan/visiMisi`, `/api/pengaturan/profil`, dan `/api/pengaturan/beranda` sudah melakukannya; tarif boleh dibaca semua pegawai untuk Kalkulator PKB, tetapi hanya pengelolanya yang boleh menyimpan, dan daftar Jadwal Pemutakhiran boleh dibaca semua pegawai, sebatas standar modul mereka.
 
 ## Tanya Jawab di dashboard
 
@@ -426,6 +431,33 @@ Halaman tidak bisa ditambah atau dihapus: `POST /api/koleksi/halaman` mendapat `
 Penyimpanan tercatat di log aktivitas sebagai "memperbarui Kebijakan Privasi" atau "memperbarui Syarat & Ketentuan".
 
 Kode: `app/Http/Controllers/Dashboard/StaticPageController.php`, `app/Http/Requests/Dashboard/UpdateStaticPageRequest.php`, `app/Rules/RichText.php`, `app/Models/StaticPage.php`, `app/Policies/StaticPagePolicy.php`, `database/migrations/*_insert_initial_static_pages.php`. Tes: `tests/Feature/StaticPageControllerTest.php`.
+
+## Jadwal Pemutakhiran di dashboard
+
+Dipakai halaman *Jadwal Pemutakhiran* dan Ringkasan di dashboard ([D-025](decisions.md#d-025--2026-10-14--jadwal-pemutakhiran-tersimpan-di-server)). Tamu mendapat `401`. Semua pegawai boleh memakai `GET /api/koleksi/pemutakhiran`, tetapi hanya pengelola Jadwal Pemutakhiran dan Administrator yang mendapat semua standar; pegawai lain mendapat standar modul yang mereka kelola saja. Selain daftar dan standar modul sendiri, pegawai yang tidak mengelola modul `pemutakhiran` mendapat `403` `{"message": "Modul Jadwal Pemutakhiran belum ditugaskan kepada Anda."}`.
+
+```json
+{
+  "id": "01m4…", "konten": "Jadwal Samsat Keliling", "modul": "keliling",
+  "unit": "Seksi Penagihan & Pelaporan", "frekuensi": "Mingguan, setiap Jumat", "intervalHari": 7,
+  "urutan": 1, "dibuat": "…", "diperbarui": "…"
+}
+```
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `GET /api/koleksi/pemutakhiran` | — | `200` standar yang diikuti pengguna, sesuai urutan. |
+| `GET /api/koleksi/pemutakhiran/{id}` | — | `200` satu standar bagi pengelola Jadwal Pemutakhiran atau pengelola modul standar itu; `404` bila tidak ada. |
+| `POST /api/koleksi/pemutakhiran` | `konten`, `modul`, `unit`, `frekuensi`, `intervalHari` | `201` di akhir daftar. |
+| `PATCH /api/koleksi/pemutakhiran/{id}` | sebagian isian di atas | `200`. Standar yang tidak berubah tidak dicatat. |
+| `PUT /api/koleksi/pemutakhiran/urutan` | `{"ids": ["…"]}` | `204`. |
+| `POST /api/koleksi/pemutakhiran/hapus` | `{"ids": ["…"]}` | `204`. |
+
+Isian divalidasi seperti formulir dashboard: nama konten, penanggung jawab, dan frekuensi wajib (maks. 120 karakter, tanpa karakter kontrol); `modul` salah satu dari `keliling`, `dokumentasi`, `jam`, `layanan`, `berita`, `dokumen`, `papan`, atau `profil` (`{"modul": ["Modul ini tidak dapat dipantau."]}`); `intervalHari` bilangan bulat 1–730.
+
+Penambahan, perubahan, urutan, dan penghapusan tercatat di log aktivitas dengan nama kontennya, mis. "memperbarui Jadwal Samsat Keliling".
+
+Kode: `app/Http/Controllers/Dashboard/UpdateStandard*`, `app/Http/Requests/Dashboard/*UpdateStandard*`, `app/Models/UpdateStandard.php`, `app/Policies/UpdateStandardPolicy.php`, `database/migrations/*_insert_initial_update_standards.php`. Tes: `tests/Feature/UpdateStandardControllerTest.php`.
 
 ## Pesan & Pengaduan di dashboard
 

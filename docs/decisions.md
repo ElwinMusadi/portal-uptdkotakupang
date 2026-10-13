@@ -331,3 +331,16 @@ Kebijakan Privasi dan Syarat & Ketentuan kini tersimpan di server, dan halaman p
 | Portal | `GET /api/public/halaman/{slug}` (tanpa ID) dibaca halamannya. Portal tidak memasang HTML dari API secara langsung: isi diurai tanpa dijalankan (`DOMParser`), lalu dibangun ulang hanya dari elemen yang diizinkan, dengan teks sebagai teks dan tautan hanya dengan skema yang diizinkan. Teks kecil di atas judul disembunyikan bila kosong. |
 
 Belum dibuat: halaman statis baru di portal, pratinjau di dashboard, dan tanggal *berlaku sejak* yang terisi otomatis.
+
+## D-025 · 2026-10-14 · Jadwal Pemutakhiran tersimpan di server
+
+Standar Jadwal Pemutakhiran kini tersimpan di server. Modul ini hanya untuk internal; portal tidak membacanya.
+
+| Hal | Keputusan |
+|---|---|
+| Penyimpanan | Koleksi `pemutakhiran` (`/api/koleksi/pemutakhiran`, tabel `update_standards`) memuat nama konten, modul yang dipantau, penanggung jawab, dan frekuensi (masing-masing maks. 120 karakter), serta batas hari (bilangan bulat 1–730). Modul yang bisa dipantau hanya delapan modul yang waktu pembaruannya bisa dihitung dashboard: Samsat Keliling, Dokumentasi Kegiatan, Jam Pelayanan, Persyaratan Layanan, Berita & Pengumuman, Regulasi & Unduhan, Papan Layanan, dan Tentang UPTD. |
+| Isi awal | **Delapan standar yang tampil di dashboard dimasukkan sebagai data awal lewat migrasi** (keputusan pemilik). Standar itu berasal dari usulan frekuensi di [RANCANGAN-UIUX.md](RANCANGAN-UIUX.md) bagian 9.2 dan tetap bisa diubah di dashboard. |
+| Akses baca | Sesuai D-010: pengelola Jadwal Pemutakhiran dan Administrator melihat semua standar; pegawai lain hanya melihat standar modul yang mereka kelola, untuk Ringkasan. Server yang menyaring daftarnya, jadi tidak ada pegawai yang ditolak saat membuka Ringkasan. |
+| Akses ubah | Administrator dan pengelola Jadwal Pemutakhiran menambah, menyunting, mengurutkan, dan **menghapus** standar (keputusan pemilik): standar adalah data internal, bukan konten portal, seperti Samsat Keliling dan penyesuaian jadwal. Pegawai lain ditolak `403`, termasuk untuk standar modulnya sendiri. |
+
+Waktu "terakhir diperbarui" tetap dihitung dashboard dari modul yang dipantau. Untuk modul yang masih tersimpan di peramban (Berita, Dokumentasi, Unduhan), waktunya berasal dari peramban masing-masing pegawai.
