@@ -9,6 +9,7 @@ use App\Http\Controllers\Dashboard\ContactController;
 use App\Http\Controllers\Dashboard\FaqController;
 use App\Http\Controllers\Dashboard\FaqDeletionController;
 use App\Http\Controllers\Dashboard\FaqOrderController;
+use App\Http\Controllers\Dashboard\HomepageController;
 use App\Http\Controllers\Dashboard\MessageController;
 use App\Http\Controllers\Dashboard\MessageDeletionController;
 use App\Http\Controllers\Dashboard\MobileServiceStopController;
@@ -27,6 +28,7 @@ use App\Http\Controllers\Dashboard\TariffController;
 use App\Http\Controllers\Dashboard\VisionMissionController;
 use App\Http\Controllers\PublicContactController;
 use App\Http\Controllers\PublicFaqController;
+use App\Http\Controllers\PublicHomepageController;
 use App\Http\Controllers\PublicMessageController;
 use App\Http\Controllers\PublicMobileServiceStopController;
 use App\Http\Controllers\PublicOpeningHoursController;
@@ -177,6 +179,15 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->can('update', [Setting::class, $profile])
         ->name('pengaturan.profil.update');
 
+    // Beranda, the homepage's texts (SettingPolicy).
+    $homepage = "'".Setting::HOMEPAGE."'";
+    Route::get('/pengaturan/beranda', [HomepageController::class, 'show'])
+        ->can('view', [Setting::class, $homepage])
+        ->name('pengaturan.beranda.show');
+    Route::put('/pengaturan/beranda', [HomepageController::class, 'update'])
+        ->can('update', [Setting::class, $homepage])
+        ->name('pengaturan.beranda.update');
+
     Route::prefix('koleksi/penyesuaian')->name('koleksi.penyesuaian.')->whereUlid('adjustment')->group(function (): void {
         Route::get('/', [ScheduleAdjustmentController::class, 'index'])->can('viewAny', ScheduleAdjustment::class)->name('index');
         Route::post('/', [ScheduleAdjustmentController::class, 'store'])->can('create', ScheduleAdjustment::class)->name('store');
@@ -233,6 +244,7 @@ Route::prefix('public')
         Route::get('/visi-misi', PublicVisionMissionController::class)->name('visi-misi.show');
         Route::get('/profil', PublicProfileController::class)->name('profil.show');
         Route::get('/layanan', PublicServiceController::class)->name('layanan.index');
+        Route::get('/beranda', PublicHomepageController::class)->name('beranda.show');
         // The contact form; also limited to 5 messages per hour per address (D-016).
         Route::post('/pesan', PublicMessageController::class)->middleware('throttle:public-messages')->name('pesan.store');
     });

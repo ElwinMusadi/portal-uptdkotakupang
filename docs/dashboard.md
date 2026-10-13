@@ -4,7 +4,7 @@ Dashboard pengelolaan konten portal **PINTU** (UPTD Pendapatan Daerah Wilayah Ko
 
 Tata letaknya mengikuti template [shadcn/ui *dashboard-01*](https://ui.shadcn.com/blocks#dashboard-01): sidebar, kartu KPI, grafik area interaktif, dan tabel data. Warna dan tipografinya disesuaikan dengan design system portal.
 
-> **Status.** Login sudah diperiksa server (lihat [Sesi login](#sesi-login)) dan Tanya Jawab, Samsat Keliling, Pesan & Pengaduan, Persyaratan Layanan, Jam Pelayanan, Papan Layanan, Tarif & Simulasi, Statistik Layanan, Kontak & Kanal, Visi & Misi, serta Tentang UPTD sudah tersimpan di server (lihat [Penyimpanan data](#penyimpanan-data)). Konten lain masih tersimpan di peramban (IndexedDB) sampai gilirannya pindah ke server; kontraknya ada di bagian [Menyambungkan ke server](#menyambungkan-ke-server-rest-api).
+> **Status.** Login sudah diperiksa server (lihat [Sesi login](#sesi-login)) dan Tanya Jawab, Samsat Keliling, Pesan & Pengaduan, Persyaratan Layanan, Jam Pelayanan, Papan Layanan, Tarif & Simulasi, Statistik Layanan, Kontak & Kanal, Visi & Misi, Tentang UPTD, serta Beranda sudah tersimpan di server (lihat [Penyimpanan data](#penyimpanan-data)). Konten lain masih tersimpan di peramban (IndexedDB) sampai gilirannya pindah ke server; kontraknya ada di bagian [Menyambungkan ke server](#menyambungkan-ke-server-rest-api).
 
 ## Menjalankan
 
@@ -152,7 +152,7 @@ Contoh entri `faq`:
 
 Tanpa `VITE_API_URL`, dashboard berjalan dalam **mode campuran** (`lib/api/hybrid.ts`, [D-011](decisions.md#d-011--2026-10-13--tanya-jawab-tersimpan-di-server)):
 
-- Koleksi di `KOLEKSI_SERVER` (saat ini `faq`, `keliling`, `penyesuaian`, `pesan`, dan `layanan`) dan pengaturan di `PENGATURAN_SERVER` (saat ini `jam`, `papan`, `tarif`, `statistik`, `kontak`, `visiMisi`, dan `profil`) dibaca dan ditulis lewat API PINTU (`/api/koleksi/…`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/tarif`, `/api/pengaturan/statistik`, `/api/pengaturan/kontak`, `/api/pengaturan/visiMisi`, `/api/pengaturan/profil`, lihat [docs/api.md](api.md#tanya-jawab-di-dashboard)). Perubahan pegawai lain muncul saat tab kembali dilihat, dan server memeriksa modul pengguna. Waktu simpan pengaturan server (`GET /api/pengaturan`) menggantikan waktu di peramban untuk pengaturan itu.
+- Koleksi di `KOLEKSI_SERVER` (saat ini `faq`, `keliling`, `penyesuaian`, `pesan`, dan `layanan`) dan pengaturan di `PENGATURAN_SERVER` (saat ini `jam`, `papan`, `tarif`, `statistik`, `kontak`, `visiMisi`, `profil`, dan `beranda`) dibaca dan ditulis lewat API PINTU (`/api/koleksi/…`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/tarif`, `/api/pengaturan/statistik`, `/api/pengaturan/kontak`, `/api/pengaturan/visiMisi`, `/api/pengaturan/profil`, `/api/pengaturan/beranda`, lihat [docs/api.md](api.md#tanya-jawab-di-dashboard)). Perubahan pegawai lain muncul saat tab kembali dilihat, dan server memeriksa modul pengguna. Waktu simpan pengaturan server (`GET /api/pengaturan`) menggantikan waktu di peramban untuk pengaturan itu.
 - Koleksi dan pengaturan lain serta unggahan tersimpan di IndexedDB peramban: database `pintu-dashboard`, store `data`, dengan kunci `koleksi:<nama>`, `pengaturan:<nama>`, `aktivitas`, dan `meta`.
 - Saat pertama dibuka, dashboard mengisi data lokal awal dari isi portal yang sudah ada (`resources/js/dashboard/lib/api/seed.ts`). Tanya jawab contoh di sana tidak dipakai lagi dan tidak dipindahkan ke server.
 - Foto dan berkas disimpan sebagai data URL. Foto dikecilkan dulu menjadi maks. 1600 px.
@@ -174,7 +174,7 @@ Tanpa `VITE_API_URL`, dashboard berjalan dalam **mode campuran** (`lib/api/hybri
 
 ## Menyambungkan ke server (REST API)
 
-> **Sebagian tersedia.** Laravel sudah menyediakan koleksi `faq`, `keliling`, `penyesuaian`, `pesan`, dan `layanan` (tanpa `PUT /urutan` untuk `keliling` dan `penyesuaian`, yang diurutkan menurut hari, jam, atau tanggal), pengaturan `jam`, `papan`, `tarif`, `statistik`, `kontak`, `visiMisi`, dan `profil`, `GET /pengaturan`, serta `GET /aktivitas` ([docs/api.md](api.md#tanya-jawab-di-dashboard)); mode campuran memakainya otomatis. Endpoint lain di bawah adalah sasaran modul berikutnya, jadi `VITE_API_URL` baru berguna setelah semuanya tersedia. `DELETE /aktivitas` sengaja tidak dibuat: log aktivitas server tidak bisa dikosongkan dari dashboard.
+> **Sebagian tersedia.** Laravel sudah menyediakan koleksi `faq`, `keliling`, `penyesuaian`, `pesan`, dan `layanan` (tanpa `PUT /urutan` untuk `keliling` dan `penyesuaian`, yang diurutkan menurut hari, jam, atau tanggal), pengaturan `jam`, `papan`, `tarif`, `statistik`, `kontak`, `visiMisi`, `profil`, dan `beranda`, `GET /pengaturan`, serta `GET /aktivitas` ([docs/api.md](api.md#tanya-jawab-di-dashboard)); mode campuran memakainya otomatis. Endpoint lain di bawah adalah sasaran modul berikutnya, jadi `VITE_API_URL` baru berguna setelah semuanya tersedia. `DELETE /aktivitas` sengaja tidak dibuat: log aktivitas server tidak bisa dikosongkan dari dashboard.
 
 Build dengan alamat API, lalu semua baca/tulis memakai REST. Karena dashboard dan API kini satu origin, alamatnya cukup `/api`:
 
@@ -237,7 +237,7 @@ Pegawai UPTD hanya melihat modul yang ditugaskan Administrator ([D-010](decision
 - `app/nav.ts` adalah satu-satunya sumber: setiap item menu konten punya `modul`, item khusus Administrator punya `khusus`. `navUntuk()` menyaring menu samping, pencarian, dan "Buat konten"; `GRUP_MODUL` menyusun centang modul di panel akun dengan judul dan kelompok yang sama dengan menu.
 - `Layout` mencocokkan alamat yang dibuka dengan item menu. Bila item itu tidak boleh dilihat, halaman diganti pesan "Modul ini belum ditugaskan kepada Anda" atau "Khusus Administrator".
 - `useItemAlur()` dan `usePemutakhiran()` di `lib/hitung.ts` menyaring konten dan jadwal per modul, sehingga Ringkasan dan Alur Publikasi ikut terbatas. Kartu dan grafik pesan hanya tampil bagi pengelola Pesan & Pengaduan.
-- Untuk Tanya Jawab, Samsat Keliling, Pesan & Pengaduan, Persyaratan Layanan, Jam Pelayanan, Papan Layanan, Tarif & Simulasi, Statistik Layanan, Kontak & Kanal, Visi & Misi, dan Tentang UPTD, server ikut menegakkannya (`FaqPolicy`, `MobileServiceStopPolicy`, `MessagePolicy`, `ServicePolicy`, `SettingPolicy`, `ScheduleAdjustmentPolicy`): pegawai tanpa modul itu mendapat `403`, kecuali saat membaca tarif, yang dipakai Kalkulator PKB semua pegawai. Karena itu Ringkasan hanya memuat jadwal Samsat Keliling bagi pengelolanya dan pengelola Jadwal Pemutakhiran (`useKoleksi(…, { aktif })`), isi Papan Layanan hanya bagi pengelolanya (`usePengaturan(…, { aktif })`), dan pesan (lencana menu, kartu, grafik, antrean kerja, jumlah di *Pengaturan › Data*) hanya bagi pengelola Pesan & Pengaduan; yang lain memakai waktu simpannya. Untuk konten yang masih di IndexedDB, pembatasan ini baru mengatur tampilan; endpoint konten berikutnya wajib memeriksa modul yang sama.
+- Untuk Tanya Jawab, Samsat Keliling, Pesan & Pengaduan, Persyaratan Layanan, Jam Pelayanan, Papan Layanan, Tarif & Simulasi, Statistik Layanan, Kontak & Kanal, Visi & Misi, Tentang UPTD, dan Beranda, server ikut menegakkannya (`FaqPolicy`, `MobileServiceStopPolicy`, `MessagePolicy`, `ServicePolicy`, `SettingPolicy`, `ScheduleAdjustmentPolicy`): pegawai tanpa modul itu mendapat `403`, kecuali saat membaca tarif, yang dipakai Kalkulator PKB semua pegawai. Karena itu Ringkasan hanya memuat jadwal Samsat Keliling bagi pengelolanya dan pengelola Jadwal Pemutakhiran (`useKoleksi(…, { aktif })`), isi Papan Layanan hanya bagi pengelolanya (`usePengaturan(…, { aktif })`), dan pesan (lencana menu, kartu, grafik, antrean kerja, jumlah di *Pengaturan › Data*) hanya bagi pengelola Pesan & Pengaduan; yang lain memakai waktu simpannya. Untuk konten yang masih di IndexedDB, pembatasan ini baru mengatur tampilan; endpoint konten berikutnya wajib memeriksa modul yang sama.
 
 ## Tanya Jawab
 
@@ -312,6 +312,13 @@ Halaman *Persyaratan Layanan* (`#/layanan`, `pages/layanan/`) tersimpan di serve
 - Pengelola modul menyiapkan draf, mengajukan, memeriksa, dan meneruskan ke penyetuju. Administrator menyetujui-dan-menerbitkan, mengembalikan dari tahap persetujuan, menarik dari portal, mengubah urutan, dan menghapus. Penyunting terkunci bagi pegawai lain selama layanan menunggu persetujuan atau terbit.
 - Hanya layanan terbit yang tampil di halaman Layanan dan, bila bertanda *Tampil di beranda*, sebagai tab *Layanan utama* di beranda (`GET /api/public/layanan`).
 - Enam layanan yang sudah tampil di portal dimasukkan sebagai data awal berstatus Terbit lewat migrasi. Layanan contoh dari penyimpanan peramban tidak dipindahkan.
+
+## Beranda
+
+Halaman *Beranda* (`#/beranda`, `pages/beranda.tsx`) tersimpan di server sejak [D-023](decisions.md#d-023--2026-10-14--teks-beranda-tersimpan-di-server-teks-html-tetap-sebagai-isi-awal) sebagai pengaturan `beranda`.
+
+- Teks yang tertulis di HTML beranda menjadi isi awal dan tetap tampil sampai dokumen pertama kali disimpan; setelah itu beranda memakai isi dari server (`GET /api/public/beranda`). Bila API gagal, teks HTML yang tampil.
+- Ikon butir nilai utama dan peta kanal mengikuti urutannya; butir tambahan memakai ikon umum.
 
 ## Pesan & Pengaduan
 

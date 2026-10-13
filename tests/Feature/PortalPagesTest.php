@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Message;
+use App\Models\Setting;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestWith;
 use Tests\TestCase;
@@ -184,6 +185,24 @@ class PortalPagesTest extends TestCase
         $this->assertSame(1, preg_match('/<section[^>]*\bid="layanan-utama"[^>]*>.*?<\/section>/s', $home, $section));
         $this->assertStringNotContainsString('role="tab"', $section[0]);
         $this->assertStringContainsString('<p class="muted" role="status">Memuat persyaratan layanan…</p>', $section[0]);
+    }
+
+    public function test_keeps_the_initial_homepage_texts_in_the_markup_for_the_public_api_to_replace(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+        $text = preg_replace('/[ \t\r\n]+/', ' ', html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+
+        $initial = Setting::INITIAL_HOMEPAGE;
+        array_walk_recursive($initial, function (mixed $value, string|int $key) use ($text): void {
+            if (is_string($value) && $key !== 'id' && $key !== 'tombolUrl') {
+                $this->assertStringContainsString($value, $text);
+            }
+        });
+        foreach (['data-beranda-hero-judul', 'data-beranda-tombol', 'data-beranda-catatan ', 'data-beranda-nilai', 'data-beranda-mitra', 'data-beranda-kanal', 'data-beranda-catatan-notis', 'data-beranda-wajib', 'data-beranda-jaminan'] as $hook) {
+            $this->assertStringContainsString($hook, $html);
+        }
+        $this->assertSame(4, substr_count($html, 'data-beranda-judul="'));
+        $this->assertSame(6, substr_count($html, 'data-beranda-teks="'));
     }
 
     public function test_sends_the_contact_form_to_the_message_api_with_the_services_it_accepts(): void

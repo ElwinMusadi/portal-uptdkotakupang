@@ -1,3 +1,4 @@
+import { IconServer } from "@tabler/icons-react"
 import { z } from "zod"
 
 import { Bagian, Baris, Halaman, PengantarHalaman } from "@/components/data/page"
@@ -5,30 +6,50 @@ import { FieldArea, FieldTeks } from "@/components/form/fields"
 import { FieldJudul2Nada, IsianItem } from "@/components/form/item-fields"
 import { DaftarObjek, FieldDaftarTeks } from "@/components/form/list-fields"
 import { FormPengaturan } from "@/components/form/settings-form"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { newId } from "@/lib/id"
 import * as v from "@/lib/validasi"
 
-const judul2 = z.object({ judul: v.wajib("Judul"), lanjutan: v.teks, deskripsi: v.teks })
+const maks = (n: number) => `Maksimal ${n} karakter.`
 
+const judul2 = z.object({
+  judul: v.wajib("Judul").max(80, maks(80)),
+  lanjutan: v.teks.max(80, maks(80)),
+  deskripsi: v.teks.max(300, maks(300)),
+})
+
+// Batas yang sama dengan server (UpdateHomepageRequest)
 const schema = z.object({
   hero: z.object({
-    eyebrow: v.teks,
-    judul: v.wajib("Judul"),
-    lanjutan: v.teks,
-    deskripsi: v.wajib("Deskripsi"),
-    tombolLabel: v.wajib("Label tombol"),
-    tombolUrl: v.tautan,
-    catatan: v.teks,
+    eyebrow: v.teks.max(120, maks(120)),
+    judul: v.wajib("Judul").max(80, maks(80)),
+    lanjutan: v.teks.max(80, maks(80)),
+    deskripsi: v.wajib("Deskripsi").max(300, maks(300)),
+    tombolLabel: v.wajib("Label tombol").max(40, maks(40)),
+    tombolUrl: v.tautan.max(300, maks(300)),
+    catatan: v.teks.max(160, maks(160)),
   }),
-  nilai: z.array(z.object({ id: z.string(), judul: v.wajib("Judul"), deskripsi: v.teks })),
+  nilai: z
+    .array(z.object({ id: z.string(), judul: v.wajib("Judul").max(60, maks(60)), deskripsi: v.teks.max(200, maks(200)) }))
+    .max(6, "Maksimal 6 nilai utama."),
   layananUtama: judul2,
-  mitra: z.array(z.object({ id: z.string(), singkatan: z.string().trim().max(3, "Maks. 3 huruf."), nama: v.wajib("Nama mitra") })),
-  kanal: z.array(z.object({ id: z.string(), kelompok: v.wajib("Kelompok"), item: z.array(z.string()) })),
+  mitra: z
+    .array(z.object({ id: z.string(), singkatan: z.string().trim().max(3, "Maks. 3 huruf."), nama: v.wajib("Nama mitra").max(60, maks(60)) }))
+    .max(12, "Maksimal 12 mitra."),
+  kanal: z
+    .array(
+      z.object({
+        id: z.string(),
+        kelompok: v.wajib("Kelompok").max(40, maks(40)),
+        item: z.array(z.string().max(60, maks(60))).max(8, "Maksimal 8 kanal per kelompok."),
+      })
+    )
+    .max(8, "Maksimal 8 kelompok kanal."),
   integritas: judul2,
   biaya: judul2.extend({
-    catatanNotis: v.teks,
-    wajibDibawa: v.teks,
-    jaminan: z.array(z.string()),
+    catatanNotis: v.teks.max(200, maks(200)),
+    wajibDibawa: v.teks.max(200, maks(200)),
+    jaminan: z.array(z.string().max(60, maks(60))).max(6, "Maksimal 6 jaminan."),
   }),
   penutup: judul2,
 })
@@ -63,6 +84,15 @@ export default function HalamanBeranda() {
           </a>
         ))}
       </nav>
+      <Alert>
+        <IconServer />
+        <AlertTitle>Tersimpan di server</AlertTitle>
+        <AlertDescription>
+          Teks ini dipakai bersama semua pengelola Beranda dan langsung tampil di beranda portal. Sebelum disimpan
+          pertama kali, isinya sama dengan teks yang sudah tertulis di beranda. Ikon setiap butir nilai dan kanal
+          mengikuti urutannya; butir tambahan memakai ikon umum.
+        </AlertDescription>
+      </Alert>
       <FormPengaturan nama="beranda" schema={schema}>
         {(form) => {
           const n = form.watch()

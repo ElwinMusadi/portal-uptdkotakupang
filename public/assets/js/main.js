@@ -866,6 +866,92 @@
     muat(null);
   }
 
+  /* ---------- Beranda ----------
+     Teks beranda dikelola di dashboard (Beranda) dan dibaca dari
+     GET /api/public/beranda (D-023). Teks di HTML sama dengan isi awal di
+     server dan tetap tampil; skrip menggantinya hanya bila dokumen sudah
+     pernah disimpan. Bila API gagal, teks HTML tetap tampil. Ikon butir
+     mengikuti posisinya; butir tambahan memakai ikon umum. */
+  async function muatBeranda() {
+    const b = await ambilJson("/api/public/beranda");
+    const teks = (x) => typeof x === "string";
+    const judulDua = (x) => teks(x?.judul) && teks(x.lanjutan) && teks(x.deskripsi);
+    const valid = ["eyebrow", "judul", "lanjutan", "deskripsi", "tombolLabel", "tombolUrl", "catatan"].every((f) => teks(b?.hero?.[f]))
+      && ["layananUtama", "integritas", "biaya", "penutup"].every((k) => judulDua(b[k]))
+      && Array.isArray(b.nilai) && b.nilai.every((n) => teks(n?.judul) && teks(n.deskripsi))
+      && Array.isArray(b.mitra) && b.mitra.every((m) => teks(m?.singkatan) && teks(m.nama))
+      && Array.isArray(b.kanal) && b.kanal.every((k) => teks(k?.kelompok) && Array.isArray(k.item) && k.item.every(teks))
+      && teks(b.biaya.catatanNotis) && teks(b.biaya.wajibDibawa) && Array.isArray(b.biaya.jaminan) && b.biaya.jaminan.every(teks)
+      && (b.diperbarui === null || teks(b.diperbarui));
+    if (!valid) throw new Error("Respons tidak dikenal");
+    return b;
+  }
+
+  function initBeranda() {
+    const judulHero = $("[data-beranda-hero-judul]");
+    if (!judulHero) return;
+    const nilai = $("[data-beranda-nilai]");
+    const mitra = $("[data-beranda-mitra]");
+    const kanal = $("[data-beranda-kanal]");
+    // Ikon yang tertulis di HTML, menurut posisi butirnya
+    const ikonNilai = $$(".feature > svg", nilai).map((el) => el.outerHTML);
+    const ikonKanal = $$(".kanal__col", kanal).map((kolom) => $$(".kanal__ic", kolom).map((el) => el.outerHTML));
+    const IKON_NILAI = '<svg class="i" aria-hidden="true"><use href="#i-check-circle"/></svg>';
+    const IKON_KANAL = '<span class="kanal__ic"><svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>';
+
+    const tampilkan = (b) => {
+      $$("[data-beranda-teks]").forEach((el) => {
+        const [bagian, isian] = el.dataset.berandaTeks.split(".");
+        el.textContent = b[bagian][isian];
+      });
+      $$("[data-beranda-judul]").forEach((el) => {
+        const j = b[el.dataset.berandaJudul];
+        duaNada(el, j.lanjutan ? `${j.judul} ` : j.judul, j.lanjutan);
+      });
+
+      // Pembuka: lanjutan judul di baris baru
+      const lanjutan = document.createElement("span");
+      lanjutan.className = "tone";
+      lanjutan.textContent = b.hero.lanjutan;
+      judulHero.replaceChildren(b.hero.judul, ...(b.hero.lanjutan ? [document.createElement("br"), lanjutan] : []));
+      const tombol = $("[data-beranda-tombol]");
+      const url = tautanAman(b.hero.tombolUrl);
+      tombol.closest(".hero__actions").hidden = !url;
+      if (url) {
+        tombol.href = url;
+        tombol.replaceChildren(b.hero.tombolLabel, $("svg", tombol));
+      }
+      const catatan = $("[data-beranda-catatan]");
+      catatan.replaceChildren($("svg", catatan), b.hero.catatan);
+      catatan.hidden = !b.hero.catatan;
+
+      nilai.innerHTML = b.nilai.map((n, i) =>
+        `<div class="feature is-in" data-reveal>${ikonNilai[i] ?? IKON_NILAI}<h2 class="title">${esc(n.judul)}</h2>${n.deskripsi ? `<p>${esc(n.deskripsi)}</p>` : ""}</div>`).join("");
+      nilai.closest("section").hidden = !b.nilai.length;
+      mitra.innerHTML = b.mitra.map((m) => `<li class="badge">${m.singkatan ? `<span class="badge__dot">${esc(m.singkatan)}</span>` : ""}${esc(m.nama)}</li>`).join("");
+      mitra.closest("section").hidden = !b.mitra.length;
+      kanal.innerHTML = b.kanal.map((k, g) => `<div class="kanal__col"><p class="eyebrow">${esc(k.kelompok)}</p><ul role="list">${k.item.map((t, j) =>
+        `<li>${ikonKanal[g]?.[j] ?? IKON_KANAL}${esc(t)}</li>`).join("")}</ul></div>`).join("");
+
+      // Biaya: kalimat pertama catatan notis ditebalkan
+      const notis = $("[data-beranda-catatan-notis]");
+      const kalimat = b.biaya.catatanNotis.match(/^([\s\S]*?[.!?])\s+(\S[\s\S]*)$/);
+      const tebal = document.createElement("strong");
+      tebal.textContent = kalimat ? kalimat[1] : b.biaya.catatanNotis;
+      notis.replaceChildren(tebal, ...(kalimat ? [` ${kalimat[2]}`] : []));
+      notis.hidden = !b.biaya.catatanNotis;
+      const wajib = $("[data-beranda-wajib]");
+      wajib.textContent = `Wajib dibawa: ${b.biaya.wajibDibawa}`;
+      wajib.hidden = !b.biaya.wajibDibawa;
+      $("[data-beranda-jaminan]").innerHTML = b.biaya.jaminan.map((t) =>
+        `<li><svg class="i i--sm" aria-hidden="true"><use href="#i-check"/></svg>${esc(t)}</li>`).join("");
+    };
+
+    muatBeranda()
+      .then((b) => { if (typeof b.diperbarui === "string") tampilkan(b); })
+      .catch(() => {});
+  }
+
   /* ---------- Samsat Keliling ----------
      Jadwal dikelola di dashboard dan dibaca dari GET /api/public/keliling,
      yang hanya memberikan lokasi aktif. Teksnya di-escape sebelum dipasang.
@@ -1665,7 +1751,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil(); initLayanan();
+    initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil(); initLayanan(); initBeranda();
     initDash(); initSim(); initDialogs(); initGag(); initFilters(); initGallery(); initFaq(); initForms(); initPesanForm(); initAuthFit(); initUtilities();
   });
 })();

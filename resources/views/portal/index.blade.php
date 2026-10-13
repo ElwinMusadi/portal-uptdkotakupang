@@ -699,26 +699,26 @@
             width="102"
             height="108"
           />
-          <p class="eyebrow hero__eyebrow" data-reveal>
+          <p class="eyebrow hero__eyebrow" data-beranda-teks="hero.eyebrow" data-reveal>
             UPTD Pendapatan Daerah Wilayah Kota Kupang · SAMSAT Kota Kupang
           </p>
-          <h1 class="h-hero hero__title" data-reveal>
+          <h1 class="h-hero hero__title" data-beranda-hero-judul data-reveal>
             Semua informasi Samsat.<br /><span class="tone"
               >Lewat satu pintu.</span
             >
           </h1>
-          <p class="lead hero__lead" data-reveal>
+          <p class="lead hero__lead" data-beranda-teks="hero.deskripsi" data-reveal>
             PINTU adalah portal resmi informasi dan pelayanan pajak kendaraan di
             Kota Kupang. Cek persyaratan, jadwal, dan lokasi layanan sebelum
             Anda berangkat.
           </p>
           <div class="hero__actions" data-reveal>
-            <a class="btn btn--dark" href="layanan.html"
+            <a class="btn btn--dark" href="layanan.html" data-beranda-tombol
               >Cek Persyaratan Layanan<svg class="i" aria-hidden="true">
                 <use href="#i-arrow-right" /></svg
             ></a>
           </div>
-          <p class="trust hero__trust" data-reveal>
+          <p class="trust hero__trust" data-beranda-catatan data-reveal>
             <svg class="i" aria-hidden="true"><use href="#i-lock" /></svg>Gratis
             dan tanpa perantara. Setiap informasi diverifikasi petugas UPTD.
           </p>
@@ -842,7 +842,7 @@
       <!-- 3 · Strip tiga fitur -->
       <section class="section section--tight">
         <div class="container">
-          <div class="features">
+          <div class="features" data-beranda-nilai>
             <div class="feature" data-reveal>
               <svg class="i" aria-hidden="true">
                 <use href="#i-list-check" />
@@ -879,11 +879,11 @@
           <div class="split split--middle views__head">
             <div data-reveal>
               <p class="eyebrow">Layanan utama</p>
-              <h2 class="h2" style="margin-top: 20px">
+              <h2 class="h2" style="margin-top: 20px" data-beranda-judul="layananUtama">
                 Dibuat untuk wajib pajak.
                 <span class="tone">Dirancang agar cukup sekali datang.</span>
               </h2>
-              <p class="body" style="margin-top: 20px">
+              <p class="body" style="margin-top: 20px" data-beranda-teks="layananUtama.deskripsi">
                 Pilih layanan, siapkan berkas dari rumah, lalu datang ke loket
                 yang tepat.
               </p>
@@ -908,7 +908,7 @@
       <section class="mitra" aria-labelledby="mitra-title">
         <div class="container center">
           <p class="eyebrow" id="mitra-title">Satu atap bersama</p>
-          <ul class="badges" role="list" data-reveal>
+          <ul class="badges" role="list" data-beranda-mitra data-reveal>
             <li class="badge">
               <span class="badge__dot">BP</span>BPAD Provinsi NTT
             </li>
@@ -1069,7 +1069,7 @@
             <path d="M500 0 C500 60 700 50 700 110" />
             <path d="M500 0 C500 60 900 50 900 110" />
           </svg>
-          <div class="kanal__cols" data-reveal>
+          <div class="kanal__cols" data-beranda-kanal data-reveal>
             <div class="kanal__col">
               <p class="eyebrow">Kantor</p>
               <ul role="list">
@@ -1377,11 +1377,11 @@
             <use href="#i-lock" />
           </svg>
           <p class="eyebrow">Integritas</p>
-          <h2 class="h-giant statement__title">
+          <h2 class="h-giant statement__title" data-beranda-judul="integritas">
             Bayar sesuai notis.
             <span class="tone">Tidak lebih sepeser pun.</span>
           </h2>
-          <p class="lead statement__lead">
+          <p class="lead statement__lead" data-beranda-teks="integritas.deskripsi">
             Seluruh pembayaran tercatat di sistem dan dapat dilakukan non-tunai.
             Petugas kami tidak pernah meminta uang atau data pribadi lewat pesan
             pribadi.
@@ -1394,18 +1394,18 @@
         <div class="container split split--middle">
           <div data-reveal>
             <p class="eyebrow">Biaya layanan</p>
-            <h2 class="h2" style="margin-top: 20px">
+            <h2 class="h2" style="margin-top: 20px" data-beranda-judul="biaya">
               Biaya jelas. <span class="tone">Tanpa kejutan.</span>
             </h2>
-            <p class="body" style="margin-top: 20px">
+            <p class="body" style="margin-top: 20px" data-beranda-teks="biaya.deskripsi">
               Pajak kendaraan dihitung sistem dan tercetak di notis. Layanan
               pendukung di kantor ini tidak dipungut biaya.
             </p>
-            <p class="small" style="margin-top: 24px">
+            <p class="small" style="margin-top: 24px" data-beranda-catatan-notis>
               <strong>Bayar sesuai notis.</strong> Tunai di kasir atau non-tunai
               lewat QRIS.
             </p>
-            <p class="micro muted" style="margin-top: 8px">
+            <p class="micro muted" style="margin-top: 8px" data-beranda-wajib>
               Wajib dibawa: KTP asli dan STNK asli pemilik kendaraan.
             </p>
           </div>
@@ -1419,7 +1419,7 @@
             <a class="btn btn--dark btn--block price__cta" href="unduhan.html"
               >Lihat standar pelayanan resmi</a
             >
-            <ul class="price__bullets" role="list">
+            <ul class="price__bullets" role="list" data-beranda-jaminan>
               <li>
                 <svg class="i i--sm" aria-hidden="true">
                   <use href="#i-check" /></svg
@@ -1486,11 +1486,11 @@
       <section class="section section--flush-top outro">
         <div class="container outro__inner" data-reveal>
           <div>
-            <h2 class="h-giant">
+            <h2 class="h-giant" data-beranda-judul="penutup">
               Map apa saja boleh.
               <span class="tone">Asal jangan lupa dibawa.</span>
             </h2>
-            <p class="lead outro__kicker">
+            <p class="lead outro__kicker" data-beranda-teks="penutup.deskripsi">
               Hampir setiap layanan meminta satu map. Kami hanya mengingatkan.
             </p>
           </div>

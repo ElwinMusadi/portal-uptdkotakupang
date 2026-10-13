@@ -15,6 +15,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET` | `/api/public/visi-misi` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/profil` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/layanan` | anonim, hanya baca | tersedia |
+| `GET` | `/api/public/beranda` | anonim, hanya baca | tersedia |
 | `POST` | `/api/public/pesan` | anonim, formulir Kontak | tersedia |
 | `POST` | `/api/masuk` | halaman Login Pegawai | tersedia |
 | `GET` | `/api/sesi` | pegawai login | tersedia |
@@ -37,6 +38,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET`, `PUT` | `/api/pengaturan/kontak` | Administrator, pengelola Kontak & Kanal | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/visiMisi` | Administrator, pengelola Visi & Misi | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/profil` | Administrator, pengelola Tentang UPTD | tersedia |
+| `GET`, `PUT` | `/api/pengaturan/beranda` | Administrator, pengelola Beranda | tersedia |
 | `GET`, `POST` | `/api/koleksi/pesan` | Administrator, pengelola Pesan & Pengaduan | tersedia |
 | `GET`, `PATCH` | `/api/koleksi/pesan/{id}` | Administrator, pengelola Pesan & Pengaduan | tersedia |
 | `POST` | `/api/koleksi/pesan/hapus` | Administrator | tersedia |
@@ -109,7 +111,7 @@ Kunci modul untuk `modul` ([D-010](decisions.md#d-010--2026-10-13--penugasan-mod
 | `jam` | Jam Pelayanan (termasuk koleksi `penyesuaian`) | `halaman` | Halaman Statis |
 | `keliling` | Samsat Keliling | `pemutakhiran` | Jadwal Pemutakhiran |
 
-Endpoint konten dashboard (`/api/koleksi/…`, `/api/pengaturan/…`) wajib menolak pegawai yang tidak mengelola modul koleksi atau pengaturan itu. `/api/koleksi/faq`, `/api/koleksi/keliling`, `/api/koleksi/penyesuaian`, `/api/koleksi/pesan`, `/api/koleksi/layanan`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/tarif`, `/api/pengaturan/statistik`, `/api/pengaturan/kontak`, `/api/pengaturan/visiMisi`, dan `/api/pengaturan/profil` sudah melakukannya; tarif boleh dibaca semua pegawai untuk Kalkulator PKB, tetapi hanya pengelolanya yang boleh menyimpan.
+Endpoint konten dashboard (`/api/koleksi/…`, `/api/pengaturan/…`) wajib menolak pegawai yang tidak mengelola modul koleksi atau pengaturan itu. `/api/koleksi/faq`, `/api/koleksi/keliling`, `/api/koleksi/penyesuaian`, `/api/koleksi/pesan`, `/api/koleksi/layanan`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/tarif`, `/api/pengaturan/statistik`, `/api/pengaturan/kontak`, `/api/pengaturan/visiMisi`, `/api/pengaturan/profil`, dan `/api/pengaturan/beranda` sudah melakukannya; tarif boleh dibaca semua pegawai untuk Kalkulator PKB, tetapi hanya pengelolanya yang boleh menyimpan.
 
 ## Tanya Jawab di dashboard
 
@@ -370,6 +372,32 @@ Isi divalidasi seperti formulir dashboard: nama (maks. 120 karakter), slug unik 
 
 Kode: `app/Http/Controllers/Dashboard/Service*`, `app/Http/Requests/Dashboard/*Service*`, `app/Actions/UpdateService.php`, `app/Models/Service.php`, `app/Enums/WorkflowStatus.php`, `app/Policies/ServicePolicy.php`, `database/migrations/*_insert_initial_services.php`. Tes: `tests/Feature/ServiceControllerTest.php`, `ServiceWorkflowTest.php`.
 
+## Beranda di dashboard
+
+Dipakai halaman *Beranda* di dashboard ([D-023](decisions.md#d-023--2026-10-14--teks-beranda-tersimpan-di-server-teks-html-tetap-sebagai-isi-awal)). Tamu mendapat `401`; pegawai yang tidak mengelola modul `beranda` mendapat `403` `{"message": "Modul Beranda belum ditugaskan kepada Anda."}`.
+
+```json
+{
+  "hero": { "eyebrow": "…", "judul": "Semua informasi Samsat.", "lanjutan": "Lewat satu pintu.", "deskripsi": "…", "tombolLabel": "Cek Persyaratan Layanan", "tombolUrl": "layanan.html", "catatan": "…" },
+  "nilai": [{ "id": "nilai-1", "judul": "Persyaratan jelas.", "deskripsi": "…" }],
+  "layananUtama": { "judul": "…", "lanjutan": "…", "deskripsi": "…" },
+  "mitra": [{ "id": "mitra-1", "singkatan": "BP", "nama": "BPAD Provinsi NTT" }],
+  "kanal": [{ "id": "kanal-1", "kelompok": "Kantor", "item": ["Loket pajak tahunan", "…"] }],
+  "integritas": { "judul": "…", "lanjutan": "…", "deskripsi": "…" },
+  "biaya": { "judul": "…", "lanjutan": "…", "deskripsi": "…", "catatanNotis": "…", "wajibDibawa": "…", "jaminan": ["Bukti bayar resmi", "…"] },
+  "penutup": { "judul": "…", "lanjutan": "…", "deskripsi": "…" }
+}
+```
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `GET /api/pengaturan/beranda` | — | `200` dokumen di atas. Sebelum pertama kali disimpan: teks yang tertulis di HTML beranda. |
+| `PUT /api/pengaturan/beranda` | dokumen lengkap | `200` dokumen tersimpan; isian opsional yang kosong disimpan sebagai `""` dan butir kosong di daftar kanal dan jaminan dibuang. Isi yang sama dengan yang tersimpan tidak dicatat. `422` bila judul pembuka (maks. 80 karakter), deskripsi pembuka (maks. 300), label tombol (maks. 40), judul bagian, judul nilai, nama mitra, atau nama kelompok kanal kosong; tujuan tombol bukan tautan portal yang sah; singkatan mitra lebih dari 3 huruf; batas jumlah butir terlampaui; ID butir ganda; atau teks berisi karakter kontrol. |
+
+Penyimpanan tercatat di log aktivitas sebagai "memperbarui Beranda".
+
+Kode: `app/Http/Controllers/Dashboard/HomepageController.php`, `app/Http/Requests/Dashboard/UpdateHomepageRequest.php`, `app/Actions/SaveSetting.php`, `app/Models/Setting.php`. Tes: `tests/Feature/HomepageControllerTest.php`.
+
 ## Pesan & Pengaduan di dashboard
 
 Dipakai halaman *Pesan & Pengaduan* di dashboard ([D-016](decisions.md#d-016--2026-10-13--pesan--pengaduan-tersimpan-di-server)). Tamu mendapat `401`; pegawai yang tidak mengelola modul `pesan` mendapat `403` `{"message": "Modul Pesan & Pengaduan belum ditugaskan kepada Anda."}`.
@@ -555,6 +583,18 @@ Halaman Layanan dan bagian *Layanan utama* di beranda ([D-022](decisions.md#d-02
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 
 Kode: `app/Http/Controllers/PublicServiceController.php`, `app/Actions/ListPublicServices.php`. Tes: `tests/Feature/PublicServiceControllerTest.php`.
+
+## `GET /api/public/beranda`
+
+Teks beranda portal ([D-023](decisions.md#d-023--2026-10-14--teks-beranda-tersimpan-di-server-teks-html-tetap-sebagai-isi-awal), `initBeranda()` di `public/assets/js/main.js`). Bentuknya sama dengan dokumen dashboard tanpa `id` butir, ditambah `diperbarui`: waktu terakhir disimpan, atau `null` selama isinya masih teks di HTML.
+
+| Hal | Perilaku |
+|---|---|
+| Berhasil | `200`. Bila `diperbarui` `null`, beranda membiarkan teks HTML; bila tidak, teksnya diganti isi ini. Teks wajib ditampilkan sebagai teks polos; tujuan tombol dipasang hanya bila skemanya diizinkan. |
+| Galat | `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah batas laju yang sama dengan `GET /api/public/faq`; `503` bila data tidak bisa dibaca. Beranda tetap menampilkan teks HTML-nya. |
+| Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
+
+Kode: `app/Http/Controllers/PublicHomepageController.php`, `app/Actions/ShowPublicHomepage.php`. Tes: `tests/Feature/PublicHomepageControllerTest.php`.
 
 ## `POST /api/public/pesan`
 

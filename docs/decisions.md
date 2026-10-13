@@ -300,3 +300,19 @@ Persyaratan Layanan kini tersimpan di server. Ini koleksi pertama yang memakai a
 Kontrak alur ini (`WorkflowStatus`) disiapkan untuk dipakai juga oleh Berita, Dokumentasi, dan Regulasi & Unduhan saat pindah ke server.
 
 Belum dibuat: peran terpisah per langkah (penyedia, pemeriksa, penyetuju, pengelola publikasi) dan versi draf untuk layanan yang sudah terbit. Saat ini layanan terbit diubah langsung oleh Administrator, atau ditarik ke arsip lalu dipulihkan ke draf.
+
+## D-023 · 2026-10-14 · Teks Beranda tersimpan di server; teks HTML tetap sebagai isi awal
+
+Teks beranda kini tersimpan di server: pembuka, nilai utama, judul *Layanan utama*, mitra, peta kanal, integritas, biaya, dan penutup.
+
+| Hal | Keputusan |
+|---|---|
+| Penyimpanan | Dokumen pengaturan `beranda` (`/api/pengaturan/beranda`) memuat pembuka (baris atas, judul dan lanjutannya, deskripsi, label dan tujuan tombol, catatan), nilai utama (maks. 6), judul dan deskripsi *Layanan utama*, integritas, biaya, dan penutup, mitra (maks. 12, singkatan maks. 3 huruf), peta kanal (maks. 8 kelompok, masing-masing maks. 8 kanal), serta catatan notis, yang wajib dibawa, dan jaminan biaya (maks. 6). Tujuan tombol harus berupa tautan portal yang sah (`PortalLink`, D-019). |
+| Akses | Administrator dan Pegawai UPTD yang mengelola Beranda; pegawai lain ditolak `403`. |
+| Tampilan | **Teks yang sudah tertulis di HTML beranda tetap di sana dan menjadi isi awal di server** (keputusan pemilik). Teks itu terbaca mesin pencari dan pembuka tidak pernah kosong. Skrip menggantinya dengan isi server hanya bila dokumen sudah pernah disimpan. Bila API gagal, teks HTML yang tampil, walau mungkin sudah tidak sama dengan isi server. Setelah teks diubah, pengunjung bisa sekilas melihat teks lama sebelum berganti. Tes portal memastikan setiap teks isi awal masih ada di HTML beranda. |
+| Ikon | **Ikon butir nilai utama dan peta kanal mengikuti posisinya** (keputusan pemilik): butir ke-n memakai ikon yang tertulis di posisi itu dalam HTML, dan butir tambahan memakai ikon umum. Data dashboard tidak memuat ikon. |
+| Portal | `GET /api/public/beranda` (tanpa ID butir) dibaca beranda. Bagian tanpa nilai utama atau mitra disembunyikan, tombol pembuka disembunyikan bila tujuannya kosong, dan catatan pembuka, catatan notis, serta yang wajib dibawa disembunyikan bila kosong. Kalimat pertama catatan notis ditebalkan. Teks dipasang sebagai teks polos. |
+
+Beranda kini memakai delapan permintaan dari batas laju API publik (D-013).
+
+Belum dibuat: isi kartu harga biaya (Rp0, cek fisik), garis peta kanal yang menyesuaikan jumlah kelompok, dan teks lain di beranda yang tidak ada di dokumen ini masih statis.

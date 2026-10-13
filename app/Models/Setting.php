@@ -183,6 +183,74 @@ class Setting extends Model
         ],
     ];
 
+    /**
+     * The texts of the portal's homepage: opening, values, the services
+     * heading, partners, channel map, integrity, fees and closing (Beranda).
+     */
+    public const string HOMEPAGE = 'beranda';
+
+    /**
+     * The Beranda document until it is first saved: the text written in the
+     * homepage's markup, which stays there and is replaced only by a saved
+     * document (D-023).
+     *
+     * @var array<string, mixed>
+     */
+    public const array INITIAL_HOMEPAGE = [
+        'hero' => [
+            'eyebrow' => 'UPTD Pendapatan Daerah Wilayah Kota Kupang · SAMSAT Kota Kupang',
+            'judul' => 'Semua informasi Samsat.',
+            'lanjutan' => 'Lewat satu pintu.',
+            'deskripsi' => 'PINTU adalah portal resmi informasi dan pelayanan pajak kendaraan di Kota Kupang. Cek persyaratan, jadwal, dan lokasi layanan sebelum Anda berangkat.',
+            'tombolLabel' => 'Cek Persyaratan Layanan',
+            'tombolUrl' => 'layanan.html',
+            'catatan' => 'Gratis dan tanpa perantara. Setiap informasi diverifikasi petugas UPTD.',
+        ],
+        'nilai' => [
+            ['id' => 'nilai-1', 'judul' => 'Persyaratan jelas.', 'deskripsi' => 'Daftar berkas setiap layanan, lengkap dengan jumlah lembar fotokopi yang perlu dibawa.'],
+            ['id' => 'nilai-2', 'judul' => 'Jadwal terbaru.', 'deskripsi' => 'Jam loket dan lokasi Samsat Keliling diperbarui petugas setiap hari kerja.'],
+            ['id' => 'nilai-3', 'judul' => 'Tanpa perantara.', 'deskripsi' => 'Semua biaya mengikuti notis pajak resmi. Urus sendiri dengan mudah, tanpa calo.'],
+        ],
+        'layananUtama' => [
+            'judul' => 'Dibuat untuk wajib pajak.',
+            'lanjutan' => 'Dirancang agar cukup sekali datang.',
+            'deskripsi' => 'Pilih layanan, siapkan berkas dari rumah, lalu datang ke loket yang tepat.',
+        ],
+        'mitra' => [
+            ['id' => 'mitra-1', 'singkatan' => 'BP', 'nama' => 'BPAD Provinsi NTT'],
+            ['id' => 'mitra-2', 'singkatan' => 'PL', 'nama' => 'Polri · Satlantas'],
+            ['id' => 'mitra-3', 'singkatan' => 'JR', 'nama' => 'Jasa Raharja'],
+            ['id' => 'mitra-4', 'singkatan' => 'BN', 'nama' => 'Bank NTT'],
+            ['id' => 'mitra-5', 'singkatan' => 'QR', 'nama' => 'QRIS'],
+            ['id' => 'mitra-6', 'singkatan' => 'SG', 'nama' => 'SIGNAL'],
+        ],
+        'kanal' => [
+            ['id' => 'kanal-1', 'kelompok' => 'Kantor', 'item' => ['Loket pajak tahunan', "Loket 5\u{00A0}tahunan", 'Loket mutasi & BBN', 'Cek fisik kendaraan']],
+            ['id' => 'kanal-2', 'kelompok' => 'Keliling', 'item' => ['Samsat Keliling', 'Layanan jemput bola']],
+            ['id' => 'kanal-3', 'kelompok' => 'Digital', 'item' => ['QRIS di kasir', 'Bank NTT', 'SIGNAL']],
+            ['id' => 'kanal-4', 'kelompok' => 'Informasi', 'item' => ['Portal PINTU', 'Media sosial', 'WhatsApp layanan']],
+            ['id' => 'kanal-5', 'kelompok' => 'Pengaduan', 'item' => ['SP4N-LAPOR!', 'Kotak saran', 'Ombudsman NTT']],
+        ],
+        'integritas' => [
+            'judul' => 'Bayar sesuai notis.',
+            'lanjutan' => 'Tidak lebih sepeser pun.',
+            'deskripsi' => 'Seluruh pembayaran tercatat di sistem dan dapat dilakukan non-tunai. Petugas kami tidak pernah meminta uang atau data pribadi lewat pesan pribadi.',
+        ],
+        'biaya' => [
+            'judul' => 'Biaya jelas.',
+            'lanjutan' => 'Tanpa kejutan.',
+            'deskripsi' => 'Pajak kendaraan dihitung sistem dan tercetak di notis. Layanan pendukung di kantor ini tidak dipungut biaya.',
+            'catatanNotis' => 'Bayar sesuai notis. Tunai di kasir atau non-tunai lewat QRIS.',
+            'wajibDibawa' => 'KTP asli dan STNK asli pemilik kendaraan.',
+            'jaminan' => ['Bukti bayar resmi', 'Bisa non-tunai', 'Tercatat di sistem'],
+        ],
+        'penutup' => [
+            'judul' => 'Map apa saja boleh.',
+            'lanjutan' => 'Asal jangan lupa dibawa.',
+            'deskripsi' => 'Hampir setiap layanan meminta satu map. Kami hanya mengingatkan.',
+        ],
+    ];
+
     protected $primaryKey = 'name';
 
     protected $keyType = 'string';
@@ -277,6 +345,16 @@ class Setting extends Model
     public static function profile(): array
     {
         return self::query()->find(self::PROFILE)?->value ?? self::INITIAL_PROFILE;
+    }
+
+    /**
+     * The Beranda document as the dashboard edits it.
+     *
+     * @return array<string, mixed>
+     */
+    public static function homepage(): array
+    {
+        return self::query()->find(self::HOMEPAGE)?->value ?? self::INITIAL_HOMEPAGE;
     }
 
     /**

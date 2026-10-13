@@ -1,0 +1,40 @@
+<?php
+
+namespace App\Actions;
+
+use App\Exceptions\PublicContentUnavailableException;
+use App\Models\Setting;
+use Illuminate\Database\QueryException;
+
+class ShowPublicHomepage
+{
+    /**
+     * Build the homepage's texts for the public portal, without the list
+     * items' IDs. Until the document is first saved it is the text already
+     * in the homepage's markup and "diperbarui" is null, so the portal keeps
+     * the markup as it is. A source that cannot be read fails the request.
+     *
+     * @return array<string, mixed>
+     *
+     * @throws PublicContentUnavailableException
+     */
+    public function handle(): array
+    {
+        try {
+            $setting = Setting::query()->find(Setting::HOMEPAGE);
+        } catch (QueryException $exception) {
+            throw new PublicContentUnavailableException('The homepage texts could not be read.', previous: $exception);
+        }
+
+        $homepage = $setting?->value ?? Setting::INITIAL_HOMEPAGE;
+        $withoutId = fn (array $items): array => array_map(fn (array $item): array => array_diff_key($item, ['id' => true]), $items);
+
+        return [
+            ...$homepage,
+            'nilai' => $withoutId($homepage['nilai']),
+            'mitra' => $withoutId($homepage['mitra']),
+            'kanal' => $withoutId($homepage['kanal']),
+            'diperbarui' => $setting?->updated_at?->toIso8601String(),
+        ];
+    }
+}

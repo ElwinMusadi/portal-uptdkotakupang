@@ -9,6 +9,8 @@
 .hero__title { max-width: 22ch; margin-inline: auto; }
 .hero__lead { margin-top: 28px; max-width: 52ch; }
 .hero__actions { margin-top: 36px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+/* Pembuka tanpa tombol atau catatan dari dashboard (initBeranda) */
+.hero__actions[hidden], .hero__trust[hidden] { display: none; }
 .hero__trust { margin-top: 18px; display: block; text-wrap: balance; }
 .hero__trust .i { display: inline-block; vertical-align: -3px; margin-right: 6px; }
 @media (max-width: 560px) { .hero__eyebrow { letter-spacing: .06em; text-wrap: balance; } }
