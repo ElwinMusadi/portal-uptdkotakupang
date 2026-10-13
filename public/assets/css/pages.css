@@ -103,6 +103,9 @@
 .dash__chart { padding-bottom: 12px; }
 .dash__legend { font-size: 12px; color: var(--night-muted); }
 .dash__note { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 6px 10px; }
+/* Selama statistik dimuat, belum diterbitkan, atau gagal dimuat (initDash) */
+.dash__status { grid-column: 1 / -1; padding: 28px 6px; font-size: 13.5px; color: var(--night-muted); }
+.dash__status .link { color: var(--night-accent); }
 .bars { display: grid; grid-template-columns: repeat(12, 1fr); align-items: end; gap: 2px; height: 160px; margin-top: 18px; padding-bottom: 22px; position: relative; border-bottom: 1px solid var(--night-line); }
 .bar { position: relative; height: 100%; display: flex; align-items: flex-end; justify-content: center; cursor: default; outline: none; }
 .bar__fill { width: min(100%, 24px); border-radius: 4px 4px 0 0; background: var(--night-faint); transition: height var(--dur-3) var(--ease), background-color var(--dur-1) var(--ease); }

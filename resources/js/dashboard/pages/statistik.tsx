@@ -1,5 +1,5 @@
 import * as React from "react"
-import { IconInfoCircle } from "@tabler/icons-react"
+import { IconInfoCircle, IconServer } from "@tabler/icons-react"
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 import type { UseFormReturn } from "react-hook-form"
 import { z } from "zod"
@@ -7,7 +7,7 @@ import { z } from "zod"
 import { Bagian, Baris, Halaman, PengantarHalaman } from "@/components/data/page"
 import { FieldPilih, FieldTeks } from "@/components/form/fields"
 import { FormPengaturan } from "@/components/form/settings-form"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
 import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
@@ -27,28 +27,29 @@ import * as v from "@/lib/validasi"
 
 const BULAN = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"]
 
+// Batas yang sama dengan server (UpdateStatisticsRequest)
 const schema = z.object({
   status: z.enum(["ilustrasi", "terverifikasi"]),
-  catatan: v.teks,
+  catatan: v.teks.max(300, "Maksimal 300 karakter."),
   tahun: z.string().regex(/^(19|20)\d{2}$/, "Tahun 4 angka."),
   set: z.array(
     z.object({
       kunci: z.string(),
-      label: v.wajib("Nama tab"),
-      sub: v.teks,
-      judulGrafik: v.wajib("Judul grafik"),
-      satuan: v.teks,
+      label: v.wajib("Nama tab").max(60, "Maksimal 60 karakter."),
+      sub: v.teks.max(120, "Maksimal 120 karakter."),
+      judulGrafik: v.wajib("Judul grafik").max(80, "Maksimal 80 karakter."),
+      satuan: v.teks.max(30, "Maksimal 30 karakter."),
       tiles: z.array(
         z.object({
           id: z.string(),
-          label: v.wajib("Label"),
-          nilai: v.angka(),
-          satuan: z.string(),
-          perubahan: v.angka(),
+          label: v.wajib("Label").max(60, "Maksimal 60 karakter."),
+          nilai: v.angka({ min: -1e12, maks: 1e12 }),
+          satuan: z.string().max(12, "Maksimal 12 karakter."),
+          perubahan: v.angka({ min: -1000, maks: 1000 }),
           naikBaik: z.boolean(),
         })
       ),
-      seri: z.array(v.angka({ min: 0 })).length(12),
+      seri: z.array(v.angka({ min: 0, maks: 1e12 })).length(12),
     })
   ),
 })
@@ -196,6 +197,14 @@ export default function HalamanStatistik() {
   return (
     <Halaman>
       <PengantarHalaman deskripsi="Angka di dasbor transparansi beranda (Transaksi, Penerimaan, Samsat Keliling, Kepuasan). Ubah status menjadi Terverifikasi setelah angka disetujui pimpinan." />
+      <Alert>
+        <IconServer />
+        <AlertTitle>Tersimpan di server</AlertTitle>
+        <AlertDescription>
+          Statistik ini dipakai bersama semua pengelola Statistik Layanan. Hanya statistik berstatus Terverifikasi
+          pimpinan yang tampil di dasbor transparansi beranda, langsung setelah disimpan.
+        </AlertDescription>
+      </Alert>
       <FormPengaturan nama="statistik" schema={schema}>
         {(form) => {
           const status = form.watch("status")
@@ -208,7 +217,7 @@ export default function HalamanStatistik() {
                     name="status"
                     label="Status"
                     opsi={[
-                      { nilai: "ilustrasi", label: "Ilustrasi (contoh desain)" },
+                      { nilai: "ilustrasi", label: "Ilustrasi (belum tampil di portal)" },
                       { nilai: "terverifikasi", label: "Terverifikasi pimpinan" },
                     ]}
                   />
@@ -219,7 +228,8 @@ export default function HalamanStatistik() {
                   <Alert>
                     <IconInfoCircle />
                     <AlertDescription>
-                      Portal menampilkan label “Data ilustrasi” selama status belum terverifikasi.
+                      Angka ini tidak tampil di portal selama status belum terverifikasi. Dasbor transparansi di
+                      beranda menyatakan statistik layanan belum diterbitkan.
                     </AlertDescription>
                   </Alert>
                 )}

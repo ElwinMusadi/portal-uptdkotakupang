@@ -103,6 +103,18 @@ class PortalPagesTest extends TestCase
         $this->assertStringContainsString('data-sim-catatan', $simulation[0]);
     }
 
+    public function test_leaves_the_transparency_dashboard_to_the_public_api(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+
+        $this->assertSame(1, preg_match('/<section[^>]*\bid="transparansi"[^>]*>.*?<\/section>/s', $html, $dashboard));
+        foreach (['12.480', '9.316', 'Data ilustrasi', 'data-dash-range', 'Hari ini'] as $example) {
+            $this->assertStringNotContainsString($example, $dashboard[0]);
+        }
+        $this->assertStringContainsString('<p class="dash__status" role="status">Memuat statistik layanan…</p>', $dashboard[0]);
+        $this->assertStringContainsString('data-dash-chart hidden', $dashboard[0]);
+    }
+
     public function test_sends_the_contact_form_to_the_message_api_with_the_services_it_accepts(): void
     {
         $html = $this->get('/kontak')->assertOk()->getContent();

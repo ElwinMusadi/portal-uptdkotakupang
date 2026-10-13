@@ -44,6 +44,24 @@ class Setting extends Model
         'catatan' => '',
     ];
 
+    /**
+     * The figures of the transparency dashboard on the portal's homepage
+     * (Statistik Layanan).
+     */
+    public const string STATISTICS = 'statistik';
+
+    /**
+     * The statistics categories, as the portal's tabs name them.
+     *
+     * @var list<string>
+     */
+    public const array STATISTICS_CATEGORIES = ['transaksi', 'penerimaan', 'keliling', 'kepuasan'];
+
+    /**
+     * The only statistics status the portal publishes (D-018).
+     */
+    public const string STATISTICS_VERIFIED = 'terverifikasi';
+
     protected $primaryKey = 'name';
 
     protected $keyType = 'string';
@@ -108,5 +126,50 @@ class Setting extends Model
     public static function tariff(): array
     {
         return self::query()->find(self::TARIFF)?->value ?? self::UNSAVED_TARIFF;
+    }
+
+    /**
+     * The statistics as the dashboard edits them. Until they are first saved,
+     * the four categories and their tiles are named but every figure is zero
+     * and the status is "ilustrasi", so nothing is published.
+     *
+     * @return array{status: string, catatan: string, tahun: string, set: list<array{kunci: string, label: string, sub: string, judulGrafik: string, satuan: string, tiles: list<array{id: string, label: string, nilai: int|float, satuan: string, perubahan: int|float, naikBaik: bool}>, seri: list<int|float>}>}
+     */
+    public static function statistics(): array
+    {
+        return self::query()->find(self::STATISTICS)?->value ?? [
+            'status' => 'ilustrasi',
+            'catatan' => '',
+            'tahun' => now('Asia/Makassar')->format('Y'),
+            'set' => array_map(fn (array $category): array => [
+                'kunci' => $category[0],
+                'label' => $category[1],
+                'sub' => $category[2],
+                'judulGrafik' => $category[3],
+                'satuan' => $category[4],
+                'tiles' => array_map(fn (array $tile, int $index): array => [
+                    'id' => "{$category[0]}-".($index + 1),
+                    'label' => $tile[0],
+                    'nilai' => 0,
+                    'satuan' => $tile[1],
+                    'perubahan' => 0,
+                    'naikBaik' => $tile[2],
+                ], $category[5], array_keys($category[5])),
+                'seri' => array_fill(0, 12, 0),
+            ], [
+                ['transaksi', 'Transaksi pelayanan', 'Transaksi pelayanan · UPTD Kota Kupang', 'Transaksi per bulan', 'transaksi', [
+                    ['Total transaksi', '', true], ['Pajak tahunan', '', true], ['Perpanjangan 5 tahun', '', true], ['Mutasi & BBN', '', true],
+                ]],
+                ['penerimaan', 'Penerimaan pajak', 'Penerimaan pajak daerah · UPTD Kota Kupang', 'Penerimaan PKB per bulan', 'juta rupiah', [
+                    ['Penerimaan PKB', 'M', true], ['BBNKB', 'M', true], ['Opsen PKB (Pemkot)', 'M', true], ['Capaian target', '%', true],
+                ]],
+                ['keliling', 'Samsat Keliling', 'Samsat Keliling · 6 kecamatan, 51 kelurahan', 'Transaksi keliling per bulan', 'transaksi', [
+                    ['Titik layanan', '', true], ['Transaksi keliling', '', true], ['Rata-rata per titik', '', true], ['Kelurahan terjangkau', '/51', true],
+                ]],
+                ['kepuasan', 'Kepuasan masyarakat', 'Survei Kepuasan Masyarakat (IKM)', 'Waktu tunggu rata-rata per bulan', 'menit', [
+                    ['Indeks kepuasan', '', true], ['Waktu tunggu rata-rata', 'mnt', false], ['Pengaduan selesai', '%', true], ['Responden survei', '', true],
+                ]],
+            ]),
+        ];
     }
 }

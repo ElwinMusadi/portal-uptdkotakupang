@@ -17,12 +17,14 @@ use App\Http\Controllers\Dashboard\ScheduleAdjustmentController;
 use App\Http\Controllers\Dashboard\ScheduleAdjustmentDeletionController;
 use App\Http\Controllers\Dashboard\ServiceBoardController;
 use App\Http\Controllers\Dashboard\SettingTimestampController;
+use App\Http\Controllers\Dashboard\StatisticsController;
 use App\Http\Controllers\Dashboard\TariffController;
 use App\Http\Controllers\PublicFaqController;
 use App\Http\Controllers\PublicMessageController;
 use App\Http\Controllers\PublicMobileServiceStopController;
 use App\Http\Controllers\PublicOpeningHoursController;
 use App\Http\Controllers\PublicServiceBoardController;
+use App\Http\Controllers\PublicStatisticsController;
 use App\Http\Controllers\PublicTariffController;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Models\Faq;
@@ -128,6 +130,15 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->can('update', [Setting::class, $tariff])
         ->name('pengaturan.tarif.update');
 
+    // Statistik Layanan, the homepage's transparency dashboard (SettingPolicy).
+    $statistics = "'".Setting::STATISTICS."'";
+    Route::get('/pengaturan/statistik', [StatisticsController::class, 'show'])
+        ->can('view', [Setting::class, $statistics])
+        ->name('pengaturan.statistik.show');
+    Route::put('/pengaturan/statistik', [StatisticsController::class, 'update'])
+        ->can('update', [Setting::class, $statistics])
+        ->name('pengaturan.statistik.update');
+
     Route::prefix('koleksi/penyesuaian')->name('koleksi.penyesuaian.')->whereUlid('adjustment')->group(function (): void {
         Route::get('/', [ScheduleAdjustmentController::class, 'index'])->can('viewAny', ScheduleAdjustment::class)->name('index');
         Route::post('/', [ScheduleAdjustmentController::class, 'store'])->can('create', ScheduleAdjustment::class)->name('store');
@@ -165,6 +176,7 @@ Route::prefix('public')
         Route::get('/jam', PublicOpeningHoursController::class)->name('jam.show');
         Route::get('/papan', PublicServiceBoardController::class)->name('papan.show');
         Route::get('/tarif', PublicTariffController::class)->name('tarif.show');
+        Route::get('/statistik', PublicStatisticsController::class)->name('statistik.show');
         // The contact form; also limited to 5 messages per hour per address (D-016).
         Route::post('/pesan', PublicMessageController::class)->middleware('throttle:public-messages')->name('pesan.store');
     });

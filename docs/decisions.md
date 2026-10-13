@@ -220,3 +220,21 @@ Tarif & Simulasi kini tersimpan di server. Simulasi PKB di beranda dan halaman L
 Satu kunjungan beranda kini memakai lima permintaan dari batas laju API publik (D-013).
 
 Belum dibuat: tanggal mulai berlaku tarif dan riwayat nilai tarif sebelumnya (log aktivitas hanya mencatat "memperbarui Tarif & Simulasi").
+
+## D-018 · 2026-10-13 · Statistik Layanan tersimpan di server; hanya angka terverifikasi yang terbit
+
+Statistik Layanan kini tersimpan di server. Dasbor transparansi di beranda menampilkan angka dari dashboard, dan hanya bila statusnya Terverifikasi pimpinan.
+
+| Hal | Keputusan |
+|---|---|
+| Penyimpanan | Dokumen pengaturan `statistik` (`/api/pengaturan/statistik`) memuat status (Ilustrasi atau Terverifikasi), tahun data, dan catatan (maks. 300 karakter). Isinya empat kategori tetap: Transaksi pelayanan, Penerimaan pajak, Samsat Keliling, dan Kepuasan masyarakat. Tiap kategori punya nama tab, subjudul, judul dan satuan grafik, **empat angka utama** (label, nilai, satuan, perubahan dalam persen, dan apakah kenaikan bermakna baik), serta **12 nilai bulanan Januari–Desember**. |
+| Akses | Administrator dan Pegawai UPTD yang mengelola Statistik Layanan; pegawai lain ditolak `403`. |
+| Terbit | **Hanya statistik berstatus Terverifikasi yang tampil di portal** (keputusan pemilik). Selama berstatus Ilustrasi atau belum pernah disimpan, `GET /api/public/statistik` tidak memberikan angka apa pun, dan beranda menyatakan "Statistik layanan belum diterbitkan." Label "Data ilustrasi untuk keperluan desain." dihapus. |
+| Rentang waktu | Tombol *Tahun ini*, *12 bln*, *3 bln*, *30 hari*, dan *Hari ini*, serta garis tren di tiap angka utama, **dihapus** (keputusan pemilik). Angkanya selama ini dikarang dari data contoh (dikalikan faktor tetap dan diberi gelombang buatan), padahal data dashboard hanya berisi angka utama dan nilai bulanan. |
+| Grafik | Dua belas batang berlabel Januari–Desember tahun data. Bulan berjalan disorot bila tahun datanya tahun ini (WITA). Sebelumnya batang diberi label 12 bulan terakhir walaupun datanya Januari–Desember. |
+| Catatan | Di bawah dasbor tampil tahun data, keterangan terverifikasi pimpinan, tanggal pembaruan, dan catatan dari dashboard. |
+| Data contoh | Angka contoh di peramban tidak dipindahkan ke server. Sebelum statistik pertama kali disimpan, keempat kategori dan label angka utamanya sudah tersedia, dengan semua angka nol dan status Ilustrasi. |
+
+Satu kunjungan beranda kini memakai enam permintaan dari batas laju API publik (D-013).
+
+Belum dibuat: data per rentang waktu, data tahun-tahun sebelumnya, dan perhitungan otomatis dari transaksi.

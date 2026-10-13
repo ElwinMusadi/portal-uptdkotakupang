@@ -466,89 +466,128 @@
     muat(false);
   }
 
-  /* ---------- Dasbor transparansi (data ilustrasi) ---------- */
-  const DASH = {
-    transaksi: {
-      sub: "Transaksi pelayanan · UPTD Kota Kupang", chart: "Transaksi per bulan", unit: "transaksi",
-      tiles: [["Total transaksi", 12480, "", 4.2, true], ["Pajak tahunan", 9316, "", 3.1, true], ["Perpanjangan 5\u00a0tahun", 2104, "", 6.8, true], ["Mutasi & BBN", 1060, "", -2.4, true]],
-      series: [880, 910, 1020, 960, 1040, 1100, 990, 1080, 1150, 1120, 1060, 1160],
-    },
-    penerimaan: {
-      sub: "Penerimaan pajak daerah · UPTD Kota Kupang", chart: "Penerimaan PKB per bulan", unit: "juta rupiah",
-      tiles: [["Penerimaan PKB", 18.4, "M", 5.6, true], ["BBNKB", 6.1, "M", -1.8, true], ["Opsen PKB (Pemkot)", 12.1, "M", 5.6, true], ["Capaian target", 78, "%", 3.0, true]],
-      series: [1310, 1380, 1520, 1460, 1590, 1640, 1500, 1620, 1710, 1680, 1600, 1740],
-    },
-    keliling: {
-      sub: "Samsat Keliling · 6 kecamatan, 51 kelurahan", chart: "Transaksi keliling per bulan", unit: "transaksi",
-      tiles: [["Titik layanan", 22, "", 10, true], ["Transaksi keliling", 1284, "", 12.5, true], ["Rata-rata per titik", 58, "", 2.1, true], ["Kelurahan terjangkau", 31, "/51", 8.0, true]],
-      series: [64, 72, 88, 95, 102, 110, 98, 120, 131, 126, 118, 140],
-    },
-    kepuasan: {
-      sub: "Survei Kepuasan Masyarakat (IKM)", chart: "Waktu tunggu rata-rata per bulan", unit: "menit",
-      tiles: [["Indeks kepuasan", 88.4, "", 1.6, true], ["Waktu tunggu rata-rata", 18, " mnt", -6, false], ["Pengaduan selesai", 96, "%", 2.0, true], ["Responden survei", 412, "", 9.3, true]],
-      series: [31, 30, 28, 29, 26, 25, 24, 23, 22, 21, 19, 18],
-    },
-  };
-  const RANGE = { ytd: 1, "12m": 1.18, "3m": 0.27, "30d": 0.09, today: 0.0042 };
-  const RATIO_UNITS = new Set(["%", "/51", " mnt", "M"]);
-
-  function sparkPath(vals, w = 120, h = 36) {
-    const min = Math.min(...vals), max = Math.max(...vals), r = max - min || 1;
-    const pts = vals.map((v, i) => [(i / (vals.length - 1)) * w, h - 3 - ((v - min) / r) * (h - 6)]);
-    const line = pts.map((p, i) => `${i ? "L" : "M"}${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" ");
-    const area = `${line} L${w} ${h} L0 ${h} Z`;
-    const last = pts[pts.length - 1], prev = pts[pts.length - 2];
-    return { line, area, last, nowSeg: `M${prev[0].toFixed(1)} ${prev[1].toFixed(1)} L${last[0].toFixed(1)} ${last[1].toFixed(1)}` };
+  /* ---------- Dasbor transparansi ----------
+     Statistik dikelola di dashboard (Statistik Layanan) dan dibaca dari
+     GET /api/public/statistik, yang hanya memberikan angka berstatus
+     terverifikasi pimpinan (D-018). Tidak ada angka cadangan: selama dimuat,
+     sebelum diterbitkan, atau bila API gagal, dasbor menampilkan keterangannya.
+     Grafik memuat 12 nilai bulanan (Januari–Desember) tahun data tersebut. */
+  async function muatStatistik() {
+    const data = await ambilJson("/api/public/statistik");
+    if (typeof data?.tahun !== "string" || typeof data.catatan !== "string" || !Array.isArray(data.set)) throw new Error("Respons tidak dikenal");
+    const angka = (n) => Number.isFinite(n);
+    const teks = (s) => typeof s === "string";
+    const lengkap = data.set.every((s) => ["kunci", "label", "sub", "judulGrafik", "satuan"].every((k) => teks(s?.[k]))
+      && Array.isArray(s.seri) && s.seri.length === 12 && s.seri.every(angka)
+      && Array.isArray(s.tiles) && s.tiles.every((t) => teks(t?.label) && teks(t.satuan) && angka(t.nilai) && angka(t.perubahan) && typeof t.naikBaik === "boolean"));
+    if (!lengkap) throw new Error("Respons tidak dikenal");
+    return data;
   }
+
+  // "M" berarti miliar rupiah: di bawah 1 miliar ditampilkan dalam juta
+  const nilaiTile = (v, satuan) => {
+    const u = satuan.trim();
+    if (u === "M") return v >= 1 ? `${fmt.format(Math.round(v * 10) / 10)}<small>miliar</small>` : `${fmt.format(Math.round(v * 1000))}<small>juta</small>`;
+    return `${fmt.format(Math.round(v * 10) / 10)}${u ? `<small>${esc(u)}</small>` : ""}`;
+  };
+  const nilaiBatang = (v, satuan) => (satuan === "juta rupiah" ? `${fmt.format(v)} jt` : satuan === "menit" ? `${fmt.format(v)} mnt` : fmt.format(v));
 
   function initDash() {
     const dash = $("[data-dash]");
     if (!dash) return;
+    const tabs = $$("[data-dash-tabs] [role=tab]");
     const tilesEl = $("[data-dash-tiles]", dash);
+    const chart = $("[data-dash-chart]", dash);
     const barsEl = $("[data-bars]", dash);
-    let set = "transaksi", range = "ytd";
+    const catatan = $("[data-dash-catatan]");
+    const catatanBawaan = catatan ? catatan.textContent.replace(/\s+/g, " ").trim() : "";
+    let D = null;
+    let set = tabs.find((t) => t.getAttribute("aria-selected") === "true")?.dataset.set ?? "transaksi";
+
+    const keadaan = (pesan, tombol) => {
+      D = null;
+      tilesEl.innerHTML = "";
+      const p = document.createElement("p");
+      p.className = "dash__status";
+      p.setAttribute("role", "status");
+      p.textContent = pesan;
+      if (tombol) p.append(tombol);
+      tilesEl.append(p);
+      chart.hidden = true;
+      if (catatan) catatan.textContent = catatanBawaan;
+    };
 
     const render = () => {
-      const d = DASH[set], k = RANGE[range];
+      const d = D?.set.find((s) => s.kunci === set);
+      if (!d) return;
       $("[data-dash-sub]", dash).textContent = d.sub;
-      $("[data-chart-title]", dash).textContent = d.chart;
-      $("[data-chart-unit]", dash).textContent = d.unit;
-      tilesEl.innerHTML = d.tiles.map(([label, val, unit, delta, upGood], i) => {
-        const isRatio = RATIO_UNITS.has(unit) && unit !== "M";
-        let v = isRatio ? val : val * k;
-        const shown = unit === "M"
-          ? (v >= 1 ? `${fmt.format(Math.round(v * 10) / 10)}<small>miliar</small>` : `${fmt.format(Math.round(v * 1000))}<small>juta</small>`)
-          : `${fmt.format(Math.round(v * 10) / 10)}${unit ? `<small>${unit.trim()}</small>` : ""}`;
-        const good = (delta >= 0) === upGood;
-        const seed = d.series.map((s, j) => s * (1 + Math.sin(j * (i + 1.3)) * 0.06));
-        const sp = sparkPath(seed);
+      $("[data-chart-title]", dash).textContent = d.judulGrafik;
+      $("[data-chart-unit]", dash).textContent = d.satuan;
+      tilesEl.innerHTML = d.tiles.map((t) => {
+        const good = (t.perubahan >= 0) === t.naikBaik;
         return `<div class="tile">
-          <p class="tile__label">${label}</p>
-          <p class="tile__value">${shown}</p>
-          <p class="tile__meta"><span class="delta ${good ? "delta--up" : "delta--down"}"><svg class="i" aria-hidden="true"><use href="#i-trend-${delta >= 0 ? "up" : "down"}"/></svg>${delta > 0 ? "+" : ""}${fmt.format(delta)}%</span><span>vs periode lalu</span></p>
-          <svg class="spark" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden="true"><path class="spark__area" d="${sp.area}"/><path d="${sp.line}"/><path class="spark__now" d="${sp.nowSeg}"/><circle cx="${sp.last[0]}" cy="${sp.last[1]}" r="4"/></svg>
+          <p class="tile__label">${esc(t.label)}</p>
+          <p class="tile__value">${nilaiTile(t.nilai, t.satuan)}</p>
+          <p class="tile__meta"><span class="delta ${good ? "delta--up" : "delta--down"}"><svg class="i" aria-hidden="true"><use href="#i-trend-${t.perubahan >= 0 ? "up" : "down"}"/></svg>${t.perubahan > 0 ? "+" : ""}${fmt.format(t.perubahan)}%</span><span>vs periode lalu</span></p>
         </div>`;
       }).join("");
 
-      const series = range === "today" || range === "30d"
-        ? d.series.map((v, i) => Math.round(v * (range === "today" ? 0.045 : 0.33) * (0.85 + ((i * 37) % 11) / 30)))
-        : d.series;
-      const max = Math.max(...series);
+      // Bulan berjalan disorot bila tahun datanya tahun ini (WITA)
       const t = nowWita();
-      const labels = range === "today"
-        ? ["08", "09", "10", "11", "12", "13", "14", "15", "", "", "", ""].slice(0, 12)
-        : range === "30d" ? series.map((_, i) => (i % 3 === 0 ? `H-${(11 - i) * 3 || "0"}` : ""))
-        : series.map((_, i) => BULAN[(t.mo - 12 + i + 12) % 12]);
-      barsEl.innerHTML = series.map((v, i) => {
+      const bulanIni = String(t.y) === D.tahun ? t.mo - 1 : -1;
+      const max = Math.max(...d.seri) || 1;
+      barsEl.innerHTML = d.seri.map((v, i) => {
         const h = Math.max(3, (v / max) * 100);
-        const now = i === series.length - 1;
-        const val = d.unit === "juta rupiah" ? `${fmt.format(v)} jt` : `${fmt.format(v)} ${d.unit === "menit" ? "mnt" : ""}`.trim();
-        return `<div class="bar${now ? " is-now" : ""}" tabindex="0" style="--h:${h}%" aria-label="${labels[i] || "Periode " + (i + 1)}: ${val}"><span class="bar__fill" style="height:${h}%"></span><span class="bar__tip">${val}</span><span class="bar__x">${labels[i] || ""}</span></div>`;
+        const val = nilaiBatang(v, d.satuan);
+        const label = `${BULAN[i]} ${D.tahun}: ${fmt.format(v)} ${d.satuan}`.trim();
+        return `<div class="bar${i === bulanIni ? " is-now" : ""}" tabindex="0" style="--h:${h}%" aria-label="${esc(label)}"><span class="bar__fill" style="height:${h}%"></span><span class="bar__tip">${esc(val)}</span><span class="bar__x">${BULAN[i]}</span></div>`;
       }).join("");
-      barsEl.setAttribute("aria-label", `${d.chart}, ${series.length} periode`);
+      barsEl.setAttribute("aria-label", `${d.judulGrafik}, Januari–Desember ${D.tahun}`);
+      chart.hidden = false;
     };
 
-    $$("[data-dash-tabs] [role=tab]").forEach((tab, i, all) => {
+    const tampilkan = (data) => {
+      D = data;
+      tabs.forEach((tab) => {
+        const s = D.set.find((x) => x.kunci === tab.dataset.set);
+        const txt = $(".catlist__txt", tab);
+        if (s && txt) txt.textContent = s.label;
+      });
+      if (catatan) {
+        const w = nowWita(new Date(D.diperbarui));
+        const waktu = document.createElement("span");
+        waktu.textContent = `Data tahun ${D.tahun}, terverifikasi pimpinan · diperbarui ${w.d} ${BULAN[w.mo - 1]} ${w.y}.`;
+        catatan.replaceChildren(waktu);
+        if (D.catatan) {
+          const isi = document.createElement("span");
+          isi.textContent = D.catatan;
+          catatan.append(isi);
+        }
+      }
+      render();
+    };
+
+    const muat = async (fokus) => {
+      keadaan("Memuat statistik layanan…");
+      dash.setAttribute("aria-busy", "true");
+      try {
+        const data = await muatStatistik();
+        if (typeof data.diperbarui !== "string" || !data.set.length) keadaan("Statistik layanan belum diterbitkan.");
+        else tampilkan(data);
+      } catch {
+        const retry = document.createElement("button");
+        retry.type = "button";
+        retry.className = "link";
+        retry.textContent = "Coba lagi";
+        retry.addEventListener("click", () => muat(true));
+        keadaan("Statistik layanan belum dapat dimuat. ", retry);
+        if (fokus) retry.focus();
+      } finally {
+        dash.removeAttribute("aria-busy");
+      }
+    };
+
+    tabs.forEach((tab, i, all) => {
       const pick = (focus) => {
         all.forEach((t) => { t.setAttribute("aria-selected", String(t === tab)); t.tabIndex = t === tab ? 0 : -1; });
         set = tab.dataset.set; render();
@@ -563,11 +602,7 @@
         next.click(); next.focus();
       });
     });
-    $$("[data-dash-range] button", dash).forEach((b, _, all) => b.addEventListener("click", () => {
-      all.forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
-      range = b.dataset.range; render();
-    }));
-    render();
+    muat(false);
   }
 
   /* ---------- Teks angka yang menyesuaikan lebar wadah ----------

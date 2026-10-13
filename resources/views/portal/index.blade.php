@@ -1240,53 +1240,11 @@
                     Transaksi pelayanan · UPTD Kota Kupang
                   </p>
                 </div>
-                <div
-                  class="filter-row"
-                  role="group"
-                  aria-label="Rentang waktu"
-                  data-dash-range
-                >
-                  <button type="button" aria-pressed="true" data-range="ytd">
-                    Tahun ini
-                  </button>
-                  <button type="button" aria-pressed="false" data-range="12m">
-                    12 bln
-                  </button>
-                  <button type="button" aria-pressed="false" data-range="3m">
-                    3 bln
-                  </button>
-                  <button type="button" aria-pressed="false" data-range="30d">
-                    30 hari
-                  </button>
-                  <button type="button" aria-pressed="false" data-range="today">
-                    Hari ini
-                  </button>
-                </div>
               </div>
               <div class="dash__tiles" data-dash-tiles>
-                <!-- diisi oleh assets/js/main.js; isi statis di bawah sebagai cadangan tanpa JS -->
-                <div class="tile">
-                  <p class="tile__label">Total transaksi</p>
-                  <p class="tile__value">12.480</p>
-                  <p class="tile__meta">
-                    <span class="delta delta--up">+4,2%</span
-                    ><span>vs periode lalu</span>
-                  </p>
-                </div>
-                <div class="tile">
-                  <p class="tile__label">Pajak tahunan</p>
-                  <p class="tile__value">9.316</p>
-                </div>
-                <div class="tile">
-                  <p class="tile__label">Perpanjangan 5&nbsp;tahun</p>
-                  <p class="tile__value">2.104</p>
-                </div>
-                <div class="tile">
-                  <p class="tile__label">Mutasi &amp; BBN</p>
-                  <p class="tile__value">1.060</p>
-                </div>
+                <p class="dash__status" role="status">Memuat statistik layanan…</p>
               </div>
-              <div class="tile dash__chart">
+              <div class="tile dash__chart" data-dash-chart hidden>
                 <div class="tile__label">
                   <span data-chart-title>Transaksi per bulan</span
                   ><span class="dash__legend" data-chart-unit>transaksi</span>
@@ -1299,10 +1257,7 @@
                 ></div>
               </div>
             </div>
-            <p class="micro muted dash__note">
-              <span class="proto-note"
-                >Data ilustrasi untuk keperluan desain.</span
-              >
+            <p class="micro muted dash__note" data-dash-catatan>
               Angka resmi tampil setelah diverifikasi dan disetujui.
             </p>
           </div>

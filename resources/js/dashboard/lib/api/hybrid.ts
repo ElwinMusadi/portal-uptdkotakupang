@@ -14,11 +14,11 @@ import type {
 
 /**
  * Koleksi dan pengaturan yang sudah tersimpan di server PINTU (D-011, D-013,
- * D-014, D-015, D-016, D-017). Yang lain menyusul satu per satu; sampai saat itu tetap di
+ * D-014, D-015, D-016, D-017, D-018). Yang lain menyusul satu per satu; sampai saat itu tetap di
  * IndexedDB peramban.
  */
 export const KOLEKSI_SERVER: readonly NamaKoleksi[] = ["faq", "keliling", "penyesuaian", "pesan"]
-export const PENGATURAN_SERVER: readonly NamaPengaturan[] = ["jam", "papan", "tarif"]
+export const PENGATURAN_SERVER: readonly NamaPengaturan[] = ["jam", "papan", "tarif", "statistik"]
 
 /**
  * Mode campuran selama konten dipindahkan ke server secara bertahap. Koleksi

@@ -10,6 +10,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET` | `/api/public/jam` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/papan` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/tarif` | anonim, hanya baca | tersedia |
+| `GET` | `/api/public/statistik` | anonim, hanya baca | tersedia |
 | `POST` | `/api/public/pesan` | anonim, formulir Kontak | tersedia |
 | `POST` | `/api/masuk` | halaman Login Pegawai | tersedia |
 | `GET` | `/api/sesi` | pegawai login | tersedia |
@@ -28,6 +29,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET`, `PUT` | `/api/pengaturan/jam` | Administrator, pengelola Jam Pelayanan | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/papan` | Administrator, pengelola Papan Layanan | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/tarif` | baca: semua pegawai login; simpan: Administrator, pengelola Tarif & Simulasi | tersedia |
+| `GET`, `PUT` | `/api/pengaturan/statistik` | Administrator, pengelola Statistik Layanan | tersedia |
 | `GET`, `POST` | `/api/koleksi/pesan` | Administrator, pengelola Pesan & Pengaduan | tersedia |
 | `GET`, `PATCH` | `/api/koleksi/pesan/{id}` | Administrator, pengelola Pesan & Pengaduan | tersedia |
 | `POST` | `/api/koleksi/pesan/hapus` | Administrator | tersedia |
@@ -96,7 +98,7 @@ Kunci modul untuk `modul` ([D-010](decisions.md#d-010--2026-10-13--penugasan-mod
 | `jam` | Jam Pelayanan (termasuk koleksi `penyesuaian`) | `halaman` | Halaman Statis |
 | `keliling` | Samsat Keliling | `pemutakhiran` | Jadwal Pemutakhiran |
 
-Endpoint konten dashboard (`/api/koleksi/…`, `/api/pengaturan/…`) wajib menolak pegawai yang tidak mengelola modul koleksi atau pengaturan itu. `/api/koleksi/faq`, `/api/koleksi/keliling`, `/api/koleksi/penyesuaian`, `/api/koleksi/pesan`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, dan `/api/pengaturan/tarif` sudah melakukannya; tarif boleh dibaca semua pegawai untuk Kalkulator PKB, tetapi hanya pengelolanya yang boleh menyimpan.
+Endpoint konten dashboard (`/api/koleksi/…`, `/api/pengaturan/…`) wajib menolak pegawai yang tidak mengelola modul koleksi atau pengaturan itu. `/api/koleksi/faq`, `/api/koleksi/keliling`, `/api/koleksi/penyesuaian`, `/api/koleksi/pesan`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/tarif`, dan `/api/pengaturan/statistik` sudah melakukannya; tarif boleh dibaca semua pegawai untuk Kalkulator PKB, tetapi hanya pengelolanya yang boleh menyimpan.
 
 ## Tanya Jawab di dashboard
 
@@ -232,6 +234,31 @@ Penyimpanan tercatat di log aktivitas sebagai "memperbarui Tarif & Simulasi".
 
 Kode: `app/Http/Controllers/Dashboard/TariffController.php`, `app/Http/Requests/Dashboard/UpdateTariffRequest.php`, `app/Actions/SaveSetting.php`, `app/Models/Setting.php`, `app/Policies/SettingPolicy.php`. Tes: `tests/Feature/TariffControllerTest.php`.
 
+## Statistik Layanan di dashboard
+
+Dipakai halaman *Statistik Layanan* di dashboard ([D-018](decisions.md#d-018--2026-10-13--statistik-layanan-tersimpan-di-server-hanya-angka-terverifikasi-yang-terbit)). Tamu mendapat `401`; pegawai yang tidak mengelola modul `statistik` mendapat `403` `{"message": "Modul Statistik Layanan belum ditugaskan kepada Anda."}`.
+
+```json
+{
+  "status": "terverifikasi", "tahun": "2026", "catatan": "…",
+  "set": [{
+    "kunci": "transaksi", "label": "Transaksi pelayanan", "sub": "Transaksi pelayanan · UPTD Kota Kupang",
+    "judulGrafik": "Transaksi per bulan", "satuan": "transaksi",
+    "tiles": [{ "id": "transaksi-1", "label": "Total transaksi", "nilai": 12480, "satuan": "", "perubahan": 4.2, "naikBaik": true }],
+    "seri": [880, 910, 1020, 960, 1040, 1100, 990, 1080, 1150, 1120, 0, 0]
+  }]
+}
+```
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `GET /api/pengaturan/statistik` | — | `200` dokumen di atas. Sebelum pertama kali disimpan: empat kategori dengan label bawaan, semua angka `0`, status `ilustrasi`, dan tahun berjalan (WITA). |
+| `PUT /api/pengaturan/statistik` | dokumen lengkap | `200` dokumen tersimpan. Bilangan bulat disimpan sebagai bilangan bulat (`12480.0` menjadi `12480`); isi yang sama dengan yang tersimpan tidak dicatat. `422` bila status selain `ilustrasi` atau `terverifikasi`; tahun bukan 4 angka 19xx/20xx; `set` tidak berisi tepat 4 kategori `transaksi`, `penerimaan`, `keliling`, `kepuasan` (masing-masing sekali); kategori tanpa nama tab (maks. 60 karakter) atau judul grafik (maks. 80); kategori tanpa tepat 4 angka utama atau 12 nilai bulanan; angka utama tanpa label (maks. 60); nilai bukan angka; perubahan di luar -1.000–1.000%; nilai bulanan negatif; atau teks berisi karakter kontrol. |
+
+Penyimpanan tercatat di log aktivitas sebagai "memperbarui Statistik Layanan".
+
+Kode: `app/Http/Controllers/Dashboard/StatisticsController.php`, `app/Http/Requests/Dashboard/UpdateStatisticsRequest.php`, `app/Actions/SaveSetting.php`, `app/Models/Setting.php`. Tes: `tests/Feature/StatisticsControllerTest.php`.
+
 ## Pesan & Pengaduan di dashboard
 
 Dipakai halaman *Pesan & Pengaduan* di dashboard ([D-016](decisions.md#d-016--2026-10-13--pesan--pengaduan-tersimpan-di-server)). Tamu mendapat `401`; pegawai yang tidak mengelola modul `pesan` mendapat `403` `{"message": "Modul Pesan & Pengaduan belum ditugaskan kepada Anda."}`.
@@ -357,6 +384,18 @@ Tarif untuk simulasi PKB di beranda dan halaman Layanan ([D-017](decisions.md#d-
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 
 Kode: `app/Http/Controllers/PublicTariffController.php`, `app/Actions/ShowPublicTariff.php`. Tes: `tests/Feature/PublicTariffControllerTest.php`.
+
+## `GET /api/public/statistik`
+
+Dasbor transparansi di beranda ([D-018](decisions.md#d-018--2026-10-13--statistik-layanan-tersimpan-di-server-hanya-angka-terverifikasi-yang-terbit), `initDash()` di `public/assets/js/main.js`). Hanya statistik berstatus `terverifikasi` yang diterbitkan: bentuknya sama dengan dokumen dashboard tanpa `status` dan tanpa `id` angka utama, ditambah `diperbarui` (waktu terakhir disimpan).
+
+| Hal | Perilaku |
+|---|---|
+| Berhasil | `200`. Selama statistik berstatus `ilustrasi` atau belum pernah disimpan: `{"tahun": "", "catatan": "", "set": [], "diperbarui": null}`, tanpa angka apa pun, dan beranda menyatakan statistik layanan belum diterbitkan. Teks wajib ditampilkan sebagai teks polos. |
+| Galat | `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah batas laju yang sama dengan `GET /api/public/faq`; `503` bila data tidak bisa dibaca, tidak pernah statistik kosong sebagai gantinya. |
+| Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
+
+Kode: `app/Http/Controllers/PublicStatisticsController.php`, `app/Actions/ShowPublicStatistics.php`. Tes: `tests/Feature/PublicStatisticsControllerTest.php`.
 
 ## `POST /api/public/pesan`
 
