@@ -31,6 +31,7 @@ use App\Http\Controllers\Dashboard\TariffController;
 use App\Http\Controllers\Dashboard\UpdateStandardController;
 use App\Http\Controllers\Dashboard\UpdateStandardDeletionController;
 use App\Http\Controllers\Dashboard\UpdateStandardOrderController;
+use App\Http\Controllers\Dashboard\UploadController;
 use App\Http\Controllers\Dashboard\VisionMissionController;
 use App\Http\Controllers\PublicContactController;
 use App\Http\Controllers\PublicFaqController;
@@ -55,6 +56,7 @@ use App\Models\Service;
 use App\Models\Setting;
 use App\Models\StaticPage;
 use App\Models\UpdateStandard;
+use App\Models\Upload;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Route;
@@ -269,6 +271,14 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/{standard}', [UpdateStandardController::class, 'show'])->can('view', 'standard')->name('show');
         Route::patch('/{standard}', [UpdateStandardController::class, 'update'])->can('update', 'standard')->name('update');
     });
+
+    /*
+     * Uploads (D-028): the target in the request decides the bucket, the
+     * accepted types and who may upload (UploadPolicy). Private files are
+     * only read through this application.
+     */
+    Route::post('/unggah', [UploadController::class, 'store'])->middleware('throttle:uploads')->name('unggah.store');
+    Route::get('/berkas/{upload}', [UploadController::class, 'show'])->whereUlid('upload')->can('view', 'upload')->name('berkas.show');
 
     Route::get('/aktivitas', ActivityController::class)->name('aktivitas');
 });

@@ -69,6 +69,15 @@ class AppServiceProvider extends ServiceProvider
                     'message' => 'Terlalu banyak percobaan masuk dari jaringan ini. Coba lagi sebentar lagi.',
                 ], 429, $headers));
         });
+
+        // Dashboard uploads (D-028): at most 30 files per minute for each employee.
+        RateLimiter::for('uploads', function (Request $request): Limit {
+            return Limit::perMinute(30)
+                ->by($request->user()?->getAuthIdentifier() ?? $request->ip())
+                ->response(fn (Request $request, array $headers): JsonResponse => response()->json([
+                    'message' => 'Terlalu banyak unggahan. Coba lagi sebentar lagi.',
+                ], 429, $headers));
+        });
     }
 
     /**

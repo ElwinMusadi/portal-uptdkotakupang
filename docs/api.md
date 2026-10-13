@@ -44,6 +44,8 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET` | `/api/pengaturan/situs` | pegawai login | tersedia |
 | `PUT` | `/api/pengaturan/situs` | Administrator | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/akun` | pegawai login, untuk akunnya sendiri | tersedia |
+| `POST` | `/api/unggah` | pengelola modul tujuan; foto absensi: semua pegawai | tersedia |
+| `GET` | `/api/berkas/{id}` | pengunggah berkas privat, Administrator | tersedia |
 | `GET`, `POST` | `/api/koleksi/pesan` | Administrator, pengelola Pesan & Pengaduan | tersedia |
 | `GET`, `PATCH` | `/api/koleksi/pesan/{id}` | Administrator, pengelola Pesan & Pengaduan | tersedia |
 | `POST` | `/api/koleksi/pesan/hapus` | Administrator | tersedia |
@@ -502,6 +504,21 @@ Dipakai tab *Akun* di halaman Pengaturan dan menu pengguna di dashboard ([D-027]
 Penyimpanan profil tidak dicatat di log aktivitas.
 
 Kode: `app/Http/Controllers/Dashboard/OwnAccountController.php`, `app/Http/Requests/Dashboard/UpdateOwnAccountRequest.php`, `app/Models/User.php`. Tes: `tests/Feature/OwnAccountControllerTest.php`.
+
+## Unggahan di dashboard
+
+Penyimpanan berkas dari dashboard ([D-028](decisions.md#d-028--2026-10-14--unggahan-disimpan-di-laravel-cloud-object-storage)). Tamu mendapat `401`. Dashboard baru memakainya saat modul yang bersangkutan pindah ke server; sampai saat itu unggahan tetap di peramban.
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `POST /api/unggah` | `multipart/form-data`: `modul` (tujuan: `berita`, `dokumentasi`, `dokumen`, `unit`, `visiMisi`, `profil`, atau `absensi`) dan `berkas` | `201` `{ "nama": "Foto Loket.jpg", "ukuran": 182400, "tipe": "image/jpeg", "url": "…" }`. `url` adalah alamat bucket publik, atau `/api/berkas/{id}` untuk foto absensi. `403` bila pegawai tidak mengelola modul tujuan, mis. `{"message": "Modul Berita & Pengumuman belum ditugaskan kepada Anda."}`; foto absensi boleh diunggah semua pegawai. `422` bila tujuan tidak dikenal, berkas kosong, formatnya tidak sesuai tujuan menurut isinya (`{"berkas": ["Format berkas harus JPG, PNG, atau WebP."]}`), gambar lebih dari 5 MB atau 25 megapiksel, atau dokumen lebih dari 10 MB. `429` setelah 30 unggahan per menit. |
+| `GET /api/berkas/{id}` | — | `200` isi berkas privat dengan `Content-Type` hasil deteksi, `X-Content-Type-Options: nosniff`, dan `Cache-Control: no-store, private`. Hanya bagi pengunggahnya dan Administrator; pegawai lain mendapat `403` `{"message": "Berkas ini tidak dapat Anda buka."}`. `404` untuk berkas publik dan berkas yang tidak ada. |
+
+Format per tujuan: gambar (JPG, PNG, WebP) untuk semua tujuan kecuali `visiMisi`; `dokumen` juga menerima PDF, DOCX, dan XLSX; `visiMisi` hanya PDF. Gambar disimpan ulang oleh server tanpa metadata dan paling panjang 1600 px; dokumen disimpan apa adanya. Nama berkas asli hanya untuk tampilan; nama simpannya acak.
+
+Berkas yang belum dipakai konten tersimpan dihapus otomatis setelah sehari.
+
+Kode: `app/Http/Controllers/Dashboard/UploadController.php`, `app/Http/Requests/Dashboard/StoreUploadRequest.php`, `app/Actions/StoreUpload.php`, `app/Enums/UploadTarget.php`, `app/Models/Upload.php`, `app/Policies/UploadPolicy.php`. Tes: `tests/Feature/UploadControllerTest.php`.
 
 ## Pesan & Pengaduan di dashboard
 

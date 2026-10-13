@@ -370,3 +370,26 @@ Tab *Akun* di halaman Pengaturan kini membaca dan menyimpan profil akun yang sed
 | Nama pelaku | Riwayat alur publikasi dan log aktivitas untuk modul yang masih tersimpan di peramban (Berita, Dokumentasi, Unduhan, Absensi) kini memakai nama akun yang sedang masuk, sama seperti modul di server. Nama di profil peramban tidak dipakai lagi. |
 
 `GET` dan `PUT /api/pengaturan/akun` hanya membaca dan mengubah akun yang sedang masuk. Administrator belum melihat profil pegawai lain di Akun Pegawai.
+
+## D-028 · 2026-10-14 · Unggahan disimpan di Laravel Cloud Object Storage
+
+Berkas yang diunggah dari dashboard kini bisa disimpan di server. Ini fondasinya: modul yang memakai unggahan pindah ke server di slice berikutnya, dan sampai saat itu dashboard tetap menyimpan unggahannya di peramban. Semua keputusan di bawah adalah keputusan pemilik atas rancangan yang diajukan.
+
+| Hal | Keputusan |
+|---|---|
+| Tempat simpan | Laravel Cloud Object Storage (Cloudflare R2), dikelola dari Laravel Cloud, bukan dari akun Cloudflare sendiri. Setiap environment memakai dua bucket: bucket privat sebagai disk bawaan dan bucket publik dengan nama disk `public`. Laravel membaca konfigurasi keduanya dari Cloud. Visibilitas R2 berlaku per bucket, jadi aplikasi tidak pernah menetapkan visibilitas per berkas. Dependensi baru `league/flysystem-aws-s3-v3`. Di lokal dipakai disk lokal; tes memakai `Storage::fake`. |
+| Publik atau privat | Publik: foto Berita, foto Dokumentasi, dokumen Regulasi & Unduhan, PDF maklumat Visi & Misi, dan foto Tentang UPTD serta Struktur Organisasi. Privat: foto Absensi Lapangan, karena berisi data pribadi dan bukti kehadiran. |
+| Sebelum terbit | Berkas konten langsung masuk bucket publik dengan nama acak yang tidak bisa ditebak. Portal hanya menautkan entri yang sudah terbit. |
+| Akses berkas privat | Dibaca hanya lewat aplikasi (`GET /api/berkas/{id}`), dengan hak akses diperiksa di setiap permintaan: pengunggahnya dan Administrator. Slice Absensi menentukan siapa lagi yang boleh membacanya. |
+| Jenis dan ukuran | Tipe dibaca dari isi berkas, bukan dari nama atau tipe kiriman browser. Gambar: JPG, PNG, WebP, maks. 5 MB dan 25 megapiksel. Server menegakkan foto sesuai orientasi kameranya, memperkecilnya ke maks. 1600 px, dan menyimpannya ulang tanpa metadata, termasuk lokasi GPS. Dokumen: PDF, DOCX, XLSX, maks. 10 MB, disimpan apa adanya. Maklumat Visi & Misi hanya PDF. Berkas `.doc`/`.xls` lama, SVG, dan HTML tidak diterima. |
+| Pencatatan | Setiap berkas dicatat di tabel `uploads`: tujuan, publik atau privat, lokasi `tujuan/tahun/bulan/ID.ext`, nama asli untuk tampilan, tipe hasil deteksi, ukuran, pengunggah, dan waktu pertama dipakai. `POST /api/unggah` mewajibkan isian `modul` (tujuan). Hanya pengelola modul tujuan yang boleh mengunggah, kecuali foto absensi yang boleh diunggah semua pegawai. Batas laju 30 unggahan per menit per pegawai. |
+| Pembersihan | Berkas yang tidak dipakai konten tersimpan dalam sehari dihapus otomatis (`model:prune`, harian). Menghapus catatan berkas juga menghapus berkasnya. Slice tiap modul menghapus berkas lama saat entri dihapus atau berkasnya diganti. |
+| Retensi foto absensi | Belum dihapus otomatis, sama seperti Pesan (D-016). Aturan retensinya diputuskan bersama unit hukum. |
+
+Sebelum go-live:
+
+- Buat dan pasang dua bucket di environment produksi: privat sebagai disk bawaan dan publik dengan nama disk `public`. Lokasinya dipilih saat dibuat dan tidak bisa diubah. Nyalakan *Scheduler* agar pembersihan harian berjalan.
+- Pastikan batas unggahan PHP di Cloud (`upload_max_filesize` dan `post_max_size`) minimal 10 MB lewat tab *Commands* (`php -i`).
+- Konfirmasi ke unit hukum atau Diskominfo kewajiban lokasi data lingkup publik (PP 71/2019). R2 tidak menawarkan wilayah Indonesia; ini juga menyangkut database di Laravel Cloud (D-006).
+- Tentukan cadangan isi bucket; dokumentasi Laravel Cloud tidak menyebut cadangan otomatis untuk bucket.
+- Bila portal kelak memakai Content-Security-Policy, izinkan host bucket publik.
