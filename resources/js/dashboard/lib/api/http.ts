@@ -1,4 +1,4 @@
-import { bacaSesi } from "@/lib/auth"
+import { headerXsrf, SAMA_ORIGIN } from "@/lib/auth"
 
 import { ApiError, type ApiClient } from "./client"
 import type {
@@ -16,8 +16,9 @@ import type {
 
 /**
  * Adapter REST. Aktif bila dashboard di-build dengan VITE_API_URL, mis.
- *   VITE_API_URL=https://pintu.example.go.id/api npm run build
- * Kontrak endpoint lengkap ada di dashboard-app/README.md.
+ *   VITE_API_URL=/api npm run build
+ * Autentikasi memakai cookie sesi Laravel Sanctum (satu origin) dan header
+ * X-XSRF-TOKEN. Kontrak endpoint lengkap ada di docs/dashboard.md.
  */
 export class HttpApi implements ApiClient {
   readonly mode = "server" as const
@@ -29,9 +30,10 @@ export class HttpApi implements ApiClient {
   }
 
   private async req<T>(method: string, path: string, body?: unknown): Promise<T> {
-    const headers: Record<string, string> = { Accept: "application/json" }
-    const token = bacaSesi()?.token
-    if (token) headers.Authorization = `Bearer ${token}`
+    const headers: Record<string, string> = {
+      Accept: "application/json",
+      ...(method === "GET" ? {} : headerXsrf()),
+    }
     let payload: BodyInit | undefined
     if (body instanceof FormData) {
       payload = body
@@ -42,7 +44,7 @@ export class HttpApi implements ApiClient {
 
     let res: Response
     try {
-      res = await fetch(this.base + path, { method, headers, body: payload })
+      res = await fetch(this.base + path, { ...SAMA_ORIGIN, method, headers, body: payload })
     } catch {
       throw new ApiError("Server tidak dapat dihubungi. Periksa koneksi internet Anda.")
     }
@@ -55,6 +57,7 @@ export class HttpApi implements ApiClient {
         // respons bukan JSON
       }
       if (res.status === 401) pesan = "Sesi Anda berakhir. Silakan masuk kembali."
+      if (res.status === 419) pesan = "Halaman ini sudah terlalu lama dibuka. Muat ulang halaman lalu coba lagi."
       throw new ApiError(pesan, res.status)
     }
     if (res.status === 204) return undefined as T

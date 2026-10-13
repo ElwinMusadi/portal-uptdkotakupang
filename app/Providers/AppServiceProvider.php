@@ -2,11 +2,19 @@
 
 namespace App\Providers;
 
+use App\Models\User;
+use Illuminate\Auth\Events\Lockout;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
+use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,10 +32,12 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureRateLimiting();
+        $this->configureAuthentication();
     }
 
     /**
-     * Throttle the anonymous public API per client IP address.
+     * Throttle the anonymous public API and sign-in attempts per client IP
+     * address. Sign-in also has per-NIP limits in LoginRequest.
      */
     protected function configureRateLimiting(): void
     {
@@ -37,6 +47,57 @@ class AppServiceProvider extends ServiceProvider
                 ->response(fn (Request $request, array $headers): JsonResponse => response()->json([
                     'message' => 'Terlalu banyak permintaan. Silakan coba lagi sebentar lagi.',
                 ], 429, $headers));
+        });
+
+        RateLimiter::for('login', function (Request $request): Limit {
+            return Limit::perMinute(30)
+                ->by($request->ip())
+                ->response(fn (Request $request, array $headers): JsonResponse => response()->json([
+                    'message' => 'Terlalu banyak percobaan masuk dari jaringan ini. Coba lagi sebentar lagi.',
+                ], 429, $headers));
+        });
+    }
+
+    /**
+     * Password policy for employee accounts, cookie-only Sanctum, and an
+     * authentication trail in the application log (never with passwords).
+     */
+    protected function configureAuthentication(): void
+    {
+        Password::defaults(fn (): Password => Password::min(12)->letters()->numbers());
+
+        // Only cookie sessions are used (D-007): ignore bearer tokens entirely.
+        Sanctum::getAccessTokenFromRequestUsing(fn (Request $request): ?string => null);
+
+        Event::listen(function (Login $event): void {
+            // An inactive account signed in by its remember cookie is signed out
+            // again by EnsureAccountIsActive, so it gets no login stamp or log.
+            if ($event->user instanceof User && ! $event->user->canSignIn()) {
+                return;
+            }
+
+            $request = request();
+
+            if ($request->hasSession()) {
+                $request->session()->put('pintu.masuk', now()->toIso8601String());
+            }
+
+            Log::info('auth.login', [
+                'user' => $event->user->getAuthIdentifier(),
+                'remember' => $event->remember,
+                'ip' => $request->ip(),
+            ]);
+        });
+
+        Event::listen(function (Logout $event): void {
+            Log::info('auth.logout', ['user' => $event->user?->getAuthIdentifier()]);
+        });
+
+        Event::listen(function (Lockout $event): void {
+            Log::warning('auth.lockout', [
+                'nip' => $event->request->input('nip'),
+                'ip' => $event->request->ip(),
+            ]);
         });
     }
 }

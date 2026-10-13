@@ -45,15 +45,6 @@
       swdkllj: { motor: 35000, mobil: 143000 },
       default: { pokok: 285000, jenis: "motor", telat: 3, putih: false },
     },
-    // Akun Login Pegawai (PROTOTIPE). Kredensial statis ini hanya untuk uji coba:
-    // pemeriksaan dilakukan di peramban sehingga tidak aman untuk produksi.
-    // Ganti dengan autentikasi server (lihat dashboard-app/README.md) sebelum terbit.
-    auth: {
-      nip: "199707162026061002",
-      sandi: "password123",
-      sesiJam: 8,       // sesi biasa, berakhir saat tab ditutup
-      ingatHari: 7,     // bila "Ingat perangkat ini" dicentang
-    },
   };
 
   const HARI = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
@@ -561,35 +552,50 @@
     });
   }
 
-  /* ---------- Sesi Login Pegawai ----------
-     Format sesi sama dengan yang dibaca dashboard (dashboard-app/src/lib/auth.ts). */
-  const KUNCI_SESI = "pintu.sesi";
+  /* ---------- Login Pegawai ----------
+     NIP dan kata sandi diperiksa server. Sesinya berupa cookie Laravel Sanctum
+     yang juga dipakai dashboard (satu origin); lihat routes/api.php. */
 
-  function bacaSesi() {
-    for (const ambil of [() => sessionStorage, () => localStorage]) {
-      try {
-        const sesi = JSON.parse(ambil().getItem(KUNCI_SESI) || "null");
-        if (sesi && sesi.nip && Date.parse(sesi.kedaluwarsa) > Date.now()) return sesi;
-      } catch { /* penyimpanan diblokir atau rusak */ }
-    }
-    return null;
+  /** Header CSRF dari cookie XSRF-TOKEN yang dipasang Laravel */
+  function headerXsrf() {
+    const cocok = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
+    return cocok ? { "X-XSRF-TOKEN": decodeURIComponent(cocok[1]) } : {};
   }
 
-  function simpanSesi(nip, ingat) {
-    const kini = Date.now();
-    const durasi = ingat ? CONFIG.auth.ingatHari * 864e5 : CONFIG.auth.sesiJam * 36e5;
-    const sesi = { nip, masuk: new Date(kini).toISOString(), kedaluwarsa: new Date(kini + durasi).toISOString(), ingat: !!ingat };
+  /* Server mengenali permintaan dari portal lewat Referer, jadi dikirim untuk origin sendiri
+     walau halaman kelak memakai kebijakan referrer yang lebih ketat. */
+  const SAMA_ORIGIN = { credentials: "same-origin", referrerPolicy: "same-origin" };
+
+  /** true bila peramban ini sudah punya sesi login yang berlaku */
+  async function sudahMasuk() {
     try {
-      localStorage.removeItem(KUNCI_SESI);
-      sessionStorage.removeItem(KUNCI_SESI);
-      (ingat ? localStorage : sessionStorage).setItem(KUNCI_SESI, JSON.stringify(sesi));
-      return true;
+      const res = await fetch("/api/sesi", { ...SAMA_ORIGIN, headers: { Accept: "application/json" } });
+      return res.ok;
     } catch { return false; }
   }
 
-  /** Tujuan setelah login: hanya halaman di dalam folder dashboard (cegah pengalihan ke situs lain) */
+  async function masuk(nip, sandi, ingat) {
+    await fetch("/sanctum/csrf-cookie", SAMA_ORIGIN);
+    return fetch("/api/masuk", {
+      ...SAMA_ORIGIN,
+      method: "POST",
+      headers: { Accept: "application/json", "Content-Type": "application/json", ...headerXsrf() },
+      body: JSON.stringify({ nip, sandi, ingat }),
+    });
+  }
+
+  /** Pesan untuk pengguna dari respons login yang gagal */
+  async function pesanGagal(res) {
+    if (res.status === 419) return "Halaman ini sudah terlalu lama dibuka. Muat ulang halaman lalu coba lagi.";
+    const data = await res.json().catch(() => ({}));
+    return data.errors?.nip?.[0] ?? data.errors?.sandi?.[0] ?? data.message ?? `Login gagal (${res.status}).`;
+  }
+
+  /** Tujuan setelah login: hanya halaman di dalam dashboard (cegah pengalihan ke situs lain) */
   function tujuanDashboard() {
-    const lanjut = new URLSearchParams(location.search).get("lanjut") || "";
+    let lanjut = new URLSearchParams(location.search).get("lanjut") || "";
+    // Pengalihan dari server membawa layar dashboard sebagai hash halaman ini (/login?lanjut=dashboard%2F#/berita)
+    if (lanjut === "dashboard/" && /^#\/[\w\-\/?=&%.]*$/.test(location.hash)) lanjut += location.hash;
     return /^dashboard\/(#\/[\w\-\/?=&%.]*)?$/.test(lanjut) ? lanjut : "dashboard/";
   }
 
@@ -598,14 +604,14 @@
     const login = $("[data-login-form]");
     if (login) {
       const params = new URLSearchParams(location.search);
-      if (!params.has("keluar") && bacaSesi()) {
-        location.replace(tujuanDashboard());
-        return;
+      if (!params.has("keluar")) {
+        sudahMasuk().then((ya) => { if (ya) location.replace(tujuanDashboard()); });
       }
       const nip = $("#nip", login), pass = $("#sandi", login), alert = $("[data-login-alert]"), info = $("[data-login-info]");
       const tampilInfo = (teks) => { $("[data-login-info-msg]").textContent = teks; info.classList.add("is-on"); };
       if (params.has("keluar")) tampilInfo("Anda sudah keluar dari dashboard. Sampai jumpa.");
       else if (params.get("sesi") === "berakhir") tampilInfo("Sesi Anda berakhir. Silakan masuk kembali.");
+      else if (params.has("aktif")) tampilInfo("Akun Anda sudah aktif. Silakan masuk dengan kata sandi baru.");
 
       const galat = (teks, el) => {
         info.classList.remove("is-on");
@@ -625,21 +631,30 @@
       nip.addEventListener("input", () => { nip.value = nip.value.replace(/\D/g, "").slice(0, 18); });
       $("[data-sso]", login)?.addEventListener("click", () => toast("SSO Pemprov belum tersedia. Masuk dengan NIP dan kata sandi."));
 
-      login.addEventListener("submit", (e) => {
+      login.addEventListener("submit", async (e) => {
         e.preventDefault();
         if (!/^\d{18}$/.test(nip.value)) return galat("NIP harus 18 digit angka.", nip);
         if (!pass.value) return galat("Kata sandi wajib diisi.", pass);
-        if (nip.value !== CONFIG.auth.nip || pass.value !== CONFIG.auth.sandi) {
-          pass.value = "";
-          return galat("NIP atau kata sandi belum sesuai.", pass);
-        }
-        if (!simpanSesi(nip.value, login.elements.ingat?.checked)) {
-          return galat("Peramban menolak menyimpan sesi. Matikan mode privat lalu coba lagi.");
-        }
         const btn = $("button[type=submit]", login);
+        const label = btn.textContent;
+        btn.disabled = true;
         btn.setAttribute("aria-disabled", "true");
-        btn.textContent = "Membuka dashboard…";
-        location.href = tujuanDashboard();
+        btn.textContent = "Memeriksa…";
+        try {
+          const res = await masuk(nip.value, pass.value, !!login.elements.ingat?.checked);
+          if (res.ok) {
+            btn.textContent = "Membuka dashboard…";
+            location.href = tujuanDashboard();
+            return;
+          }
+          pass.value = "";
+          galat(await pesanGagal(res), pass);
+        } catch {
+          galat("Server tidak dapat dihubungi. Periksa koneksi lalu coba lagi.");
+        }
+        btn.disabled = false;
+        btn.removeAttribute("aria-disabled");
+        btn.textContent = label;
       });
     }
 

@@ -7,25 +7,33 @@ import { router } from "@/app/router"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
-import { bacaSesi, urlLogin } from "@/lib/auth"
+import { muatSesi, urlLogin } from "@/lib/auth"
 import { queryClient } from "@/lib/queries"
 
 import "./index.css"
 
-// Tanpa sesi login yang sah, kembali ke halaman Login Pegawai portal
-if (!bacaSesi()) {
-  window.location.replace(urlLogin())
-} else {
-  createRoot(document.getElementById("root")!).render(
-    <StrictMode>
-      <ThemeProvider>
-        <QueryClientProvider client={queryClient}>
-          <TooltipProvider delayDuration={300}>
-            <RouterProvider router={router} />
-            <Toaster position="bottom-right" richColors={false} closeButton />
-          </TooltipProvider>
-        </QueryClientProvider>
-      </ThemeProvider>
-    </StrictMode>
-  )
-}
+const root = document.getElementById("root")!
+
+// Pastikan sesi login masih berlaku di server sebelum dashboard tampil
+muatSesi()
+  .then((sesi) => {
+    if (!sesi) {
+      window.location.replace(urlLogin())
+      return
+    }
+    createRoot(root).render(
+      <StrictMode>
+        <ThemeProvider>
+          <QueryClientProvider client={queryClient}>
+            <TooltipProvider delayDuration={300}>
+              <RouterProvider router={router} />
+              <Toaster position="bottom-right" richColors={false} closeButton />
+            </TooltipProvider>
+          </QueryClientProvider>
+        </ThemeProvider>
+      </StrictMode>
+    )
+  })
+  .catch(() => {
+    root.textContent = "Dashboard tidak dapat memeriksa sesi login. Periksa koneksi lalu muat ulang halaman."
+  })

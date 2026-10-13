@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { api, ApiError, type Snapshot } from "@/lib/api"
-import { bacaSesi, keluar } from "@/lib/auth"
+import { keluar, LABEL_PERAN, sesi } from "@/lib/auth"
 import { tanggalJam } from "@/lib/format"
 import { KOLEKSI_LABEL } from "@/lib/meta"
 import { laporGalat, useKoleksi } from "@/lib/queries"
@@ -94,7 +94,7 @@ function TabSitus() {
 }
 
 function TabAkun() {
-  const sesi = bacaSesi()
+  const login = sesi()
   return (
     <div className="grid gap-4 md:gap-6">
       <FormPengaturan nama="akun" schema={skemaAkun}>
@@ -122,23 +122,23 @@ function TabAkun() {
         <dl className="grid gap-3 text-sm sm:grid-cols-3">
           <div>
             <dt className="text-muted-foreground">NIP</dt>
-            <dd className="font-mono">{sesi?.nip ?? "—"}</dd>
+            <dd className="font-mono">{login.nip}</dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">Peran</dt>
+            <dd>{LABEL_PERAN[login.peran]}</dd>
           </div>
           <div>
             <dt className="text-muted-foreground">Masuk sejak</dt>
-            <dd>{tanggalJam(sesi?.masuk)}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Sesi berakhir</dt>
-            <dd>{tanggalJam(sesi?.kedaluwarsa)}</dd>
+            <dd>{login.masuk ? tanggalJam(login.masuk) : "—"}</dd>
           </div>
         </dl>
         <Alert>
           <IconInfoCircle />
-          <AlertTitle>Akun statis untuk prototipe</AlertTitle>
+          <AlertTitle>Login diperiksa server PINTU</AlertTitle>
           <AlertDescription>
-            NIP dan kata sandi diperiksa di peramban sehingga belum aman untuk dipakai publik. Setelah server
-            tersedia, login dipindahkan ke API (token) dan kata sandi bisa diganti dari sini.
+            Sesi berakhir bila lama tidak aktif atau peramban ditutup, kecuali “Ingat perangkat ini” dicentang saat
+            masuk. Untuk mengganti kata sandi atau membuka akun yang terkunci, hubungi admin di Sub Bagian Tata Usaha.
           </AlertDescription>
         </Alert>
         <div>

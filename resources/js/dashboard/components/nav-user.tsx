@@ -33,7 +33,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { bacaSesi, keluar } from "@/lib/auth"
+import { keluar, LABEL_PERAN, sesi } from "@/lib/auth"
 import { inisial } from "@/lib/format"
 import { usePengaturan } from "@/lib/queries"
 import { urlPortal } from "@/lib/portal"
@@ -44,8 +44,7 @@ export function NavUser() {
   const tutup = useTutupSeluler()
   const { theme, setTheme } = useTheme()
   const { data: akun } = usePengaturan("akun")
-  const nip = bacaSesi()?.nip ?? ""
-  const nama = akun?.nama ?? "Pengelola PINTU"
+  const { nip, nama, peran } = sesi()
 
   const identitas = (
     <>
@@ -84,11 +83,10 @@ export function NavUser() {
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 {identitas}
               </div>
-              {akun?.peran && (
-                <p className="px-1 pb-1.5 text-xs text-muted-foreground">
-                  {akun.peran} · {akun.unit}
-                </p>
-              )}
+              <p className="px-1 pb-1.5 text-xs text-muted-foreground">
+                {LABEL_PERAN[peran]}
+                {akun?.unit ? ` · ${akun.unit}` : ""}
+              </p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>

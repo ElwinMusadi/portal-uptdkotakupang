@@ -29,7 +29,7 @@ docs/                              rancangan, keputusan, API, dashboard, arsip f
 | Alamat | Isi |
 |---|---|
 | `/`, `/profil`, `/layanan`, `/jadwal`, … | Halaman portal. Alamat lama `*.html` dialihkan permanen ke alamat bersih. |
-| `/login` | Login pegawai (prototipe, lihat di bawah) |
+| `/login` | Login pegawai (diperiksa server, lihat di bawah) |
 | `/dashboard` | Dashboard pengelolaan konten ([docs/dashboard.md](docs/dashboard.md)) |
 | `/api/…` | API JSON ([docs/api.md](docs/api.md)) |
 
@@ -67,11 +67,25 @@ npm run dev
 
 Tanpa Herd, `composer dev` menjalankan `php artisan serve` dan Vite sekaligus; buka `http://127.0.0.1:8000`.
 
-Login pegawai masih **prototipe**. Akun statisnya diperiksa di peramban dan tidak aman untuk produksi:
+### Login pegawai
 
-| NIP | Kata sandi |
-|---|---|
-| `199707162026061002` | `password123` |
+Login diperiksa server dengan sesi cookie Laravel Sanctum ([D-007](docs/decisions.md#d-007--2026-10-13--login-pegawai-dengan-laravel-sanctum)). Untuk pengembangan lokal, buat akun admin lokal (NIP dan kata sandinya ada di `database/seeders/LocalAccountSeeder.php`; seeder ini menolak berjalan di luar lingkungan `local`):
+
+```bash
+php artisan db:seed
+```
+
+Akun administrator sungguhan, termasuk yang pertama di produksi, dibuat dengan perintah berikut. Di terminal, kata sandi diminta tanpa ditampilkan dan akun langsung aktif.
+
+```bash
+php artisan pintu:create-admin 199001012020121001 "Nama Lengkap"
+```
+
+Tanpa mode interaktif (`--no-interaction`, misalnya di tab *Commands* Laravel Cloud), tidak ada kata sandi yang ditampilkan. Akun dibuat menunggu aktivasi dan perintah mencetak tautan aktivasi yang berlaku 60 menit dan hanya sekali pakai. Pemilik akun membuka tautan itu dan memilih kata sandinya sendiri: minimal 12 karakter, berisi huruf dan angka. Bila tautan kedaluwarsa, buat tautan baru; tautan sebelumnya otomatis tidak berlaku:
+
+```bash
+php artisan pintu:activation-link 199001012020121001
+```
 
 ## Pengujian
 
@@ -79,7 +93,7 @@ Login pegawai masih **prototipe**. Akun statisnya diperiksa di peramban dan tida
 composer test
 ```
 
-Tes berjalan di SQLite di memori. Untuk menjalankan tes yang sama di MySQL, isi `DB_TEST_DATABASE` di `.env` dengan database lokal yang **boleh direset**, lalu:
+Tes berjalan di SQLite di memori. Untuk menjalankan tes yang sama di MySQL, isi `DB_TEST_DATABASE` di `.env` dengan database lokal yang **boleh direset** (setelahnya jalankan lagi `php artisan db:seed` bila database itu juga dipakai untuk login lokal), lalu:
 
 ```bash
 composer test:mysql
@@ -99,7 +113,9 @@ Produksi saat ini masih Cloudflare Pages dari branch `main` (situs statis lama).
 - **Build command:** `composer install --no-dev && npm ci && npm run build && php artisan optimize`
 - **Deploy command:** `php artisan migrate --force`
 - **Database:** pasang Laravel MySQL; kredensialnya disuntikkan otomatis.
-- **Edge network:** aktifkan rate limiting (paket Growth atau Business). Di Cloud, Laravel memercayai semua proxy sehingga IP pengunjung untuk pembatasan laju di aplikasi bisa dipalsukan.
+- **Variabel lingkungan:** `APP_URL` dengan alamat https produksi, `SESSION_DRIVER=database` (filesystem Cloud tidak permanen), `SESSION_SECURE_COOKIE=true`, `SESSION_LIFETIME=480`, `SESSION_EXPIRE_ON_CLOSE=true`, dan `CACHE_STORE=database` (percobaan login dihitung di cache, jadi semua server harus memakai cache yang sama).
+- **Administrator pertama:** di tab *Commands* jalankan `php artisan pintu:create-admin <nip> "<nama>" --no-interaction`, lalu kirim tautan aktivasi yang dicetak hanya kepada pemilik akun. Tautan berlaku 60 menit; bila terlewat, jalankan `php artisan pintu:activation-link <nip>`.
+- **Edge network:** aktifkan rate limiting (paket Growth atau Business). Di Cloud, Laravel memercayai semua proxy sehingga IP pengunjung untuk pembatasan laju di aplikasi bisa dipalsukan. Batas percobaan login per NIP tetap berlaku karena tidak bergantung pada IP.
 - Setelah aman, arahkan domain `pintu.uptdpenda-kupang.web.id` ke Laravel Cloud dan matikan deploy otomatis Cloudflare Pages.
 
 ## Mengubah header, footer, atau ikon portal

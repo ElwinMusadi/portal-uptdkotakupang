@@ -157,7 +157,6 @@
 
       <p class="small muted" id="lupa" style="margin-top:20px">Lupa kata sandi atau akun terkunci? Hubungi admin di Sub Bagian Tata Usaha.</p>
       <p class="auth__security"><svg class="i" aria-hidden="true"><use href="#i-shield"/></svg><span>Setiap akses dicatat. Jangan bagikan kata sandi, termasuk kepada rekan kerja.</span></p>
-      <p class="proto-note" style="margin-top:14px">Prototipe: akun statis di peramban. Autentikasi server menyusul sebelum dipakai publik.</p>
     </form>
   </section>
 </main>

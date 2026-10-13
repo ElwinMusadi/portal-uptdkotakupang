@@ -10,24 +10,29 @@ import { SiteHeader } from "@/components/site-header"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { api } from "@/lib/api"
-import { bacaSesi, urlLogin } from "@/lib/auth"
+import { muatSesi, urlLogin } from "@/lib/auth"
 import { aturBasisPortal } from "@/lib/portal"
 import { usePengaturan } from "@/lib/queries"
 
-/** Arahkan ke halaman login bila sesi berakhir atau pengguna keluar di tab lain */
+/**
+ * Kembali ke halaman login bila sesi di server sudah berakhir (keluar di tab lain,
+ * akun dinonaktifkan, atau lama tidak aktif). Diperiksa saat tab kembali dilihat,
+ * bukan berkala, supaya tab yang terbuka tanpa dipakai tidak memperpanjang sesi.
+ */
 function useJagaSesi() {
   React.useEffect(() => {
     const periksa = () => {
-      if (!bacaSesi()) window.location.replace(urlLogin("berakhir"))
+      if (document.visibilityState !== "visible") return
+      muatSesi()
+        .then((sesi) => {
+          if (!sesi) window.location.replace(urlLogin("berakhir"))
+        })
+        .catch(() => {
+          // koneksi terputus: periksa lagi saat tab dilihat berikutnya
+        })
     }
-    const id = window.setInterval(periksa, 60_000)
     document.addEventListener("visibilitychange", periksa)
-    window.addEventListener("storage", periksa)
-    return () => {
-      window.clearInterval(id)
-      document.removeEventListener("visibilitychange", periksa)
-      window.removeEventListener("storage", periksa)
-    }
+    return () => document.removeEventListener("visibilitychange", periksa)
   }, [])
 }
 

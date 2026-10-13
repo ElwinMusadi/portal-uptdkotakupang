@@ -4,7 +4,7 @@ Dashboard pengelolaan konten portal **PINTU** (UPTD Pendapatan Daerah Wilayah Ko
 
 Tata letaknya mengikuti template [shadcn/ui *dashboard-01*](https://ui.shadcn.com/blocks#dashboard-01): sidebar, kartu KPI, grafik area interaktif, dan tabel data. Warna dan tipografinya disesuaikan dengan design system portal.
 
-> **Status prototipe.** Login memakai satu akun statis yang diperiksa di peramban, dan data tersimpan di peramban (IndexedDB). Sebelum dipakai publik, sambungkan ke server dan pindahkan login ke server. Langkahnya ada di bagian [Menyambungkan ke server](#menyambungkan-ke-server-rest-api) dan [Mengganti login statis](#mengganti-login-statis).
+> **Status.** Login sudah diperiksa server (lihat [Sesi login](#sesi-login)), tetapi data konten masih tersimpan di peramban (IndexedDB) sampai dashboard disambungkan ke API. Langkahnya ada di bagian [Menyambungkan ke server](#menyambungkan-ke-server-rest-api).
 
 ## Menjalankan
 
@@ -15,11 +15,13 @@ npm install
 npm run dev
 ```
 
-Dengan Laravel Herd, buka `http://portal-uptdkotakupang.test/login` (atau jalankan `composer dev` lalu buka `http://127.0.0.1:8000/login`), lalu masuk dengan akun prototipe:
+Buat akun admin lokal sekali (hanya berjalan di lingkungan `local`; data dan NIP-nya ada di `database/seeders/LocalAccountSeeder.php`):
 
-| NIP | Kata sandi |
-|---|---|
-| `199707162026061002` | `password123` |
+```bash
+php artisan db:seed
+```
+
+Lalu buka `http://portal-uptdkotakupang.test/login` dengan Laravel Herd (atau jalankan `composer dev` lalu buka `http://127.0.0.1:8000/login`) dan masuk dengan akun itu. `composer test:mysql` mereset database, jadi jalankan `php artisan db:seed` lagi sesudahnya.
 
 Dashboard ada di `/dashboard`. Selama `npm run dev` berjalan, perubahan di `resources/js/dashboard/` langsung tampil; tanpa itu Laravel memakai hasil `npm run build`.
 
@@ -198,7 +200,7 @@ Server perlu menyediakan endpoint berikut. Bentuk JSON-nya sama dengan model dat
 
 Ketentuan:
 
-- Setiap permintaan membawa `Authorization: Bearer <token>` bila sesi memiliki `token`. Balas **401** bila token tidak berlaku; dashboard akan kembali ke halaman login.
+- Permintaan memakai cookie sesi Laravel (satu origin) dan, untuk metode selain `GET`, header `X-XSRF-TOKEN`. Balas **401** bila sesi tidak berlaku; dashboard akan kembali ke halaman login. Balasan **419** berarti token CSRF kedaluwarsa.
 - Pesan galat dikirim sebagai JSON `{ "pesan": "…" }` (atau `{ "message": "…" }`) dan ditampilkan apa adanya.
 - Server yang mengisi `id`, `dibuat`, `diperbarui`, dan `urutan`, mencatat log aktivitas, serta memeriksa hak akses sesuai peran.
 - **Bersihkan HTML** dari kolom teks kaya (`isi`) dengan daftar tag yang diizinkan sebelum disimpan atau ditampilkan di portal.
@@ -206,22 +208,14 @@ Ketentuan:
 
 ## Sesi login
 
-Halaman `/login` di portal memeriksa NIP dan kata sandi (`CONFIG.auth` di `public/assets/js/main.js`), lalu menyimpan sesi dengan kunci `pintu.sesi`:
+Halaman `/login` (`public/assets/js/main.js`) mengirim NIP dan kata sandi ke `POST /api/masuk`. Server menyimpan sesi sebagai cookie HttpOnly Laravel Sanctum; tidak ada data sesi di `localStorage`/`sessionStorage`. Kontrak lengkapnya ada di [docs/api.md](api.md#login-pegawai-laravel-sanctum) dan keputusannya di [D-007](decisions.md#d-007--2026-10-13--login-pegawai-dengan-laravel-sanctum).
 
-```json
-{ "nip": "199707162026061002", "masuk": "2026-10-10T00:00:00.000Z", "kedaluwarsa": "2026-10-10T08:00:00.000Z", "ingat": false }
-```
-
-Sesi biasa disimpan di `sessionStorage` dan berlaku 8 jam. Bila “Ingat perangkat ini” dicentang, sesi disimpan di `localStorage` selama 7 hari. Dashboard memeriksa sesi saat dibuka, setiap menit, dan saat tab kembali aktif. Bila sesi tidak ada atau kedaluwarsa, pengguna diarahkan ke `login.html?lanjut=…` lalu dikembalikan ke halaman semula setelah masuk.
-
-## Mengganti login statis
-
-Akun statis **tidak aman**: kata sandinya bisa dibaca siapa pun dari kode halaman. Rencana berikutnya memakai sesi cookie Laravel Sanctum (dashboard dan API kini satu origin). Garis besar yang berlaku untuk pendekatan apa pun:
-
-1. Hapus `CONFIG.auth` dari `public/assets/js/main.js`. Kirim NIP dan kata sandi ke endpoint login di server lewat HTTPS.
-2. Server memeriksa akun per pegawai beserta perannya, lalu mengembalikan token dan waktu kedaluwarsa.
-3. Simpan sesi dengan format di atas ditambah `"token": "…"`. Dashboard otomatis mengirim token itu ke setiap permintaan REST.
-4. Untuk keluar, hapus sesi di peramban dan cabut token di server.
+- Rute `/dashboard` hanya terbuka untuk akun aktif yang sudah masuk; tamu dialihkan ke `/login?lanjut=dashboard%2F`, dan layar yang dituju (`#/berita`) dibuka kembali setelah masuk.
+- `resources/js/dashboard/lib/auth.ts` memuat sesi (`GET /api/sesi`) sebelum dashboard tampil dan memeriksanya lagi setiap kali tab kembali dilihat. Pemeriksaan tidak berjalan berkala, supaya tab yang dibiarkan terbuka tidak memperpanjang sesi.
+- Sesi berakhir setelah 8 jam tanpa aktivitas atau saat peramban ditutup; “Ingat perangkat ini” menyimpan login selama 7 hari.
+- **Keluar** memanggil `POST /api/keluar` lalu kembali ke `/login?keluar=1`. Data dashboard di IndexedDB tetap ada di peramban setelah keluar, jadi hindari komputer bersama sampai data pindah ke server.
+- Nama, NIP, dan peran di menu akun berasal dari server. Profil di *Pengaturan › Akun* (jabatan, unit, peran alur) masih data lokal untuk riwayat alur publikasi.
+- Administrator produksi dibuat dengan `php artisan pintu:create-admin <nip> "<nama>"`; tanpa mode interaktif, perintah ini mencetak tautan aktivasi (lihat [README](../README.md#login-pegawai)).
 
 ## Pemeriksaan sebelum commit
 

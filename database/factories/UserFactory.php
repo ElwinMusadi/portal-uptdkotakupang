@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Enums\AccountStatus;
+use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -18,28 +20,40 @@ class UserFactory extends Factory
     protected static ?string $password;
 
     /**
-     * Define the model's default state.
+     * Define the model's default state: an active employee (Pegawai UPTD).
      *
      * @return array<string, mixed>
      */
     public function definition(): array
     {
         return [
+            'nip' => fake()->unique()->numerify('19################'),
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
+            'role' => UserRole::Pegawai,
+            'status' => AccountStatus::Active,
             'remember_token' => Str::random(10),
         ];
     }
 
     /**
-     * Indicate that the model's email address should be unverified.
+     * An administrator account.
      */
-    public function unverified(): static
+    public function administrator(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
+        return $this->state(fn (array $attributes): array => [
+            'role' => UserRole::Administrator,
+        ]);
+    }
+
+    /**
+     * An account in the given lifecycle state.
+     */
+    public function withStatus(AccountStatus $status): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'status' => $status,
         ]);
     }
 }

@@ -41,6 +41,8 @@ return [
         'web' => [
             'driver' => 'session',
             'provider' => 'users',
+            // "Ingat perangkat ini selama 7 hari" on the login page
+            'remember' => 60 * 24 * 7,
         ],
     ],
 

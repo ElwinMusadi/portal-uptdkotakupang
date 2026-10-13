@@ -46,7 +46,7 @@ import {
 import { Spinner } from "@/components/ui/spinner"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { api, type Absensi, type JenisKegiatan, type Koordinat, type TipeAbsen } from "@/lib/api"
-import { bacaSesi } from "@/lib/auth"
+import { sesi } from "@/lib/auth"
 import { hariIniIso, jamTitik, selisihHari, tanggalJam } from "@/lib/format"
 import { kompresGambar, namaBerkasGambar, TIPE_GAMBAR } from "@/lib/gambar"
 import { sekarangWita } from "@/lib/jadwal"
@@ -420,7 +420,7 @@ export default function HalamanAbsensi() {
   const [periode, setPeriode] = React.useState<Periode>("semua")
 
   const nama = akun?.nama || "Pengelola PINTU"
-  const nip = bacaSesi()?.nip ?? ""
+  const nip = sesi().nip
   const hariIni = hariIniIso()
 
   const ed = useEditorEntri({

@@ -1,59 +1,63 @@
 /*
  * Sesi login dashboard.
  *
- * Halaman Login Pegawai (../login.html) memeriksa NIP & kata sandi lalu
- * menyimpan sesi dengan format di bawah. Dashboard hanya membaca sesi itu.
- * Format ini harus sama dengan yang ditulis assets/js/main.js di portal.
- *
- * PERHATIAN: kredensial statis + sesi di peramban hanya untuk prototipe.
- * Sebelum dipakai publik, ganti dengan autentikasi di server (token dari API).
+ * Halaman Login Pegawai (/login) mengirim NIP dan kata sandi ke server
+ * (POST /api/masuk). Server menyimpan sesi sebagai cookie Laravel Sanctum
+ * (satu origin dengan dashboard), jadi dashboard cukup menanyakan siapa yang
+ * sedang masuk (GET /api/sesi) dan meminta server mengakhiri sesi saat keluar.
  */
+import { toast } from "sonner"
 
-export const KUNCI_SESI = "pintu.sesi"
+export type Peran = "administrator" | "pegawai"
 
 export interface Sesi {
   nip: string
-  masuk: string
-  kedaluwarsa: string
-  ingat: boolean
-  /** Token dari server bila sudah memakai REST API */
-  token?: string
+  nama: string
+  peran: Peran
+  /** Waktu login (ISO 8601); null bila belum tercatat di sesi ini */
+  masuk: string | null
 }
 
-function baca(ambil: () => Storage): Sesi | null {
-  try {
-    const storage = ambil()
-    const raw = storage.getItem(KUNCI_SESI)
-    if (!raw) return null
-    const sesi = JSON.parse(raw) as Partial<Sesi>
-    if (typeof sesi.nip !== "string" || typeof sesi.kedaluwarsa !== "string") return null
-    if (!(Date.parse(sesi.kedaluwarsa) > Date.now())) {
-      storage.removeItem(KUNCI_SESI)
-      return null
-    }
-    return sesi as Sesi
-  } catch {
+export const LABEL_PERAN: Record<Peran, string> = {
+  administrator: "Administrator",
+  pegawai: "Pegawai UPTD",
+}
+
+let sesiAktif: Sesi | null = null
+
+/**
+ * Opsi untuk permintaan ke server sendiri. Sanctum mengenali permintaan dari dashboard
+ * lewat Referer, jadi Referer selalu dikirim untuk origin sendiri.
+ */
+export const SAMA_ORIGIN = { credentials: "same-origin", referrerPolicy: "same-origin" } as const satisfies RequestInit
+
+/** Header CSRF untuk permintaan yang mengubah data, dari cookie XSRF-TOKEN milik Laravel */
+export function headerXsrf(): Record<string, string> {
+  const cocok = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/)
+  return cocok ? { "X-XSRF-TOKEN": decodeURIComponent(cocok[1]) } : {}
+}
+
+/** Tanya server siapa yang sedang masuk; null bila belum atau tidak lagi login */
+export async function muatSesi(): Promise<Sesi | null> {
+  const res = await fetch("/api/sesi", { ...SAMA_ORIGIN, headers: { Accept: "application/json" } })
+  if (res.status === 401) {
+    sesiAktif = null
     return null
   }
+  if (!res.ok) throw new Error(`Sesi tidak dapat diperiksa (${res.status}).`)
+  sesiAktif = (await res.json()) as Sesi
+  return sesiAktif
 }
 
-export function bacaSesi(): Sesi | null {
-  return baca(() => window.sessionStorage) ?? baca(() => window.localStorage)
+/** Sesi yang dimuat saat dashboard dibuka; main.tsx memuatnya sebelum aplikasi tampil */
+export function sesi(): Sesi {
+  if (!sesiAktif) throw new Error("Sesi login belum dimuat.")
+  return sesiAktif
 }
 
-export function hapusSesi() {
-  for (const ambil of [() => window.localStorage, () => window.sessionStorage]) {
-    try {
-      ambil().removeItem(KUNCI_SESI)
-    } catch {
-      // penyimpanan diblokir; tidak ada yang perlu dihapus
-    }
-  }
-}
-
-/** URL halaman Login Pegawai di portal, relatif terhadap folder dashboard */
+/** URL halaman Login Pegawai di portal, relatif terhadap dashboard */
 export function urlLogin(alasan?: "keluar" | "berakhir"): string {
-  const url = new URL("../login.html", window.location.href)
+  const url = new URL("../login", window.location.href)
   url.hash = ""
   if (alasan === "keluar") url.searchParams.set("keluar", "1")
   if (alasan === "berakhir") {
@@ -64,7 +68,21 @@ export function urlLogin(alasan?: "keluar" | "berakhir"): string {
   return url.toString()
 }
 
-export function keluar() {
-  hapusSesi()
+/** Akhiri sesi di server lalu kembali ke halaman login */
+export async function keluar() {
+  try {
+    await fetch("/sanctum/csrf-cookie", SAMA_ORIGIN)
+    const res = await fetch("/api/keluar", {
+      ...SAMA_ORIGIN,
+      method: "POST",
+      headers: { Accept: "application/json", ...headerXsrf() },
+    })
+    // 401: sesi sudah berakhir di server, jadi pengguna memang sudah keluar
+    if (!res.ok && res.status !== 401) throw new Error(`Gagal keluar (${res.status}).`)
+  } catch {
+    toast.error("Gagal keluar", { description: "Server tidak dapat dihubungi. Coba lagi sebentar lagi." })
+    return
+  }
+  sesiAktif = null
   window.location.replace(urlLogin("keluar"))
 }

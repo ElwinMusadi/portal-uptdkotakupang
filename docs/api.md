@@ -6,7 +6,30 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 |---|---|---|---|
 | `GET` | `/api/health` | anonim | tersedia |
 | `GET` | `/api/public/faq` | anonim, hanya baca | tersedia |
+| `POST` | `/api/masuk` | halaman Login Pegawai | tersedia |
+| `GET` | `/api/sesi` | pegawai login | tersedia |
+| `POST` | `/api/keluar` | pegawai login | tersedia |
 | — | `/api/koleksi/…`, `/api/pengaturan/…` (kontrak dashboard) | pegawai login | belum dibuat, lihat [docs/dashboard.md](dashboard.md#menyambungkan-ke-server-rest-api) |
+
+## Login pegawai (Laravel Sanctum)
+
+Sesi berupa cookie HttpOnly milik Laravel; portal, dashboard, dan API satu origin, jadi tidak ada token di peramban ([D-007](decisions.md#d-007--2026-10-13--login-pegawai-dengan-laravel-sanctum)). Permintaan dianggap berasal dari peramban bila `Referer`/`Origin`-nya host aplikasi sendiri. Permintaan yang mengubah data wajib membawa header `X-XSRF-TOKEN` (isi cookie `XSRF-TOKEN`), yang bisa diperbarui lewat `GET /sanctum/csrf-cookie`.
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `POST /api/masuk` | `{"nip": "18 digit", "sandi": "…", "ingat": false}` | `200` dengan data sesi. `422` bila isian tidak valid, NIP/sandi salah (pesan sama untuk keduanya), atau akun tidak aktif (hanya setelah sandi benar). `429` bila percobaan melewati 5 per NIP+IP per menit atau 20 per NIP per 15 menit (dihitung sebelum sandi diperiksa, dihapus setelah berhasil masuk), atau 30 permintaan login per IP per menit. `400` bila tidak dikirim dari peramban di origin aplikasi. `419` bila token CSRF tidak cocok. |
+| `GET /api/sesi` | — | `200` dengan data sesi; `401` bila belum masuk atau akun sudah tidak aktif (sesinya diakhiri). |
+| `POST /api/keluar` | — | `204`; sesi dihapus dan token CSRF diganti. |
+
+Data sesi:
+
+```json
+{ "nip": "199707162026061002", "nama": "Admin PINTU", "peran": "administrator", "masuk": "2026-10-13T06:33:17+00:00" }
+```
+
+`peran` bernilai `administrator` atau `pegawai`; `masuk` kosong (`null`) bila waktu login belum tercatat di sesi itu. Rute `/dashboard` memakai sesi yang sama: tamu dialihkan ke `/login?lanjut=dashboard%2F`. Token bearer (`Authorization: Bearer …`) diabaikan.
+
+Aktivasi akun memakai halaman web, bukan API: `GET` dan `POST /aktivasi/{user}?expires=…&kunci=…&signature=…`, dengan tautan dari `php artisan pintu:create-admin --no-interaction` atau `php artisan pintu:activation-link`. Tautan yang kedaluwarsa, sudah dipakai, diganti, diubah, atau untuk akun yang tidak lagi `pending` dijawab `410`. Aktivasi yang berhasil dialihkan ke `/login?aktif=1`.
 
 ## `GET /api/public/faq`
 

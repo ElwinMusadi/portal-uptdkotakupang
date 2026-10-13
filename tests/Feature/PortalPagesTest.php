@@ -42,6 +42,17 @@ class PortalPagesTest extends TestCase
         $this->assertSame(file_get_contents(resource_path("views/portal/{$view}.blade.php")), $response->getContent());
     }
 
+    #[TestWith(['/'])]
+    #[TestWith(['/login'])]
+    #[TestWith(['/layanan'])]
+    public function test_serves_portal_pages_without_setting_any_cookie(string $uri): void
+    {
+        $response = $this->get($uri);
+
+        $response->assertOk();
+        $this->assertSame([], $response->headers->getCookies());
+    }
+
     public function test_redirects_a_former_html_address_permanently_and_keeps_its_query_string(): void
     {
         $response = $this->get('/login.html?sesi=berakhir&lanjut=dashboard%2F%23%2Fberita');

@@ -171,6 +171,15 @@ class PublicFaqControllerTest extends TestCase
         Log::shouldHaveReceived('warning')->twice()->with(self::WITHHELD_WARNING, ['ids' => [$blank->id]]);
     }
 
+    public function test_starts_no_session_for_readers_even_from_the_portal_itself(): void
+    {
+        $response = $this->withHeader('Referer', config('app.url').'/')->getJson('/api/public/faq');
+
+        $response->assertOk()
+            ->assertCookieMissing(config('session.cookie'))
+            ->assertCookieMissing('XSRF-TOKEN');
+    }
+
     public function test_forbids_caching_and_sends_no_revalidation_headers(): void
     {
         $response = $this->getJson('/api/public/faq');
