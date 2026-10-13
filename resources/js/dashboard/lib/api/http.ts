@@ -57,7 +57,9 @@ export async function mintaServer<T>(url: string, method: string, body?: unknown
 }
 
 /**
- * Adapter REST. Aktif bila dashboard di-build dengan VITE_API_URL, mis.
+ * Adapter REST. Mode campuran memakainya untuk koleksi yang sudah tersimpan
+ * di server (/api); untuk semua data bila dashboard di-build dengan
+ * VITE_API_URL, mis.
  *   VITE_API_URL=/api npm run build
  * Kontrak endpoint lengkap ada di docs/dashboard.md.
  */

@@ -4,8 +4,13 @@ use App\Http\Controllers\Admin\AccountActivationLinkController;
 use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\AccountStatusController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Dashboard\ActivityController;
+use App\Http\Controllers\Dashboard\FaqController;
+use App\Http\Controllers\Dashboard\FaqDeletionController;
+use App\Http\Controllers\Dashboard\FaqOrderController;
 use App\Http\Controllers\PublicFaqController;
 use App\Http\Middleware\EnsureAccountIsActive;
+use App\Models\Faq;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Route;
@@ -44,6 +49,22 @@ Route::middleware('auth:sanctum')->group(function (): void {
             ->can('issueActivationLink', 'user')
             ->name('tautan-aktivasi');
     });
+
+    /*
+     * Dashboard content kept on the server, following the dashboard's REST
+     * contract (docs/dashboard.md). FAQ entries belong to the Tanya Jawab
+     * module (FaqPolicy); the other collections still live in the browser.
+     */
+    Route::prefix('koleksi/faq')->name('koleksi.faq.')->whereUlid('faq')->group(function (): void {
+        Route::get('/', [FaqController::class, 'index'])->can('viewAny', Faq::class)->name('index');
+        Route::post('/', [FaqController::class, 'store'])->can('create', Faq::class)->name('store');
+        Route::put('/urutan', [FaqOrderController::class, 'update'])->can('reorder', Faq::class)->name('urutan');
+        Route::post('/hapus', [FaqDeletionController::class, 'store'])->can('deleteAny', Faq::class)->name('hapus');
+        Route::get('/{faq}', [FaqController::class, 'show'])->can('view', 'faq')->name('show');
+        Route::patch('/{faq}', [FaqController::class, 'update'])->can('update', 'faq')->name('update');
+    });
+
+    Route::get('/aktivitas', ActivityController::class)->name('aktivitas');
 });
 
 /*

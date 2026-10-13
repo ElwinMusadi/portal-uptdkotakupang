@@ -86,9 +86,9 @@ export function sesi(): Sesi {
 }
 
 /**
- * Apakah pengguna ini mengelola salah satu modul tersebut. Hanya mengatur
- * tampilan dashboard; selama konten tersimpan di peramban, pembatasan ini
- * belum ditegakkan server.
+ * Apakah pengguna ini mengelola salah satu modul tersebut. Untuk koleksi
+ * yang sudah tersimpan di server (Tanya Jawab), server juga menolaknya;
+ * untuk konten yang masih di peramban, ini hanya mengatur tampilan.
  */
 export function bolehModul(...modul: Modul[]): boolean {
   const milik = sesi().modul

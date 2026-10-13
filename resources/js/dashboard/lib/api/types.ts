@@ -147,9 +147,15 @@ export interface Layanan extends Entri, Beralur {
   unggulan: boolean
 }
 
+/** Siklus tanya jawab di server: draf, terbit, atau ditarik dari portal */
+export type StatusFaq = "draft" | "published" | "unpublished"
+
 export interface Faq extends Entri {
   pertanyaan: string
   jawaban: string
+  status: StatusFaq
+  /** Pernyataan eksplisit bahwa isinya memang untuk warga */
+  publik: boolean
   tampil: boolean
 }
 

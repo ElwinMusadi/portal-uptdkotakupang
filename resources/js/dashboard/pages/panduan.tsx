@@ -114,13 +114,21 @@ export default function HalamanPanduan() {
       </Topik>
 
       <Topik id="data" judul="Penyimpanan data">
-        {api.mode === "lokal" ? (
+        {api.mode !== "server" ? (
           <>
-            <p>
-              Saat ini dashboard berjalan dalam <strong>mode lokal</strong>: data disimpan di IndexedDB
-              peramban yang sedang Anda pakai. Perubahan belum tampil di portal publik dan tidak terlihat
-              dari perangkat lain.
-            </p>
+            {api.mode === "campuran" ? (
+              <p>
+                <strong>Tanya Jawab</strong> sudah tersimpan di server PINTU, sehingga perubahannya langsung
+                terlihat oleh pengelola lain. Konten lain masih disimpan di IndexedDB peramban yang sedang Anda
+                pakai: perubahannya belum tampil di portal publik dan tidak terlihat dari perangkat lain.
+              </p>
+            ) : (
+              <p>
+                Saat ini dashboard berjalan dalam <strong>mode lokal</strong>: data disimpan di IndexedDB
+                peramban yang sedang Anda pakai. Perubahan belum tampil di portal publik dan tidak terlihat
+                dari perangkat lain.
+              </p>
+            )}
             <p>
               Unduh cadangan secara berkala lewat{" "}
               <Link to="/pengaturan?tab=data" className="underline underline-offset-4">Pengaturan › Data</Link>.

@@ -195,6 +195,9 @@ function TabData() {
   const inputRef = React.useRef<HTMLInputElement>(null)
   const [proses, setProses] = React.useState<string | null>(null)
   const { data: pesan } = useKoleksi("pesan")
+  const lokal = api.sementara ? "Memori sementara" : "Lokal (IndexedDB)"
+  // Mode campuran: pulihkan, kosongkan log, dan kembalikan hanya mengubah data di peramban ini.
+  const tetapDiServer = api.mode === "campuran" ? " Tanya Jawab tersimpan di server dan tidak ikut berubah." : ""
 
   const jalan = async (kunci: string, fn: () => Promise<void>, sukses: string) => {
     setProses(kunci)
@@ -234,7 +237,7 @@ function TabData() {
       judul: "Pulihkan dari cadangan?",
       deskripsi: `Seluruh data di dashboard akan diganti dengan isi “${berkas.name}”${
         snap.diekspor ? ` (dibuat ${tanggalJam(snap.diekspor)})` : ""
-      }.`,
+      }.${tetapDiServer}`,
       label: "Pulihkan",
       bahaya: true,
     })
@@ -259,12 +262,21 @@ function TabData() {
         deskripsi={
           api.mode === "lokal"
             ? "Data tersimpan di IndexedDB peramban ini. Perangkat atau peramban lain tidak melihat perubahan yang sama."
-            : "Data tersimpan di server melalui REST API."
+            : api.mode === "campuran"
+              ? "Tanya Jawab tersimpan di server PINTU. Konten lain masih tersimpan di IndexedDB peramban ini; perangkat atau peramban lain tidak melihat perubahan yang sama."
+              : "Data tersimpan di server melalui REST API."
         }
       >
         <p className="flex items-center gap-2 text-sm">
           <IconDatabase className="size-4 text-muted-foreground" aria-hidden="true" />
-          Mode: <strong>{api.mode === "lokal" ? (api.sementara ? "Memori sementara" : "Lokal (IndexedDB)") : "Server (REST API)"}</strong>
+          Mode:{" "}
+          <strong>
+            {api.mode === "lokal"
+              ? lokal
+              : api.mode === "campuran"
+                ? `Campuran (Tanya Jawab di server, lainnya ${lokal})`
+                : "Server (REST API)"}
+          </strong>
         </p>
         <JumlahKoleksi />
       </Bagian>
@@ -314,7 +326,9 @@ function TabData() {
             onClick={async () => {
               const ya = await konfirmasi({
                 judul: "Kosongkan log aktivitas?",
-                deskripsi: "Riwayat aktivitas di Ringkasan akan dikosongkan. Riwayat alur tiap konten tetap tersimpan.",
+                deskripsi: `Riwayat aktivitas di Ringkasan akan dikosongkan. Riwayat alur tiap konten tetap tersimpan.${
+                  api.mode === "campuran" ? " Aktivitas yang tercatat di server tidak ikut dihapus." : ""
+                }`,
                 label: "Kosongkan",
                 bahaya: true,
               })
@@ -326,7 +340,10 @@ function TabData() {
           </Button>
         </div>
       </Bagian>
-      <Bagian judul="Kembalikan ke data awal" deskripsi="Mengganti seluruh isi dashboard dengan isi awal portal. Unduh cadangan terlebih dahulu bila perlu.">
+      <Bagian
+        judul="Kembalikan ke data awal"
+        deskripsi={`Mengganti seluruh isi dashboard dengan isi awal portal. Unduh cadangan terlebih dahulu bila perlu.${tetapDiServer}`}
+      >
         <div>
           <Button
             variant="destructive"
@@ -334,7 +351,7 @@ function TabData() {
             onClick={async () => {
               const ya = await konfirmasi({
                 judul: "Kembalikan semua data ke isi awal?",
-                deskripsi: "Semua perubahan, unggahan, dan pesan akan hilang. Tindakan ini tidak bisa dibatalkan.",
+                deskripsi: `Semua perubahan, unggahan, dan pesan akan hilang. Tindakan ini tidak bisa dibatalkan.${tetapDiServer}`,
                 label: "Kembalikan",
                 bahaya: true,
               })

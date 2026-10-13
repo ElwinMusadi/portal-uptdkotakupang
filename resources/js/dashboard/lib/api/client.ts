@@ -14,15 +14,17 @@ import type {
 /**
  * Kontrak penyimpanan data dashboard.
  *
- * Ada dua implementasi:
- * - LocalApi  → menyimpan di IndexedDB peramban (bawaan, tanpa server)
- * - HttpApi   → memanggil REST API bila VITE_API_URL diisi saat build
+ * Ada tiga implementasi:
+ * - LocalApi  → menyimpan di IndexedDB peramban
+ * - HttpApi   → memanggil REST API server
+ * - HybridApi → bawaan: koleksi yang sudah pindah ke server PINTU lewat
+ *               HttpApi, sisanya LocalApi (lihat KOLEKSI_SERVER)
  *
  * Halaman dashboard hanya mengenal antarmuka ini, sehingga mengganti sumber
  * data tidak perlu mengubah komponen.
  */
 export interface ApiClient {
-  readonly mode: "lokal" | "server"
+  readonly mode: "lokal" | "campuran" | "server"
   /** true bila data hanya tersimpan di memori (IndexedDB tidak tersedia) */
   readonly sementara: boolean
 

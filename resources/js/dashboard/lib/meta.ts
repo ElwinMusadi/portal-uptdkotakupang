@@ -1,4 +1,5 @@
 import type {
+  Faq,
   Hari,
   JenisKegiatan,
   JenisPesan,
@@ -11,6 +12,7 @@ import type {
   NamaKoleksi,
   NamaPengaturan,
   StatusAlur,
+  StatusFaq,
   StatusLoket,
   StatusPesan,
   SumberPesan,
@@ -137,6 +139,51 @@ export const STATUS_ALUR: Record<
 
 /** Urutan kolom papan alur publikasi */
 export const TAHAP_ALUR: StatusAlur[] = ["draf", "diperiksa", "persetujuan", "terbit"]
+
+export const STATUS_FAQ: Record<StatusFaq, { label: string; nada: Nada }> = {
+  draft: { label: "Draf", nada: "netral" },
+  published: { label: "Terbit", nada: "sukses" },
+  unpublished: { label: "Ditarik", nada: "peringatan" },
+}
+
+/**
+ * Apakah tanya jawab sampai ke portal dan, bila tidak, mengapa. API publik
+ * hanya memberikan tanya jawab yang terbit, untuk warga, dan ditampilkan.
+ */
+export function keadaanPortalFaq(f: Pick<Faq, "status" | "publik" | "tampil">): {
+  diPortal: boolean
+  /** Label singkat untuk tabel */
+  label: string
+  /** Kalimat untuk formulir */
+  keterangan: string
+  nada: Nada
+} {
+  if (f.status !== "published") {
+    return {
+      diPortal: false,
+      label: STATUS_FAQ[f.status].label,
+      keterangan: f.status === "draft" ? "Belum tampil di portal karena masih draf." : "Tidak tampil di portal karena sudah ditarik.",
+      nada: STATUS_FAQ[f.status].nada,
+    }
+  }
+  if (!f.publik) {
+    return {
+      diPortal: false,
+      label: "Terbit, bukan untuk warga",
+      keterangan: "Belum tampil di portal karena belum dinyatakan untuk warga.",
+      nada: "netral",
+    }
+  }
+  if (!f.tampil) {
+    return {
+      diPortal: false,
+      label: "Terbit, disembunyikan",
+      keterangan: "Tidak tampil di portal karena disembunyikan.",
+      nada: "netral",
+    }
+  }
+  return { diPortal: true, label: "Di portal", keterangan: "Tampil di portal.", nada: "sukses" }
+}
 
 export interface AksiAlur {
   ke: StatusAlur

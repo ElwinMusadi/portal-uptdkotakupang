@@ -660,6 +660,8 @@ function faq(sekarang: Date): Faq[] {
     diperbarui: waktu(sekarang, 30 - i),
     pertanyaan,
     jawaban,
+    status: "published",
+    publik: true,
     tampil: true,
   }))
 }

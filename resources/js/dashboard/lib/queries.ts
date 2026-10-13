@@ -6,7 +6,7 @@ import {
 } from "@tanstack/react-query"
 import { toast } from "sonner"
 
-import { api, ApiError } from "@/lib/api"
+import { api, ApiError, diServer } from "@/lib/api"
 import type { Draf, Id, Koleksi, NamaKoleksi, NamaPengaturan, Pengaturan } from "@/lib/api"
 import { keluar } from "@/lib/auth"
 
@@ -39,7 +39,7 @@ export function laporGalat(e: unknown, judul = "Gagal menyimpan") {
 }
 
 export function useKoleksi<K extends NamaKoleksi>(k: K) {
-  return useQuery({ queryKey: qk.koleksi(k), queryFn: () => api.list(k) })
+  return useQuery({ queryKey: qk.koleksi(k), queryFn: () => api.list(k), refetchOnWindowFocus: diServer(k) })
 }
 
 export function usePengaturan<N extends NamaPengaturan>(n: N) {
@@ -51,7 +51,11 @@ export function useWaktuPengaturan() {
 }
 
 export function useAktivitas(limit = 50) {
-  return useQuery({ queryKey: [...qk.aktivitas, limit], queryFn: () => api.activity(limit) })
+  return useQuery({
+    queryKey: [...qk.aktivitas, limit],
+    queryFn: () => api.activity(limit),
+    refetchOnWindowFocus: api.mode !== "lokal",
+  })
 }
 
 function useSegarkan() {

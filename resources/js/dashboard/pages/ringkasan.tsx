@@ -23,16 +23,21 @@ function InfoPrototipe() {
       return true
     }
   })
-  if (api.mode !== "lokal" || !tampil) return null
+  if (api.mode === "server" || !tampil) return null
+  const campuran = api.mode === "campuran"
   return (
     <div className="px-4 lg:px-6">
       <Alert className="pr-12">
         <IconInfoCircle />
-        <AlertTitle>Mode prototipe: data tersimpan di peramban ini</AlertTitle>
+        <AlertTitle>
+          {campuran ? "Mode prototipe: sebagian besar data tersimpan di peramban ini" : "Mode prototipe: data tersimpan di peramban ini"}
+        </AlertTitle>
         <AlertDescription>
           <p>
-            Perubahan disimpan di IndexedDB perangkat ini dan belum tersambung ke portal publik. Cadangkan
-            data lewat <Link to="/pengaturan?tab=data" className="underline underline-offset-4">Pengaturan › Data</Link>,
+            {campuran
+              ? "Tanya Jawab sudah tersimpan di server. Konten lain masih disimpan di IndexedDB perangkat ini dan belum tersambung ke portal publik."
+              : "Perubahan disimpan di IndexedDB perangkat ini dan belum tersambung ke portal publik."}{" "}
+            Cadangkan data lewat <Link to="/pengaturan?tab=data" className="underline underline-offset-4">Pengaturan › Data</Link>,
             atau baca <Link to="/panduan" className="underline underline-offset-4">Panduan</Link> untuk
             menyambungkan dashboard ke server.
           </p>

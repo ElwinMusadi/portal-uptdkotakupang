@@ -5,6 +5,7 @@ import {
   useForm,
   type DefaultValues,
   type FieldValues,
+  type Path,
   type Resolver,
   type UseFormReturn,
 } from "react-hook-form"
@@ -24,7 +25,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { Spinner } from "@/components/ui/spinner"
-import type { Draf, Koleksi, NamaKoleksi } from "@/lib/api"
+import { ApiError, type Draf, type Koleksi, type NamaKoleksi } from "@/lib/api"
 import { validasiFormulir } from "@/lib/formulir"
 import { useKoleksi, useTambahEntri, useUbahEntri } from "@/lib/queries"
 import { cn } from "@/lib/utils"
@@ -110,7 +111,13 @@ export function useEditorEntri<K extends NamaKoleksi, F extends FieldValues>(ops
       form.reset(nilai as DefaultValues<F>)
       if (tutupSetelah) tutup()
       return true
-    } catch {
+    } catch (galat) {
+      // Galat validasi server (422) ditampilkan di isiannya; toast sudah muncul dari mutasi.
+      if (galat instanceof ApiError) {
+        for (const [nama, pesan] of Object.entries(galat.isian)) {
+          form.setError(nama as Path<F>, { type: "server", message: pesan })
+        }
+      }
       return false
     }
   }

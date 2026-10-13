@@ -30,6 +30,33 @@ enum DashboardModule: string
     case Pemutakhiran = 'pemutakhiran';
 
     /**
+     * The module's name as the dashboard menu shows it.
+     */
+    public function label(): string
+    {
+        return match ($this) {
+            self::Pesan => 'Pesan & Pengaduan',
+            self::Statistik => 'Statistik Layanan',
+            self::Berita => 'Berita & Pengumuman',
+            self::Dokumentasi => 'Dokumentasi Kegiatan',
+            self::Dokumen => 'Regulasi & Unduhan',
+            self::Faq => 'Tanya Jawab',
+            self::Layanan => 'Persyaratan Layanan',
+            self::Jam => 'Jam Pelayanan',
+            self::Keliling => 'Samsat Keliling',
+            self::Papan => 'Papan Layanan',
+            self::Tarif => 'Tarif & Simulasi',
+            self::Profil => 'Tentang UPTD',
+            self::VisiMisi => 'Visi & Misi',
+            self::Unit => 'Struktur Organisasi',
+            self::Kontak => 'Kontak & Kanal',
+            self::Beranda => 'Beranda',
+            self::Halaman => 'Halaman Statis',
+            self::Pemutakhiran => 'Jadwal Pemutakhiran',
+        };
+    }
+
+    /**
      * The given module values without duplicates, in the order of the cases.
      *
      * @param  array<int, string>  $values

@@ -4,7 +4,7 @@ Dashboard pengelolaan konten portal **PINTU** (UPTD Pendapatan Daerah Wilayah Ko
 
 Tata letaknya mengikuti template [shadcn/ui *dashboard-01*](https://ui.shadcn.com/blocks#dashboard-01): sidebar, kartu KPI, grafik area interaktif, dan tabel data. Warna dan tipografinya disesuaikan dengan design system portal.
 
-> **Status.** Login sudah diperiksa server (lihat [Sesi login](#sesi-login)), tetapi data konten masih tersimpan di peramban (IndexedDB) sampai dashboard disambungkan ke API. Langkahnya ada di bagian [Menyambungkan ke server](#menyambungkan-ke-server-rest-api).
+> **Status.** Login sudah diperiksa server (lihat [Sesi login](#sesi-login)) dan Tanya Jawab sudah tersimpan di server (lihat [Penyimpanan data](#penyimpanan-data)). Konten lain masih tersimpan di peramban (IndexedDB) sampai gilirannya pindah ke server; kontraknya ada di bagian [Menyambungkan ke server](#menyambungkan-ke-server-rest-api).
 
 ## Menjalankan
 
@@ -65,7 +65,7 @@ resources/js/dashboard/
     │   ├── form/         ← isian formulir, unggah foto/berkas, editor teks kaya, panel sunting
     │   └── alur/         ← aksi dan riwayat alur publikasi
     ├── lib/
-    │   ├── api/          ← model data (types.ts), klien lokal & REST, data awal (seed.ts)
+    │   ├── api/          ← model data (types.ts), klien lokal, REST & campuran, data awal (seed.ts)
     │   ├── auth.ts       ← membaca sesi yang ditulis halaman Login Pegawai
     │   ├── queries.ts    ← hook TanStack Query untuk baca/tulis data
     │   ├── meta.ts       ← label, status alur, kategori
@@ -136,27 +136,31 @@ Contoh entri `faq`:
 
 ```json
 {
-  "id": "3f2a9c1e7b6d4a10",
-  "dibuat": "2026-09-01T01:00:00.000Z",
-  "diperbarui": "2026-10-02T03:15:00.000Z",
+  "id": "01m4tdcs3vdwjm3pg8pqmxmjhx",
+  "dibuat": "2026-09-01T01:00:00+00:00",
+  "diperbarui": "2026-10-02T03:15:00+00:00",
   "urutan": 0,
   "pertanyaan": "Apakah pajak tahunan bisa diwakilkan?",
   "jawaban": "Bisa, dengan membawa KTP pemilik dan surat kuasa bermeterai.",
+  "status": "published",
+  "publik": true,
   "tampil": true
 }
 ```
 
 ## Penyimpanan data
 
-Tanpa `VITE_API_URL`, dashboard berjalan dalam **mode lokal**:
+Tanpa `VITE_API_URL`, dashboard berjalan dalam **mode campuran** (`lib/api/hybrid.ts`, [D-011](decisions.md#d-011--2026-10-13--tanya-jawab-tersimpan-di-server)):
 
-- Data tersimpan di IndexedDB peramban: database `pintu-dashboard`, store `data`, dengan kunci `koleksi:<nama>`, `pengaturan:<nama>`, `aktivitas`, dan `meta`.
-- Saat pertama dibuka, dashboard mengisi data awal dari isi portal yang sudah ada (`resources/js/dashboard/lib/api/seed.ts`).
+- Koleksi di `KOLEKSI_SERVER` (saat ini hanya `faq`) dibaca dan ditulis lewat API PINTU (`/api/koleksi/faq`, lihat [docs/api.md](api.md#tanya-jawab-di-dashboard)). Perubahan pegawai lain muncul saat tab kembali dilihat, dan server memeriksa modul pengguna.
+- Koleksi lain, pengaturan, dan unggahan tersimpan di IndexedDB peramban: database `pintu-dashboard`, store `data`, dengan kunci `koleksi:<nama>`, `pengaturan:<nama>`, `aktivitas`, dan `meta`.
+- Saat pertama dibuka, dashboard mengisi data lokal awal dari isi portal yang sudah ada (`resources/js/dashboard/lib/api/seed.ts`). Tanya jawab contoh di sana tidak dipakai lagi dan tidak dipindahkan ke server.
 - Foto dan berkas disimpan sebagai data URL. Foto dikecilkan dulu menjadi maks. 1600 px.
-- Bila IndexedDB tidak tersedia (mis. mode privat tertentu), data hanya tersimpan di memori dan dashboard menampilkan peringatan.
-- Data hanya ada di peramban itu dan **belum tampil di portal publik**.
+- Bila IndexedDB tidak tersedia (mis. mode privat tertentu), data lokal hanya tersimpan di memori dan dashboard menampilkan peringatan.
+- Data lokal hanya ada di peramban itu dan **belum tampil di portal publik**.
+- Log aktivitas di Ringkasan menggabungkan log server (`GET /api/aktivitas`) dengan log peramban, terbaru lebih dulu.
 
-**Cadangan.** Di *Pengaturan › Data*, unduh seluruh data sebagai JSON atau pulihkan dari berkas cadangan. Berkas yang sama bisa dipakai sebagai data awal server:
+**Cadangan.** Di *Pengaturan › Data*, unduh seluruh data sebagai JSON atau pulihkan dari berkas cadangan. Cadangan menyertakan Tanya Jawab dari server, tetapi *Pulihkan dari cadangan*, *Kosongkan log aktivitas*, dan *Kembalikan ke data awal* hanya mengubah data di peramban. Berkas yang sama bisa dipakai sebagai data awal server:
 
 ```json
 {
@@ -170,7 +174,7 @@ Tanpa `VITE_API_URL`, dashboard berjalan dalam **mode lokal**:
 
 ## Menyambungkan ke server (REST API)
 
-> **Belum diimplementasikan di Laravel.** Endpoint publik yang sudah tersedia ada di [docs/api.md](api.md). Kontrak di bawah adalah sasaran untuk modul admin berikutnya.
+> **Sebagian tersedia.** Laravel sudah menyediakan koleksi `faq` dan `GET /aktivitas` ([docs/api.md](api.md#tanya-jawab-di-dashboard)); mode campuran memakainya otomatis. Endpoint lain di bawah adalah sasaran modul berikutnya, jadi `VITE_API_URL` baru berguna setelah semuanya tersedia. `DELETE /aktivitas` sengaja tidak dibuat: log aktivitas server tidak bisa dikosongkan dari dashboard.
 
 Build dengan alamat API, lalu semua baca/tulis memakai REST. Karena dashboard dan API kini satu origin, alamatnya cukup `/api`:
 
@@ -201,7 +205,7 @@ Server perlu menyediakan endpoint berikut. Bentuk JSON-nya sama dengan model dat
 Ketentuan:
 
 - Permintaan memakai cookie sesi Laravel (satu origin) dan, untuk metode selain `GET`, header `X-XSRF-TOKEN`. Balas **401** bila sesi tidak berlaku; dashboard akan kembali ke halaman login. Balasan **419** berarti token CSRF kedaluwarsa.
-- Pesan galat dikirim sebagai JSON `{ "pesan": "…" }` (atau `{ "message": "…" }`) dan ditampilkan apa adanya.
+- Pesan galat dikirim sebagai JSON `{ "pesan": "…" }` (atau `{ "message": "…" }`) dan ditampilkan apa adanya. Galat validasi (`422`) membawa `errors` per isian; formulir entri menampilkannya di isian yang bersangkutan.
 - Server yang mengisi `id`, `dibuat`, `diperbarui`, dan `urutan`, mencatat log aktivitas, serta memeriksa hak akses sesuai peran.
 - **Bersihkan HTML** dari kolom teks kaya (`isi`) dengan daftar tag yang diizinkan sebelum disimpan atau ditampilkan di portal.
 - Portal publik hanya membaca entri yang boleh tampil lewat endpoint publik tersendiri, bukan kontrak admin ini. FAQ: `published` + `publik` + `tampil` (lihat [docs/api.md](api.md)); modul lain menyusul. Koleksi `pesan`, `absensi`, dan `pemutakhiran` serta pengaturan `akun` hanya untuk internal.
@@ -233,7 +237,16 @@ Pegawai UPTD hanya melihat modul yang ditugaskan Administrator ([D-010](decision
 - `app/nav.ts` adalah satu-satunya sumber: setiap item menu konten punya `modul`, item khusus Administrator punya `khusus`. `navUntuk()` menyaring menu samping, pencarian, dan "Buat konten"; `GRUP_MODUL` menyusun centang modul di panel akun dengan judul dan kelompok yang sama dengan menu.
 - `Layout` mencocokkan alamat yang dibuka dengan item menu. Bila item itu tidak boleh dilihat, halaman diganti pesan "Modul ini belum ditugaskan kepada Anda" atau "Khusus Administrator".
 - `useItemAlur()` dan `usePemutakhiran()` di `lib/hitung.ts` menyaring konten dan jadwal per modul, sehingga Ringkasan dan Alur Publikasi ikut terbatas. Kartu dan grafik pesan hanya tampil bagi pengelola Pesan & Pengaduan.
-- Pembatasan ini mengatur tampilan. Selama konten tersimpan di IndexedDB, server belum bisa menegakkannya; endpoint konten di server kelak wajib memeriksa modul yang sama.
+- Untuk Tanya Jawab, server ikut menegakkannya (`FaqPolicy`): pegawai tanpa modul itu mendapat `403`. Untuk konten yang masih di IndexedDB, pembatasan ini baru mengatur tampilan; endpoint konten berikutnya wajib memeriksa modul yang sama.
+
+## Tanya Jawab
+
+Halaman *Tanya Jawab* (`#/faq`, `pages/faq.tsx`) adalah modul pertama yang tersimpan di server ([D-011](decisions.md#d-011--2026-10-13--tanya-jawab-tersimpan-di-server)).
+
+- Formulir berisi Pertanyaan, Jawaban, Status (*Draf*, *Terbit*, *Ditarik*), *Untuk warga*, dan *Tampilkan di portal*. Entri baru mulai sebagai draf yang belum untuk warga. Kalimat di bawah formulir menjelaskan apakah isian itu membuat entri tampil di portal.
+- Kolom *Status* menandai entri *Di portal* bila terbit, untuk warga, dan ditampilkan (`keadaanPortalFaq()` di `lib/meta.ts`), sama dengan syarat `GET /api/public/faq`. Selain itu kolom ini menyebut alasannya: draf, ditarik, bukan untuk warga, atau disembunyikan.
+- Hapus, per baris maupun massal, hanya untuk Administrator. Pegawai UPTD menyembunyikan entri dengan sakelar atau menariknya dari portal.
+- Beranda portal belum membaca `GET /api/public/faq`; sampai disambungkan, beranda masih menampilkan tanya jawab lama.
 
 ## Pemeriksaan sebelum commit
 
