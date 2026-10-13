@@ -112,8 +112,7 @@
 <header class="nav-wrap">
   <nav class="nav" aria-label="Navigasi utama">
     <a class="nav__brand" href="index.html" aria-label="PINTU Samsat Kota Kupang — Beranda">
-      <img class="emblem nav__emblem" src="assets/img/lambang-ntt-96.webp" alt="" width="29" height="31">
-      <span class="brand-name"><strong>PINTU</strong><small>Samsat Kota Kupang</small></span>
+      <img class="nav__logo" src="assets/img/logo-pintu-nav-putih.png" alt="" width="1107" height="361">
       <!-- Logo cadangan PINTU (simpan): <svg class="mark" aria-hidden="true"><use href="#logo-pintu"/></svg> -->
     </a>
     <ul class="nav__links">
@@ -201,8 +200,7 @@
     <div class="footer__info">
       <div>
         <a class="footer__brand" href="index.html">
-          <img class="emblem footer__emblem-img" src="assets/img/lambang-ntt-192.webp" alt="" width="42" height="44">
-          <span><strong>PINTU</strong><span>Portal Informasi dan Pelayanan<br>UPTD Pendapatan Daerah Wilayah Kota Kupang</span></span>
+          <img class="footer__logo" src="assets/img/logo-pintu-lockup.png" alt="PINTU, Portal Informasi dan Pelayanan UPTD Pendapatan Daerah Wilayah Kota Kupang" width="1107" height="361">
         </a>
         <p class="micro muted" style="margin-top:16px;max-width:34ch">Unit Pelaksana Teknis Daerah pada Badan Pendapatan dan Aset Daerah Provinsi Nusa Tenggara Timur. Kantor bersama Samsat Kota Kupang.</p>
       </div>
