@@ -146,6 +146,8 @@
 .link-arrow { display: inline-flex; align-items: center; gap: 6px; color: var(--accent-ink); font-weight: 500; }
 .link-arrow .i { width: 16px; height: 16px; transition: transform var(--dur-2) var(--ease); }
 .link-arrow:hover .i { transform: translateX(3px); }
+/* Bilah pengumuman tanpa tujuan tautan (initSitus) */
+.link-arrow[hidden] { display: none; }
 .link-ink { color: var(--ink); text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 4px; transition: text-decoration-color var(--dur-1) var(--ease); }
 .link-ink:hover { text-decoration-color: var(--ink); }
 

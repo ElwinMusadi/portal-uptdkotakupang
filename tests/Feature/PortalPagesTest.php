@@ -130,6 +130,35 @@ class PortalPagesTest extends TestCase
         }
     }
 
+    #[DataProvider('pages')]
+    public function test_keeps_the_initial_footer_texts_in_the_markup_for_the_public_api_to_replace(string $uri, string $view): void
+    {
+        $html = $this->get($uri)->assertOk()->getContent();
+        $text = fn (string $html): string => trim(preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+
+        if (! str_contains($html, '<footer class="footer">')) {
+            $this->assertStringNotContainsString('data-situs-', $html, $view);
+
+            return;
+        }
+
+        $this->assertSame(1, preg_match('/<p [^>]*data-situs-deskripsi>(.*?)<\/p>/s', $html, $description), $view);
+        $this->assertSame(Setting::INITIAL_SITE['deskripsi'], $text($description[1]), $view);
+        $this->assertSame(1, preg_match('/<p data-situs-hak-cipta>(.*?)<\/p>/s', $html, $copyright), $view);
+        $this->assertSame(Setting::INITIAL_SITE['hakCipta'], $text($copyright[1]), $view);
+    }
+
+    public function test_keeps_the_initial_announcement_in_the_markup_for_the_public_api_to_replace(): void
+    {
+        $html = $this->get('/informasi')->assertOk()->getContent();
+        $announcement = Setting::INITIAL_SITE['bilahPengumuman'];
+
+        $this->assertSame(1, preg_match('/<a class="card card--link" href="([^"]*)"[^>]*data-situs-pengumuman>(.*?)<\/a>/s', $html, $bar));
+        $this->assertSame($announcement['tautanUrl'], $bar[1]);
+        $this->assertStringContainsString("data-situs-pengumuman-teks>{$announcement['teks']}</span>", $bar[2]);
+        $this->assertStringContainsString("data-situs-pengumuman-label>{$announcement['tautanLabel']}<svg", $bar[2]);
+    }
+
     public function test_leaves_the_contact_page_details_and_complaint_channels_to_the_public_api(): void
     {
         $html = $this->get('/kontak')->assertOk()->getContent();

@@ -23,6 +23,7 @@ use App\Http\Controllers\Dashboard\ServiceController;
 use App\Http\Controllers\Dashboard\ServiceDeletionController;
 use App\Http\Controllers\Dashboard\ServiceOrderController;
 use App\Http\Controllers\Dashboard\SettingTimestampController;
+use App\Http\Controllers\Dashboard\SiteController;
 use App\Http\Controllers\Dashboard\StaticPageController;
 use App\Http\Controllers\Dashboard\StatisticsController;
 use App\Http\Controllers\Dashboard\TariffController;
@@ -39,6 +40,7 @@ use App\Http\Controllers\PublicOpeningHoursController;
 use App\Http\Controllers\PublicProfileController;
 use App\Http\Controllers\PublicServiceBoardController;
 use App\Http\Controllers\PublicServiceController;
+use App\Http\Controllers\PublicSiteController;
 use App\Http\Controllers\PublicStaticPageController;
 use App\Http\Controllers\PublicStatisticsController;
 use App\Http\Controllers\PublicTariffController;
@@ -195,6 +197,15 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->can('update', [Setting::class, $homepage])
         ->name('pengaturan.beranda.update');
 
+    // Pengaturan Situs: every employee reads it, only administrators save it (SettingPolicy, D-026).
+    $site = "'".Setting::SITE."'";
+    Route::get('/pengaturan/situs', [SiteController::class, 'show'])
+        ->can('view', [Setting::class, $site])
+        ->name('pengaturan.situs.show');
+    Route::put('/pengaturan/situs', [SiteController::class, 'update'])
+        ->can('update', [Setting::class, $site])
+        ->name('pengaturan.situs.update');
+
     Route::prefix('koleksi/penyesuaian')->name('koleksi.penyesuaian.')->whereUlid('adjustment')->group(function (): void {
         Route::get('/', [ScheduleAdjustmentController::class, 'index'])->can('viewAny', ScheduleAdjustment::class)->name('index');
         Route::post('/', [ScheduleAdjustmentController::class, 'store'])->can('create', ScheduleAdjustment::class)->name('store');
@@ -277,6 +288,7 @@ Route::prefix('public')
         Route::get('/profil', PublicProfileController::class)->name('profil.show');
         Route::get('/layanan', PublicServiceController::class)->name('layanan.index');
         Route::get('/beranda', PublicHomepageController::class)->name('beranda.show');
+        Route::get('/situs', PublicSiteController::class)->name('situs.show');
         Route::get('/halaman/{slug}', PublicStaticPageController::class)
             ->whereIn('slug', array_keys(StaticPage::PAGES))
             ->name('halaman.show');

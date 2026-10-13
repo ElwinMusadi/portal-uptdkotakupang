@@ -198,10 +198,10 @@
   </section>
 
   <section class="container">
-    <a class="card card--link" href="berita-detail.html" style="padding:16px 20px;display:flex;gap:14px;align-items:center;flex-wrap:wrap" data-reveal>
+    <a class="card card--link" href="berita-detail.html" style="padding:16px 20px;display:flex;gap:14px;align-items:center;flex-wrap:wrap" data-reveal data-situs-pengumuman>
       <span class="tag tag--accent"><svg class="i" aria-hidden="true"><use href="#i-megaphone"/></svg>Pengumuman</span>
-      <span class="title-sm" style="flex:1;min-width:220px">Program pemutihan denda PKB diperpanjang hingga 31 Desember 2026.</span>
-      <span class="link-arrow small">Baca<svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
+      <span class="title-sm" style="flex:1;min-width:220px" data-situs-pengumuman-teks>Program pemutihan denda PKB diperpanjang hingga 31 Desember 2026.</span>
+      <span class="link-arrow small" data-situs-pengumuman-label>Baca<svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
     </a>
   </section>
 
@@ -304,7 +304,7 @@
           <img class="emblem footer__emblem-img" src="assets/img/lambang-ntt-192.webp" alt="" width="42" height="44">
           <span><strong>PINTU</strong><span>Portal Informasi dan Pelayanan<br>UPTD Pendapatan Daerah Wilayah Kota Kupang</span></span>
         </a>
-        <p class="micro muted" style="margin-top:16px;max-width:34ch">Unit Pelaksana Teknis Daerah pada Badan Pendapatan dan Aset Daerah Provinsi Nusa Tenggara Timur. Kantor bersama Samsat Kota Kupang.</p>
+        <p class="micro muted" style="margin-top:16px;max-width:34ch" data-situs-deskripsi>Unit Pelaksana Teknis Daerah pada Badan Pendapatan dan Aset Daerah Provinsi Nusa Tenggara Timur. Kantor bersama Samsat Kota Kupang.</p>
       </div>
       <div>
         <h3>Alamat</h3>
@@ -336,7 +336,7 @@
     </div>
 
     <div class="footer__bottom">
-      <p>© 2026 UPTD Pendapatan Daerah Wilayah Kota Kupang · BPAD Provinsi NTT</p>
+      <p data-situs-hak-cipta>© 2026 UPTD Pendapatan Daerah Wilayah Kota Kupang · BPAD Provinsi NTT</p>
       <ul role="list">
         <li><a href="login.html">Login Pegawai</a></li>
         <li><a href="kebijakan-privasi.html">Kebijakan Privasi</a></li>

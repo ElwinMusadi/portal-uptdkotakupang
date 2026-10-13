@@ -16,7 +16,9 @@ class SaveSetting
      * Store a settings document and log the change in the same transaction,
      * e.g. "memperbarui Jam Pelayanan". Saving a document equal to the stored
      * one changes and logs nothing; keys in $ignored, such as a "diperbarui"
-     * stamp, do not count as a change.
+     * stamp, do not count as a change. A document of no dashboard module,
+     * such as the site settings, is not logged: the activity log is kept per
+     * module (D-026).
      *
      * @param  array<string, mixed>  $value
      * @param  list<string>  $ignored
@@ -32,8 +34,11 @@ class SaveSetting
 
             $setting->forceFill(['name' => $name, 'value' => $value])->save();
 
-            $module = DashboardModule::from($name);
-            $this->recordActivity->handle($user, $module, 'memperbarui', $module->label());
+            $module = DashboardModule::tryFrom($name);
+
+            if ($module !== null) {
+                $this->recordActivity->handle($user, $module, 'memperbarui', $module->label());
+            }
 
             return $setting;
         });

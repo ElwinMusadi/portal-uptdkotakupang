@@ -28,21 +28,29 @@ import { KOLEKSI_LABEL, LABEL_MODUL_SERVER } from "@/lib/meta"
 import { laporGalat, useKoleksi } from "@/lib/queries"
 import * as v from "@/lib/validasi"
 
+const maks = (n: number) => `Maksimal ${n} karakter.`
+
+// Batas yang sama dengan server (D-026)
 const skemaSitus = z.object({
-  namaPortal: v.wajib("Nama portal"),
-  kepanjangan: v.teks,
-  namaInstansi: v.wajib("Nama instansi"),
-  namaSingkat: v.teks,
-  induk: v.teks,
-  deskripsi: v.teks,
-  urlPortal: v.wajib("Alamat portal"),
-  hakCipta: v.teks,
-  bilahPengumuman: z.object({
-    aktif: z.boolean(),
-    teks: v.teks,
-    tautanLabel: v.teks,
-    tautanUrl: v.tautan,
-  }),
+  namaPortal: v.wajib("Nama portal").max(40, maks(40)),
+  kepanjangan: v.teks.max(80, maks(80)),
+  namaInstansi: v.wajib("Nama instansi").max(120, maks(120)),
+  namaSingkat: v.teks.max(60, maks(60)),
+  induk: v.teks.max(160, maks(160)),
+  deskripsi: v.teks.max(300, maks(300)),
+  urlPortal: v.wajib("Alamat portal").max(300, maks(300)).pipe(v.tautan),
+  hakCipta: v.teks.max(160, maks(160)),
+  bilahPengumuman: z
+    .object({
+      aktif: z.boolean(),
+      teks: v.teks.max(200, maks(200)),
+      tautanLabel: v.teks.max(30, maks(30)),
+      tautanUrl: v.tautan.pipe(z.string().max(300, maks(300))),
+    })
+    .refine((b) => !b.aktif || b.teks.trim() !== "", {
+      path: ["teks"],
+      message: "Teks pengumuman wajib diisi selama bilah pengumuman ditampilkan.",
+    }),
 })
 
 const skemaAkun = z.object({
@@ -54,11 +62,23 @@ const skemaAkun = z.object({
 })
 
 function TabSitus() {
+  // Pengaturan Situs bukan milik modul mana pun: hanya Administrator yang menyimpannya (D-026)
+  const admin = sesi().peran === "administrator"
   return (
     <FormPengaturan nama="situs" schema={skemaSitus}>
       {(form) => (
-        <>
-          <Bagian judul="Identitas portal" deskripsi="Dipakai di kepala & kaki halaman portal serta judul tab peramban.">
+        <fieldset disabled={!admin} className="grid min-w-0 gap-4 md:gap-6">
+          {!admin && (
+            <Alert>
+              <IconInfoCircle />
+              <AlertTitle>Hanya Administrator yang dapat mengubah pengaturan ini</AlertTitle>
+              <AlertDescription>Pengaturan Situs berlaku untuk seluruh portal dan dashboard.</AlertDescription>
+            </Alert>
+          )}
+          <Bagian
+            judul="Identitas portal"
+            deskripsi="Deskripsi singkat dan teks hak cipta tampil di kaki halaman portal; nama portal tampil di dashboard. Nama di kepala halaman dan judul tab portal tetap mengikuti HTML."
+          >
             <Baris>
               <FieldTeks control={form.control} name="namaPortal" label="Nama portal" wajib />
               <FieldTeks control={form.control} name="kepanjangan" label="Kepanjangan" />
@@ -87,7 +107,7 @@ function TabSitus() {
               <FieldTeks control={form.control} name="bilahPengumuman.tautanUrl" label="Tujuan tautan" placeholder="berita-detail.html" />
             </Baris>
           </Bagian>
-        </>
+        </fieldset>
       )}
     </FormPengaturan>
   )

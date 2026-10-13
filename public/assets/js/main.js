@@ -1012,6 +1012,51 @@
       .catch(() => {});
   }
 
+  /* ---------- Pengaturan Situs ----------
+     Deskripsi dan hak cipta di kaki halaman serta bilah pengumuman di
+     Informasi dikelola di dashboard (Pengaturan Situs) dan dibaca dari
+     GET /api/public/situs (D-026). Teks di HTML sama dengan isi awal di
+     server dan tetap tampil; skrip menggantinya hanya bila pengaturan sudah
+     pernah disimpan. Teks dipasang sebagai teks polos dan tautan hanya
+     dengan skema yang diizinkan. Bila API gagal, teks HTML tetap tampil. */
+  async function muatSitus() {
+    const s = await ambilJson("/api/public/situs");
+    const teks = (x) => typeof x === "string";
+    const b = s?.bilahPengumuman;
+    const valid = teks(s?.deskripsi) && teks(s.hakCipta)
+      && typeof b?.aktif === "boolean" && teks(b.teks) && teks(b.tautanLabel) && teks(b.tautanUrl)
+      && (s.diperbarui === null || teks(s.diperbarui));
+    if (!valid) throw new Error("Respons tidak dikenal");
+    return s;
+  }
+
+  function initSitus() {
+    const deskripsi = $$("[data-situs-deskripsi]");
+    const hakCipta = $$("[data-situs-hak-cipta]");
+    const pengumuman = $("[data-situs-pengumuman]");
+    if (!deskripsi.length && !hakCipta.length && !pengumuman) return;
+
+    const tampilkan = (s) => {
+      deskripsi.forEach((el) => { el.textContent = s.deskripsi; el.hidden = !s.deskripsi; });
+      hakCipta.forEach((el) => { el.textContent = s.hakCipta; el.hidden = !s.hakCipta; });
+      if (!pengumuman) return;
+      const b = s.bilahPengumuman;
+      pengumuman.closest("section").hidden = !b.aktif || !b.teks;
+      $("[data-situs-pengumuman-teks]", pengumuman).textContent = b.teks;
+      // Tanpa tujuan yang sah, bilah tetap tampil sebagai teks, bukan tautan
+      const url = tautanAman(b.tautanUrl);
+      const label = $("[data-situs-pengumuman-label]", pengumuman);
+      if (url) pengumuman.setAttribute("href", url);
+      else pengumuman.removeAttribute("href");
+      label.replaceChildren(b.tautanLabel || "Baca", $("svg", label));
+      label.hidden = !url;
+    };
+
+    muatSitus()
+      .then((s) => { if (typeof s.diperbarui === "string") tampilkan(s); })
+      .catch(() => {});
+  }
+
   /* ---------- Samsat Keliling ----------
      Jadwal dikelola di dashboard dan dibaca dari GET /api/public/keliling,
      yang hanya memberikan lokasi aktif. Teksnya di-escape sebelum dipasang.
@@ -1811,7 +1856,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil(); initLayanan(); initBeranda(); initHalaman();
+    initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil(); initLayanan(); initBeranda(); initHalaman(); initSitus();
     initDash(); initSim(); initDialogs(); initGag(); initFilters(); initGallery(); initFaq(); initForms(); initPesanForm(); initAuthFit(); initUtilities();
   });
 })();

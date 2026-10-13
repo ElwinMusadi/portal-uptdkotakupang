@@ -184,6 +184,37 @@ class Setting extends Model
     ];
 
     /**
+     * The portal's identity and announcement bar (Pengaturan Situs). It
+     * belongs to no dashboard module: every employee reads it, only
+     * administrators save it (D-026).
+     */
+    public const string SITE = 'situs';
+
+    /**
+     * The Pengaturan Situs document until it is first saved: the identity
+     * and announcement written in the portal's markup, which stay there and
+     * are replaced only by a saved document (D-026).
+     *
+     * @var array{namaPortal: string, kepanjangan: string, namaInstansi: string, namaSingkat: string, induk: string, deskripsi: string, urlPortal: string, hakCipta: string, bilahPengumuman: array{aktif: bool, teks: string, tautanLabel: string, tautanUrl: string}}
+     */
+    public const array INITIAL_SITE = [
+        'namaPortal' => 'PINTU',
+        'kepanjangan' => 'Portal Informasi dan Pelayanan',
+        'namaInstansi' => 'UPTD Pendapatan Daerah Wilayah Kota Kupang',
+        'namaSingkat' => 'Samsat Kota Kupang',
+        'induk' => 'Badan Pendapatan dan Aset Daerah Provinsi Nusa Tenggara Timur',
+        'deskripsi' => 'Unit Pelaksana Teknis Daerah pada Badan Pendapatan dan Aset Daerah Provinsi Nusa Tenggara Timur. Kantor bersama Samsat Kota Kupang.',
+        'urlPortal' => '../',
+        'hakCipta' => '© 2026 UPTD Pendapatan Daerah Wilayah Kota Kupang · BPAD Provinsi NTT',
+        'bilahPengumuman' => [
+            'aktif' => true,
+            'teks' => 'Program pemutihan denda PKB diperpanjang hingga 31 Desember 2026.',
+            'tautanLabel' => 'Baca',
+            'tautanUrl' => 'berita-detail.html',
+        ],
+    ];
+
+    /**
      * The texts of the portal's homepage: opening, values, the services
      * heading, partners, channel map, integrity, fees and closing (Beranda).
      */
@@ -345,6 +376,16 @@ class Setting extends Model
     public static function profile(): array
     {
         return self::query()->find(self::PROFILE)?->value ?? self::INITIAL_PROFILE;
+    }
+
+    /**
+     * The Pengaturan Situs document as the dashboard edits it.
+     *
+     * @return array{namaPortal: string, kepanjangan: string, namaInstansi: string, namaSingkat: string, induk: string, deskripsi: string, urlPortal: string, hakCipta: string, bilahPengumuman: array{aktif: bool, teks: string, tautanLabel: string, tautanUrl: string}}
+     */
+    public static function site(): array
+    {
+        return self::query()->find(self::SITE)?->value ?? self::INITIAL_SITE;
     }
 
     /**

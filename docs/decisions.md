@@ -344,3 +344,17 @@ Standar Jadwal Pemutakhiran kini tersimpan di server. Modul ini hanya untuk inte
 | Akses ubah | Administrator dan pengelola Jadwal Pemutakhiran menambah, menyunting, mengurutkan, dan **menghapus** standar (keputusan pemilik): standar adalah data internal, bukan konten portal, seperti Samsat Keliling dan penyesuaian jadwal. Pegawai lain ditolak `403`, termasuk untuk standar modulnya sendiri. |
 
 Waktu "terakhir diperbarui" tetap dihitung dashboard dari modul yang dipantau. Untuk modul yang masih tersimpan di peramban (Berita, Dokumentasi, Unduhan), waktunya berasal dari peramban masing-masing pegawai.
+
+## D-026 · 2026-10-14 · Pengaturan Situs tersimpan di server; hanya Administrator yang menyimpan
+
+Pengaturan Situs kini tersimpan di server. Kaki halaman portal dan bilah pengumuman di halaman Informasi membaca isinya dari API.
+
+| Hal | Keputusan |
+|---|---|
+| Penyimpanan | Dokumen pengaturan `situs` (`/api/pengaturan/situs`) memuat nama portal (maks. 40 karakter), kepanjangan (80), nama instansi (120), nama yang dikenal (60), instansi induk (160), deskripsi singkat (300), alamat portal publik, teks hak cipta (160), dan bilah pengumuman: tampil atau tidak, teks (maks. 200, wajib selama tampil), label tautan (30), dan tujuan tautan. Alamat portal dan tujuan tautan harus berupa tautan portal yang sah (`PortalLink`, D-019). |
+| Akses | **Hanya Administrator yang menyimpan** (keputusan pemilik): pengaturan ini berlaku untuk seluruh portal dan bukan milik modul mana pun. Semua pegawai boleh membacanya untuk sidebar dan tautan ke portal; di dashboard, formulirnya hanya-baca bagi pegawai lain. Karena log aktivitas disusun per modul, penyimpanan ini tidak dicatat di sana, sama seperti pengelolaan akun. Waktu simpannya tetap tercatat (`GET /api/pengaturan`). |
+| Portal | **Portal membaca bilah pengumuman serta deskripsi dan hak cipta di kaki halaman** (keputusan pemilik), lewat `GET /api/public/situs`, yang hanya memuat bagian itu. Nama dan logo di kepala halaman, merek di kaki halaman, judul tab, dan baris hak cipta ringkas di halaman Login tetap mengikuti HTML, supaya tidak berganti setelah halaman dimuat dan tetap terbaca mesin pencari. |
+| Isi awal | Teks yang tertulis di HTML portal menjadi isi awal dan tetap tampil sampai pengaturan pertama kali disimpan, seperti Beranda (D-023). Bila API gagal, teks HTML yang tampil. Tes portal memastikan teks isi awal masih sama dengan teks di HTML. |
+| Tampilan | Teks dipasang sebagai teks polos. Deskripsi atau hak cipta yang dikosongkan disembunyikan. Bilah pengumuman disembunyikan bila dimatikan atau teksnya kosong. Tanpa tujuan tautan yang sah, bilah tampil sebagai teks tanpa tautan dan tanpa label. |
+
+Setiap halaman portal yang memiliki kaki halaman kini memakai satu permintaan tambahan dari batas laju API publik (D-013).

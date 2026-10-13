@@ -1553,7 +1553,7 @@
                 ></span
               >
             </a>
-            <p class="micro muted" style="margin-top: 16px; max-width: 34ch">
+            <p class="micro muted" style="margin-top: 16px; max-width: 34ch" data-situs-deskripsi>
               Unit Pelaksana Teknis Daerah pada Badan Pendapatan dan Aset Daerah
               Provinsi Nusa Tenggara Timur. Kantor bersama Samsat Kota Kupang.
             </p>
@@ -1592,7 +1592,7 @@
         </div>
 
         <div class="footer__bottom">
-          <p>
+          <p data-situs-hak-cipta>
             © 2026 UPTD Pendapatan Daerah Wilayah Kota Kupang · BPAD Provinsi
             NTT
           </p>
