@@ -6,7 +6,8 @@ namespace App\Enums;
  * Dashboard modules an administrator assigns to employees (D-010).
  * Administrators manage every module. Each value is the name of the
  * module's main collection or setting in the dashboard data model, so a
- * content endpoint can find the module it belongs to.
+ * content endpoint can find the module it belongs to. A retired module stays
+ * a case so earlier activity entries still read, but nobody manages it.
  */
 enum DashboardModule: string
 {
@@ -20,6 +21,7 @@ enum DashboardModule: string
     case Jam = 'jam';
     case Keliling = 'keliling';
     case Papan = 'papan';
+    /** Tarif & Simulasi, retired by D-041: the tax engine sets the rates. */
     case Tarif = 'tarif';
     case Profil = 'profil';
     case VisiMisi = 'visiMisi';
@@ -57,7 +59,26 @@ enum DashboardModule: string
     }
 
     /**
-     * The given module values without duplicates, in the order of the cases.
+     * Whether the module is no longer part of the dashboard.
+     */
+    public function isRetired(): bool
+    {
+        return $this === self::Tarif;
+    }
+
+    /**
+     * The modules that can be assigned and managed, in the order of the cases.
+     *
+     * @return list<self>
+     */
+    public static function assignable(): array
+    {
+        return array_values(array_filter(self::cases(), fn (self $module): bool => ! $module->isRetired()));
+    }
+
+    /**
+     * The given module values without duplicates or retired modules, in the
+     * order of the cases.
      *
      * @param  array<int, string>  $values
      * @return list<string>
@@ -66,7 +87,7 @@ enum DashboardModule: string
     {
         return array_values(array_map(
             fn (self $module): string => $module->value,
-            array_filter(self::cases(), fn (self $module): bool => in_array($module->value, $values, true)),
+            array_filter(self::assignable(), fn (self $module): bool => in_array($module->value, $values, true)),
         ));
     }
 }

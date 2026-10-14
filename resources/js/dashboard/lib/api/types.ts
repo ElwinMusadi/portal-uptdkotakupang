@@ -355,18 +355,6 @@ export interface JamPelayanan {
   pemberitahuan: string
 }
 
-export interface Tarif {
-  opsenPersen: number
-  dendaPersenPerBulan: number
-  maksBulanDenda: number
-  swdklljMotor: number
-  swdklljMobil: number
-  contohPokok: number
-  contohJenis: "motor" | "mobil"
-  contohTelat: number
-  catatan: string
-}
-
 export type KunciStatistik = "transaksi" | "penerimaan" | "keliling" | "kepuasan"
 
 export interface Statistik {
@@ -435,7 +423,6 @@ export interface Pengaturan {
   beranda: Beranda
   papan: PapanLayanan
   jam: JamPelayanan
-  tarif: Tarif
   statistik: Statistik
   profil: Profil
   visiMisi: VisiMisi

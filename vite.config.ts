@@ -8,12 +8,14 @@ import { defineConfig } from "vite"
  * Builds the React dashboard (resources/js/dashboard) into public/build.
  * Laravel serves it at /dashboard through resources/views/dashboard.blade.php,
  * and the officers' attendance app (resources/js/absen) at /absen.
- * The public portal (resources/views/portal, public/assets) needs no build.
+ * The public portal (resources/views/portal, public/assets) is static HTML;
+ * only its tax check (resources/js/portal/cek-pajak.ts, D-041) is built here
+ * and loaded by the pages through /skrip/cek-pajak (routes/web.php).
  */
 export default defineConfig({
   plugins: [
     laravel({
-      input: ["resources/js/dashboard/main.tsx", "resources/js/absen/main.tsx"],
+      input: ["resources/js/dashboard/main.tsx", "resources/js/absen/main.tsx", "resources/js/portal/cek-pajak.ts"],
       refresh: true,
     }),
     react(),

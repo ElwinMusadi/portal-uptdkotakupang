@@ -99,7 +99,7 @@ class User extends Authenticatable
     public function managedModules(): array
     {
         return $this->isAdministrator()
-            ? array_map(fn (DashboardModule $module): string => $module->value, DashboardModule::cases())
+            ? array_map(fn (DashboardModule $module): string => $module->value, DashboardModule::assignable())
             : $this->assignedModules();
     }
 

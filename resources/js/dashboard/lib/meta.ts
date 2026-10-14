@@ -37,7 +37,6 @@ export const PENGATURAN_LABEL: Record<NamaPengaturan, string> = {
   beranda: "Beranda",
   papan: "Papan Layanan",
   jam: "Jam Pelayanan",
-  tarif: "Tarif & Simulasi",
   statistik: "Statistik Layanan",
   profil: "Tentang UPTD",
   visiMisi: "Visi & Misi",

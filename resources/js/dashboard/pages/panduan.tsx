@@ -83,7 +83,7 @@ export default function HalamanPanduan() {
           konten dan di tab Aktivitas pada <Link to="/" className="underline underline-offset-4">Ringkasan</Link>.
         </p>
         <p className="text-muted-foreground">
-          Halaman satu-dokumen (profil, visi misi, kontak, jam pelayanan, papan layanan, tarif) langsung
+          Halaman satu-dokumen (profil, visi misi, kontak, jam pelayanan, papan layanan) langsung
           berlaku saat disimpan. Pastikan isinya sudah diverifikasi sebelum menyimpan.
         </p>
       </Topik>
@@ -109,9 +109,10 @@ export default function HalamanPanduan() {
         </p>
         <p>
           <Link to="/kalkulator" className="underline underline-offset-4">Kalkulator PKB</Link> menghitung
-          estimasi tagihan untuk wajib pajak di loket, termasuk saat masa amnesti (denda dihapus). Rumus dan
-          parameternya sama dengan simulasi di portal dan diatur di{" "}
-          <Link to="/tarif" className="underline underline-offset-4">Tarif & Simulasi</Link>.
+          PKB, opsen, SWDKLLJ, dan PNBP menurut Pergub NTT Nomor 54 Tahun 2026. Cukup masukkan nomor polisi:
+          data kendaraan diambil dari Samsat. Bila kendaraan tidak ditemukan, isi NJKB, jenis, dan tanggal jatuh
+          tempo sendiri. Cek biaya pajak di portal memakai rumus yang sama, dengan nomor polisi dan 5 digit
+          terakhir nomor rangka.
         </p>
       </Topik>
 

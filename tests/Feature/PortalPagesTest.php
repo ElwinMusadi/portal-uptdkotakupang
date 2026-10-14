@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Http\PortalPage;
 use App\Models\Message;
 use App\Models\Setting;
+use Illuminate\Support\Facades\Vite;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestWith;
 use Tests\TestCase;
@@ -103,17 +104,30 @@ class PortalPagesTest extends TestCase
 
     #[TestWith(['/'])]
     #[TestWith(['/layanan'])]
-    public function test_leaves_the_tax_simulation_rates_to_the_public_api(string $uri): void
+    public function test_offers_the_tax_check_by_plate_number_and_chassis_digits(string $uri): void
     {
         $html = $this->get($uri)->assertOk()->getContent();
 
-        $this->assertSame(1, preg_match('/<section[^>]*\bid="simulasi"[^>]*>.*?<\/section>/s', $html, $simulation));
-        foreach (['66%', '1%', 'maks. 24', '285.000', 'Rp35.000', 'Rp143.000', 'Asumsi contoh'] as $exampleValue) {
-            $this->assertStringNotContainsString($exampleValue, $simulation[0]);
-        }
-        $this->assertStringContainsString('<p class="tile__label" data-tarif="label-opsen">Opsen PKB</p>', $simulation[0]);
-        $this->assertStringContainsString('<span data-tarif="maks"></span>', $simulation[0]);
-        $this->assertStringContainsString('data-sim-catatan', $simulation[0]);
+        $this->assertSame(1, preg_match('/<section[^>]*\bid="simulasi"[^>]*>.*?<\/section>/s', $html, $check));
+        $this->assertStringContainsString('data-cek-pajak', $check[0]);
+        $this->assertMatchesRegularExpression('/<input[^>]*\bname="nopol"/', $check[0]);
+        $this->assertMatchesRegularExpression('/<input[^>]*\bname="rangka"[^>]*\bmaxlength="5"/', $check[0]);
+        $this->assertStringContainsString('<div class="bento cek__hasil" data-cek-hasil hidden>', $check[0]);
+        $this->assertStringContainsString('<script type="module" src="skrip/cek-pajak"></script>', $html);
+        $this->assertStringNotContainsString('data-sim', $html);
+        $this->assertStringNotContainsString('data-tarif', $html);
+    }
+
+    public function test_sends_the_portal_to_the_built_tax_check_script_without_letting_the_address_be_cached(): void
+    {
+        Vite::shouldReceive('asset')->once()->with('resources/js/portal/cek-pajak.ts')->andReturn('http://localhost/build/assets/cek-pajak-a1b2c3.js');
+
+        $response = $this->get('/skrip/cek-pajak');
+
+        $response->assertFound()
+            ->assertRedirect('http://localhost/build/assets/cek-pajak-a1b2c3.js')
+            ->assertHeader('Cache-Control', 'no-cache, private');
+        $this->assertSame([], $response->headers->getCookies());
     }
 
     public function test_leaves_the_transparency_dashboard_to_the_public_api(): void

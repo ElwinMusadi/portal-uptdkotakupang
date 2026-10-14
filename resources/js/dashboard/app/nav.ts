@@ -20,7 +20,6 @@ import {
   IconLayoutBoard,
   IconNews,
   IconPhoto,
-  IconReceiptTax,
   IconSettings,
   IconTargetArrow,
   IconTruck,
@@ -89,7 +88,6 @@ export const NAV_GRUP: GrupNav[] = [
       { judul: "Jam Pelayanan", url: "/jadwal/jam", ikon: IconClockHour4, portal: "jadwal.html", modul: ["jam"] },
       { judul: "Samsat Keliling", url: "/jadwal/keliling", ikon: IconTruck, portal: "jadwal.html#keliling", tambah: "/jadwal/keliling?baru=1", modul: ["keliling"] },
       { judul: "Papan Layanan", url: "/papan", ikon: IconAlarm, portal: "index.html", modul: ["papan"] },
-      { judul: "Tarif & Simulasi", url: "/tarif", ikon: IconReceiptTax, portal: "layanan.html#simulasi", modul: ["tarif"] },
     ],
   },
   {
@@ -113,7 +111,7 @@ export const NAV_GRUP: GrupNav[] = [
     label: "Alat Bantu",
     item: [
       { judul: "Absensi Lapangan", url: "/absensi", ikon: IconCamera, keterangan: "Clock-in kegiatan lapangan dengan swafoto dan lokasi" },
-      { judul: "Kalkulator PKB", url: "/kalkulator", ikon: IconCalculator, keterangan: "Estimasi tagihan untuk petugas loket, termasuk amnesti" },
+      { judul: "Kalkulator PKB", url: "/kalkulator", ikon: IconCalculator, keterangan: "Rincian PKB dari nomor polisi, menurut Pergub NTT 54/2026" },
     ],
   },
 ]

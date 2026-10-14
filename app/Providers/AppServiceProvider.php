@@ -70,6 +70,28 @@ class AppServiceProvider extends ServiceProvider
                 ], 429, $headers));
         });
 
+        // Vehicle lookups through the private NJKB API (D-041), which allows PINTU 60 calls a
+        // minute: 30 a minute for each employee, and for the portal 5 a minute and 20 an hour
+        // from one address, at most 30 a minute from all visitors together.
+        RateLimiter::for('kendaraan', function (Request $request): Limit {
+            return Limit::perMinute(30)
+                ->by($request->user()?->getAuthIdentifier() ?? $request->ip())
+                ->response(fn (Request $request, array $headers): JsonResponse => response()->json([
+                    'message' => 'Terlalu banyak pencarian kendaraan. Coba lagi sebentar lagi.',
+                ], 429, $headers));
+        });
+        RateLimiter::for('public-kendaraan', function (Request $request): array {
+            $tooMany = fn (Request $request, array $headers): JsonResponse => response()->json([
+                'message' => 'Terlalu banyak pengecekan dari jaringan ini. Coba lagi beberapa saat lagi.',
+            ], 429, $headers);
+
+            return [
+                Limit::perMinute(5)->by('menit:'.$request->ip())->response($tooMany),
+                Limit::perHour(20)->by('jam:'.$request->ip())->response($tooMany),
+                Limit::perMinute(30)->by('portal')->response($tooMany),
+            ];
+        });
+
         // Dashboard uploads (D-028): at most 30 files per minute for each employee.
         RateLimiter::for('uploads', function (Request $request): Limit {
             return Limit::perMinute(30)

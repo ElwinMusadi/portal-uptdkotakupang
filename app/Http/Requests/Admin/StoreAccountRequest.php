@@ -32,7 +32,7 @@ class StoreAccountRequest extends FormRequest
             'surel' => ['nullable', 'string', 'email', 'max:255', Rule::unique(User::class, 'email')],
             'peran' => ['required', Rule::enum(UserRole::class)],
             'modul' => ['sometimes', 'list'],
-            'modul.*' => ['string', Rule::enum(DashboardModule::class)],
+            'modul.*' => ['string', Rule::enum(DashboardModule::class)->only(DashboardModule::assignable())],
         ];
     }
 

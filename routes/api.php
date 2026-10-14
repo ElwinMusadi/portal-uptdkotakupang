@@ -39,11 +39,11 @@ use App\Http\Controllers\Dashboard\SettingTimestampController;
 use App\Http\Controllers\Dashboard\SiteController;
 use App\Http\Controllers\Dashboard\StaticPageController;
 use App\Http\Controllers\Dashboard\StatisticsController;
-use App\Http\Controllers\Dashboard\TariffController;
 use App\Http\Controllers\Dashboard\UpdateStandardController;
 use App\Http\Controllers\Dashboard\UpdateStandardDeletionController;
 use App\Http\Controllers\Dashboard\UpdateStandardOrderController;
 use App\Http\Controllers\Dashboard\UploadController;
+use App\Http\Controllers\Dashboard\VehicleController;
 use App\Http\Controllers\Dashboard\VisionMissionController;
 use App\Http\Controllers\PublicArticleController;
 use App\Http\Controllers\PublicContactController;
@@ -61,7 +61,7 @@ use App\Http\Controllers\PublicServiceController;
 use App\Http\Controllers\PublicSiteController;
 use App\Http\Controllers\PublicStaticPageController;
 use App\Http\Controllers\PublicStatisticsController;
-use App\Http\Controllers\PublicTariffController;
+use App\Http\Controllers\PublicVehicleController;
 use App\Http\Controllers\PublicVisionMissionController;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Models\Article;
@@ -166,15 +166,6 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::put('/pengaturan/papan', [ServiceBoardController::class, 'update'])
         ->can('update', [Setting::class, $serviceBoard])
         ->name('pengaturan.papan.update');
-
-    // Tarif & Simulasi (SettingPolicy): every employee reads it for the Kalkulator PKB.
-    $tariff = "'".Setting::TARIFF."'";
-    Route::get('/pengaturan/tarif', [TariffController::class, 'show'])
-        ->can('view', [Setting::class, $tariff])
-        ->name('pengaturan.tarif.show');
-    Route::put('/pengaturan/tarif', [TariffController::class, 'update'])
-        ->can('update', [Setting::class, $tariff])
-        ->name('pengaturan.tarif.update');
 
     // Statistik Layanan, the homepage's transparency dashboard (SettingPolicy).
     $statistics = "'".Setting::STATISTICS."'";
@@ -376,6 +367,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware('throttle:uploads')
         ->name('absen.store');
 
+    // Vehicle data for the Kalkulator PKB from the private NJKB API (D-041)
+    Route::get('/kendaraan/{nopol}', VehicleController::class)->middleware('throttle:kendaraan')->name('kendaraan.show');
+
     Route::get('/aktivitas', ActivityController::class)->name('aktivitas');
 });
 
@@ -392,7 +386,6 @@ Route::prefix('public')
         Route::get('/keliling', PublicMobileServiceStopController::class)->name('keliling.index');
         Route::get('/jam', PublicOpeningHoursController::class)->name('jam.show');
         Route::get('/papan', PublicServiceBoardController::class)->name('papan.show');
-        Route::get('/tarif', PublicTariffController::class)->name('tarif.show');
         Route::get('/statistik', PublicStatisticsController::class)->name('statistik.show');
         Route::get('/kontak', PublicContactController::class)->name('kontak.show');
         Route::get('/visi-misi', PublicVisionMissionController::class)->name('visi-misi.show');
@@ -412,4 +405,6 @@ Route::prefix('public')
             ->name('halaman.show');
         // The contact form; also limited to 5 messages per hour per address (D-016).
         Route::post('/pesan', PublicMessageController::class)->middleware('throttle:public-messages')->name('pesan.store');
+        // The portal's tax check: plate number and the last five chassis characters (D-041)
+        Route::post('/kendaraan', PublicVehicleController::class)->middleware('throttle:public-kendaraan')->name('kendaraan.check');
     });

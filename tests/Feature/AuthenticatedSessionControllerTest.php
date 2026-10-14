@@ -327,7 +327,7 @@ class AuthenticatedSessionControllerTest extends TestCase
             'peran' => 'administrator',
             'modul' => [
                 'pesan', 'statistik', 'berita', 'dokumentasi', 'dokumen', 'faq', 'layanan', 'jam', 'keliling',
-                'papan', 'tarif', 'profil', 'visiMisi', 'unit', 'kontak', 'beranda', 'halaman', 'pemutakhiran',
+                'papan', 'profil', 'visiMisi', 'unit', 'kontak', 'beranda', 'halaman', 'pemutakhiran',
             ],
             'masuk' => null,
         ]);
@@ -342,9 +342,9 @@ class AuthenticatedSessionControllerTest extends TestCase
         $response->assertOk()->assertJsonPath('modul', []);
     }
 
-    public function test_ignores_module_values_it_does_not_know(): void
+    public function test_ignores_module_values_it_does_not_know_and_retired_modules(): void
     {
-        $user = User::factory()->create(['modules' => ['keuangan', 'keliling', 7]]);
+        $user = User::factory()->create(['modules' => ['keuangan', 'tarif', 'keliling', 7]]);
 
         $response = $this->actingAs($user)->getJson('/api/sesi');
 

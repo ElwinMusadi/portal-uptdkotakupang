@@ -57,6 +57,8 @@ php artisan migrate
 
 Jalankan `php artisan key:generate` **hanya** bila `APP_KEY` di `.env` masih kosong; menjalankannya ulang akan membatalkan sesi dan data terenkripsi.
 
+Data kendaraan untuk Kalkulator PKB dan cek biaya pajak di portal ([D-041](docs/decisions.md#d-041--2026-10-14--kalkulator-pkb-dan-cek-biaya-pajak-memakai-mesin-kalkulator-pajak-tarif--simulasi-dipensiunkan)) dibaca dari API NJKB BPAD NTT dengan token layanan Cloudflare Access milik PINTU: isi `NJKB_ACCESS_CLIENT_ID` dan `NJKB_ACCESS_CLIENT_SECRET` di `.env`. Jangan memakai token aplikasi lain. Tanpa token, pencarian menjawab "Pencarian data kendaraan belum dikonfigurasi." dan kalkulator tetap bisa diisi manual.
+
 ## Menjalankan
 
 Dengan Laravel Herd, situs otomatis tersedia di `http://portal-uptdkotakupang.test`. Herd hanya menyajikan folder `public/`, jadi `.env` dan kode sumber tidak bisa diakses dari peramban. Untuk mengembangkan dashboard dengan muat ulang otomatis:
@@ -121,7 +123,7 @@ Produksi saat ini masih Cloudflare Pages dari branch `main` (situs statis lama).
 - **Build command:** `composer install --no-dev && npm ci && npm run build && php artisan optimize`
 - **Deploy command:** `php artisan migrate --force`
 - **Database:** pasang Laravel MySQL; kredensialnya disuntikkan otomatis.
-- **Variabel lingkungan:** `APP_URL` dengan alamat https produksi, `SESSION_DRIVER=database` (filesystem Cloud tidak permanen), `SESSION_SECURE_COOKIE=true`, `SESSION_LIFETIME=480`, `SESSION_EXPIRE_ON_CLOSE=true`, dan `CACHE_STORE=database` (percobaan login dihitung di cache, jadi semua server harus memakai cache yang sama).
+- **Variabel lingkungan:** `APP_URL` dengan alamat https produksi, `SESSION_DRIVER=database` (filesystem Cloud tidak permanen), `SESSION_SECURE_COOKIE=true`, `SESSION_LIFETIME=480`, `SESSION_EXPIRE_ON_CLOSE=true`, dan `CACHE_STORE=database` (percobaan login dihitung di cache, jadi semua server harus memakai cache yang sama), serta `NJKB_ACCESS_CLIENT_ID` dan `NJKB_ACCESS_CLIENT_SECRET` untuk data kendaraan.
 - **Administrator pertama:** di tab *Commands* jalankan `php artisan pintu:create-admin <nip> "<nama>" --no-interaction`, lalu kirim tautan aktivasi yang dicetak hanya kepada pemilik akun. Tautan berlaku 60 menit; bila terlewat, jalankan `php artisan pintu:activation-link <nip>`.
 - **Edge network:** aktifkan rate limiting (paket Growth atau Business). Di Cloud, Laravel memercayai semua proxy sehingga IP pengunjung untuk pembatasan laju di aplikasi bisa dipalsukan. Batas percobaan login per NIP tetap berlaku karena tidak bergantung pada IP.
 - Setelah aman, arahkan domain `pintu.uptdpenda-kupang.web.id` ke Laravel Cloud dan matikan deploy otomatis Cloudflare Pages.
@@ -140,7 +142,7 @@ node scripts/sync-partials.mjs
 
 ## Konten dinamis
 
-Jam loket, rotasi Samsat Keliling, dan parameter simulasi PKB ada di objek `CONFIG` pada `public/assets/js/main.js`. Semua konten ini juga sudah dimodelkan di dashboard; langkah berikutnya adalah membaca isi portal dari database lewat Laravel. Nilai yang ditandai titik kuning di halaman adalah **data contoh** dan wajib diverifikasi petugas sebelum terbit.
+Jam loket dan rotasi Samsat Keliling ada di objek `CONFIG` pada `public/assets/js/main.js`. Semua konten ini juga sudah dimodelkan di dashboard; langkah berikutnya adalah membaca isi portal dari database lewat Laravel. Nilai yang ditandai titik kuning di halaman adalah **data contoh** dan wajib diverifikasi petugas sebelum terbit.
 
 ## Logo
 

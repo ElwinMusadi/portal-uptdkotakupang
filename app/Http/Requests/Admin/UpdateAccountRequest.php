@@ -36,7 +36,7 @@ class UpdateAccountRequest extends FormRequest
             'surel' => ['sometimes', 'nullable', 'string', 'email', 'max:255', Rule::unique(User::class, 'email')->ignore($this->account())],
             'peran' => ['sometimes', 'required', Rule::enum(UserRole::class)],
             'modul' => ['sometimes', 'list'],
-            'modul.*' => ['string', Rule::enum(DashboardModule::class)],
+            'modul.*' => ['string', Rule::enum(DashboardModule::class)->only(DashboardModule::assignable())],
         ];
     }
 

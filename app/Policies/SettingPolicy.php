@@ -10,20 +10,18 @@ use Illuminate\Auth\Access\Response;
 /**
  * A settings document belongs to the dashboard module of the same name
  * (D-010), e.g. "jam" to Jam Pelayanan: administrators and the employees
- * assigned to that module may read and save it. The tariff is the exception
- * for reading (D-017), and the site settings, which belong to no module, for
- * both (D-026).
+ * assigned to that module may read and save it. The site settings, which
+ * belong to no module, are the exception (D-026).
  */
 class SettingPolicy
 {
     /**
      * Determine whether the user can read the named settings document. Every
-     * employee may read the tariff: the Kalkulator PKB is open to all of them
-     * (D-010), and the portal publishes the same rates.
+     * employee reads the site settings for the dashboard.
      */
     public function view(User $user, string $name): Response
     {
-        if ($name === Setting::TARIFF || $name === Setting::SITE) {
+        if ($name === Setting::SITE) {
             return Response::allow();
         }
 

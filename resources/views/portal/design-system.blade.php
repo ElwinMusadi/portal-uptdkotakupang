@@ -423,7 +423,7 @@
             <tr><td>Tab bernomor + kartu tangkapan layar</td><td>Layanan utama dengan checklist berkas interaktif</td><td>Beranda</td></tr>
             <tr><td>Dasbor gelap + daftar kategori</td><td>Transparansi kinerja layanan dengan rentang waktu</td><td>Beranda</td></tr>
             <tr><td>Peta integrasi + pil notch</td><td>Kanal layanan: kantor, keliling, digital, informasi, pengaduan</td><td>Beranda</td></tr>
-            <tr><td>Kanvas bento</td><td>Simulasi PKB: pokok, opsen, denda, pemutihan, SWDKLLJ</td><td>Beranda, Layanan, Pegawai</td></tr>
+            <tr><td>Kanvas bento</td><td>Cek biaya pajak: nomor polisi, nomor rangka, rincian PKB</td><td>Beranda, Layanan, Pegawai</td></tr>
             <tr><td>Pernyataan privasi</td><td>Pernyataan integritas anti-pungli</td><td>Beranda</td></tr>
             <tr><td>Kartu harga + hitung mundur</td><td>Biaya cek fisik Rp0 + hitung mundur jam loket</td><td>Beranda, Jadwal</td></tr>
             <tr><td>Penutup jenaka</td><td>“Map apa saja boleh.” dengan kontrol “Cek lagi”</td><td>Beranda</td></tr>

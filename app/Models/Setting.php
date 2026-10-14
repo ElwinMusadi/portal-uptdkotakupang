@@ -22,29 +22,6 @@ class Setting extends Model
     public const string SERVICE_BOARD = 'papan';
 
     /**
-     * The rates of the PKB simulation and the Kalkulator PKB (Tarif & Simulasi).
-     */
-    public const string TARIFF = 'tarif';
-
-    /**
-     * The tariff until it is first saved: every rate is zero, so nothing is
-     * simulated with rates nobody has set.
-     *
-     * @var array{opsenPersen: int, dendaPersenPerBulan: int, maksBulanDenda: int, swdklljMotor: int, swdklljMobil: int, contohPokok: int, contohJenis: string, contohTelat: int, catatan: string}
-     */
-    public const array UNSAVED_TARIFF = [
-        'opsenPersen' => 0,
-        'dendaPersenPerBulan' => 0,
-        'maksBulanDenda' => 0,
-        'swdklljMotor' => 0,
-        'swdklljMobil' => 0,
-        'contohPokok' => 0,
-        'contohJenis' => 'motor',
-        'contohTelat' => 0,
-        'catatan' => '',
-    ];
-
-    /**
      * The figures of the transparency dashboard on the portal's homepage
      * (Statistik Layanan).
      */
@@ -364,16 +341,6 @@ class Setting extends Model
             'catatan' => '',
             'diperbarui' => null,
         ];
-    }
-
-    /**
-     * The tariff as the dashboard edits it.
-     *
-     * @return array{opsenPersen: int|float, dendaPersenPerBulan: int|float, maksBulanDenda: int, swdklljMotor: int, swdklljMobil: int, contohPokok: int, contohJenis: string, contohTelat: int, catatan: string}
-     */
-    public static function tariff(): array
-    {
-        return self::query()->find(self::TARIFF)?->value ?? self::UNSAVED_TARIFF;
     }
 
     /**

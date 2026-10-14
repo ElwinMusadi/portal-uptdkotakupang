@@ -81,7 +81,7 @@ PINTU
 ├── Layanan
 │   ├── Persyaratan 5 layanan (layanan.html)
 │   ├── Alur non-tunai (layanan.html#alur)
-│   └── Simulasi PKB (layanan.html#simulasi)
+│   └── Cek biaya pajak (layanan.html#simulasi)
 ├── Jadwal
 │   ├── Jam pelayanan + status langsung (jadwal.html)
 │   └── Samsat Keliling mingguan (jadwal.html#keliling)
@@ -95,10 +95,10 @@ PINTU
 │   └── Dashboard pengelolaan konten (/dashboard, sumber di resources/js/dashboard/)
 │       ├── Ringkasan · Alur publikasi (kanban) · Pesan & pengaduan · Statistik layanan
 │       ├── Konten: berita & pengumuman, dokumentasi, regulasi & unduhan, tanya jawab
-│       ├── Layanan: persyaratan, jam pelayanan, Samsat Keliling, papan layanan, tarif & simulasi
+│       ├── Layanan: persyaratan, jam pelayanan, Samsat Keliling, papan layanan
 │       ├── Profil instansi: tentang UPTD, visi & misi, struktur organisasi, kontak & kanal
 │       ├── Situs: beranda, halaman statis, jadwal pemutakhiran
-│       ├── Alat bantu: absensi lapangan (foto + GPS), kalkulator PKB amnesti
+│       ├── Alat bantu: absensi lapangan (foto + GPS), kalkulator PKB (nomor polisi)
 │       └── Pengaturan (situs, akun, cadangan data) · Panduan
 ├── Kebijakan Privasi · Syarat & Ketentuan · 404
 └── Design System (design-system.html)
@@ -116,7 +116,7 @@ Navigasi utama dibatasi **lima** tautan (Profil, Layanan, Jadwal, Informasi, Kon
 | Tentang UPTD | Kedudukan dan tugas | Fakta (dl), daftar tugas bernomor, sambutan, kartu lanjutan |
 | Visi & Misi | Arah provinsi → layanan | Visi raksasa dua nada, 5 misi + kata kunci, kontribusi PINTU, grid BerAKHLAK, maklumat |
 | Struktur Organisasi | Siapa mengerjakan apa | Bagan CSS responsif, akordeon uraian tugas, 4 peran pengelola informasi |
-| Layanan & Persyaratan | Siapkan berkas dari rumah | Ringkasan standar, navigasi samping (scroll-spy), 5 kartu tabel berkas, alur non-tunai, simulasi |
+| Layanan & Persyaratan | Siapkan berkas dari rumah | Ringkasan standar, navigasi samping (scroll-spy), 5 kartu tabel berkas, alur non-tunai, cek biaya pajak |
 | Jadwal | Cek sebelum berangkat | Kartu status langsung + hitung mundur, tabel jam dengan penanda hari ini, jadwal keliling mingguan otomatis |
 | Berita & Pengumuman | Kabar resmi bertanggal | Pengumuman tersemat, berita utama, filter + pencarian, arsip pengumuman |
 | Detail berita | Satu artikel | Metadata verifikasi (diterbitkan, diperbarui, diverifikasi oleh), bagikan, baca juga |
@@ -152,7 +152,7 @@ Sumber kebenaran: `assets/css/tokens.css`. Panduan visual hidup: `design-system.
 - **SF Pro Display** (semibold 600) untuk headline dan angka ≥ 20px: hero `clamp(36px, 4.6vw + 22px, 80px)`, lh 1.05, tracking −0.022em; H1 halaman 36–64px; H2 30–48px; H3 24–28px; angka metrik 28–40px.
 - **SF Pro Text** untuk teks, UI, dan label di bawah 20px.
 - **Angka tabular** (`font-variant-numeric: tabular-nums`) dengan SF Pro Text untuk nomor tab (01/02/03), jam, dan hitung mundur kecil; hitung mundur besar (≥ 20px) memakai SF Pro Display. Tidak ada font monospace.
-- Semua headline memakai `text-wrap: balance`. Angka dan satuannya dipisah spasi tak-putus (`5&nbsp;tahun`). Angka di simulasi mengecil otomatis bila tidak muat di tile (minimum 14px); bila tetap tidak muat, tile kecil memakai format ringkas (mis. `Rp660 jt`) dengan angka lengkap di rincian dan tooltip.
+- Semua headline memakai `text-wrap: balance`. Angka dan satuannya dipisah spasi tak-putus (`5&nbsp;tahun`). Total di cek biaya pajak mengecil di layar sempit (minimum 26px) agar tetap satu baris.
 - SF Pro adalah font sistem Apple dan **tidak di-host** di situs (lisensi Apple tidak mengizinkan distribusi web). Urutan font: `"SF Pro Display"/"SF Pro Text", -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif`. Artinya perangkat Apple menampilkan SF Pro, Windows menampilkan Segoe UI, dan Android menampilkan Roboto.
 - Body 16px / 1.6, lebar maks. ±38ch. Eyebrow 11px uppercase, tracking 0.12em.
 - **Aturan dua nada**: kalimat pertama tinta, lanjutan abu-abu (`<span class="tone">`). Semua headline berupa kalimat lengkap dan diakhiri titik.
@@ -204,7 +204,7 @@ Navbar notch di tepi atas + dropdown gelap + ikon Login Pegawai · tombol (dark,
 | 6 | Teaser integrasi | Lencana mitra satu atap: BPAD NTT, Polri, Jasa Raharja, Bank NTT, QRIS, SIGNAL |
 | 7 | "Your tools. One view." | **Transparansi layanan**: 4 kategori data + dasbor gelap dengan filter waktu |
 | 8 | Peta integrasi | **Kanal layanan**: pil notch (status loket, jumlah titik keliling) → 5 kelompok kanal |
-| 9 | Bento playground | **Simulasi PKB** dalam kanvas bento (pokok, jenis, terlambat, opsen, denda, total, pemutihan, SWDKLLJ) |
+| 9 | Bento playground | **Cek biaya pajak** dalam kanvas bento (nomor polisi, 5 digit terakhir nomor rangka, rincian PKB, opsen, SWDKLLJ, PNBP; D-041) |
 | 10 | Pernyataan privasi | **Integritas**: "Bayar sesuai notis. *Tidak lebih sepeser pun.*" |
 | 11 | Pricing | **Biaya**: cek fisik Rp0 + hitung mundur jam loket langsung |
 | 12 | FAQ | "Perlu diketahui. *Sebelum ke loket.*" 7 pertanyaan |
@@ -262,7 +262,7 @@ Semua elemen bertanda titik kuning "proto-note" di prototipe adalah contoh. Daft
 - [ ] Jam loket per hari dan batas penerimaan berkas
 - [ ] Lokasi dan jadwal Samsat Keliling (data rotasi di `assets/js/main.js` → `CONFIG.keliling`)
 - [ ] Nama seksi dan pejabat sesuai Pergub NTT yang berlaku; foto Kepala UPTD
-- [ ] Parameter simulasi: opsen PKB, denda per bulan, batas bulan, SWDKLLJ (`CONFIG.sim`)
+- [ ] Rincian cek biaya pajak dicocokkan dengan notis beberapa kendaraan (mesin kalkulator-pajak, D-041)
 - [ ] Nomor loket per layanan
 - [ ] Kanal pembayaran non-tunai yang berlaku (QRIS, bank mitra, SIGNAL)
 - [ ] Dokumen regulasi, standar pelayanan, maklumat, SOP, formulir (berkas & tautan JDIH)

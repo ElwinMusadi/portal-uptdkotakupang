@@ -148,9 +148,11 @@ class AccountControllerTest extends TestCase
         $this->assertSame([], User::query()->where('nip', self::NIP)->sole()->modules);
     }
 
-    public function test_rejects_a_module_it_does_not_know(): void
+    #[TestWith(['keuangan'])]
+    #[TestWith(['tarif'])]
+    public function test_rejects_a_module_it_does_not_know_or_that_is_retired(string $module): void
     {
-        $response = $this->actingAs($this->administrator())->postJson('/api/akun', ['modul' => ['berita', 'keuangan']] + $this->newAccount());
+        $response = $this->actingAs($this->administrator())->postJson('/api/akun', ['modul' => ['berita', $module]] + $this->newAccount());
 
         $response->assertUnprocessable()->assertJsonValidationErrors(['modul.1' => 'Modul tidak dikenal.']);
         $this->assertDatabaseCount('users', 1);
@@ -292,11 +294,13 @@ class AccountControllerTest extends TestCase
         $this->assertSame([], $account->fresh()->modules);
     }
 
-    public function test_rejects_a_module_it_does_not_know_when_editing(): void
+    #[TestWith(['keuangan'])]
+    #[TestWith(['tarif'])]
+    public function test_rejects_a_module_it_does_not_know_or_that_is_retired_when_editing(string $module): void
     {
         $account = User::factory()->withModules(DashboardModule::Berita)->create();
 
-        $response = $this->actingAs($this->administrator())->patchJson("/api/akun/{$account->id}", ['modul' => ['keuangan']]);
+        $response = $this->actingAs($this->administrator())->patchJson("/api/akun/{$account->id}", ['modul' => [$module]]);
 
         $response->assertUnprocessable()->assertJsonValidationErrors(['modul.0' => 'Modul tidak dikenal.']);
         $this->assertSame(['berita'], $account->fresh()->modules);

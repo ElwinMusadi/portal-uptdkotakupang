@@ -245,36 +245,38 @@
   <section class="section" id="simulasi">
     <div class="container split split--middle">
       <div data-reveal>
-        <p class="eyebrow">Simulasi pajak</p>
+        <p class="eyebrow">Cek biaya pajak</p>
         <h2 class="h2" style="margin-top:20px">Hitung dulu. <span class="tone">Datang dengan tenang.</span></h2>
-        <p class="body" style="margin-top:20px">Masukkan nilai pokok PKB dari notis terakhir. Simulasi menambahkan opsen, denda keterlambatan, dan SWDKLLJ.</p>
+        <p class="body" style="margin-top:20px">Masukkan nomor polisi dan 5 digit terakhir nomor rangka. Rincian PKB, opsen, SWDKLLJ, dan PNBP dihitung dari data kendaraan di Samsat.</p>
         <table class="table table--fluid" style="margin-top:28px;max-width:420px">
-          <caption class="sr-only">Asumsi perhitungan simulasi</caption>
+          <caption class="sr-only">Dasar perhitungan biaya pajak</caption>
           <tbody>
-            <tr><td>Opsen PKB</td><td class="num" data-tarif="opsen-pokok">—</td></tr>
-            <tr><td>Denda keterlambatan</td><td class="num" data-tarif="denda-maks">—</td></tr>
-            <tr><td>SWDKLLJ motor / mobil</td><td class="num" data-tarif="swdkllj">—</td></tr>
+            <tr><td>Tarif PKB</td><td class="num">1,2% · plat merah 0,5%</td></tr>
+            <tr><td>Opsen PKB</td><td class="num">66% dari PKB</td></tr>
+            <tr><td>Tunggakan PKB</td><td class="num">maks. 4 tahun, diskon 50%</td></tr>
+            <tr><td>Denda PKB dan opsen</td><td class="num">dibebaskan 100%</td></tr>
+            <tr><td>PNBP STNK dan TNKB</td><td class="num">bila STNK tersisa ≤ 90 hari</td></tr>
           </tbody>
         </table>
-        <p class="micro muted" style="margin-top:14px" data-tarif="diperbarui" hidden></p>
+        <p class="micro muted" style="margin-top:14px">Menurut Pergub NTT Nomor 54 Tahun 2026. Masa pajak sebelum 5 Januari 2025 bertarif 1,5% tanpa opsen; tunggakan di wilayah terdampak gempa didiskon 75%.</p>
       </div>
       <div data-reveal>
-        <div class="canvas" data-sim>
+        <div class="canvas" data-cek-pajak>
           <div class="canvas__bar">
-            <p class="smallcaps">Simulasi PKB · nilai contoh</p>
-            <button class="btn btn--ghost btn--xs" type="button" data-sim-reset><svg class="i i--sm" aria-hidden="true"><use href="#i-refresh"/></svg>Reset</button>
+            <p class="smallcaps">Cek biaya pajak · Pergub NTT 54/2026</p>
           </div>
-          <div class="bento">
-            <div class="tile bento__pokok"><span class="size-chip">2×1</span><label class="tile__label" for="sim-pokok-2">Pokok PKB di notis</label><div class="bento__money"><span>Rp</span><input class="bento__input" id="sim-pokok-2" type="text" inputmode="numeric" value="" data-sim-pokok autocomplete="off"></div></div>
-            <div class="tile bento__jenis"><span class="size-chip">1×1</span><p class="tile__label" id="sim2-jenis-l">Jenis</p><div class="seg" role="radiogroup" aria-labelledby="sim2-jenis-l" data-sim-jenis><button type="button" role="radio" aria-checked="true" data-val="motor"><svg class="i" aria-hidden="true"><use href="#i-motor"/></svg>Motor</button><button type="button" role="radio" aria-checked="false" data-val="mobil"><svg class="i" aria-hidden="true"><use href="#i-car"/></svg>Mobil</button></div></div>
-            <div class="tile bento__telat"><span class="size-chip">1×1</span><p class="tile__label" id="sim2-telat-l">Terlambat</p><div class="stepper" role="group" aria-labelledby="sim2-telat-l"><button type="button" data-sim-step="-1" aria-label="Kurangi satu bulan"><svg class="i i--sm" aria-hidden="true"><use href="#i-minus"/></svg></button><output data-sim-telat aria-live="polite">—</output><button type="button" data-sim-step="1" aria-label="Tambah satu bulan"><svg class="i i--sm" aria-hidden="true"><use href="#i-plus"/></svg></button></div><p class="tile__meta"><span>bulan</span><span data-tarif="maks"></span></p></div>
-            <div class="tile bento__opsen"><span class="size-chip">1×1</span><p class="tile__label" data-tarif="label-opsen">Opsen PKB</p><p class="tile__value bento__val" data-sim-out="opsen">—</p></div>
-            <div class="tile bento__denda"><span class="size-chip">1×1</span><p class="tile__label" data-tarif="label-denda">Denda</p><p class="tile__value bento__val" data-sim-out="denda">—</p></div>
-            <div class="tile bento__total"><span class="size-chip">2×2</span><p class="tile__label">Estimasi total bayar</p><p class="bento__total-val" data-sim-out="total">—</p><ul class="bento__rows" role="list"><li><span>Pokok PKB</span><span data-sim-out="pokok">—</span></li><li><span>Opsen PKB</span><span data-sim-out="opsen2">—</span></li><li><span>Denda</span><span data-sim-out="denda2">—</span></li><li><span>SWDKLLJ</span><span data-sim-out="swd2">—</span></li></ul><label class="switch on-night"><input type="checkbox" data-sim-putih><span class="switch__track" aria-hidden="true"></span>Program pemutihan denda</label></div>
-            <div class="tile bento__swd"><span class="size-chip">2×1</span><p class="tile__label">SWDKLLJ · Jasa Raharja</p><p class="tile__value bento__val" data-sim-out="swd">—</p></div>
+          <form class="bento cek__form" data-cek-form novalidate>
+            <div class="tile cek__isian"><label class="tile__label" for="cek-nopol">Nomor polisi</label><input class="bento__input" id="cek-nopol" name="nopol" type="text" placeholder="DH 1234 AB" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" required aria-describedby="cek-pesan"></div>
+            <div class="tile cek__isian"><label class="tile__label" for="cek-rangka">5 digit terakhir nomor rangka</label><input class="bento__input" id="cek-rangka" name="rangka" type="text" placeholder="12345" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" required aria-describedby="cek-rangka-ket cek-pesan"><p class="tile__meta" id="cek-rangka-ket">Tertera di STNK dan BPKB.</p></div>
+            <div class="cek__aksi"><button class="btn btn--dark" type="submit" data-cek-kirim><svg class="i" aria-hidden="true"><use href="#i-search"/></svg>Cek biaya</button><p class="cek__pesan" id="cek-pesan" role="status" data-cek-pesan></p></div>
+          </form>
+          <div class="bento cek__hasil" data-cek-hasil hidden>
+            <div class="tile cek__kendaraan"><p class="tile__label">Pemilik</p><p class="cek__nama" data-cek="nama">—</p><dl class="cek__data"><div><dt>Nomor polisi</dt><dd data-cek="nopol">—</dd></div><div><dt>Jenis</dt><dd data-cek="jenis">—</dd></div><div><dt>Jatuh tempo pajak</dt><dd data-cek="jt-pajak">—</dd></div><div><dt>Jatuh tempo STNK</dt><dd data-cek="jt-stnk">—</dd></div></dl></div>
+            <div class="tile cek__opsi"><label class="tile__label" for="cek-bayar">Tanggal bayar</label><input class="cek__tanggal" id="cek-bayar" type="date" data-cek-bayar><label class="switch on-night"><input type="checkbox" data-cek-gempa><span class="switch__track" aria-hidden="true"></span>Wilayah terdampak gempa</label><label class="switch on-night"><input type="checkbox" data-cek-mutasi><span class="switch__track" aria-hidden="true"></span>Mutasi masuk luar daerah</label><p class="tile__meta">Wilayah gempa: Sikka, Ende, Nagekeo, Ngada, Manggarai, Manggarai Timur, dan Manggarai Barat.</p></div>
+            <div class="tile cek__total"><p class="tile__label">Estimasi total bayar</p><p class="bento__total-val" data-cek="total" aria-live="polite">—</p><p class="cek__masa" data-cek="masa">—</p><div class="cek__rincian" data-cek-rincian></div><p class="cek__catatan" data-cek="catatan"></p><p class="cek__catatan">Denda keterlambatan PKB dan opsen dibebaskan 100%. Pokok pajak dan SWDKLLJ tetap dihitung.</p></div>
           </div>
         </div>
-        <p class="micro muted canvas__note" data-sim-catatan aria-live="polite">Pratinjau interaktif dengan nilai contoh. Tagihan resmi mengikuti notis pajak di loket.</p>
+        <p class="micro muted canvas__note">Nomor rangka hanya dipakai untuk mencocokkan data kendaraan dan tidak disimpan. Tagihan resmi mengikuti notis pajak di loket.</p>
       </div>
     </div>
   </section>
@@ -333,5 +335,6 @@
 <div class="toast" role="status" aria-live="polite" id="toast"></div>
 <!-- /@footer -->
 <script src="assets/js/main.js" defer></script>
+<script type="module" src="skrip/cek-pajak"></script>
 </body>
 </html>

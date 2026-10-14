@@ -25,7 +25,7 @@ class StatisticsControllerTest extends TestCase
     #[TestWith(['PUT'])]
     public function test_forbids_employees_without_the_module_with_403(string $method): void
     {
-        $employee = User::factory()->withModules(DashboardModule::Tarif)->create();
+        $employee = User::factory()->withModules(DashboardModule::Papan)->create();
 
         $response = $this->actingAs($employee)->json($method, '/api/pengaturan/statistik', $this->statistics());
 

@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Vite;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 /*
@@ -57,6 +58,9 @@ Route::withoutMiddleware([
     Route::get('/berita/{slug}', ArticlePageController::class)->where('slug', Article::SLUG_PATTERN)->name('portal.berita');
     Route::permanentRedirect('/berita-detail', '/informasi');
     Route::permanentRedirect('/berita-detail.html', '/informasi');
+
+    // The tax check on Beranda and Layanan (D-041) is the one portal script Vite builds; the static pages load it from this fixed address.
+    Route::get('/skrip/cek-pajak', fn (): RedirectResponse => redirect(Vite::asset('resources/js/portal/cek-pajak.ts')))->name('portal.cek-pajak');
 });
 
 /*

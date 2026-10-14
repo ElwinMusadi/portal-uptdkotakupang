@@ -35,7 +35,6 @@ export const KOLEKSI_SERVER: readonly NamaKoleksi[] = [
 export const PENGATURAN_SERVER: readonly NamaPengaturan[] = [
   "jam",
   "papan",
-  "tarif",
   "statistik",
   "kontak",
   "visiMisi",

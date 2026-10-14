@@ -1,5 +1,5 @@
 import { IconRefresh } from "@tabler/icons-react"
-import { createHashRouter, isRouteErrorResponse, useRouteError, type RouteObject } from "react-router"
+import { createHashRouter, isRouteErrorResponse, redirect, useRouteError, type RouteObject } from "react-router"
 
 import { Layout } from "@/app/layout"
 import { Button } from "@/components/ui/button"
@@ -74,7 +74,8 @@ export const router = createHashRouter([
       { path: "jadwal/jam", ...halaman("Jam Pelayanan", () => import("@/pages/jadwal/jam")) },
       { path: "jadwal/keliling", ...halaman("Samsat Keliling", () => import("@/pages/jadwal/keliling")) },
       { path: "papan", ...halaman("Papan Layanan", () => import("@/pages/papan")) },
-      { path: "tarif", ...halaman("Tarif & Simulasi", () => import("@/pages/tarif")) },
+      // Tarif & Simulasi dipensiunkan (D-041); tautan lama menuju Kalkulator PKB
+      { path: "tarif", loader: () => redirect("/kalkulator") },
       { path: "profil", ...halaman("Tentang UPTD", () => import("@/pages/profil")) },
       { path: "visi-misi", ...halaman("Visi & Misi", () => import("@/pages/visi-misi")) },
       { path: "struktur", ...halaman("Struktur Organisasi", () => import("@/pages/struktur")) },
