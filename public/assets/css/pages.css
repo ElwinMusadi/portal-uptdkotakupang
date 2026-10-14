@@ -278,6 +278,7 @@
 .values p { font-size: 13.5px; color: var(--text-2); }
 .values > div.values__intro { background: var(--ink); color: #fff; }
 .values__intro p { color: var(--night-muted); }
+.values__intro .values__l { color: #fff; }
 @media (max-width: 900px) { .values { grid-template-columns: repeat(2, 1fr); } }
 
 /* ---------- Kutipan sambutan ---------- */
