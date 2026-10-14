@@ -254,19 +254,39 @@ class Setting extends Model
             'deskripsi' => 'Pilih layanan, siapkan berkas dari rumah, lalu datang ke loket yang tepat.',
         ],
         'mitra' => [
-            ['id' => 'mitra-1', 'singkatan' => 'BP', 'nama' => 'BPAD Provinsi NTT'],
-            ['id' => 'mitra-2', 'singkatan' => 'PL', 'nama' => 'Polri · Satlantas'],
-            ['id' => 'mitra-3', 'singkatan' => 'JR', 'nama' => 'Jasa Raharja'],
-            ['id' => 'mitra-4', 'singkatan' => 'BN', 'nama' => 'Bank NTT'],
-            ['id' => 'mitra-5', 'singkatan' => 'QR', 'nama' => 'QRIS'],
-            ['id' => 'mitra-6', 'singkatan' => 'SG', 'nama' => 'SIGNAL'],
+            ['id' => 'mitra-1', 'singkatan' => 'BP', 'nama' => 'BPAD Provinsi NTT', 'logo' => null],
+            ['id' => 'mitra-2', 'singkatan' => 'PL', 'nama' => 'Polri · Satlantas', 'logo' => null],
+            ['id' => 'mitra-3', 'singkatan' => 'JR', 'nama' => 'Jasa Raharja', 'logo' => null],
+            ['id' => 'mitra-4', 'singkatan' => 'BN', 'nama' => 'Bank NTT', 'logo' => null],
+            ['id' => 'mitra-5', 'singkatan' => 'QR', 'nama' => 'QRIS', 'logo' => null],
+            ['id' => 'mitra-6', 'singkatan' => 'SG', 'nama' => 'SIGNAL', 'logo' => null],
         ],
         'kanal' => [
-            ['id' => 'kanal-1', 'kelompok' => 'Kantor', 'item' => ['Loket pajak tahunan', "Loket 5\u{00A0}tahunan", 'Loket mutasi & BBN', 'Cek fisik kendaraan']],
-            ['id' => 'kanal-2', 'kelompok' => 'Keliling', 'item' => ['Samsat Keliling', 'Layanan jemput bola']],
-            ['id' => 'kanal-3', 'kelompok' => 'Digital', 'item' => ['QRIS di kasir', 'Bank NTT', 'SIGNAL']],
-            ['id' => 'kanal-4', 'kelompok' => 'Informasi', 'item' => ['Portal PINTU', 'Media sosial', 'WhatsApp layanan']],
-            ['id' => 'kanal-5', 'kelompok' => 'Pengaduan', 'item' => ['SP4N-LAPOR!', 'Kotak saran', 'Ombudsman NTT']],
+            ['id' => 'kanal-1', 'kelompok' => 'Kantor', 'item' => [
+                ['teks' => 'Loket pajak tahunan', 'tautan' => ''],
+                ['teks' => "Loket 5\u{00A0}tahunan", 'tautan' => ''],
+                ['teks' => 'Loket mutasi & BBN', 'tautan' => ''],
+                ['teks' => 'Cek fisik kendaraan', 'tautan' => ''],
+            ]],
+            ['id' => 'kanal-2', 'kelompok' => 'Keliling', 'item' => [
+                ['teks' => 'Samsat Keliling', 'tautan' => ''],
+                ['teks' => 'Layanan jemput bola', 'tautan' => ''],
+            ]],
+            ['id' => 'kanal-3', 'kelompok' => 'Digital', 'item' => [
+                ['teks' => 'QRIS di kasir', 'tautan' => ''],
+                ['teks' => 'Bank NTT', 'tautan' => ''],
+                ['teks' => 'SIGNAL', 'tautan' => ''],
+            ]],
+            ['id' => 'kanal-4', 'kelompok' => 'Informasi', 'item' => [
+                ['teks' => 'Portal PINTU', 'tautan' => ''],
+                ['teks' => 'Media sosial', 'tautan' => ''],
+                ['teks' => 'WhatsApp layanan', 'tautan' => ''],
+            ]],
+            ['id' => 'kanal-5', 'kelompok' => 'Pengaduan', 'item' => [
+                ['teks' => 'SP4N-LAPOR!', 'tautan' => ''],
+                ['teks' => 'Kotak saran', 'tautan' => ''],
+                ['teks' => 'Ombudsman NTT', 'tautan' => ''],
+            ]],
         ],
         'integritas' => [
             'judul' => 'Bayar sesuai notis.',
@@ -401,7 +421,27 @@ class Setting extends Model
      */
     public static function homepage(): array
     {
-        return self::query()->find(self::HOMEPAGE)?->value ?? self::INITIAL_HOMEPAGE;
+        return self::upgradeHomepage(self::query()->find(self::HOMEPAGE)?->value ?? self::INITIAL_HOMEPAGE);
+    }
+
+    /**
+     * A Beranda document in its current shape, whenever it was saved: every
+     * partner has a logo address or null (D-037), and every channel is a
+     * text with a link, empty when it has none (D-038). Channels saved as
+     * plain text get no link.
+     *
+     * @param  array<string, mixed>  $homepage
+     * @return array<string, mixed>
+     */
+    public static function upgradeHomepage(array $homepage): array
+    {
+        $homepage['mitra'] = array_map(fn (array $partner): array => [...$partner, 'logo' => $partner['logo'] ?? null], $homepage['mitra']);
+        $homepage['kanal'] = array_map(fn (array $group): array => [
+            ...$group,
+            'item' => array_map(fn (string|array $channel): array => is_string($channel) ? ['teks' => $channel, 'tautan' => ''] : $channel, $group['item']),
+        ], $homepage['kanal']);
+
+        return $homepage;
     }
 
     /**

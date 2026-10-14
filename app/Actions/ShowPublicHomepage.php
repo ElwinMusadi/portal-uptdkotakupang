@@ -26,7 +26,7 @@ class ShowPublicHomepage
             throw new PublicContentUnavailableException('The homepage texts could not be read.', previous: $exception);
         }
 
-        $homepage = $setting?->value ?? Setting::INITIAL_HOMEPAGE;
+        $homepage = Setting::upgradeHomepage($setting?->value ?? Setting::INITIAL_HOMEPAGE);
         $withoutId = fn (array $items): array => array_map(fn (array $item): array => array_diff_key($item, ['id' => true]), $items);
 
         return [

@@ -6,7 +6,7 @@ import {
   IconTrash,
   IconUpload,
 } from "@tabler/icons-react"
-import type { FieldValues } from "react-hook-form"
+import type { Control, FieldPath, FieldValues } from "react-hook-form"
 import { toast } from "sonner"
 
 import type { PropsDasar } from "@/components/form/fields"
@@ -48,6 +48,99 @@ export function PlaceholderFoto({ className, label }: { className?: string; labe
   )
 }
 
+/**
+ * Logo kecil di baris daftar, mis. logo mitra (D-037): pratinjau bundar seperti
+ * lencana di portal, dengan inisial bila logo belum diunggah.
+ */
+export function IsianLogo<T extends FieldValues>({
+  control,
+  name,
+  label,
+  labelAksi,
+  inisial,
+  tujuan,
+}: {
+  control: Control<T>
+  name: FieldPath<T>
+  label: string
+  /** Nama logo di label tombol untuk pembaca layar, mis. "logo mitra 2" */
+  labelAksi: string
+  inisial?: string
+  tujuan: TujuanUnggah
+}) {
+  const inputRef = React.useRef<HTMLInputElement>(null)
+  const [proses, setProses] = React.useState(false)
+
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => {
+        const src = (field.value as string | null) || null
+        const pilih = async (berkas: File | undefined) => {
+          if (!berkas) return
+          setProses(true)
+          try {
+            field.onChange(await unggahGambar(berkas, tujuan))
+          } catch (e) {
+            toast.error("Logo gagal diunggah", { description: (e as Error).message })
+          } finally {
+            setProses(false)
+            if (inputRef.current) inputRef.current.value = ""
+          }
+        }
+        return (
+          <FormItem className="gap-1.5">
+            <FormLabel className="text-xs text-muted-foreground">{label}</FormLabel>
+            <div className="flex items-center gap-1">
+              <span
+                className={cn(
+                  "relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full border text-[11px] font-semibold text-muted-foreground",
+                  src ? "bg-white p-1" : "bg-muted"
+                )}
+              >
+                {src ? <img src={src} alt="" className="size-full object-contain" /> : inisial || <IconPhoto className="size-4" aria-hidden="true" />}
+                {proses && (
+                  <span className="absolute inset-0 flex items-center justify-center bg-background/70">
+                    <Spinner className="size-4" />
+                  </span>
+                )}
+              </span>
+              <FormControl>
+                <input
+                  ref={inputRef}
+                  type="file"
+                  accept={TIPE_GAMBAR.join(",")}
+                  className="sr-only"
+                  tabIndex={-1}
+                  onChange={(e) => void pilih(e.target.files?.[0])}
+                />
+              </FormControl>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                disabled={proses}
+                aria-label={`${src ? "Ganti" : "Unggah"} ${labelAksi}`}
+                title={src ? "Ganti logo" : "Unggah logo (JPG, PNG, atau WebP; PNG transparan paling baik)"}
+                onClick={() => inputRef.current?.click()}
+              >
+                <IconUpload />
+              </Button>
+              {src && (
+                <Button type="button" variant="ghost" size="icon" aria-label={`Hapus ${labelAksi}`} title="Hapus logo" onClick={() => field.onChange(null)}>
+                  <IconTrash />
+                </Button>
+              )}
+            </div>
+            <FormMessage />
+          </FormItem>
+        )
+      }}
+    />
+  )
+}
+
 export function FieldGambar<T extends FieldValues>({
   control,
   name,
@@ -55,8 +148,14 @@ export function FieldGambar<T extends FieldValues>({
   deskripsi,
   className,
   rasio = "aspect-[16/9]",
+  logo = false,
   tujuan,
-}: PropsDasar<T> & { rasio?: string; tujuan: TujuanUnggah }) {
+}: PropsDasar<T> & {
+  rasio?: string
+  /** Tampilkan utuh di atas latar putih, tidak dipotong (logo) */
+  logo?: boolean
+  tujuan: TujuanUnggah
+}) {
   const inputRef = React.useRef<HTMLInputElement>(null)
   const [proses, setProses] = React.useState(false)
   const [modeUrl, setModeUrl] = React.useState(false)
@@ -91,9 +190,11 @@ export function FieldGambar<T extends FieldValues>({
               }}
             >
               {src ? (
-                <img src={src} alt="" className="size-full object-cover" />
+                <img src={src} alt="" className={cn("size-full", logo ? "bg-white object-contain p-4" : "object-cover")} />
               ) : (
-                <PlaceholderFoto label="Belum ada foto. Seret foto ke sini atau pilih berkas." />
+                <PlaceholderFoto
+                  label={logo ? "Belum ada logo. Seret logo ke sini atau pilih berkas." : "Belum ada foto. Seret foto ke sini atau pilih berkas."}
+                />
               )}
               {proses && (
                 <div className="absolute inset-0 flex items-center justify-center bg-background/70">
@@ -121,7 +222,7 @@ export function FieldGambar<T extends FieldValues>({
                 onClick={() => inputRef.current?.click()}
               >
                 <IconUpload />
-                {src ? "Ganti foto" : "Pilih foto"}
+                {logo ? (src ? "Ganti logo" : "Pilih logo") : src ? "Ganti foto" : "Pilih foto"}
               </Button>
               {/* Server hanya menerima foto yang diunggah ke PINTU */}
               {!unggahanDiServer(tujuan) && (

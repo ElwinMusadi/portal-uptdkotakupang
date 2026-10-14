@@ -46,7 +46,7 @@ export const PENGATURAN_SERVER: readonly NamaPengaturan[] = [
 ]
 
 /** Unggahan yang sudah disimpan di server (D-028): tujuan yang modulnya sudah di server */
-export const UNGGAHAN_SERVER: readonly TujuanUnggah[] = ["visiMisi", "profil", "dokumen", "berita", "dokumentasi", "unit"]
+export const UNGGAHAN_SERVER: readonly TujuanUnggah[] = ["visiMisi", "profil", "beranda", "dokumen", "berita", "dokumentasi", "unit"]
 
 /**
  * Mode campuran selama konten dipindahkan ke server secara bertahap. Koleksi

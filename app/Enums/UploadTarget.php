@@ -15,6 +15,7 @@ enum UploadTarget: string
     case Unit = 'unit';
     case VisiMisi = 'visiMisi';
     case Profil = 'profil';
+    case Beranda = 'beranda';
     case Absensi = 'absensi';
 
     /**

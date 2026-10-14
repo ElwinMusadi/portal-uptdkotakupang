@@ -56,11 +56,12 @@ function KotakUnit({ u, onBuka }: { u: UnitKerja; onBuka: () => void }) {
       <span className="flex items-center gap-2">
         <span
           className={cn(
-            "flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-[11px] font-semibold text-primary-foreground",
-            mitra && "bg-muted text-muted-foreground"
+            "flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary text-[11px] font-semibold text-primary-foreground",
+            mitra && "bg-muted text-muted-foreground",
+            mitra && u.foto && "border bg-white p-0.5"
           )}
         >
-          {u.singkatan}
+          {mitra && u.foto ? <img src={u.foto} alt="" className="size-full object-contain" /> : u.singkatan}
         </span>
         <span className="font-medium">{u.nama}</span>
       </span>
@@ -168,6 +169,8 @@ export default function HalamanStruktur() {
   })
 
   const namaUnit = React.useMemo(() => new Map(data?.map((u) => [u.id, u.nama])), [data])
+  // Unit mitra memakai isian foto untuk logonya (D-037)
+  const mitraDisunting = ed.form.watch("jenis") === "mitra"
   const opsiInduk = [
     { nilai: TANPA, label: "Tidak ada (puncak atau mitra)" },
     ...(data ?? [])
@@ -281,7 +284,19 @@ export default function HalamanStruktur() {
           <FieldTeks control={ed.form.control} name="pejabat" label="Nama pejabat" />
         </Baris>
         <div className="grid gap-5 sm:grid-cols-[180px_minmax(0,1fr)]">
-          <FieldGambar control={ed.form.control} name="foto" label="Foto pejabat" rasio="aspect-[4/5]" deskripsi="Opsional." tujuan="unit" />
+          {mitraDisunting ? (
+            <FieldGambar
+              control={ed.form.control}
+              name="foto"
+              label="Logo mitra"
+              rasio="aspect-square"
+              logo
+              deskripsi="Opsional. Tampil di lencana mitra; inisial dipakai bila kosong. PNG transparan paling baik."
+              tujuan="unit"
+            />
+          ) : (
+            <FieldGambar control={ed.form.control} name="foto" label="Foto pejabat" rasio="aspect-[4/5]" deskripsi="Opsional." tujuan="unit" />
+          )}
           <div className="grid content-start gap-5">
             <FieldTeks
               control={ed.form.control}

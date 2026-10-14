@@ -197,7 +197,7 @@ Server perlu menyediakan endpoint berikut. Bentuk JSON-nya sama dengan model dat
 | `GET` | `/pengaturan` | — | `{ "situs": "<waktu ISO>", … }`, waktu terakhir tiap pengaturan disimpan |
 | `GET` | `/aktivitas?limit=50` | — | Log aktivitas terbaru `{ id, waktu, oleh, aksi, modul, target }` |
 | `DELETE` | `/aktivitas` | — | 204 |
-| `POST` | `/unggah` | `multipart/form-data`, field `modul` (tujuan) dan `berkas` | `{ nama, ukuran, tipe, url }`; tersedia di server ([D-028](decisions.md#d-028--2026-10-14--unggahan-disimpan-di-laravel-cloud-object-storage)). Mode campuran memakainya untuk tujuan di `UNGGAHAN_SERVER` (saat ini `visiMisi`, `profil`, `dokumen`, `berita`, `dokumentasi`, dan `unit`) |
+| `POST` | `/unggah` | `multipart/form-data`, field `modul` (tujuan) dan `berkas` | `{ nama, ukuran, tipe, url }`; tersedia di server ([D-028](decisions.md#d-028--2026-10-14--unggahan-disimpan-di-laravel-cloud-object-storage)). Mode campuran memakainya untuk tujuan di `UNGGAHAN_SERVER` (saat ini `visiMisi`, `profil`, `beranda`, `dokumen`, `berita`, `dokumentasi`, dan `unit`) |
 | `GET` | `/ekspor` | — | Cadangan lengkap (format di atas) |
 | `POST` | `/impor` | Cadangan lengkap | 204 |
 | `POST` | `/reset` | — | 204 |

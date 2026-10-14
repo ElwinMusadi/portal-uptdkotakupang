@@ -42,9 +42,16 @@ class UploadControllerTest extends TestCase
         $this->actingAs($employee)->post('/api/unggah', ['modul' => 'berita', 'berkas' => $this->jpeg(10, 10)], ['Accept' => 'application/json'])
             ->assertForbidden()
             ->assertExactJson(['message' => 'Modul Berita & Pengumuman belum ditugaskan kepada Anda.']);
+        $this->actingAs($employee)->post('/api/unggah', ['modul' => 'beranda', 'berkas' => $this->jpeg(10, 10)], ['Accept' => 'application/json'])
+            ->assertForbidden()
+            ->assertExactJson(['message' => 'Modul Beranda belum ditugaskan kepada Anda.']);
         $this->actingAs($employee)->post('/api/unggah', ['modul' => 'absensi', 'berkas' => $this->jpeg(10, 10)], ['Accept' => 'application/json'])
             ->assertCreated();
-        $this->assertDatabaseCount('uploads', 1);
+        $this->actingAs(User::factory()->withModules(DashboardModule::Beranda)->create())
+            ->post('/api/unggah', ['modul' => 'beranda', 'berkas' => $this->jpeg(10, 10)], ['Accept' => 'application/json'])
+            ->assertCreated();
+        $this->assertDatabaseCount('uploads', 2);
+        $this->assertTrue(Upload::query()->where('tujuan', 'beranda')->sole()->publik);
     }
 
     public function test_stores_a_photo_in_the_public_bucket_resized_and_without_metadata(): void

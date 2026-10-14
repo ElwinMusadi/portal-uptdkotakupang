@@ -16,7 +16,7 @@ class ShowPublicOrganization
      * are left out. A unit whose parent no longer exists is shown at the
      * top. A source that cannot be read fails the request.
      *
-     * @return array{unit: list<array<string, mixed>>, mitra: list<array{nama: string, singkatan: string, uraianTugas: string, catatan: string}>}
+     * @return array{unit: list<array<string, mixed>>, mitra: list<array{nama: string, singkatan: string, foto: ?string, uraianTugas: string, catatan: string}>}
      *
      * @throws PublicContentUnavailableException
      */
@@ -37,6 +37,7 @@ class ShowPublicOrganization
             'mitra' => $partners->map(fn (OrganizationUnit $unit): array => [
                 'nama' => $unit->nama,
                 'singkatan' => $unit->singkatan,
+                'foto' => $unit->foto,
                 'uraianTugas' => $unit->uraian_tugas,
                 'catatan' => $unit->catatan,
             ])->values()->all(),

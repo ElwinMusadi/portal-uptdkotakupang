@@ -655,6 +655,15 @@
      alamat http(s); bila API gagal, keterangan dan tombol coba lagi. */
   const gambarAman = (url) => (typeof url === "string" && /^https?:\/\/[^\s\x00-\x1f\x7f]+$/i.test(url) ? url : "");
 
+  /* Tanda mitra di lencana (Beranda dan Struktur Organisasi): logonya bila
+     sudah diunggah, atau inisialnya (D-037). Nama mitra tertulis di sebelahnya,
+     jadi logo tidak diberi teks alternatif sendiri. */
+  const tandaMitra = (logo, singkatan) => {
+    const src = gambarAman(logo);
+    if (src) return `<span class="badge__dot badge__dot--logo"><img src="${esc(src)}" alt="" loading="lazy" decoding="async"></span>`;
+    return singkatan ? `<span class="badge__dot">${esc(singkatan)}</span>` : "";
+  };
+
 
   async function muatProfil() {
     const p = await ambilJson("/api/public/profil");
@@ -1359,7 +1368,7 @@
       && (u.foto === null || teks(u.foto)) && Array.isArray(u.anggota) && u.anggota.every(teks)
       && Array.isArray(u.bawahan) && u.bawahan.every(unitValid);
     const valid = Array.isArray(d?.unit) && d.unit.every(unitValid)
-      && Array.isArray(d.mitra) && d.mitra.every((m) => ["nama", "singkatan", "uraianTugas", "catatan"].every((f) => teks(m?.[f])));
+      && Array.isArray(d.mitra) && d.mitra.every((m) => ["nama", "singkatan", "uraianTugas", "catatan"].every((f) => teks(m?.[f])) && (m.foto === null || teks(m.foto)));
     if (!valid) throw new Error("Respons tidak dikenal");
     return d;
   }
@@ -1399,7 +1408,7 @@
         puncak ? kotak(puncak, " org__node--head", true) : "",
         jajar.length ? `<div class="org__v" aria-hidden="true"></div><div class="org__row" style="--org-kolom:${jajar.length}">${jajar.map(kolom).join("")}</div>` : "",
         bawah.length ? `<div class="org__v" aria-hidden="true" style="margin-top:28px"></div><div style="display:grid;gap:12px;justify-items:center;width:100%">${bawah.map((u) => kotak(u, " org__node--dashed")).join("")}</div>` : "",
-        d.mitra.length ? `<div class="org__side">${d.mitra.map((m) => `<span class="badge"><span class="badge__dot">${esc(m.singkatan)}</span>${esc(m.nama)}</span>`).join("")}</div>` : "",
+        d.mitra.length ? `<div class="org__side">${d.mitra.map((m) => `<span class="badge">${tandaMitra(m.foto, m.singkatan)}${esc(m.nama)}</span>`).join("")}</div>` : "",
         catatanMitra ? `<p class="micro muted center" style="margin-top:12px">${esc(catatanMitra)}</p>` : "",
       ].join("") || '<p class="muted center" role="status">Struktur organisasi belum tersedia.</p>';
 
@@ -1447,8 +1456,8 @@
     const valid = ["eyebrow", "judul", "lanjutan", "deskripsi", "tombolLabel", "tombolUrl", "catatan"].every((f) => teks(b?.hero?.[f]))
       && ["layananUtama", "integritas", "biaya", "penutup"].every((k) => judulDua(b[k]))
       && Array.isArray(b.nilai) && b.nilai.every((n) => teks(n?.judul) && teks(n.deskripsi))
-      && Array.isArray(b.mitra) && b.mitra.every((m) => teks(m?.singkatan) && teks(m.nama))
-      && Array.isArray(b.kanal) && b.kanal.every((k) => teks(k?.kelompok) && Array.isArray(k.item) && k.item.every(teks))
+      && Array.isArray(b.mitra) && b.mitra.every((m) => teks(m?.singkatan) && teks(m.nama) && (m.logo === null || teks(m.logo)))
+      && Array.isArray(b.kanal) && b.kanal.every((k) => teks(k?.kelompok) && Array.isArray(k.item) && k.item.every((t) => teks(t?.teks) && teks(t.tautan)))
       && teks(b.biaya.catatanNotis) && teks(b.biaya.wajibDibawa) && Array.isArray(b.biaya.jaminan) && b.biaya.jaminan.every(teks)
       && (b.diperbarui === null || teks(b.diperbarui));
     if (!valid) throw new Error("Respons tidak dikenal");
@@ -1466,6 +1475,13 @@
     const ikonKanal = $$(".kanal__col", kanal).map((kolom) => $$(".kanal__ic", kolom).map((el) => el.outerHTML));
     const IKON_NILAI = '<svg class="i" aria-hidden="true"><use href="#i-check-circle"/></svg>';
     const IKON_KANAL = '<span class="kanal__ic"><svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>';
+    // Kanal bertautan: ikon dan namanya menjadi satu tautan; situs luar dibuka di tab baru (D-038)
+    const isiKanal = (ikon, t) => {
+      const url = tautanAman(t.tautan);
+      if (!url) return `${ikon}${esc(t.teks)}`;
+      const luar = /^https?:/i.test(url);
+      return `<a class="kanal__tautan" href="${esc(url)}"${luar ? ' target="_blank" rel="noopener"' : ""}>${ikon}<span class="kanal__teks">${esc(t.teks)}</span>${luar ? '<span class="sr-only"> (tab baru)</span>' : ""}</a>`;
+    };
 
     const tampilkan = (b) => {
       $$("[data-beranda-teks]").forEach((el) => {
@@ -1496,10 +1512,10 @@
       nilai.innerHTML = b.nilai.map((n, i) =>
         `<div class="feature is-in" data-reveal>${ikonNilai[i] ?? IKON_NILAI}<h2 class="title">${esc(n.judul)}</h2>${n.deskripsi ? `<p>${esc(n.deskripsi)}</p>` : ""}</div>`).join("");
       nilai.closest("section").hidden = !b.nilai.length;
-      mitra.innerHTML = b.mitra.map((m) => `<li class="badge">${m.singkatan ? `<span class="badge__dot">${esc(m.singkatan)}</span>` : ""}${esc(m.nama)}</li>`).join("");
+      mitra.innerHTML = b.mitra.map((m) => `<li class="badge">${tandaMitra(m.logo, m.singkatan)}${esc(m.nama)}</li>`).join("");
       mitra.closest("section").hidden = !b.mitra.length;
       kanal.innerHTML = b.kanal.map((k, g) => `<div class="kanal__col"><p class="eyebrow">${esc(k.kelompok)}</p><ul role="list">${k.item.map((t, j) =>
-        `<li>${ikonKanal[g]?.[j] ?? IKON_KANAL}${esc(t)}</li>`).join("")}</ul></div>`).join("");
+        `<li>${isiKanal(ikonKanal[g]?.[j] ?? IKON_KANAL, t)}</li>`).join("")}</ul></div>`).join("");
 
       // Biaya: kalimat pertama catatan notis ditebalkan
       const notis = $("[data-beranda-catatan-notis]");

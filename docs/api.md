@@ -535,8 +535,8 @@ Dipakai halaman *Beranda* di dashboard ([D-023](decisions.md#d-023--2026-10-14--
   "hero": { "eyebrow": "…", "judul": "Semua informasi Samsat.", "lanjutan": "Lewat satu pintu.", "deskripsi": "…", "tombolLabel": "Cek Persyaratan Layanan", "tombolUrl": "layanan.html", "catatan": "…" },
   "nilai": [{ "id": "nilai-1", "judul": "Persyaratan jelas.", "deskripsi": "…" }],
   "layananUtama": { "judul": "…", "lanjutan": "…", "deskripsi": "…" },
-  "mitra": [{ "id": "mitra-1", "singkatan": "BP", "nama": "BPAD Provinsi NTT" }],
-  "kanal": [{ "id": "kanal-1", "kelompok": "Kantor", "item": ["Loket pajak tahunan", "…"] }],
+  "mitra": [{ "id": "mitra-1", "singkatan": "BP", "nama": "BPAD Provinsi NTT", "logo": null }],
+  "kanal": [{ "id": "kanal-5", "kelompok": "Pengaduan", "item": [{ "teks": "Ombudsman NTT", "tautan": "https://ombudsman.go.id" }, { "teks": "Kotak saran", "tautan": "" }] }],
   "integritas": { "judul": "…", "lanjutan": "…", "deskripsi": "…" },
   "biaya": { "judul": "…", "lanjutan": "…", "deskripsi": "…", "catatanNotis": "…", "wajibDibawa": "…", "jaminan": ["Bukti bayar resmi", "…"] },
   "penutup": { "judul": "…", "lanjutan": "…", "deskripsi": "…" }
@@ -545,8 +545,8 @@ Dipakai halaman *Beranda* di dashboard ([D-023](decisions.md#d-023--2026-10-14--
 
 | Alamat | Permintaan | Respons |
 |---|---|---|
-| `GET /api/pengaturan/beranda` | — | `200` dokumen di atas. Sebelum pertama kali disimpan: teks yang tertulis di HTML beranda. |
-| `PUT /api/pengaturan/beranda` | dokumen lengkap | `200` dokumen tersimpan; isian opsional yang kosong disimpan sebagai `""` dan butir kosong di daftar kanal dan jaminan dibuang. Isi yang sama dengan yang tersimpan tidak dicatat. `422` bila judul pembuka (maks. 80 karakter), deskripsi pembuka (maks. 300), label tombol (maks. 40), judul bagian, judul nilai, nama mitra, atau nama kelompok kanal kosong; tujuan tombol bukan tautan portal yang sah; singkatan mitra lebih dari 3 huruf; batas jumlah butir terlampaui; ID butir ganda; atau teks berisi karakter kontrol. |
+| `GET /api/pengaturan/beranda` | — | `200` dokumen di atas. Sebelum pertama kali disimpan: teks yang tertulis di HTML beranda. `logo` mitra `null` bila belum diunggah, termasuk untuk dokumen yang disimpan sebelum ada logo. |
+| `PUT /api/pengaturan/beranda` | dokumen lengkap | `200` dokumen tersimpan; isian opsional yang kosong disimpan sebagai `""` dan butir kosong di daftar kanal dan jaminan dibuang. Isi kanal tanpa nama dibuang; `tautan` kosong berarti tidak bisa diklik ([D-038](decisions.md#d-038--2026-10-14--isi-kanal-layanan-bisa-diberi-tautan)). Isi kanal berupa teks polos, seperti yang dikirim dashboard lama, diterima sebagai kanal tanpa tautan. Isi yang sama dengan yang tersimpan tidak dicatat. Logo mitra yang diganti atau dikosongkan ikut terhapus ([D-037](decisions.md#d-037--2026-10-14--mitra-satu-atap-memakai-logo-inisial-sebagai-cadangan)). `422` bila judul pembuka (maks. 80 karakter), deskripsi pembuka (maks. 300), label tombol (maks. 40), judul bagian, judul nilai, nama mitra, atau nama kelompok kanal kosong; tujuan tombol bukan tautan portal yang sah; singkatan mitra lebih dari 3 huruf; nama kanal lebih dari 60 karakter atau kosong padahal tautannya diisi (`"Nama kanal wajib diisi bila tautannya diisi."`); tautan kanal lebih dari 300 karakter atau bukan tautan portal yang sah; logo mitra bukan alamat unggahan PINTU untuk tujuan `beranda` (`"Logo mitra harus diunggah lewat dashboard."`); batas jumlah butir terlampaui; ID butir ganda; atau teks berisi karakter kontrol. |
 
 Penyimpanan tercatat di log aktivitas sebagai "memperbarui Beranda".
 
@@ -647,11 +647,11 @@ Kode: `app/Http/Controllers/Dashboard/OwnAccountController.php`, `app/Http/Reque
 
 ## Unggahan di dashboard
 
-Penyimpanan berkas dari dashboard ([D-028](decisions.md#d-028--2026-10-14--unggahan-disimpan-di-laravel-cloud-object-storage)). Tamu mendapat `401`. Dashboard memakainya untuk tujuan yang modulnya sudah di server, saat ini `visiMisi`, `profil` ([D-029](decisions.md#d-029--2026-10-14--foto-tentang-uptd-dan-maklumat-diunggah-ke-server-profil-disusun-dari-renstra-dan-rpjmd)), `dokumen` ([D-030](decisions.md#d-030--2026-10-14--regulasi--unduhan-tersimpan-di-server-dengan-alur-persetujuan)), `berita` ([D-031](decisions.md#d-031--2026-10-14--berita--pengumuman-tersimpan-di-server-pengelola-berita-menerbitkan-sendiri)), `dokumentasi` ([D-032](decisions.md#d-032--2026-10-14--dokumentasi-kegiatan-tersimpan-di-server-galeri-disusun-per-bulan)), dan `unit` ([D-033](decisions.md#d-033--2026-10-14--struktur-organisasi-tersimpan-di-server-nip-pejabat-tidak-ditampilkan-di-portal)). Aplikasi Absensi PINTU memakai tujuan `absensi` ([D-034](decisions.md#d-034--2026-10-14--absensi-lapangan-tersimpan-di-server-petugas-clock-in-lewat-aplikasi-absen)).
+Penyimpanan berkas dari dashboard ([D-028](decisions.md#d-028--2026-10-14--unggahan-disimpan-di-laravel-cloud-object-storage)). Tamu mendapat `401`. Dashboard memakainya untuk tujuan yang modulnya sudah di server, saat ini `visiMisi`, `profil` ([D-029](decisions.md#d-029--2026-10-14--foto-tentang-uptd-dan-maklumat-diunggah-ke-server-profil-disusun-dari-renstra-dan-rpjmd)), `dokumen` ([D-030](decisions.md#d-030--2026-10-14--regulasi--unduhan-tersimpan-di-server-dengan-alur-persetujuan)), `berita` ([D-031](decisions.md#d-031--2026-10-14--berita--pengumuman-tersimpan-di-server-pengelola-berita-menerbitkan-sendiri)), `dokumentasi` ([D-032](decisions.md#d-032--2026-10-14--dokumentasi-kegiatan-tersimpan-di-server-galeri-disusun-per-bulan)), `unit` ([D-033](decisions.md#d-033--2026-10-14--struktur-organisasi-tersimpan-di-server-nip-pejabat-tidak-ditampilkan-di-portal)), dan `beranda` untuk logo mitra ([D-037](decisions.md#d-037--2026-10-14--mitra-satu-atap-memakai-logo-inisial-sebagai-cadangan)). Aplikasi Absensi PINTU memakai tujuan `absensi` ([D-034](decisions.md#d-034--2026-10-14--absensi-lapangan-tersimpan-di-server-petugas-clock-in-lewat-aplikasi-absen)).
 
 | Alamat | Permintaan | Respons |
 |---|---|---|
-| `POST /api/unggah` | `multipart/form-data`: `modul` (tujuan: `berita`, `dokumentasi`, `dokumen`, `unit`, `visiMisi`, `profil`, atau `absensi`) dan `berkas` | `201` `{ "nama": "Foto Loket.jpg", "ukuran": 182400, "tipe": "image/jpeg", "url": "…" }`. `url` adalah alamat bucket publik, atau `/api/berkas/{id}` untuk foto absensi. `403` bila pegawai tidak mengelola modul tujuan, mis. `{"message": "Modul Berita & Pengumuman belum ditugaskan kepada Anda."}`; foto absensi boleh diunggah semua pegawai. `422` bila tujuan tidak dikenal, berkas kosong, formatnya tidak sesuai tujuan menurut isinya (`{"berkas": ["Format berkas harus JPG, PNG, atau WebP."]}`), gambar lebih dari 5 MB atau 25 megapiksel, atau dokumen lebih dari 10 MB. `429` setelah 30 unggahan per menit. |
+| `POST /api/unggah` | `multipart/form-data`: `modul` (tujuan: `berita`, `dokumentasi`, `dokumen`, `unit`, `visiMisi`, `profil`, `beranda`, atau `absensi`) dan `berkas` | `201` `{ "nama": "Foto Loket.jpg", "ukuran": 182400, "tipe": "image/jpeg", "url": "…" }`. `url` adalah alamat bucket publik, atau `/api/berkas/{id}` untuk foto absensi. `403` bila pegawai tidak mengelola modul tujuan, mis. `{"message": "Modul Berita & Pengumuman belum ditugaskan kepada Anda."}`; foto absensi boleh diunggah semua pegawai. `422` bila tujuan tidak dikenal, berkas kosong, formatnya tidak sesuai tujuan menurut isinya (`{"berkas": ["Format berkas harus JPG, PNG, atau WebP."]}`), gambar lebih dari 5 MB atau 25 megapiksel, atau dokumen lebih dari 10 MB. `429` setelah 30 unggahan per menit. |
 | `GET /api/berkas/{id}` | — | `200` isi berkas privat dengan `Content-Type` hasil deteksi, `X-Content-Type-Options: nosniff`, dan `Cache-Control: no-store, private`. Hanya bagi pengunggahnya dan Administrator; pegawai lain mendapat `403` `{"message": "Berkas ini tidak dapat Anda buka."}`. `404` untuk berkas publik dan berkas yang tidak ada. |
 
 Format per tujuan: gambar (JPG, PNG, WebP) untuk semua tujuan kecuali `visiMisi`; `dokumen` juga menerima PDF, DOCX, dan XLSX; `visiMisi` hanya PDF. Gambar disimpan ulang oleh server tanpa metadata dan paling panjang 1600 px; dokumen disimpan apa adanya. Nama berkas asli hanya untuk tampilan; nama simpannya acak.
@@ -927,13 +927,13 @@ Bagan dan uraian tugas halaman Struktur Organisasi ([D-033](decisions.md#d-033--
 ```json
 {
   "unit": [{ "nama": "Kepala UPTD", "singkatan": "KU", "jenis": "pimpinan", "jabatan": "…", "pejabat": "Remmy Christian Pah, S.STP, M.Si", "foto": null, "anggota": [], "uraianTugas": "…", "catatan": "", "bawahan": [ … ] }],
-  "mitra": [{ "nama": "Polri · Satlantas", "singkatan": "PL", "uraianTugas": "…", "catatan": "Mitra satu atap Samsat · garis koordinasi, bukan garis komando." }]
+  "mitra": [{ "nama": "Polri · Satlantas", "singkatan": "PL", "foto": null, "uraianTugas": "…", "catatan": "Mitra satu atap Samsat · garis koordinasi, bukan garis komando." }]
 }
 ```
 
 | Hal | Perilaku |
 |---|---|
-| Berhasil | `200`. `unit` berisi unit UPTD teratas sesuai urutan, masing-masing dengan `bawahan` (bentuk yang sama, bertingkat). Unit yang unit induknya sudah tidak ada ditampilkan di tingkat teratas. `mitra` berisi mitra satu atap. Tanpa ID dan tanpa NIP. Portal hanya memakai foto beralamat `http(s)` dan menampilkan teks sebagai teks polos. |
+| Berhasil | `200`. `unit` berisi unit UPTD teratas sesuai urutan, masing-masing dengan `bawahan` (bentuk yang sama, bertingkat). Unit yang unit induknya sudah tidak ada ditampilkan di tingkat teratas. `mitra` berisi mitra satu atap; `foto` mitra adalah logonya dan portal menampilkannya di tempat inisial ([D-037](decisions.md#d-037--2026-10-14--mitra-satu-atap-memakai-logo-inisial-sebagai-cadangan)). Tanpa ID dan tanpa NIP. Portal hanya memakai foto beralamat `http(s)` dan menampilkan teks sebagai teks polos. |
 | Galat | `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah batas laju yang sama dengan `GET /api/public/faq`; `503` bila data tidak bisa dibaca. |
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 
@@ -945,7 +945,7 @@ Teks beranda portal ([D-023](decisions.md#d-023--2026-10-14--teks-beranda-tersim
 
 | Hal | Perilaku |
 |---|---|
-| Berhasil | `200`. Bila `diperbarui` `null`, beranda membiarkan teks HTML; bila tidak, teksnya diganti isi ini. Teks wajib ditampilkan sebagai teks polos; tujuan tombol dipasang hanya bila skemanya diizinkan. |
+| Berhasil | `200`. Bila `diperbarui` `null`, beranda membiarkan teks HTML; bila tidak, teksnya diganti isi ini. Teks wajib ditampilkan sebagai teks polos; tujuan tombol dipasang hanya bila skemanya diizinkan. `logo` mitra (alamat bucket publik atau `null`) menggantikan inisial di lencana bila beralamat `http(s)`. Isi kanal dengan `tautan` yang sah menjadi tautan; alamat `http(s)` dibuka di tab baru, halaman portal, `tel:`, dan `mailto:` di tab yang sama; tautan lain diabaikan dan isinya tampil sebagai teks. |
 | Galat | `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah batas laju yang sama dengan `GET /api/public/faq`; `503` bila data tidak bisa dibaca. Beranda tetap menampilkan teks HTML-nya. |
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 

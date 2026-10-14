@@ -23,8 +23,8 @@ class PublicHomepageControllerTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('hero.judul', 'Semua informasi Samsat.')
             ->assertJsonPath('nilai.0', ['judul' => 'Persyaratan jelas.', 'deskripsi' => 'Daftar berkas setiap layanan, lengkap dengan jumlah lembar fotokopi yang perlu dibawa.'])
-            ->assertJsonPath('mitra.0', ['singkatan' => 'BP', 'nama' => 'BPAD Provinsi NTT'])
-            ->assertJsonPath('kanal.4', ['kelompok' => 'Pengaduan', 'item' => ['SP4N-LAPOR!', 'Kotak saran', 'Ombudsman NTT']])
+            ->assertJsonPath('mitra.0', ['singkatan' => 'BP', 'nama' => 'BPAD Provinsi NTT', 'logo' => null])
+            ->assertJsonPath('kanal.4', ['kelompok' => 'Pengaduan', 'item' => [['teks' => 'SP4N-LAPOR!', 'tautan' => ''], ['teks' => 'Kotak saran', 'tautan' => ''], ['teks' => 'Ombudsman NTT', 'tautan' => '']]])
             ->assertJsonPath('diperbarui', null);
     }
 
@@ -44,6 +44,24 @@ class PublicHomepageControllerTest extends TestCase
         foreach (['nilai', 'mitra', 'kanal'] as $list) {
             $this->assertArrayNotHasKey('id', $response->json("{$list}.0"));
         }
+    }
+
+    public function test_returns_partner_logos_and_channel_links_in_the_current_shape(): void
+    {
+        $homepage = Setting::INITIAL_HOMEPAGE;
+        $homepage['mitra'] = [
+            ['id' => 'mitra-1', 'singkatan' => 'BP', 'nama' => 'BPAD Provinsi NTT', 'logo' => 'https://bucket.test/beranda/2026/10/logo.png'],
+            ['id' => 'mitra-2', 'singkatan' => 'PL', 'nama' => 'Polri · Satlantas'],
+        ];
+        $homepage['kanal'] = [['id' => 'kanal-1', 'kelompok' => 'Pengaduan', 'item' => ['SP4N-LAPOR!', ['teks' => 'Ombudsman NTT', 'tautan' => 'https://ombudsman.go.id']]]];
+        (new Setting)->forceFill(['name' => Setting::HOMEPAGE, 'value' => $homepage])->save();
+
+        $response = $this->getJson('/api/public/beranda');
+
+        $response->assertOk()->assertJsonPath('mitra', [
+            ['singkatan' => 'BP', 'nama' => 'BPAD Provinsi NTT', 'logo' => 'https://bucket.test/beranda/2026/10/logo.png'],
+            ['singkatan' => 'PL', 'nama' => 'Polri · Satlantas', 'logo' => null],
+        ])->assertJsonPath('kanal.0.item', [['teks' => 'SP4N-LAPOR!', 'tautan' => ''], ['teks' => 'Ombudsman NTT', 'tautan' => 'https://ombudsman.go.id']]);
     }
 
     public function test_starts_no_session_forbids_caching_and_rejects_query_parameters(): void

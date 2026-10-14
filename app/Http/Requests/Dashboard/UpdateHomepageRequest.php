@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Dashboard;
 
+use App\Enums\UploadTarget;
 use App\Rules\PlainText;
 use App\Rules\PortalLink;
+use App\Rules\UploadUrl;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -34,6 +36,24 @@ class UpdateHomepageRequest extends FormRequest
     }
 
     /**
+     * Prepare the data for validation: channels sent as plain text, as a
+     * dashboard opened before channel links (D-038) still sends them, become
+     * channels without a link.
+     */
+    protected function prepareForValidation(): void
+    {
+        $groups = $this->input('kanal');
+
+        if (! is_array($groups)) {
+            return;
+        }
+
+        $this->merge(['kanal' => array_map(fn (mixed $group): mixed => is_array($group) && is_array($group['item'] ?? null)
+            ? [...$group, 'item' => array_map(fn (mixed $channel): mixed => is_string($channel) || $channel === null ? ['teks' => $channel, 'tautan' => null] : $channel, $group['item'])]
+            : $group, $groups)]);
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, array<int, mixed>>
@@ -59,12 +79,15 @@ class UpdateHomepageRequest extends FormRequest
             'mitra.*.id' => ['required', 'string', 'max:40', 'distinct'],
             'mitra.*.singkatan' => ['nullable', 'string', 'max:3', new PlainText('Singkatan mitra')],
             'mitra.*.nama' => ['required', 'string', 'max:60', new PlainText('Nama mitra')],
+            'mitra.*.logo' => ['nullable', 'string', new UploadUrl(UploadTarget::Beranda, 'Logo mitra harus diunggah lewat dashboard.')],
             'kanal' => ['present', 'list', 'max:8'],
             'kanal.*' => ['required', 'array'],
             'kanal.*.id' => ['required', 'string', 'max:40', 'distinct'],
             'kanal.*.kelompok' => ['required', 'string', 'max:40', new PlainText('Kelompok kanal')],
             'kanal.*.item' => ['present', 'list', 'max:8'],
-            'kanal.*.item.*' => ['nullable', 'string', 'max:60', new PlainText('Kanal')],
+            'kanal.*.item.*' => ['required', 'array'],
+            'kanal.*.item.*.teks' => ['nullable', 'required_with:kanal.*.item.*.tautan', 'string', 'max:60', new PlainText('Nama kanal')],
+            'kanal.*.item.*.tautan' => ['nullable', 'string', 'max:300', new PortalLink('Tautan kanal')],
             'biaya.catatanNotis' => ['nullable', 'string', 'max:200', new PlainText('Catatan notis')],
             'biaya.wajibDibawa' => ['nullable', 'string', 'max:200', new PlainText('Wajib dibawa')],
             'biaya.jaminan' => ['present', 'list', 'max:6'],
@@ -95,6 +118,7 @@ class UpdateHomepageRequest extends FormRequest
             'present' => ':Attribute wajib dikirim.',
             'max' => ':Attribute maksimal :max karakter.',
             'distinct' => ':Attribute tercantum dua kali.',
+            'required_with' => ':Attribute wajib diisi bila tautannya diisi.',
             'nilai.max' => 'Maksimal :max nilai utama.',
             'mitra.max' => 'Maksimal :max mitra.',
             'kanal.max' => 'Maksimal :max kelompok kanal.',
@@ -127,12 +151,15 @@ class UpdateHomepageRequest extends FormRequest
             'mitra.*.id' => 'mitra',
             'mitra.*.singkatan' => 'singkatan mitra',
             'mitra.*.nama' => 'nama mitra',
+            'mitra.*.logo' => 'logo mitra',
             'kanal' => 'peta kanal',
             'kanal.*' => 'kelompok kanal',
             'kanal.*.id' => 'kelompok kanal',
             'kanal.*.kelompok' => 'nama kelompok',
             'kanal.*.item' => 'daftar kanal',
             'kanal.*.item.*' => 'kanal',
+            'kanal.*.item.*.teks' => 'nama kanal',
+            'kanal.*.item.*.tautan' => 'tautan kanal',
             'biaya.catatanNotis' => 'catatan notis',
             'biaya.wajibDibawa' => 'wajib dibawa',
             'biaya.jaminan' => 'daftar jaminan',
@@ -185,11 +212,15 @@ class UpdateHomepageRequest extends FormRequest
                 'id' => $partner['id'],
                 'singkatan' => $partner['singkatan'] ?? '',
                 'nama' => $partner['nama'],
+                'logo' => $partner['logo'] ?? null,
             ], $this->validated('mitra')),
             'kanal' => array_map(fn (array $group): array => [
                 'id' => $group['id'],
                 'kelompok' => $group['kelompok'],
-                'item' => $list($group['item']),
+                'item' => array_values(array_filter(
+                    array_map(fn (array $channel): array => ['teks' => $channel['teks'] ?? '', 'tautan' => $channel['tautan'] ?? ''], $group['item']),
+                    fn (array $channel): bool => $channel['teks'] !== '',
+                )),
             ], $this->validated('kanal')),
             'integritas' => $titled('integritas'),
             'biaya' => [

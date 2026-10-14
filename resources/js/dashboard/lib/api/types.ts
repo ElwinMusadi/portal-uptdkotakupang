@@ -61,7 +61,7 @@ export interface Beralur {
 /* ------------------------------------------------------------------ */
 
 /** Tempat berkas dipakai; menentukan bucket, format yang diterima, dan siapa yang boleh mengunggah (D-028) */
-export type TujuanUnggah = "berita" | "dokumentasi" | "dokumen" | "unit" | "visiMisi" | "profil" | "absensi"
+export type TujuanUnggah = "berita" | "dokumentasi" | "dokumen" | "unit" | "visiMisi" | "profil" | "beranda" | "absensi"
 
 export interface Berkas {
   nama: string
@@ -319,8 +319,10 @@ export interface Beranda {
   }
   nilai: { id: Id; judul: string; deskripsi: string }[]
   layananUtama: Judul2Nada & { deskripsi: string }
-  mitra: { id: Id; singkatan: string; nama: string }[]
-  kanal: { id: Id; kelompok: string; item: string[] }[]
+  /** Logo mitra di bucket publik; inisial dipakai bila belum ada logo (D-037) */
+  mitra: { id: Id; singkatan: string; nama: string; logo: string | null }[]
+  /** Isi kelompok kanal; tautan kosong bila tidak bisa diklik (D-038) */
+  kanal: { id: Id; kelompok: string; item: { teks: string; tautan: string }[] }[]
   integritas: Judul2Nada & { deskripsi: string }
   biaya: Judul2Nada & {
     deskripsi: string

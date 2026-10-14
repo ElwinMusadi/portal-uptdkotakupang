@@ -37,9 +37,20 @@ class PublicOrganizationControllerTest extends TestCase
                 'bawahan' => [],
             ])
             ->assertJsonPath('mitra', [
-                ['nama' => 'Polri · Satlantas', 'singkatan' => 'PL', 'uraianTugas' => 'Registrasi dan identifikasi kendaraan bermotor, termasuk pengesahan STNK.', 'catatan' => 'Mitra satu atap Samsat · garis koordinasi, bukan garis komando.'],
-                ['nama' => 'PT Jasa Raharja', 'singkatan' => 'JR', 'uraianTugas' => 'Pengelolaan Sumbangan Wajib Dana Kecelakaan Lalu Lintas Jalan (SWDKLLJ).', 'catatan' => 'Mitra satu atap Samsat · garis koordinasi, bukan garis komando.'],
+                ['nama' => 'Polri · Satlantas', 'singkatan' => 'PL', 'foto' => null, 'uraianTugas' => 'Registrasi dan identifikasi kendaraan bermotor, termasuk pengesahan STNK.', 'catatan' => 'Mitra satu atap Samsat · garis koordinasi, bukan garis komando.'],
+                ['nama' => 'PT Jasa Raharja', 'singkatan' => 'JR', 'foto' => null, 'uraianTugas' => 'Pengelolaan Sumbangan Wajib Dana Kecelakaan Lalu Lintas Jalan (SWDKLLJ).', 'catatan' => 'Mitra satu atap Samsat · garis koordinasi, bukan garis komando.'],
             ]);
+    }
+
+    public function test_shows_a_partners_photo_as_its_logo(): void
+    {
+        OrganizationUnit::query()->where('singkatan', 'JR')->update(['foto' => 'https://bucket.test/unit/2026/10/jasa-raharja.png']);
+
+        $response = $this->getJson('/api/public/struktur');
+
+        $response->assertOk()
+            ->assertJsonPath('mitra.0.foto', null)
+            ->assertJsonPath('mitra.1.foto', 'https://bucket.test/unit/2026/10/jasa-raharja.png');
     }
 
     public function test_never_shows_the_officials_nip_or_ids_and_follows_the_order(): void

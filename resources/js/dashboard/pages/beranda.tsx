@@ -5,6 +5,7 @@ import { Bagian, Baris, Halaman, PengantarHalaman } from "@/components/data/page
 import { FieldArea, FieldTeks } from "@/components/form/fields"
 import { FieldJudul2Nada, IsianItem } from "@/components/form/item-fields"
 import { DaftarObjek, FieldDaftarTeks } from "@/components/form/list-fields"
+import { IsianLogo } from "@/components/form/media-fields"
 import { FormPengaturan } from "@/components/form/settings-form"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { newId } from "@/lib/id"
@@ -34,14 +35,27 @@ const schema = z.object({
     .max(6, "Maksimal 6 nilai utama."),
   layananUtama: judul2,
   mitra: z
-    .array(z.object({ id: z.string(), singkatan: z.string().trim().max(3, "Maks. 3 huruf."), nama: v.wajib("Nama mitra").max(60, maks(60)) }))
+    .array(
+      z.object({
+        id: z.string(),
+        singkatan: z.string().trim().max(3, "Maks. 3 huruf."),
+        nama: v.wajib("Nama mitra").max(60, maks(60)),
+        logo: z.string().nullable(),
+      })
+    )
     .max(12, "Maksimal 12 mitra."),
   kanal: z
     .array(
       z.object({
         id: z.string(),
         kelompok: v.wajib("Kelompok").max(40, maks(40)),
-        item: z.array(z.string().max(60, maks(60))).max(8, "Maksimal 8 kanal per kelompok."),
+        item: z
+          .array(
+            z
+              .object({ teks: z.string().trim().max(60, maks(60)), tautan: v.tautan.max(300, maks(300)) })
+              .refine((k) => !k.tautan || k.teks, { message: "Isi nama kanal untuk tautan ini.", path: ["teks"] })
+          )
+          .max(8, "Maksimal 8 kanal per kelompok."),
       })
     )
     .max(8, "Maksimal 8 kelompok kanal."),
@@ -132,16 +146,24 @@ export default function HalamanBeranda() {
                 <FieldTeks control={form.control} name="layananUtama.deskripsi" label="Deskripsi" />
               </Bagian>
 
-              <Bagian id="bagian-mitra" judul="Mitra satu atap">
+              <Bagian id="bagian-mitra" judul="Mitra satu atap" deskripsi="Logo tampil di lencana mitra di beranda; inisial dipakai bila logo belum diunggah. PNG berlatar transparan paling baik.">
                 <DaftarObjek
                   control={form.control}
                   name="mitra"
                   label="Mitra"
                   labelTambah="Tambah mitra"
                   labelItem={(i) => `mitra ${i + 1}`}
-                  itemBaru={() => ({ id: newId(), singkatan: "", nama: "" })}
+                  itemBaru={() => ({ id: newId(), singkatan: "", nama: "", logo: null })}
                   render={(i) => (
-                    <div className="grid gap-2 sm:grid-cols-[6rem_minmax(0,1fr)]">
+                    <div className="grid gap-2 sm:grid-cols-[auto_6rem_minmax(0,1fr)]">
+                      <IsianLogo
+                        control={form.control}
+                        name={`mitra.${i}.logo`}
+                        label="Logo"
+                        labelAksi={`logo mitra ${i + 1}`}
+                        inisial={form.watch(`mitra.${i}.singkatan`)}
+                        tujuan="beranda"
+                      />
                       <IsianItem control={form.control} name={`mitra.${i}.singkatan`} label="Inisial" />
                       <IsianItem control={form.control} name={`mitra.${i}.nama`} label="Nama" />
                     </div>
@@ -160,7 +182,23 @@ export default function HalamanBeranda() {
                   render={(i) => (
                     <>
                       <IsianItem control={form.control} name={`kanal.${i}.kelompok`} label="Nama kelompok" />
-                      <FieldDaftarTeks control={form.control} name={`kanal.${i}.item`} label="Isi kelompok" labelTambah="Tambah kanal" />
+                      <DaftarObjek
+                        control={form.control}
+                        name={`kanal.${i}.item`}
+                        label="Isi kelompok"
+                        deskripsi="Tautan opsional: alamat lengkap (https://…), halaman portal (mis. kontak.html), tel:, atau mailto:. Situs luar dibuka di tab baru."
+                        labelTambah="Tambah kanal"
+                        labelItem={(j) => `kanal ${j + 1} di kelompok ${i + 1}`}
+                        itemBaru={() => ({ teks: "", tautan: "" })}
+                        maks={8}
+                        ringkas
+                        render={(j) => (
+                          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                            <IsianItem control={form.control} name={`kanal.${i}.item.${j}.teks`} label="Nama kanal" />
+                            <IsianItem control={form.control} name={`kanal.${i}.item.${j}.tautan`} label="Tautan (opsional)" placeholder="https://… atau kontak.html" />
+                          </div>
+                        )}
+                      />
                     </>
                   )}
                 />

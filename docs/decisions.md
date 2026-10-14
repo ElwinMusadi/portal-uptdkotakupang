@@ -515,3 +515,22 @@ Atas permintaan pemilik, notch D-035 diukur ulang dari gambar referensi Kage "ti
 | Lebar | 800 px, tiga tautan | mengikuti isi, ±870 px di layar 1280 px, karena kelima menu PINTU tetap ada (D-035) |
 
 Tombol "Cek Persyaratan" tetap berbentuk pil seperti tombol lain di portal; di referensi tombolnya persegi dengan sudut ±10 px. Dropdown kini terbuka ±10 px di bawah notch.
+
+## D-037 · 2026-10-14 · Mitra satu atap memakai logo; inisial sebagai cadangan
+
+| Hal | Keputusan |
+|---|---|
+| Tampilan | **Logo menggantikan lingkaran inisial** di lencana mitra (keputusan pemilik): logo dipaskan utuh di lingkaran 28 px berlatar putih, nama mitra tetap di sebelahnya. Mitra tanpa logo tetap memakai inisial. Logo tidak diberi teks alternatif sendiri karena namanya sudah tertulis. |
+| Beranda | Setiap mitra di dokumen Beranda punya `logo` (alamat unggahan atau `null`). Dokumen yang disimpan sebelum ada logo dibaca dengan `logo` `null`. |
+| Struktur Organisasi | **Ikut memakai logo** (keputusan pemilik): unit berjenis mitra memakai isian foto yang sudah ada sebagai logonya. Di dashboard isian itu berlabel "Logo mitra" dan ditampilkan utuh, dan `GET /api/public/struktur` kini menyertakan `foto` mitra. |
+| Unggahan | **Diunggah lewat dashboard** (keputusan pemilik), bukan diambil dari situs mitra. Tujuan unggahan baru `beranda` (bucket publik, JPG/PNG/WebP, maks. 5 MB) untuk Pengelola Beranda; logo mitra Struktur memakai tujuan `unit`. Logo yang diganti, dikosongkan, atau mitranya dihapus ikut terhapus (D-028). PNG berlatar transparan paling baik. Peramban kini menyimpan WebP tetap sebagai WebP (sebelumnya diubah menjadi JPEG) agar transparansi logo terjaga. |
+
+## D-038 · 2026-10-14 · Isi kanal layanan bisa diberi tautan
+
+| Hal | Keputusan |
+|---|---|
+| Letak | **Per isi kelompok** (keputusan pemilik): setiap isi kanal di peta kanal beranda punya nama dan tautan opsional, mis. TikTok ke akun TikTok, WhatsApp ke halaman kontak, Ombudsman NTT ke situsnya. Isi tanpa tautan tetap teks biasa. |
+| Format tautan | Sama dengan tombol pembuka beranda: alamat lengkap `http(s)://`, halaman portal (mis. `kontak.html#pengaduan`), `tel:`, `mailto:`, atau jangkar `#`; maks. 300 karakter. Nama kanal wajib bila tautannya diisi. |
+| Membuka | **Situs luar di tab baru** (keputusan pemilik), dengan `rel="noopener"` dan keterangan "(tab baru)" untuk pembaca layar; halaman portal, telepon, dan surel di tab yang sama. |
+| Tampilan | **Hanya garis bawah saat disorot atau difokus** (keputusan pemilik), tanpa tanda panah. Ikon dan nama kanal menjadi satu tautan. |
+| Data lama | Dokumen Beranda yang disimpan sebelum ini (isi kanal berupa teks) dibaca sebagai kanal tanpa tautan, dan dashboard yang masih terbuka dengan versi lama tetap bisa menyimpan. |

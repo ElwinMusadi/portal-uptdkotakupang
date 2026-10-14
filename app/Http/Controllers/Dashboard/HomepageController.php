@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Actions\SaveSetting;
+use App\Actions\SyncUploads;
+use App\Enums\UploadTarget;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dashboard\UpdateHomepageRequest;
 use App\Models\Setting;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 /**
  * The Beranda settings document as the dashboard edits it (D-023). The
@@ -24,11 +27,24 @@ class HomepageController extends Controller
     }
 
     /**
-     * Replace the document.
+     * Replace the document. Partner logos it now uses are kept; replaced or
+     * removed logos are deleted with it (D-037).
      */
-    public function update(UpdateHomepageRequest $request, SaveSetting $saveSetting): JsonResponse
+    public function update(UpdateHomepageRequest $request, SaveSetting $saveSetting, SyncUploads $syncUploads): JsonResponse
     {
-        $setting = $saveSetting->handle($request->user(), Setting::HOMEPAGE, $request->homepage());
+        $before = Setting::homepage();
+        $homepage = $request->homepage();
+
+        $setting = DB::transaction(function () use ($request, $saveSetting, $syncUploads, $before, $homepage): Setting {
+            $setting = $saveSetting->handle($request->user(), Setting::HOMEPAGE, $homepage);
+            $syncUploads->handle(
+                UploadTarget::Beranda,
+                array_column($before['mitra'], 'logo'),
+                array_column($homepage['mitra'], 'logo'),
+            );
+
+            return $setting;
+        });
 
         return response()->json($setting->value);
     }
