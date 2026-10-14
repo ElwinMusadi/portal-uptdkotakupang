@@ -128,7 +128,7 @@ Produksi saat ini masih Cloudflare Pages dari branch `main` (situs statis lama).
 
 ## Mengubah header, footer, atau ikon portal
 
-Sumbernya ada di `resources/views/portal/partials/`. Periksa dulu halaman mana yang akan berubah, lalu salin ke semua halaman:
+Sumbernya ada di `resources/views/portal/partials/`. Periksa dulu halaman mana yang akan berubah, lalu salin ke semua halaman. Skrip mempertahankan akhir baris setiap halaman, hanya menyebut halaman yang isinya berbeda, dan berhenti dengan galat bila penanda `<!-- @header -->`/`<!-- /@header -->` (atau `@footer`, `@icons`) tidak berpasangan:
 
 ```bash
 node scripts/sync-partials.mjs --check

@@ -202,11 +202,11 @@
         <a class="footer__brand" href="index.html">
           <img class="footer__logo" src="assets/img/logo-pintu-lockup.png" alt="PINTU, Portal Informasi dan Pelayanan UPTD Pendapatan Daerah Wilayah Kota Kupang" width="1107" height="361">
         </a>
-        <p class="micro muted" style="margin-top:16px;max-width:34ch">Unit Pelaksana Teknis Daerah pada Badan Pendapatan dan Aset Daerah Provinsi Nusa Tenggara Timur. Kantor bersama Samsat Kota Kupang.</p>
+        <p class="micro muted" style="margin-top:16px;max-width:34ch" data-situs-deskripsi>Unit Pelaksana Teknis Daerah pada Badan Pendapatan dan Aset Daerah Provinsi Nusa Tenggara Timur. Kantor bersama Samsat Kota Kupang.</p>
       </div>
       <div>
         <h3>Alamat</h3>
-        <p>Kantor Bersama Samsat Kota Kupang<br>Jl. [alamat kantor], Kota Kupang<br>Nusa Tenggara Timur</p>
+        <p data-kontak-alamat>Memuat alamat…</p>
       </div>
       <div>
         <h3>Jam loket</h3>
@@ -216,9 +216,7 @@
       </div>
       <div>
         <h3>Hubungi</h3>
-        <ul role="list">
-          <li><a href="tel:+620000000000">(0380) 000 000</a></li>
-          <li><a href="mailto:uptd.kotakupang@example.go.id">uptd.kotakupang@…go.id</a></li>
+        <ul role="list" data-kontak-hubungi>
           <li><a href="kontak.html#pengaduan">Kanal pengaduan</a></li>
         </ul>
       </div>
@@ -236,7 +234,7 @@
     </div>
 
     <div class="footer__bottom">
-      <p>© 2026 UPTD Pendapatan Daerah Wilayah Kota Kupang · BPAD Provinsi NTT</p>
+      <p data-situs-hak-cipta>© 2026 UPTD Pendapatan Daerah Wilayah Kota Kupang · BPAD Provinsi NTT</p>
       <ul role="list">
         <li><a href="login.html">Login Pegawai</a></li>
         <li><a href="kebijakan-privasi.html">Kebijakan Privasi</a></li>
