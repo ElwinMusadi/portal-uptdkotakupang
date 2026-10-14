@@ -220,14 +220,14 @@
     <div class="container">
       <div class="center" style="margin-bottom: var(--inner-y)" data-reveal>
         <p class="eyebrow">Pengelola informasi PINTU</p>
-        <h2 class="h2" style="margin-top:20px">Empat peran. <span class="tone">Satu alur sebelum terbit.</span></h2>
-        <p class="lead" style="margin-top:20px">Setiap informasi di portal ini melewati alur yang sama, agar yang Anda baca selalu resmi.</p>
+        <h2 class="h2" style="margin-top:20px">Empat langkah. <span class="tone">Satu alur sebelum terbit.</span></h2>
+        <p class="lead" style="margin-top:20px">Persyaratan layanan, regulasi, berita, dan dokumentasi kegiatan melewati alur ini sebelum tampil di portal. Jadwal dan informasi harian diperbarui langsung oleh petugas yang ditugaskan.</p>
       </div>
       <ol class="steps steps--4" role="list" data-reveal>
-        <li class="step"><span class="step__n">01 · Penyedia</span><svg class="i" aria-hidden="true"><use href="#i-inbox"/></svg><h3>Unit pemilik data.</h3><p>Seksi atau petugas menyiapkan bahan: jadwal, persyaratan, berita, foto.</p></li>
-        <li class="step"><span class="step__n">02 · Pemeriksa</span><svg class="i" aria-hidden="true"><use href="#i-search"/></svg><h3>Kepala seksi atau subbagian.</h3><p>Mencocokkan isi dengan sumber resmi dan memeriksa kelengkapan.</p></li>
-        <li class="step"><span class="step__n">03 · Penyetuju</span><svg class="i" aria-hidden="true"><use href="#i-check-circle"/></svg><h3>Atasan langsung.</h3><p>Menyetujui informasi yang layak terbit dan menolak yang belum siap.</p></li>
-        <li class="step"><span class="step__n">04 · Pengelola publikasi</span><svg class="i" aria-hidden="true"><use href="#i-globe"/></svg><h3>Operator portal.</h3><p>Menerbitkan, mencatat tanggal pemutakhiran, dan memantau masukan.</p></li>
+        <li class="step"><span class="step__n">01 · Disiapkan</span><svg class="i" aria-hidden="true"><use href="#i-inbox"/></svg><h3>Pengelola modul.</h3><p>Petugas yang ditugaskan menyiapkan bahan: persyaratan, regulasi, berita, dan foto kegiatan.</p></li>
+        <li class="step"><span class="step__n">02 · Diperiksa</span><svg class="i" aria-hidden="true"><use href="#i-search"/></svg><h3>Dicocokkan dengan sumber resmi.</h3><p>Kelengkapan diperiksa, lalu diteruskan atau dikembalikan dengan catatan revisi.</p></li>
+        <li class="step"><span class="step__n">03 · Disetujui</span><svg class="i" aria-hidden="true"><use href="#i-check-circle"/></svg><h3>Administrator atau pengelolanya.</h3><p>Persyaratan layanan dan regulasi disetujui Administrator; berita dan dokumentasi oleh pengelolanya.</p></li>
+        <li class="step"><span class="step__n">04 · Terbit</span><svg class="i" aria-hidden="true"><use href="#i-globe"/></svg><h3>Tampil di portal.</h3><p>Tanggal terbit tercatat; informasi yang tidak berlaku lagi ditarik ke arsip.</p></li>
       </ol>
     </div>
   </section>

@@ -119,10 +119,10 @@
       <h1 class="h-display">Kelola informasi.<br><span class="tone">Jaga keakuratannya.</span></h1>
       <p class="body">Akses internal untuk mengelola seluruh konten dan informasi portal PINTU, dari draf sampai terbit.</p>
       <ul class="auth__roles" role="list">
-        <li><span class="numtab__num">01</span><span><strong>Penyedia</strong> menyiapkan bahan informasi dari unit.</span></li>
-        <li><span class="numtab__num">02</span><span><strong>Pemeriksa</strong> mencocokkan isi dengan sumber resmi.</span></li>
-        <li><span class="numtab__num">03</span><span><strong>Penyetuju</strong> memberi izin terbit.</span></li>
-        <li><span class="numtab__num">04</span><span><strong>Pengelola publikasi</strong> menerbitkan dan memantau.</span></li>
+        <li><span class="numtab__num">01</span><span><strong>Pengelola modul</strong> menyiapkan bahan dari unitnya.</span></li>
+        <li><span class="numtab__num">02</span><span><strong>Pemeriksaan</strong> mencocokkan isi dengan sumber resmi.</span></li>
+        <li><span class="numtab__num">03</span><span><strong>Persetujuan</strong> oleh Administrator untuk layanan dan regulasi, oleh pengelolanya untuk berita dan dokumentasi.</span></li>
+        <li><span class="numtab__num">04</span><span><strong>Terbit</strong> di portal, tanggal pemutakhirannya tercatat.</span></li>
       </ul>
     </div>
     <div class="auth__foot"><a class="link-arrow" href="index.html"><svg class="i" aria-hidden="true"><use href="#i-arrow-left"/></svg>Kembali ke portal publik</a><span>© 2026 UPTD Pendapatan Daerah Wilayah Kota Kupang</span></div>

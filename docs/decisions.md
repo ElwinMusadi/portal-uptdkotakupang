@@ -534,3 +534,12 @@ Tombol "Cek Persyaratan" tetap berbentuk pil seperti tombol lain di portal; di r
 | Membuka | **Situs luar di tab baru** (keputusan pemilik), dengan `rel="noopener"` dan keterangan "(tab baru)" untuk pembaca layar; halaman portal, telepon, dan surel di tab yang sama. |
 | Tampilan | **Hanya garis bawah saat disorot atau difokus** (keputusan pemilik), tanpa tanda panah. Ikon dan nama kanal menjadi satu tautan. |
 | Data lama | Dokumen Beranda yang disimpan sebelum ini (isi kanal berupa teks) dibaca sebagai kanal tanpa tautan, dan dashboard yang masih terbuka dengan versi lama tetap bisa menyimpan. |
+
+## D-039 · 2026-10-14 · Teks alur publikasi di portal mengikuti alur yang berlaku
+
+Menjawab catatan di D-033: bagian "Empat peran. Satu alur sebelum terbit." di halaman Struktur Organisasi menyebut bahwa setiap informasi melewati penyedia, pemeriksa, atasan langsung, dan operator portal, padahal alur yang berlaku berbeda menurut modul (D-022, D-030, D-031, D-032).
+
+| Hal | Keputusan |
+|---|---|
+| Struktur Organisasi | **Ditulis ulang sesuai alur** (keputusan pemilik), tata letak empat kartu tetap: "Empat langkah. Satu alur sebelum terbit." Persyaratan layanan, regulasi, berita, dan dokumentasi kegiatan melewati alur ini; jadwal dan informasi harian diperbarui langsung oleh petugas yang ditugaskan. Langkahnya: disiapkan pengelola modul; diperiksa dan dicocokkan dengan sumber resmi; disetujui Administrator (persyaratan layanan dan regulasi) atau pengelolanya (berita dan dokumentasi); terbit dengan tanggal tercatat, dan informasi yang tidak berlaku lagi ditarik ke arsip. |
+| Login | **Ikut disesuaikan** (keputusan pemilik): panel samping menyebut pengelola modul, pemeriksaan, persetujuan oleh Administrator untuk layanan dan regulasi atau oleh pengelolanya untuk berita dan dokumentasi, lalu terbit. |
