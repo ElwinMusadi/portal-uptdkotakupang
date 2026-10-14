@@ -1,0 +1,18 @@
+/* Kata bergilir di judul pembuka (D-045), dibangun Vite bersama komponennya
+   sehingga gaya dan skripnya selalu sejalan. Kata lama naik keluar, kata baru
+   masuk dari bawah, dan lebar kotaknya mengikuti kata. Kotak dipotong dengan
+   clip-path, bukan overflow, agar garis dasar kata tetap sejajar dengan judul.
+   Waktu dan kurva gerak memakai token portal (public/assets/css/tokens.css). */
+.kata-gilir { white-space: nowrap; }
+/* Baris sendiri bila panjang kata mengubah letak baris judul; inline-block
+   selebar judul, bukan block, agar <br> sesudahnya tidak menambah baris kosong */
+.kata-gilir--baris { display: inline-block; width: 100%; }
+.kata-gilir__kotak { position: relative; display: inline-block; clip-path: inset(-.1em -.06em -.25em); transition: width var(--dur-3) var(--ease); }
+.kata-gilir__kata { display: inline-block; }
+.kata-gilir__kata--masuk { animation: kata-gilir-masuk var(--dur-3) var(--ease) both; }
+.kata-gilir__kata--keluar { position: absolute; top: 0; left: 0; animation: kata-gilir-keluar var(--dur-3) var(--ease) both; }
+.kata-gilir__ukur { position: absolute; top: 0; left: 0; visibility: hidden; pointer-events: none; }
+.kata-gilir__ukur > span { display: block; width: max-content; }
+
+@keyframes kata-gilir-masuk { from { transform: translateY(100%); opacity: 0; } }
+@keyframes kata-gilir-keluar { to { transform: translateY(-100%); opacity: 0; } }

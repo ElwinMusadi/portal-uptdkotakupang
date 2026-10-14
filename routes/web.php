@@ -59,8 +59,10 @@ Route::withoutMiddleware([
     Route::permanentRedirect('/berita-detail', '/informasi');
     Route::permanentRedirect('/berita-detail.html', '/informasi');
 
-    // The tax check on Beranda and Layanan (D-041) is the one portal script Vite builds; the static pages load it from this fixed address.
+    // Portal scripts that Vite builds, loaded by the pages as written from fixed addresses: the tax check on Beranda and
+    // Layanan (D-041) and the React components that take over [data-react] elements (D-045).
     Route::get('/skrip/cek-pajak', fn (): RedirectResponse => redirect(Vite::asset('resources/js/portal/cek-pajak.ts')))->name('portal.cek-pajak');
+    Route::get('/skrip/portal', fn (): RedirectResponse => redirect(Vite::asset('resources/js/portal/main.tsx')))->name('portal.skrip');
 });
 
 /*

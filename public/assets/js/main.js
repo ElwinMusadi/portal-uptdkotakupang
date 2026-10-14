@@ -1464,9 +1464,8 @@
   }
 
   function initBeranda() {
-    const judulHero = $("[data-beranda-hero-judul]");
-    if (!judulHero) return;
     const nilai = $("[data-beranda-nilai]");
+    if (!nilai) return;
     const mitra = $("[data-beranda-mitra]");
     const kanal = $("[data-beranda-kanal]");
 
@@ -1513,11 +1512,7 @@
         duaNada(el, j.lanjutan ? `${j.judul} ` : j.judul, j.lanjutan);
       });
 
-      // Pembuka: lanjutan judul di baris baru
-      const lanjutan = document.createElement("span");
-      lanjutan.className = "tone";
-      lanjutan.textContent = b.hero.lanjutan;
-      judulHero.replaceChildren(b.hero.judul, ...(b.hero.lanjutan ? [document.createElement("br"), lanjutan] : []));
+      // Judul pembuka diisi komponen React (resources/js/portal/beranda/judul-pembuka.tsx, D-045)
       const tombol = $("[data-beranda-tombol]");
       const url = tautanAman(b.hero.tombolUrl);
       tombol.closest(".hero__actions").hidden = !url;

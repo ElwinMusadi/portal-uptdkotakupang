@@ -122,14 +122,16 @@ class PortalPagesTest extends TestCase
         $this->assertStringNotContainsString('data-tarif', $html);
     }
 
-    public function test_sends_the_portal_to_the_built_tax_check_script_without_letting_the_address_be_cached(): void
+    #[TestWith(['/skrip/cek-pajak', 'resources/js/portal/cek-pajak.ts', 'http://localhost/build/assets/cek-pajak-a1b2c3.js'])]
+    #[TestWith(['/skrip/portal', 'resources/js/portal/main.tsx', 'http://localhost/build/assets/main-d4e5f6.js'])]
+    public function test_sends_the_portal_to_its_built_scripts_without_letting_the_address_be_cached(string $uri, string $entry, string $built): void
     {
-        Vite::shouldReceive('asset')->once()->with('resources/js/portal/cek-pajak.ts')->andReturn('http://localhost/build/assets/cek-pajak-a1b2c3.js');
+        Vite::shouldReceive('asset')->once()->with($entry)->andReturn($built);
 
-        $response = $this->get('/skrip/cek-pajak');
+        $response = $this->get($uri);
 
         $response->assertFound()
-            ->assertRedirect('http://localhost/build/assets/cek-pajak-a1b2c3.js')
+            ->assertRedirect($built)
             ->assertHeader('Cache-Control', 'no-cache, private');
         $this->assertSame([], $response->headers->getCookies());
     }
@@ -365,12 +367,17 @@ class PortalPagesTest extends TestCase
         $text = preg_replace('/[ \t\r\n]+/', ' ', html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
 
         $initial = Setting::INITIAL_HOMEPAGE;
+        // The rotating words only appear while the title's word rolls through them (D-045)
+        unset($initial['hero']['kataBergilir']);
         array_walk_recursive($initial, function (mixed $value, string|int $key) use ($text): void {
             if (is_string($value) && $key !== 'id' && $key !== 'tombolUrl') {
                 $this->assertStringContainsString($value, $text);
             }
         });
-        foreach (['data-beranda-hero-judul', 'data-beranda-tombol', 'data-beranda-catatan ', 'data-beranda-nilai', 'data-beranda-mitra', 'data-beranda-kanal', 'data-beranda-catatan-notis', 'data-beranda-wajib', 'data-beranda-jaminan'] as $hook) {
+        $this->assertSame('SAMSAT', Setting::rotatingWordIn($initial['hero']['judul'], Setting::INITIAL_HOMEPAGE['hero']['kataBergilir']));
+        $this->assertStringContainsString('<h1 class="h-hero hero__title" data-react="judul-pembuka" data-reveal>', $html);
+        $this->assertStringContainsString('<script type="module" src="skrip/portal"></script>', $html);
+        foreach (['data-beranda-tombol', 'data-beranda-catatan ', 'data-beranda-nilai', 'data-beranda-mitra', 'data-beranda-kanal', 'data-beranda-catatan-notis', 'data-beranda-wajib', 'data-beranda-jaminan'] as $hook) {
             $this->assertStringContainsString($hook, $html);
         }
         $this->assertSame(4, substr_count($html, 'data-beranda-judul="'));

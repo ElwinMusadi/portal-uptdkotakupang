@@ -338,6 +338,8 @@ export interface Beranda {
   hero: {
     eyebrow: string
     judul: string
+    /** Kata yang bergantian di kata judul yang sama, satu putaran; kosong = judul diam (D-045) */
+    kataBergilir: string[]
     lanjutan: string
     deskripsi: string
     tombolLabel: string

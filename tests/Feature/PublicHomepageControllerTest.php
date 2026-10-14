@@ -22,6 +22,7 @@ class PublicHomepageControllerTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('hero.judul', 'Semua informasi Samsat.')
+            ->assertJsonPath('hero.kataBergilir', ['Pajak', 'STNK', 'Mutasi', 'BBN', 'SAMSAT'])
             ->assertJsonPath('nilai.0', ['judul' => 'Persyaratan jelas.', 'deskripsi' => 'Daftar berkas setiap layanan, lengkap dengan jumlah lembar fotokopi yang perlu dibawa.'])
             ->assertJsonPath('mitra.0', ['singkatan' => 'BP', 'nama' => 'BPAD Provinsi NTT', 'logo' => null])
             ->assertJsonPath('kanal.4', ['kelompok' => 'Pengaduan', 'item' => [['teks' => 'SP4N-LAPOR!', 'tautan' => ''], ['teks' => 'Kotak saran', 'tautan' => ''], ['teks' => 'Ombudsman NTT', 'tautan' => '']]])

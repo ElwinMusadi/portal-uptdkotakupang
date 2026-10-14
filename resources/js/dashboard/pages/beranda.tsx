@@ -11,6 +11,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { newId } from "@/lib/id"
 import * as v from "@/lib/validasi"
 
+import { kataDalamJudul } from "../../portal/kata-bergilir"
+
 const maks = (n: number) => `Maksimal ${n} karakter.`
 
 /** ID video YouTube dari tautan bagikan, tonton, Shorts, live, atau sematan; null bila bukan (sama dengan server, D-040) */
@@ -34,6 +36,18 @@ function idYoutube(tautan: string): string | null {
   return id && /^[\w-]{11}$/.test(id) ? id : null
 }
 
+/** Masalah daftar kata bergilir, dengan aturan yang sama dengan server (D-045); null bila tidak ada */
+function masalahKataBergilir(judul: string, kata: string[]): string | null {
+  if (kata.length === 0) return null
+  if (kata.some((k) => !k.trim())) return "Isi setiap kata, atau hapus barisnya."
+  if (kata.some((k) => k.trim().length > 24)) return "Setiap kata maksimal 24 karakter."
+  if (kata.length > 8) return "Maksimal 8 kata bergilir."
+  if (new Set(kata.map((k) => k.trim().toLowerCase())).size < kata.length) return "Setiap kata cukup ditulis sekali."
+  if (kata.length < 2) return "Isi minimal dua kata bergilir, atau kosongkan daftarnya."
+  if (kataDalamJudul(judul, kata) < 0) return "Judul harus memuat salah satu kata ini; di kata itulah putarannya berhenti."
+  return null
+}
+
 const judul2 = z.object({
   judul: v.wajib("Judul").max(80, maks(80)),
   lanjutan: v.teks.max(80, maks(80)),
@@ -42,15 +56,21 @@ const judul2 = z.object({
 
 // Batas yang sama dengan server (UpdateHomepageRequest)
 const schema = z.object({
-  hero: z.object({
-    eyebrow: v.teks.max(120, maks(120)),
-    judul: v.wajib("Judul").max(80, maks(80)),
-    lanjutan: v.teks.max(80, maks(80)),
-    deskripsi: v.wajib("Deskripsi").max(300, maks(300)),
-    tombolLabel: v.wajib("Label tombol").max(40, maks(40)),
-    tombolUrl: v.tautan.max(300, maks(300)),
-    catatan: v.teks.max(160, maks(160)),
-  }),
+  hero: z
+    .object({
+      eyebrow: v.teks.max(120, maks(120)),
+      judul: v.wajib("Judul").max(80, maks(80)),
+      kataBergilir: z.array(z.string()),
+      lanjutan: v.teks.max(80, maks(80)),
+      deskripsi: v.wajib("Deskripsi").max(300, maks(300)),
+      tombolLabel: v.wajib("Label tombol").max(40, maks(40)),
+      tombolUrl: v.tautan.max(300, maks(300)),
+      catatan: v.teks.max(160, maks(160)),
+    })
+    .superRefine((h, ctx) => {
+      const masalah = masalahKataBergilir(h.judul, h.kataBergilir)
+      if (masalah) ctx.addIssue({ code: "custom", path: ["kataBergilir"], message: masalah })
+    }),
   video: z
     .object({
       url: z
@@ -149,6 +169,14 @@ export default function HalamanBeranda() {
               <Bagian id="bagian-hero" judul="Pembuka (hero)">
                 <FieldTeks control={form.control} name="hero.eyebrow" label="Teks kecil di atas judul" />
                 <FieldJudul2Nada control={form.control} judul="hero.judul" lanjutan="hero.lanjutan" nilaiJudul={n.hero?.judul} nilaiLanjutan={n.hero?.lanjutan} />
+                <FieldDaftarTeks
+                  control={form.control}
+                  name="hero.kataBergilir"
+                  label="Kata bergilir"
+                  labelTambah="Tambah kata"
+                  placeholder="Pajak"
+                  deskripsi="Kata di judul yang sama dengan salah satu kata ini berganti satu per satu sesuai urutan, satu putaran, lalu berhenti lagi di kata judul. Kosongkan daftarnya untuk judul tanpa animasi."
+                />
                 <FieldArea control={form.control} name="hero.deskripsi" label="Deskripsi" wajib rows={3} />
                 <Baris>
                   <FieldTeks control={form.control} name="hero.tombolLabel" label="Label tombol" wajib />

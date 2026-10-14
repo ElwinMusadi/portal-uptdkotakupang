@@ -216,7 +216,7 @@
           <p class="eyebrow hero__eyebrow" data-beranda-teks="hero.eyebrow" data-reveal>
             UPTD Pendapatan Daerah Wilayah Kota Kupang · SAMSAT Kota Kupang
           </p>
-          <h1 class="h-hero hero__title" data-beranda-hero-judul data-reveal>
+          <h1 class="h-hero hero__title" data-react="judul-pembuka" data-reveal>
             Semua informasi Samsat.<br /><span class="tone"
               >Lewat satu pintu.</span
             >
@@ -1075,5 +1075,6 @@
 <!-- /@footer -->
     <script src="assets/js/main.js" defer></script>
     <script type="module" src="skrip/cek-pajak"></script>
+    <script type="module" src="skrip/portal"></script>
   </body>
 </html>

@@ -355,6 +355,7 @@ Halaman *Beranda* (`#/beranda`, `pages/beranda.tsx`) tersimpan di server sejak [
 
 - Teks yang tertulis di HTML beranda menjadi isi awal dan tetap tampil sampai dokumen pertama kali disimpan; setelah itu beranda memakai isi dari server (`GET /api/public/beranda`). Bila API gagal, teks HTML yang tampil.
 - Ikon butir nilai utama dan peta kanal mengikuti urutannya; butir tambahan memakai ikon umum.
+- **Kata bergilir** di bagian Pembuka ([D-045](decisions.md#d-045--2026-10-15--portal-beralih-ke-react-bertahap-kata-bergilir-di-judul-pembuka)): kata di judul yang sama dengan salah satu kata di daftar bergulir ke kata-kata lain sesuai urutan, satu putaran, lalu berhenti lagi di kata judul. Isi 2–8 kata (maks. 24 karakter, tanpa kata ganda) dan pastikan judul memuat salah satunya; kosongkan daftar untuk judul tanpa animasi. Aturan yang sama diperiksa server.
 
 ## Halaman Statis
 

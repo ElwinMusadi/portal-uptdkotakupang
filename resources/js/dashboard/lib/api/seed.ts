@@ -1052,6 +1052,7 @@ function pengaturan(sekarang: Date): Pengaturan {
       hero: {
         eyebrow: "UPTD Pendapatan Daerah Wilayah Kota Kupang · Samsat Kota Kupang",
         judul: "Semua informasi Samsat.",
+        kataBergilir: ["Pajak", "STNK", "Mutasi", "BBN", "SAMSAT"],
         lanjutan: "Lewat satu pintu.",
         deskripsi:
           "PINTU adalah portal resmi informasi dan pelayanan pajak kendaraan di Kota Kupang. Cek persyaratan, jadwal, dan lokasi layanan sebelum Anda berangkat.",

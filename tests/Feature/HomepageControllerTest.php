@@ -41,6 +41,7 @@ class HomepageControllerTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('hero.judul', 'Semua informasi Samsat.')
+            ->assertJsonPath('hero.kataBergilir', ['Pajak', 'STNK', 'Mutasi', 'BBN', 'SAMSAT'])
             ->assertJsonPath('hero.tombolUrl', 'layanan.html')
             ->assertJsonPath('nilai.*.judul', ['Persyaratan jelas.', 'Jadwal terbaru.', 'Tanpa perantara.'])
             ->assertJsonPath('mitra.*.singkatan', ['BP', 'PL', 'JR', 'BN', 'QR', 'SG'])
@@ -57,6 +58,7 @@ class HomepageControllerTest extends TestCase
         $employee = $this->berandaEmployee();
         $homepage = Setting::INITIAL_HOMEPAGE;
         $homepage['hero']['judul'] = 'Judul baru.';
+        $homepage['hero']['kataBergilir'] = [];
         $homepage['hero']['catatan'] = null;
         $homepage['nilai'][0]['deskripsi'] = null;
         $homepage['mitra'][0]['singkatan'] = null;
@@ -70,6 +72,7 @@ class HomepageControllerTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('hero.judul', 'Judul baru.')
+            ->assertJsonPath('hero.kataBergilir', [])
             ->assertJsonPath('hero.catatan', '')
             ->assertJsonPath('nilai.0.deskripsi', '')
             ->assertJsonPath('mitra.0.singkatan', '')
@@ -135,6 +138,62 @@ class HomepageControllerTest extends TestCase
             'nilai' => 'Maksimal 6 nilai utama.',
             'mitra.1.id' => 'Mitra tercantum dua kali.',
         ]);
+    }
+
+    public function test_saves_rotating_words_when_the_title_holds_one_in_any_case(): void
+    {
+        $homepage = Setting::INITIAL_HOMEPAGE;
+        $homepage['hero']['judul'] = 'Semua informasi SAMSAT.';
+        $homepage['hero']['kataBergilir'] = [' Pajak kendaraan bermotor ', 'STNK', 'samsat'];
+
+        $response = $this->actingAs($this->berandaEmployee())->putJson('/api/pengaturan/beranda', $homepage);
+
+        $response->assertOk()->assertJsonPath('hero.kataBergilir', ['Pajak kendaraan bermotor', 'STNK', 'samsat']);
+        $this->assertSame(['Pajak kendaraan bermotor', 'STNK', 'samsat'], Setting::homepage()['hero']['kataBergilir']);
+    }
+
+    /**
+     * @param  array<string, string>  $errors
+     */
+    #[TestWith(['Semua informasi Samsat.', ['Pajak', 'STNK', 'Mutasi', 'BBN', 'Balik nama', 'Pajak progresif', 'Plat', 'Notis', 'Samsat'], ['hero.kataBergilir' => 'Maksimal 8 kata bergilir.']])]
+    #[TestWith(['Semua informasi Samsat.', ['Samsat'], ['hero.kataBergilir' => 'Isi minimal dua kata bergilir, atau kosongkan daftarnya.']])]
+    #[TestWith(['Semua informasi Samsat.', ['Pajak', 'STNK'], ['hero.kataBergilir' => 'Judul pembuka harus memuat salah satu kata bergilir; di kata itulah putarannya berhenti.']])]
+    #[TestWith(['Semua informasi SAMSATKU.', ['Pajak', 'Samsat'], ['hero.kataBergilir' => 'Judul pembuka harus memuat salah satu kata bergilir; di kata itulah putarannya berhenti.']])]
+    #[TestWith(['Semua informasi KuSamsat.', ['Pajak', 'Samsat'], ['hero.kataBergilir' => 'Judul pembuka harus memuat salah satu kata bergilir; di kata itulah putarannya berhenti.']])]
+    #[TestWith(['Semua informasi PKB.', ['P.B', 'Samsat'], ['hero.kataBergilir' => 'Judul pembuka harus memuat salah satu kata bergilir; di kata itulah putarannya berhenti.']])]
+    #[TestWith(['Semua informasi Samsat.', ['Pajak', 'pajak', 'Samsat'], ['hero.kataBergilir.0' => 'Kata bergilir tercantum dua kali.', 'hero.kataBergilir.1' => 'Kata bergilir tercantum dua kali.']])]
+    #[TestWith(['Semua informasi Samsat.', ['Pajak', ''], ['hero.kataBergilir.1' => 'Kata bergilir wajib diisi.']])]
+    #[TestWith(['Semua informasi Samsat.', ['Pajak', 'Balik nama kendaraan baru', 'Samsat'], ['hero.kataBergilir.1' => 'Kata bergilir maksimal 24 karakter.']])]
+    #[TestWith(['Semua informasi Samsat.', ["Pajak\u{0007}", 'Samsat'], ['hero.kataBergilir.0' => 'Kata bergilir berisi karakter kontrol yang tidak diizinkan.']])]
+    #[TestWith(['Semua informasi Samsat.', 'Pajak', ['hero.kataBergilir' => 'Daftar kata bergilir tidak valid.']])]
+    #[TestWith(['', ['Pajak', 'Samsat'], ['hero.judul' => 'Judul pembuka wajib diisi.']])]
+    public function test_validates_the_rotating_words(string $title, mixed $words, array $errors): void
+    {
+        $homepage = Setting::INITIAL_HOMEPAGE;
+        $homepage['hero']['judul'] = $title;
+        $homepage['hero']['kataBergilir'] = $words;
+
+        $response = $this->actingAs($this->berandaEmployee())->putJson('/api/pengaturan/beranda', $homepage);
+
+        $response->assertUnprocessable()->assertOnlyJsonValidationErrors($errors);
+        $this->assertDatabaseCount('settings', 0);
+    }
+
+    /**
+     * @param  list<string>  $words
+     */
+    #[TestWith(['Semua informasi SAMSAT.', ['Pajak', 'STNK', 'Mutasi', 'BBN', 'SAMSAT']])]
+    #[TestWith(['Satu pintu untuk semua layanan.', []])]
+    public function test_gives_documents_saved_before_rotating_words_the_initial_ones_when_the_title_holds_one(string $title, array $words): void
+    {
+        $homepage = Setting::INITIAL_HOMEPAGE;
+        $homepage['hero']['judul'] = $title;
+        unset($homepage['hero']['kataBergilir']);
+        (new Setting)->forceFill(['name' => Setting::HOMEPAGE, 'value' => $homepage])->save();
+
+        $this->actingAs($this->berandaEmployee())->getJson('/api/pengaturan/beranda')
+            ->assertOk()
+            ->assertJsonPath('hero.kataBergilir', $words);
     }
 
     public function test_keeps_partner_logos_and_deletes_replaced_or_removed_ones(): void
@@ -284,18 +343,20 @@ class HomepageControllerTest extends TestCase
             ->assertOnlyJsonValidationErrors(['video.url']);
     }
 
-    public function test_keeps_the_saved_video_when_an_older_dashboard_sends_none(): void
+    public function test_keeps_the_saved_video_and_rotating_words_when_an_older_dashboard_sends_none(): void
     {
         $employee = $this->berandaEmployee();
         $homepage = Setting::INITIAL_HOMEPAGE;
+        $homepage['hero']['kataBergilir'] = ['STNK', 'Samsat'];
         $homepage['video'] = ['url' => 'https://youtu.be/25sRCp-IFxI', 'label' => 'Tonton alur pelayanan', 'durasi' => '2:14', 'judul' => 'Alur pelayanan PINTU'];
         $this->actingAs($employee)->putJson('/api/pengaturan/beranda', $homepage)->assertOk();
 
-        unset($homepage['video']);
+        unset($homepage['video'], $homepage['hero']['kataBergilir']);
         $homepage['hero']['judul'] = 'Judul baru.';
         $this->actingAs($employee)->putJson('/api/pengaturan/beranda', $homepage)
             ->assertOk()
             ->assertJsonPath('hero.judul', 'Judul baru.')
+            ->assertJsonPath('hero.kataBergilir', ['STNK', 'Samsat'])
             ->assertJsonPath('video.url', 'https://www.youtube.com/watch?v=25sRCp-IFxI')
             ->assertJsonPath('video.judul', 'Alur pelayanan PINTU');
     }

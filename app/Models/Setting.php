@@ -214,6 +214,8 @@ class Setting extends Model
         'hero' => [
             'eyebrow' => 'UPTD Pendapatan Daerah Wilayah Kota Kupang · SAMSAT Kota Kupang',
             'judul' => 'Semua informasi Samsat.',
+            // The title's matching word takes turns with the others for one round and stops on it (D-045)
+            'kataBergilir' => ['Pajak', 'STNK', 'Mutasi', 'BBN', 'SAMSAT'],
             'lanjutan' => 'Lewat satu pintu.',
             'deskripsi' => 'PINTU adalah portal resmi informasi dan pelayanan pajak kendaraan di Kota Kupang. Cek persyaratan, jadwal, dan lokasi layanan sebelum Anda berangkat.',
             'tombolLabel' => 'Cek Persyaratan Layanan',
@@ -398,13 +400,16 @@ class Setting extends Model
      * partner has a logo address or null (D-037), every channel is a text
      * with a link, empty when it has none (D-038), and there is a video, with
      * no link until one is saved (D-040). Channels saved as plain text get no
-     * link.
+     * link. An opening saved before its rotating words (D-045) gets the
+     * initial ones when its title holds one of them, and none otherwise.
      *
      * @param  array<string, mixed>  $homepage
      * @return array<string, mixed>
      */
     public static function upgradeHomepage(array $homepage): array
     {
+        $words = self::INITIAL_HOMEPAGE['hero']['kataBergilir'];
+        $homepage['hero']['kataBergilir'] ??= self::rotatingWordIn($homepage['hero']['judul'], $words) === null ? [] : $words;
         $homepage['mitra'] = array_map(fn (array $partner): array => [...$partner, 'logo' => $partner['logo'] ?? null], $homepage['mitra']);
         $homepage['kanal'] = array_map(fn (array $group): array => [
             ...$group,
@@ -413,6 +418,24 @@ class Setting extends Model
         $homepage['video'] = [...self::INITIAL_HOMEPAGE['video'], ...($homepage['video'] ?? [])];
 
         return $homepage;
+    }
+
+    /**
+     * The first of the rotating words that the title holds as a whole word,
+     * in any case; the portal's rotation starts and stops there (D-045).
+     * resources/js/portal/kata-bergilir.ts matches the same way.
+     *
+     * @param  list<string>  $words
+     */
+    public static function rotatingWordIn(string $title, array $words): ?string
+    {
+        foreach ($words as $word) {
+            if (preg_match('/(?<![\p{L}\p{N}])'.preg_quote($word, '/').'(?![\p{L}\p{N}])/iu', $title) === 1) {
+                return $word;
+            }
+        }
+
+        return null;
     }
 
     /**

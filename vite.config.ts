@@ -8,17 +8,21 @@ import { defineConfig } from "vite"
  * Builds the React dashboard (resources/js/dashboard) into public/build.
  * Laravel serves it at /dashboard through resources/views/dashboard.blade.php,
  * and the officers' attendance app (resources/js/absen) at /absen.
- * The public portal (resources/views/portal, public/assets) is static HTML;
- * only its tax check (resources/js/portal/cek-pajak.ts, D-041) is built here
- * and loaded by the pages through /skrip/cek-pajak (routes/web.php).
+ * The public portal (resources/views/portal, public/assets) is server-rendered
+ * HTML that moves to React one part at a time (D-045). Its pages are served as
+ * written and load the scripts built here from fixed addresses (routes/web.php):
+ * /skrip/portal for resources/js/portal/main.tsx, which mounts the portal's
+ * React components, and /skrip/cek-pajak for the tax check (D-041). Those pages
+ * have no Fast Refresh preamble, so portal files are left out of Fast Refresh
+ * and reload fully during development.
  */
 export default defineConfig({
   plugins: [
     laravel({
-      input: ["resources/js/dashboard/main.tsx", "resources/js/absen/main.tsx", "resources/js/portal/cek-pajak.ts"],
+      input: ["resources/js/dashboard/main.tsx", "resources/js/absen/main.tsx", "resources/js/portal/main.tsx", "resources/js/portal/cek-pajak.ts"],
       refresh: true,
     }),
-    react(),
+    react({ exclude: [/\/node_modules\//, /\/resources\/js\/portal\//] }),
     tailwindcss(),
   ],
   resolve: {

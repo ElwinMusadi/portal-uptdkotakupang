@@ -9,6 +9,7 @@ use App\Rules\PortalLink;
 use App\Rules\UploadUrl;
 use App\Rules\YoutubeUrl;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 /**
  * The complete Beranda document: the homepage's opening, values, services
@@ -66,6 +67,8 @@ class UpdateHomepageRequest extends FormRequest
             'hero' => ['required', 'array'],
             'hero.eyebrow' => ['nullable', 'string', 'max:120', new PlainText('Baris atas pembuka')],
             'hero.judul' => ['required', 'string', 'max:80', new PlainText('Judul pembuka')],
+            'hero.kataBergilir' => ['sometimes', 'list', 'max:8'],
+            'hero.kataBergilir.*' => ['required', 'string', 'max:24', 'distinct:ignore_case', new PlainText('Kata bergilir')],
             'hero.lanjutan' => ['nullable', 'string', 'max:80', new PlainText('Lanjutan judul pembuka')],
             'hero.deskripsi' => ['required', 'string', 'max:300', new PlainText('Deskripsi pembuka')],
             'hero.tombolLabel' => ['required', 'string', 'max:40', new PlainText('Label tombol')],
@@ -113,6 +116,31 @@ class UpdateHomepageRequest extends FormRequest
     }
 
     /**
+     * Rotating words need at least two of them, and the title must hold one:
+     * the portal's rotation starts and stops on that word (D-045).
+     *
+     * @return array<int, callable(Validator): void>
+     */
+    public function after(): array
+    {
+        return [
+            function (Validator $validator): void {
+                $words = $this->input('hero.kataBergilir');
+
+                if (! is_array($words) || $words === [] || $validator->errors()->hasAny(['hero.judul', 'hero.kataBergilir', 'hero.kataBergilir.*'])) {
+                    return;
+                }
+
+                if (count($words) < 2) {
+                    $validator->errors()->add('hero.kataBergilir', 'Isi minimal dua kata bergilir, atau kosongkan daftarnya.');
+                } elseif (Setting::rotatingWordIn($this->input('hero.judul'), $words) === null) {
+                    $validator->errors()->add('hero.kataBergilir', 'Judul pembuka harus memuat salah satu kata bergilir; di kata itulah putarannya berhenti.');
+                }
+            },
+        ];
+    }
+
+    /**
      * @return array<string, string>
      */
     public function messages(): array
@@ -126,6 +154,7 @@ class UpdateHomepageRequest extends FormRequest
             'max' => ':Attribute maksimal :max karakter.',
             'distinct' => ':Attribute tercantum dua kali.',
             'required_with' => ':Attribute wajib diisi bila tautannya diisi.',
+            'hero.kataBergilir.max' => 'Maksimal :max kata bergilir.',
             'video.durasi.regex' => 'Tulis durasi video seperti 2:14 atau 1:02:30.',
             'nilai.max' => 'Maksimal :max nilai utama.',
             'mitra.max' => 'Maksimal :max mitra.',
@@ -144,6 +173,8 @@ class UpdateHomepageRequest extends FormRequest
             'hero' => 'pembuka',
             'hero.eyebrow' => 'baris atas pembuka',
             'hero.judul' => 'judul pembuka',
+            'hero.kataBergilir' => 'daftar kata bergilir',
+            'hero.kataBergilir.*' => 'kata bergilir',
             'hero.lanjutan' => 'lanjutan judul pembuka',
             'hero.deskripsi' => 'deskripsi pembuka',
             'hero.tombolLabel' => 'label tombol',
@@ -209,6 +240,8 @@ class UpdateHomepageRequest extends FormRequest
             'hero' => [
                 'eyebrow' => $text('hero.eyebrow'),
                 'judul' => $this->validated('hero.judul'),
+                // A dashboard opened before the rotating words existed sends none; the saved ones stay
+                'kataBergilir' => $this->has('hero.kataBergilir') ? $this->validated('hero.kataBergilir') : Setting::homepage()['hero']['kataBergilir'],
                 'lanjutan' => $text('hero.lanjutan'),
                 'deskripsi' => $this->validated('hero.deskripsi'),
                 'tombolLabel' => $this->validated('hero.tombolLabel'),

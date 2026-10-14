@@ -21,8 +21,9 @@ resources/views/portal/partials/   sumber header, footer, dan ikon portal
 resources/views/errors/404.blade.php
 resources/views/dashboard.blade.php   halaman induk dashboard
 resources/js/dashboard/            kode React dashboard
+resources/js/portal/               komponen React portal (D-045) dan cek pajak (D-041)
 public/assets/                     CSS, JavaScript, dan gambar portal
-public/build/                      hasil build dashboard (tidak di-commit)
+public/build/                      hasil build Vite untuk dashboard dan portal (tidak di-commit)
 docs/                              rancangan, keputusan, API, dashboard, arsip fase
 ```
 
