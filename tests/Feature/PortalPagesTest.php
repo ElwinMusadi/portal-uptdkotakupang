@@ -285,6 +285,18 @@ class PortalPagesTest extends TestCase
         $this->assertStringContainsString('<dialog class="dialog lightbox" id="lightbox" aria-label="Pratinjau foto">', $html);
     }
 
+    public function test_leaves_the_organisation_chart_and_duties_to_the_public_api(): void
+    {
+        $html = $this->get('/struktur-organisasi')->assertOk()->getContent();
+
+        foreach (['class="org__node', 'class="org__staff"', '<details class="acc"', '[Nama]', 'class="proto-note"'] as $static) {
+            $this->assertStringNotContainsString($static, $html);
+        }
+        $this->assertMatchesRegularExpression('#<div class="org" data-struktur-bagan>\s*<p class="muted center" role="status">Memuat struktur organisasi…</p>\s*</div>#', $html);
+        $this->assertStringContainsString('<div class="accordion" data-reveal data-struktur-tugas></div>', $html);
+        $this->assertStringContainsString('Susunan unit mengikuti Renstra BPAD 2025–2029 (Pergub NTT Nomor 96 Tahun 2023).', $html);
+    }
+
     public function test_serves_the_article_page_with_addresses_from_the_site_root(): void
     {
         $response = $this->get('/berita/pintu-resmi-diluncurkan');

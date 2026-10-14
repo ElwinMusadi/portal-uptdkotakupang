@@ -1344,6 +1344,96 @@
     muat(false);
   }
 
+  /* ---------- Struktur organisasi ----------
+     Unit kerja dikelola di dashboard (Struktur Organisasi) dan dibaca dari
+     GET /api/public/struktur (D-033): pohon unit UPTD sesuai urutan dan
+     mitra satu atap. Bagan: pimpinan di atas, unit di bawahnya berjajar
+     dengan jabatan pelaksana, kelompok jabatan fungsional di bawah garis,
+     dan mitra sebagai lencana. Uraian tugas setiap unit tampil di akordeon.
+     NIP tidak pernah dikirim ke portal; foto pejabat hanya dari alamat
+     http(s), dan teks dipasang sebagai teks. */
+  async function muatStruktur() {
+    const d = await ambilJson("/api/public/struktur");
+    const teks = (x) => typeof x === "string";
+    const unitValid = (u) => ["nama", "singkatan", "jenis", "jabatan", "pejabat", "uraianTugas", "catatan"].every((f) => teks(u?.[f]))
+      && (u.foto === null || teks(u.foto)) && Array.isArray(u.anggota) && u.anggota.every(teks)
+      && Array.isArray(u.bawahan) && u.bawahan.every(unitValid);
+    const valid = Array.isArray(d?.unit) && d.unit.every(unitValid)
+      && Array.isArray(d.mitra) && d.mitra.every((m) => ["nama", "singkatan", "uraianTugas", "catatan"].every((f) => teks(m?.[f])));
+    if (!valid) throw new Error("Respons tidak dikenal");
+    return d;
+  }
+
+  function initStruktur() {
+    const bagan = $("[data-struktur-bagan]");
+    if (!bagan) return;
+    const tugas = $("[data-struktur-tugas]");
+
+    // Baris kedua kotak: pimpinan dengan nama pejabatnya, unit lain "jabatan · pejabat", atau catatannya bila keduanya kosong
+    const pakaiCatatan = (u, puncak) => !puncak && !u.jabatan && !u.pejabat;
+    const keterangan = (u, puncak) => (puncak ? u.pejabat || u.jabatan : pakaiCatatan(u, puncak) ? u.catatan : [u.jabatan, u.pejabat].filter(Boolean).join(" · "));
+    const avatar = (u) => {
+      const foto = gambarAman(u.foto);
+      return `<span class="avatar">${foto ? `<img src="${esc(foto)}" alt="" loading="lazy" decoding="async">` : esc(u.singkatan)}</span>`;
+    };
+    const kotak = (u, kelas = "", puncak = false) => {
+      const ket = keterangan(u, puncak);
+      return `<div class="org__node${kelas}">${avatar(u)}<span><strong>${esc(u.nama)}</strong>${ket ? `<span>${esc(ket)}</span>` : ""}</span></div>`;
+    };
+    // Satu kolom: unitnya, unit-unit di bawahnya, lalu jabatan pelaksana
+    const turunan = (u) => u.bawahan.flatMap((b) => [kotak(b), ...turunan(b)]);
+    const kolom = (u) => {
+      const isi = [...turunan(u), ...u.anggota.map((a) => `<span class="org__staff">${esc(a)}</span>`)];
+      return `<div class="org__col">${kotak(u)}${isi.length ? `<div class="org__sub">${isi.join("")}</div>` : ""}</div>`;
+    };
+    const semua = (daftar) => daftar.flatMap((u) => [u, ...semua(u.bawahan)]);
+
+    const tampilkan = (d) => {
+      const puncak = d.unit.find((u) => u.jenis === "pimpinan") || d.unit[0];
+      const lain = d.unit.filter((u) => u !== puncak);
+      const jajar = puncak ? puncak.bawahan.filter((u) => u.jenis !== "fungsional") : [];
+      const bawah = [...(puncak ? puncak.bawahan.filter((u) => u.jenis === "fungsional") : []), ...lain];
+      const catatanMitra = d.mitra.map((m) => m.catatan).find(Boolean);
+
+      bagan.innerHTML = [
+        puncak ? kotak(puncak, " org__node--head", true) : "",
+        jajar.length ? `<div class="org__v" aria-hidden="true"></div><div class="org__row" style="--org-kolom:${jajar.length}">${jajar.map(kolom).join("")}</div>` : "",
+        bawah.length ? `<div class="org__v" aria-hidden="true" style="margin-top:28px"></div><div style="display:grid;gap:12px;justify-items:center;width:100%">${bawah.map((u) => kotak(u, " org__node--dashed")).join("")}</div>` : "",
+        d.mitra.length ? `<div class="org__side">${d.mitra.map((m) => `<span class="badge"><span class="badge__dot">${esc(m.singkatan)}</span>${esc(m.nama)}</span>`).join("")}</div>` : "",
+        catatanMitra ? `<p class="micro muted center" style="margin-top:12px">${esc(catatanMitra)}</p>` : "",
+      ].join("") || '<p class="muted center" role="status">Struktur organisasi belum tersedia.</p>';
+
+      // Catatan yang tidak dipakai di bagan menjadi paragraf kedua uraian tugas
+      const daftar = [...(puncak ? semua([puncak]) : []), ...semua(lain)].filter((u) => u.uraianTugas);
+      tugas.innerHTML = daftar.map((u, i) => {
+        const catatan = pakaiCatatan(u, u === puncak) ? "" : u.catatan;
+        return `<details class="acc"${i ? "" : " open"}>
+          <summary>${esc(u.nama)}<span class="acc__plus" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></summary>
+          <div class="acc__body"><div><p>${esc(u.uraianTugas)}</p>${catatan ? `<p>${esc(catatan)}</p>` : ""}</div></div>
+        </details>`;
+      }).join("");
+      $("[data-struktur-tugas-bagian]").hidden = !daftar.length;
+    };
+
+    const muat = async (fokus) => {
+      bagan.innerHTML = '<p class="muted center" role="status">Memuat struktur organisasi…</p>';
+      try {
+        tampilkan(await muatStruktur());
+      } catch {
+        const retry = tombolCobaLagi(() => muat(true));
+        const p = document.createElement("p");
+        p.className = "muted center";
+        p.setAttribute("role", "status");
+        p.append("Struktur organisasi belum dapat dimuat. ", retry);
+        bagan.replaceChildren(p);
+        $("[data-struktur-tugas-bagian]").hidden = true;
+        if (fokus) retry.focus();
+      }
+    };
+
+    muat(false);
+  }
+
   /* ---------- Beranda ----------
      Teks beranda dikelola di dashboard (Beranda) dan dibaca dari
      GET /api/public/beranda (D-023). Teks di HTML sama dengan isi awal di
@@ -2345,7 +2435,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil(); initLayanan(); initDokumen(); initInformasi(); initBerita(); initPengumumanBeranda(); initDokumentasi(); initBeranda(); initHalaman(); initSitus();
+    initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil(); initLayanan(); initDokumen(); initInformasi(); initBerita(); initPengumumanBeranda(); initDokumentasi(); initStruktur(); initBeranda(); initHalaman(); initSitus();
     initDash(); initSim(); initDialogs(); initGag(); initFilters(); initGallery(); initFaq(); initForms(); initPesanForm(); initAuthFit(); initUtilities();
   });
 })();

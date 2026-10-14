@@ -198,80 +198,21 @@
 
   <section class="container container--wide">
     <div class="card--sunken" style="padding: clamp(24px, 4vw, 56px);" data-reveal>
-      <div class="org">
-        <div class="org__node org__node--head">
-          <span class="avatar">KU</span>
-          <span><strong>Kepala UPTD</strong><span>Remmy Christian Pah, S.STP, M.Si</span></span>
-        </div>
-        <div class="org__v" aria-hidden="true"></div>
-        <div class="org__row">
-          <div class="org__col">
-            <div class="org__node"><span class="avatar">TU</span><span><strong>Subbagian Tata Usaha</strong><span>Kepala Subbagian · [Nama]</span></span></div>
-            <div class="org__sub">
-              <span class="org__staff">Pengelola kepegawaian</span>
-              <span class="org__staff">Pengelola keuangan</span>
-              <span class="org__staff">Pengelola barang &amp; perlengkapan</span>
-              <span class="org__staff">Penata kelola sistem &amp; teknologi informasi</span>
-            </div>
-          </div>
-          <div class="org__col">
-            <div class="org__node"><span class="avatar">S1</span><span><strong>Seksi Penetapan dan Penagihan</strong><span>Kepala Seksi · [Nama]</span></span></div>
-            <div class="org__sub">
-              <span class="org__staff">Petugas penetapan &amp; korektor</span>
-              <span class="org__staff">Petugas penagihan &amp; Samsat Keliling</span>
-              <span class="org__staff">Kasir &amp; bendahara penerimaan</span>
-              <span class="org__staff">Petugas pembukuan &amp; pelaporan</span>
-            </div>
-          </div>
-          <div class="org__col">
-            <div class="org__node"><span class="avatar">S2</span><span><strong>Seksi Verifikasi</strong><span>Kepala Seksi · [Nama]</span></span></div>
-            <div class="org__sub">
-              <span class="org__staff">Petugas pendataan &amp; verifikasi</span>
-              <span class="org__staff">Petugas loket pelayanan</span>
-            </div>
-          </div>
-        </div>
-        <div class="org__v" aria-hidden="true" style="margin-top:28px"></div>
-        <div class="org__node org__node--dashed"><span class="avatar">JF</span><span><strong>Kelompok Jabatan Fungsional</strong><span>Sesuai formasi yang ditetapkan</span></span></div>
-        <div class="org__side">
-          <span class="badge"><span class="badge__dot">PL</span>Polri · Satlantas</span>
-          <span class="badge"><span class="badge__dot">JR</span>PT Jasa Raharja</span>
-        </div>
-        <p class="micro muted center" style="margin-top:12px">Mitra satu atap Samsat · garis koordinasi, bukan garis komando.</p>
+      <div class="org" data-struktur-bagan>
+        <p class="muted center" role="status">Memuat struktur organisasi…</p>
       </div>
     </div>
-    <p class="proto-note" style="margin-top:16px">Susunan unit mengikuti Renstra BPAD 2025–2029 (Pergub NTT Nomor 96 Tahun 2023). Nama pejabat lain diisi setelah verifikasi.</p>
+    <p class="micro muted" style="margin-top:16px">Susunan unit mengikuti Renstra BPAD 2025–2029 (Pergub NTT Nomor 96 Tahun 2023).</p>
   </section>
 
-  <section class="section">
+  <section class="section" data-struktur-tugas-bagian>
     <div class="container split">
       <div class="split__sticky" data-reveal>
         <p class="eyebrow">Uraian tugas</p>
         <h2 class="h2" style="margin-top:20px">Tugas setiap unit. <span class="tone">Singkat dan terbuka.</span></h2>
         <p class="body" style="margin-top:20px">Ringkasan untuk masyarakat. Rincian lengkap tercantum dalam dokumen resmi.</p>
       </div>
-      <div class="accordion" data-reveal>
-        <details class="acc" open>
-          <summary>Kepala UPTD<span class="acc__plus" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></summary>
-          <div class="acc__body"><div><p>Memimpin, mengoordinasikan, dan mengawasi pelaksanaan tugas teknis operasional pendapatan daerah di wilayah Kota Kupang, serta menyetujui informasi sebelum dipublikasikan.</p></div></div>
-        </details>
-        <details class="acc">
-          <summary>Subbagian Tata Usaha<span class="acc__plus" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></summary>
-          <div class="acc__body"><div><p>Merencanakan dan melaksanakan kegiatan ketatausahaan meliputi urusan kepegawaian, keuangan, perlengkapan, dan tata usaha umum, serta memberikan pelayanan administratif kepada semua unsur di lingkungan UPTD.</p><p>Pengelolaan portal PINTU berada di bawah unit ini.</p></div></div>
-        </details>
-        <details class="acc">
-          <summary>Seksi Penetapan dan Penagihan<span class="acc__plus" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></summary>
-          <div class="acc__body"><div><p>Merencanakan dan melaksanakan kegiatan penetapan dan penagihan pajak serta pendapatan lain-lain, termasuk pemberian surat keterangan terdaftar untuk kendaraan bermotor.</p></div></div>
-        </details>
-        <details class="acc">
-          <summary>Seksi Verifikasi<span class="acc__plus" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></summary>
-          <div class="acc__body"><div><p>Merencanakan dan melaksanakan kegiatan verifikasi, meliputi pengumpulan data serta pengendalian dan evaluasi pemeriksaan kebenaran penetapan pajak dan pendapatan lain-lain, termasuk pemberian surat keterangan terdaftar kendaraan bermotor.</p></div></div>
-        </details>
-        <details class="acc">
-          <summary>Kelompok Jabatan Fungsional<span class="acc__plus" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></summary>
-          <div class="acc__body"><div><p>Melaksanakan tugas sesuai keahlian dan jabatan fungsional masing-masing untuk mendukung pelayanan UPTD.</p></div></div>
-        </details>
-      </div>
+      <div class="accordion" data-reveal data-struktur-tugas></div>
     </div>
   </section>
 

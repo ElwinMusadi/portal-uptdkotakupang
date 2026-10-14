@@ -22,17 +22,22 @@ import * as v from "@/lib/validasi"
 const TANPA = "tanpa"
 
 const schema = z.object({
-  nama: v.wajib("Nama unit"),
-  singkatan: z.string().trim().min(1, "Isi singkatan.").max(3, "Maks. 3 huruf."),
+  nama: v.wajib("Nama unit").max(120, "Nama unit maksimal 120 karakter."),
+  singkatan: z
+    .string()
+    .trim()
+    .min(1, "Isi singkatan.")
+    .max(3, "Maks. 3 huruf.")
+    .regex(/^[A-Za-z0-9]*$/, "Singkatan 1–3 huruf atau angka."),
   jenis: z.enum(["pimpinan", "tata-usaha", "seksi", "fungsional", "mitra"]),
   induk: z.string(),
-  jabatan: v.teks,
-  pejabat: v.teks,
+  jabatan: v.teks.max(120, "Jabatan maksimal 120 karakter."),
+  pejabat: v.teks.max(160, "Nama pejabat maksimal 160 karakter."),
   nip: z.string().trim().refine((n) => n === "" || /^\d{18}$/.test(n.replace(/\s/g, "")), "NIP 18 digit angka."),
   foto: z.string().nullable(),
-  anggota: z.array(z.string()),
-  uraianTugas: v.teks,
-  catatan: v.teks,
+  anggota: z.array(z.string().max(120, "Jabatan pelaksana maksimal 120 karakter.")).max(20, "Maksimal 20 jabatan pelaksana."),
+  uraianTugas: v.teks.max(1000, "Uraian tugas maksimal 1000 karakter."),
+  catatan: v.teks.max(200, "Catatan maksimal 200 karakter."),
 })
 type FormUnit = z.infer<typeof schema>
 
@@ -284,7 +289,7 @@ export default function HalamanStruktur() {
               label="NIP pejabat"
               inputMode="numeric"
               maxLength={18}
-              deskripsi="Opsional. Disamarkan di portal publik."
+              deskripsi="Opsional. Tidak ditampilkan di portal publik."
               className="[&_input]:font-mono"
             />
             <FieldDaftarTeks control={ed.form.control} name="anggota" label="Jabatan pelaksana" labelTambah="Tambah jabatan" />

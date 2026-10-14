@@ -21,6 +21,9 @@ use App\Http\Controllers\Dashboard\MessageDeletionController;
 use App\Http\Controllers\Dashboard\MobileServiceStopController;
 use App\Http\Controllers\Dashboard\MobileServiceStopDeletionController;
 use App\Http\Controllers\Dashboard\OpeningHoursController;
+use App\Http\Controllers\Dashboard\OrganizationUnitController;
+use App\Http\Controllers\Dashboard\OrganizationUnitDeletionController;
+use App\Http\Controllers\Dashboard\OrganizationUnitOrderController;
 use App\Http\Controllers\Dashboard\OwnAccountController;
 use App\Http\Controllers\Dashboard\ProfileController;
 use App\Http\Controllers\Dashboard\ScheduleAdjustmentController;
@@ -48,6 +51,7 @@ use App\Http\Controllers\PublicHomepageController;
 use App\Http\Controllers\PublicMessageController;
 use App\Http\Controllers\PublicMobileServiceStopController;
 use App\Http\Controllers\PublicOpeningHoursController;
+use App\Http\Controllers\PublicOrganizationController;
 use App\Http\Controllers\PublicProfileController;
 use App\Http\Controllers\PublicServiceBoardController;
 use App\Http\Controllers\PublicServiceController;
@@ -63,6 +67,7 @@ use App\Models\Documentation;
 use App\Models\Faq;
 use App\Models\Message;
 use App\Models\MobileServiceStop;
+use App\Models\OrganizationUnit;
 use App\Models\ScheduleAdjustment;
 use App\Models\Service;
 use App\Models\Setting;
@@ -288,6 +293,20 @@ Route::middleware('auth:sanctum')->group(function (): void {
     });
 
     /*
+     * Struktur Organisasi (OrganizationUnitPolicy): module managers add,
+     * change, reorder and delete units, which reach the portal when saved
+     * (D-033). Units that others report to cannot be deleted.
+     */
+    Route::prefix('koleksi/unit')->name('koleksi.unit.')->whereUlid('unit')->group(function (): void {
+        Route::get('/', [OrganizationUnitController::class, 'index'])->can('viewAny', OrganizationUnit::class)->name('index');
+        Route::post('/', [OrganizationUnitController::class, 'store'])->can('create', OrganizationUnit::class)->name('store');
+        Route::put('/urutan', [OrganizationUnitOrderController::class, 'update'])->can('reorder', OrganizationUnit::class)->name('urutan');
+        Route::post('/hapus', [OrganizationUnitDeletionController::class, 'store'])->can('deleteAny', OrganizationUnit::class)->name('hapus');
+        Route::get('/{unit}', [OrganizationUnitController::class, 'show'])->can('view', 'unit')->name('show');
+        Route::patch('/{unit}', [OrganizationUnitController::class, 'update'])->can('update', 'unit')->name('update');
+    });
+
+    /*
      * Regulasi & Unduhan (DocumentPolicy) with the publication workflow, as
      * for services: module managers prepare, submit and review; administrators
      * approve, withdraw and delete (D-030). The portal sorts documents by
@@ -358,6 +377,7 @@ Route::prefix('public')
         Route::get('/layanan', PublicServiceController::class)->name('layanan.index');
         Route::get('/dokumen', PublicDocumentController::class)->name('dokumen.index');
         Route::get('/dokumentasi', PublicDocumentationController::class)->name('dokumentasi.index');
+        Route::get('/struktur', PublicOrganizationController::class)->name('struktur.show');
         Route::get('/berita', [PublicArticleController::class, 'index'])->name('berita.index');
         Route::get('/berita/{slug}', [PublicArticleController::class, 'show'])
             ->where('slug', Article::SLUG_PATTERN)

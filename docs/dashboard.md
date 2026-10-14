@@ -152,7 +152,7 @@ Contoh entri `faq`:
 
 Tanpa `VITE_API_URL`, dashboard berjalan dalam **mode campuran** (`lib/api/hybrid.ts`, [D-011](decisions.md#d-011--2026-10-13--tanya-jawab-tersimpan-di-server)):
 
-- Koleksi di `KOLEKSI_SERVER` (saat ini `faq`, `keliling`, `penyesuaian`, `pesan`, `layanan`, `halaman`, `pemutakhiran`, `dokumen`, `berita`, dan `dokumentasi`) dan pengaturan di `PENGATURAN_SERVER` (saat ini `jam`, `papan`, `tarif`, `statistik`, `kontak`, `visiMisi`, `profil`, `beranda`, `situs`, dan `akun`) dibaca dan ditulis lewat API PINTU (`/api/koleksi/…`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/tarif`, `/api/pengaturan/statistik`, `/api/pengaturan/kontak`, `/api/pengaturan/visiMisi`, `/api/pengaturan/profil`, `/api/pengaturan/beranda`, `/api/pengaturan/situs`, `/api/pengaturan/akun`, lihat [docs/api.md](api.md#tanya-jawab-di-dashboard)). Perubahan pegawai lain muncul saat tab kembali dilihat, dan server memeriksa modul pengguna. Waktu simpan pengaturan server (`GET /api/pengaturan`) menggantikan waktu di peramban untuk pengaturan itu.
+- Koleksi di `KOLEKSI_SERVER` (saat ini `faq`, `keliling`, `penyesuaian`, `pesan`, `layanan`, `halaman`, `pemutakhiran`, `dokumen`, `berita`, `dokumentasi`, dan `unit`) dan pengaturan di `PENGATURAN_SERVER` (saat ini `jam`, `papan`, `tarif`, `statistik`, `kontak`, `visiMisi`, `profil`, `beranda`, `situs`, dan `akun`) dibaca dan ditulis lewat API PINTU (`/api/koleksi/…`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/tarif`, `/api/pengaturan/statistik`, `/api/pengaturan/kontak`, `/api/pengaturan/visiMisi`, `/api/pengaturan/profil`, `/api/pengaturan/beranda`, `/api/pengaturan/situs`, `/api/pengaturan/akun`, lihat [docs/api.md](api.md#tanya-jawab-di-dashboard)). Perubahan pegawai lain muncul saat tab kembali dilihat, dan server memeriksa modul pengguna. Waktu simpan pengaturan server (`GET /api/pengaturan`) menggantikan waktu di peramban untuk pengaturan itu.
 - Koleksi dan pengaturan lain serta unggahan tersimpan di IndexedDB peramban: database `pintu-dashboard`, store `data`, dengan kunci `koleksi:<nama>`, `pengaturan:<nama>`, `aktivitas`, dan `meta`.
 - Saat pertama dibuka, dashboard mengisi data lokal awal dari isi portal yang sudah ada (`resources/js/dashboard/lib/api/seed.ts`). Tanya jawab contoh di sana tidak dipakai lagi dan tidak dipindahkan ke server.
 - Foto dan berkas disimpan sebagai data URL. Foto dikecilkan dulu menjadi maks. 1600 px.
@@ -174,7 +174,7 @@ Tanpa `VITE_API_URL`, dashboard berjalan dalam **mode campuran** (`lib/api/hybri
 
 ## Menyambungkan ke server (REST API)
 
-> **Sebagian tersedia.** Laravel sudah menyediakan koleksi `faq`, `keliling`, `penyesuaian`, `pesan`, `layanan`, `halaman`, `pemutakhiran`, `dokumen`, `berita`, dan `dokumentasi` (tanpa `PUT /urutan` untuk `keliling` dan `penyesuaian`, yang diurutkan menurut hari, jam, atau tanggal, untuk `dokumen`, yang diurutkan per kategori, dan untuk `berita` serta `dokumentasi`, yang diurutkan menurut tanggal; `halaman` hanya dibaca dan disunting), pengaturan `jam`, `papan`, `tarif`, `statistik`, `kontak`, `visiMisi`, `profil`, `beranda`, `situs`, dan `akun`, `GET /pengaturan`, serta `GET /aktivitas` ([docs/api.md](api.md#tanya-jawab-di-dashboard)); mode campuran memakainya otomatis. Endpoint lain di bawah adalah sasaran modul berikutnya, jadi `VITE_API_URL` baru berguna setelah semuanya tersedia. `DELETE /aktivitas` sengaja tidak dibuat: log aktivitas server tidak bisa dikosongkan dari dashboard.
+> **Sebagian tersedia.** Laravel sudah menyediakan koleksi `faq`, `keliling`, `penyesuaian`, `pesan`, `layanan`, `halaman`, `pemutakhiran`, `dokumen`, `berita`, `dokumentasi`, dan `unit` (tanpa `PUT /urutan` untuk `keliling` dan `penyesuaian`, yang diurutkan menurut hari, jam, atau tanggal, untuk `dokumen`, yang diurutkan per kategori, dan untuk `berita` serta `dokumentasi`, yang diurutkan menurut tanggal; `halaman` hanya dibaca dan disunting), pengaturan `jam`, `papan`, `tarif`, `statistik`, `kontak`, `visiMisi`, `profil`, `beranda`, `situs`, dan `akun`, `GET /pengaturan`, serta `GET /aktivitas` ([docs/api.md](api.md#tanya-jawab-di-dashboard)); mode campuran memakainya otomatis. Endpoint lain di bawah adalah sasaran modul berikutnya, jadi `VITE_API_URL` baru berguna setelah semuanya tersedia. `DELETE /aktivitas` sengaja tidak dibuat: log aktivitas server tidak bisa dikosongkan dari dashboard.
 
 Build dengan alamat API, lalu semua baca/tulis memakai REST. Karena dashboard dan API kini satu origin, alamatnya cukup `/api`:
 
@@ -197,7 +197,7 @@ Server perlu menyediakan endpoint berikut. Bentuk JSON-nya sama dengan model dat
 | `GET` | `/pengaturan` | — | `{ "situs": "<waktu ISO>", … }`, waktu terakhir tiap pengaturan disimpan |
 | `GET` | `/aktivitas?limit=50` | — | Log aktivitas terbaru `{ id, waktu, oleh, aksi, modul, target }` |
 | `DELETE` | `/aktivitas` | — | 204 |
-| `POST` | `/unggah` | `multipart/form-data`, field `modul` (tujuan) dan `berkas` | `{ nama, ukuran, tipe, url }`; tersedia di server ([D-028](decisions.md#d-028--2026-10-14--unggahan-disimpan-di-laravel-cloud-object-storage)). Mode campuran memakainya untuk tujuan di `UNGGAHAN_SERVER` (saat ini `visiMisi`, `profil`, `dokumen`, `berita`, dan `dokumentasi`) |
+| `POST` | `/unggah` | `multipart/form-data`, field `modul` (tujuan) dan `berkas` | `{ nama, ukuran, tipe, url }`; tersedia di server ([D-028](decisions.md#d-028--2026-10-14--unggahan-disimpan-di-laravel-cloud-object-storage)). Mode campuran memakainya untuk tujuan di `UNGGAHAN_SERVER` (saat ini `visiMisi`, `profil`, `dokumen`, `berita`, `dokumentasi`, dan `unit`) |
 | `GET` | `/ekspor` | — | Cadangan lengkap (format di atas) |
 | `POST` | `/impor` | Cadangan lengkap | 204 |
 | `POST` | `/reset` | — | 204 |
@@ -331,6 +331,15 @@ Halaman *Dokumentasi Kegiatan* (`#/dokumentasi`, `pages/dokumentasi.tsx`) tersim
 - Pengelola modul menjalankan semua langkah alur sendiri, termasuk menerbitkan dan menarik dari portal. Hanya Administrator yang menghapus.
 - Galeri portal (`GET /api/public/dokumentasi`) menampilkan foto per bulan; bagian Arsip berpindah bulan, atau tahun untuk tahun-tahun sebelumnya.
 - Sembilan kegiatan contoh menjadi data awal berstatus Draf tanpa foto.
+
+## Struktur Organisasi
+
+Halaman *Struktur Organisasi* (`#/struktur`, `pages/struktur.tsx`) tersimpan di server sejak [D-033](decisions.md#d-033--2026-10-14--struktur-organisasi-tersimpan-di-server-nip-pejabat-tidak-ditampilkan-di-portal) sebagai koleksi `unit`, tanpa alur publikasi: perubahan langsung tampil di portal (`GET /api/public/struktur`).
+
+- Pengelola modul menambah, menyunting, mengurutkan, dan menghapus unit. Server menolak susunan yang melingkar dan penghapusan unit yang masih membawahi unit lain.
+- Urutan di daftar adalah urutan unit di bagan portal, dari kiri ke kanan. Foto pejabat diunggah ke server (tujuan `unit`) dan menggantikan inisial di bagan.
+- NIP pejabat hanya untuk internal dan tidak dikirim ke portal.
+- Ketujuh unit yang tampil di portal menjadi data awal; nama pejabat selain Kepala UPTD diisi setelah diverifikasi.
 
 ## Regulasi & Unduhan
 

@@ -18,6 +18,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET` | `/api/public/dokumen` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/berita`, `/api/public/berita/{slug}` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/dokumentasi` | anonim, hanya baca | tersedia |
+| `GET` | `/api/public/struktur` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/beranda` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/halaman/{slug}` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/situs` | anonim, hanya baca | tersedia |
@@ -65,6 +66,10 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET`, `POST` | `/api/koleksi/dokumentasi` | Administrator, pengelola Dokumentasi Kegiatan (daftar: juga pengelola Jadwal Pemutakhiran) | tersedia |
 | `GET`, `PATCH` | `/api/koleksi/dokumentasi/{id}` | Administrator, pengelola Dokumentasi Kegiatan, termasuk kegiatan yang terbit | tersedia |
 | `POST` | `/api/koleksi/dokumentasi/hapus` | Administrator | tersedia |
+| `GET`, `POST` | `/api/koleksi/unit` | Administrator, pengelola Struktur Organisasi | tersedia |
+| `GET`, `PATCH` | `/api/koleksi/unit/{id}` | Administrator, pengelola Struktur Organisasi | tersedia |
+| `PUT` | `/api/koleksi/unit/urutan` | Administrator, pengelola Struktur Organisasi | tersedia |
+| `POST` | `/api/koleksi/unit/hapus` | Administrator, pengelola Struktur Organisasi | tersedia |
 | `GET` | `/api/koleksi/halaman` | Administrator, pengelola Halaman Statis | tersedia |
 | `GET`, `PATCH` | `/api/koleksi/halaman/{id}` | Administrator, pengelola Halaman Statis | tersedia |
 | `GET` | `/api/koleksi/pemutakhiran` | semua pegawai; daftarnya sebatas modul pengguna, lengkap bagi Administrator dan pengelola Jadwal Pemutakhiran | tersedia |
@@ -458,6 +463,32 @@ Isi divalidasi seperti formulir dashboard: nama kegiatan (maks. 160 karakter), l
 
 Kode: `app/Http/Controllers/Dashboard/Documentation*`, `app/Http/Requests/Dashboard/*Documentation*`, `app/Models/Documentation.php`, `app/Policies/DocumentationPolicy.php`, `database/migrations/*_insert_initial_documentations.php`. Tes: `tests/Feature/DocumentationControllerTest.php`, `DocumentationWorkflowTest.php`.
 
+## Struktur Organisasi di dashboard
+
+Dipakai halaman *Struktur Organisasi* di dashboard ([D-033](decisions.md#d-033--2026-10-14--struktur-organisasi-tersimpan-di-server-nip-pejabat-tidak-ditampilkan-di-portal)). Tamu mendapat `401`; pegawai yang tidak mengelola modul `unit` mendapat `403` `{"message": "Modul Struktur Organisasi belum ditugaskan kepada Anda."}`. Perubahan langsung tampil di portal; tidak ada alur publikasi.
+
+```json
+{
+  "id": "01m4…", "nama": "Seksi Verifikasi", "singkatan": "S2", "jenis": "seksi", "induk": "01m4…",
+  "jabatan": "Kepala Seksi", "pejabat": "", "nip": "", "foto": null,
+  "anggota": ["Petugas pendataan & verifikasi", "Petugas loket pelayanan"],
+  "uraianTugas": "…", "catatan": "", "urutan": 3, "dibuat": "…", "diperbarui": "…"
+}
+```
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `GET /api/koleksi/unit` | — | `200` semua unit sesuai urutan. |
+| `GET /api/koleksi/unit/{id}` | — | `200` satu unit; `404` bila tidak ada. |
+| `POST /api/koleksi/unit` | isi unit seperti di atas | `201` di akhir daftar; dicatat "menambahkan". |
+| `PATCH /api/koleksi/unit/{id}` | sebagian isi | `200`; perubahan dicatat "memperbarui", simpan ulang tanpa perubahan tidak dicatat. `422` `{"induk": ["Unit tidak bisa berada di bawah dirinya sendiri atau unit yang dibawahinya."]}` bila unit dipindahkan ke bawah dirinya atau ke bawah unit di cabangnya. |
+| `PUT /api/koleksi/unit/urutan` | `{"ids": ["…"]}` | `204`. Unit yang tidak disebut tetap berurutan di belakang; waktu `diperbarui` tidak berubah. `422` bila daftar tidak cocok dengan data terbaru. |
+| `POST /api/koleksi/unit/hapus` | `{"ids": ["…"]}` | `204`; foto pejabat ikut terhapus. `422` `{"ids": ["Unit masih membawahi unit lain. Pindahkan unit di bawahnya terlebih dahulu."]}` bila unit lain di luar daftar masih berada di bawahnya. |
+
+Isi divalidasi seperti formulir dashboard: nama unit (maks. 120 karakter) wajib; singkatan 1–3 huruf atau angka (disimpan kapital); jenis `pimpinan`, `tata-usaha`, `seksi`, `fungsional`, atau `mitra`; `induk` kosong atau ID unit yang ada dan bukan mitra; jabatan maks. 120, nama pejabat maks. 160; NIP kosong atau 18 digit (spasi dibuang); maks. 20 jabatan pelaksana (maks. 120 karakter, yang kosong dibuang); uraian tugas maks. 1000; catatan maks. 200; tanpa karakter kontrol. Foto pejabat harus alamat unggahan PINTU untuk tujuan `unit` yang belum dipakai unit lain.
+
+Kode: `app/Http/Controllers/Dashboard/OrganizationUnit*`, `app/Http/Requests/Dashboard/*OrganizationUnit*`, `app/Models/OrganizationUnit.php`, `app/Policies/OrganizationUnitPolicy.php`, `database/migrations/*_insert_initial_organization_units.php`. Tes: `tests/Feature/OrganizationUnitControllerTest.php`.
+
 ## Regulasi & Unduhan di dashboard
 
 Dipakai halaman *Regulasi & Unduhan* di dashboard ([D-030](decisions.md#d-030--2026-10-14--regulasi--unduhan-tersimpan-di-server-dengan-alur-persetujuan)), dengan alur publikasi yang sama dengan Persyaratan Layanan. Tamu mendapat `401`; pegawai yang tidak mengelola modul `dokumen` mendapat `403` `{"message": "Modul Regulasi & Unduhan belum ditugaskan kepada Anda."}`. Pengelola Jadwal Pemutakhiran boleh memakai `GET /api/koleksi/dokumen` saja.
@@ -611,7 +642,7 @@ Kode: `app/Http/Controllers/Dashboard/OwnAccountController.php`, `app/Http/Reque
 
 ## Unggahan di dashboard
 
-Penyimpanan berkas dari dashboard ([D-028](decisions.md#d-028--2026-10-14--unggahan-disimpan-di-laravel-cloud-object-storage)). Tamu mendapat `401`. Dashboard memakainya untuk tujuan yang modulnya sudah di server, saat ini `visiMisi`, `profil` ([D-029](decisions.md#d-029--2026-10-14--foto-tentang-uptd-dan-maklumat-diunggah-ke-server-profil-disusun-dari-renstra-dan-rpjmd)), `dokumen` ([D-030](decisions.md#d-030--2026-10-14--regulasi--unduhan-tersimpan-di-server-dengan-alur-persetujuan)), `berita` ([D-031](decisions.md#d-031--2026-10-14--berita--pengumuman-tersimpan-di-server-pengelola-berita-menerbitkan-sendiri)), dan `dokumentasi` ([D-032](decisions.md#d-032--2026-10-14--dokumentasi-kegiatan-tersimpan-di-server-galeri-disusun-per-bulan)); unggahan lain tetap di peramban sampai modulnya pindah.
+Penyimpanan berkas dari dashboard ([D-028](decisions.md#d-028--2026-10-14--unggahan-disimpan-di-laravel-cloud-object-storage)). Tamu mendapat `401`. Dashboard memakainya untuk tujuan yang modulnya sudah di server, saat ini `visiMisi`, `profil` ([D-029](decisions.md#d-029--2026-10-14--foto-tentang-uptd-dan-maklumat-diunggah-ke-server-profil-disusun-dari-renstra-dan-rpjmd)), `dokumen` ([D-030](decisions.md#d-030--2026-10-14--regulasi--unduhan-tersimpan-di-server-dengan-alur-persetujuan)), `berita` ([D-031](decisions.md#d-031--2026-10-14--berita--pengumuman-tersimpan-di-server-pengelola-berita-menerbitkan-sendiri)), `dokumentasi` ([D-032](decisions.md#d-032--2026-10-14--dokumentasi-kegiatan-tersimpan-di-server-galeri-disusun-per-bulan)), dan `unit` ([D-033](decisions.md#d-033--2026-10-14--struktur-organisasi-tersimpan-di-server-nip-pejabat-tidak-ditampilkan-di-portal)); unggahan lain tetap di peramban sampai modulnya pindah.
 
 | Alamat | Permintaan | Respons |
 |---|---|---|
@@ -849,6 +880,25 @@ Galeri halaman Dokumentasi Kegiatan ([D-032](decisions.md#d-032--2026-10-14--dok
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 
 Kode: `app/Http/Controllers/PublicDocumentationController.php`, `app/Actions/ListPublicDocumentations.php`. Tes: `tests/Feature/PublicDocumentationControllerTest.php`.
+
+## `GET /api/public/struktur`
+
+Bagan dan uraian tugas halaman Struktur Organisasi ([D-033](decisions.md#d-033--2026-10-14--struktur-organisasi-tersimpan-di-server-nip-pejabat-tidak-ditampilkan-di-portal), `initStruktur()` di `public/assets/js/main.js`).
+
+```json
+{
+  "unit": [{ "nama": "Kepala UPTD", "singkatan": "KU", "jenis": "pimpinan", "jabatan": "…", "pejabat": "Remmy Christian Pah, S.STP, M.Si", "foto": null, "anggota": [], "uraianTugas": "…", "catatan": "", "bawahan": [ … ] }],
+  "mitra": [{ "nama": "Polri · Satlantas", "singkatan": "PL", "uraianTugas": "…", "catatan": "Mitra satu atap Samsat · garis koordinasi, bukan garis komando." }]
+}
+```
+
+| Hal | Perilaku |
+|---|---|
+| Berhasil | `200`. `unit` berisi unit UPTD teratas sesuai urutan, masing-masing dengan `bawahan` (bentuk yang sama, bertingkat). Unit yang unit induknya sudah tidak ada ditampilkan di tingkat teratas. `mitra` berisi mitra satu atap. Tanpa ID dan tanpa NIP. Portal hanya memakai foto beralamat `http(s)` dan menampilkan teks sebagai teks polos. |
+| Galat | `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah batas laju yang sama dengan `GET /api/public/faq`; `503` bila data tidak bisa dibaca. |
+| Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
+
+Kode: `app/Http/Controllers/PublicOrganizationController.php`, `app/Actions/ShowPublicOrganization.php`. Tes: `tests/Feature/PublicOrganizationControllerTest.php`.
 
 ## `GET /api/public/beranda`
 
