@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Http\Controllers\ArticlePageController;
+use App\Http\PortalPage;
 use App\Models\Message;
 use App\Models\Setting;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -322,7 +322,7 @@ class PortalPagesTest extends TestCase
 
         $this->assertSame(
             '<link href="/assets/a.css"><script src="/assets/a.js"></script><a href="/profil.html#visi"><a href="/kontak"><a href="#main"><use href="#i-x"/><a href="https://wa.me/"><a href="mailto:a@b.go.id">',
-            ArticlePageController::fromSiteRoot($html),
+            PortalPage::fromSiteRoot($html),
         );
     }
 
@@ -410,11 +410,22 @@ class PortalPagesTest extends TestCase
     #[TestWith(['/halaman-tidak-ada.html'])]
     #[TestWith(['/.env'])]
     #[TestWith(['/composer.json'])]
-    public function test_renders_the_portal_404_page_for_any_other_address(string $uri): void
+    #[TestWith(['/tidak/ada/halaman'])]
+    #[TestWith(['/berita/judul/lain'])]
+    public function test_renders_the_portal_404_page_with_addresses_from_the_site_root_for_any_other_address(string $uri): void
     {
         $response = $this->get($uri);
 
-        $response->assertNotFound();
-        $this->assertSame(file_get_contents(resource_path('views/errors/404.blade.php')), $response->getContent());
+        $html = $response->assertNotFound()->getContent();
+        $this->assertSame(PortalPage::fromSiteRoot(file_get_contents(resource_path('views/errors/404.blade.php'))), $html);
+        $this->assertSame(0, preg_match('/\s(?:href|src)="(?![a-z][a-z0-9+.-]*:|\/|#)/i', $html));
+        $this->assertStringContainsString('<link rel="stylesheet" href="/assets/css/components.css">', $html);
+        $this->assertStringContainsString('<script src="/assets/js/main.js" defer></script>', $html);
+    }
+
+    public function test_answers_missing_api_addresses_and_json_requests_with_json(): void
+    {
+        $this->get('/api/tidak-ada')->assertNotFound()->assertHeader('Content-Type', 'application/json');
+        $this->getJson('/tidak/ada')->assertNotFound()->assertHeader('Content-Type', 'application/json');
     }
 }

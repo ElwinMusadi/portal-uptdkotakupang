@@ -3,6 +3,7 @@
 use App\Exceptions\PublicContentUnavailableException;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\PreventResponseCaching;
+use App\Http\PortalPage;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
@@ -10,6 +11,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -48,6 +50,12 @@ return Application::configure(basePath: dirname(__DIR__))
             return $request->is('api/*') && $e->getPrevious() instanceof ModelNotFoundException
                 ? response()->json(['message' => 'Data tidak ditemukan.'], 404)
                 : null;
+        });
+
+        // The portal's 404 page answers any missing address, also nested ones
+        // such as /a/b/c, so its addresses are made root-relative.
+        $exceptions->render(function (NotFoundHttpException $e, Request $request): ?Response {
+            return $request->is('api', 'api/*') || $request->expectsJson() ? null : PortalPage::render('errors.404', 404);
         });
 
         // Anonymous traffic must not flood the log while a public source is down.
