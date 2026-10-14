@@ -498,3 +498,20 @@ Kamera dan lokasi hanya bekerja lewat HTTPS, jadi aplikasi diuji penuh di Larave
 | Isi | **Semua menu tetap ada, dipadatkan** (keputusan pemilik): Profil, Layanan, Jadwal, Informasi, Kontak & Pengaduan, ikon Login Pegawai, dan tombol "Cek Persyaratan"; teks 13 px, tombol 36 px. Di bawah 1001 px tautan masuk ke tombol Menu di dalam notch, dan menu seluler terbuka di bawahnya. Markup header di semua halaman tidak berubah; perubahan hanya di `components.css`. |
 | Warna | **Tetap warna PINTU** (keputusan pemilik): ink #0F1319, tautan redup, tombol putih, dan aksen #7FA4FF untuk fokus dan halaman aktif. |
 | Tema dashboard | **Terang menjadi tema bawaan** dashboard dan aplikasi `/absen` (keputusan pemilik), menggantikan "ikuti sistem". Pilihan Gelap atau Sistem yang sudah disimpan pegawai tetap dihormati. |
+
+## D-036 · 2026-10-14 · Ukuran notch disamakan dengan referensi Kage
+
+Atas permintaan pemilik, notch D-035 diukur ulang dari gambar referensi Kage "tinykpi navigation" (tangkapan 1280 px, skala 1:1) dan disamakan. **Menggantikan** ukuran di D-035; isi, warna PINTU, dan perilaku seluler tetap.
+
+| Hal | Referensi | PINTU |
+|---|---|---|
+| Tinggi | 62 px: 12 + tombol 38 + 12 | sama |
+| Sudut bawah | ±22 px | 22 px |
+| Lekuk ke tepi atas | ±18 px | 18 px |
+| Jarak tepi kiri ke logo / tombol ke tepi kanan | 23 px / 11 px | 22 px / 12 px |
+| Tombol | 38 px | 38 px (tombol Login, "Cek Persyaratan", dan Menu) |
+| Bayangan | tidak ada | tidak ada |
+| Latar | pekat #08090D | pekat ink #0F1319 (warna PINTU, D-035); tanpa transparansi dan blur agar lekuk menyatu tanpa sambungan |
+| Lebar | 800 px, tiga tautan | mengikuti isi, ±870 px di layar 1280 px, karena kelima menu PINTU tetap ada (D-035) |
+
+Tombol "Cek Persyaratan" tetap berbentuk pil seperti tombol lain di portal; di referensi tombolnya persegi dengan sudut ±10 px. Dropdown kini terbuka ±10 px di bawah notch.
