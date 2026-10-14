@@ -276,7 +276,7 @@
             <div class="tile cek__total"><p class="tile__label">Estimasi total bayar</p><p class="bento__total-val" data-cek="total" aria-live="polite">—</p><p class="cek__masa" data-cek="masa">—</p><div class="cek__rincian" data-cek-rincian></div><p class="cek__catatan" data-cek="catatan"></p><p class="cek__catatan">Denda keterlambatan PKB dan opsen dibebaskan 100%. Pokok pajak dan SWDKLLJ tetap dihitung.</p></div>
           </div>
         </div>
-        <p class="micro muted canvas__note">Nomor rangka hanya dipakai untuk mencocokkan data kendaraan dan tidak disimpan. Tagihan resmi mengikuti notis pajak di loket.</p>
+        <p class="micro muted canvas__note">Data kendaraan dari BPAD tersedia sampai pukul 21.00 WITA. Nomor rangka hanya dipakai untuk mencocokkan data kendaraan dan tidak disimpan. Tagihan resmi mengikuti notis pajak di loket.</p>
       </div>
     </div>
   </section>

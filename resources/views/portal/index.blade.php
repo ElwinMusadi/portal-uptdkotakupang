@@ -857,8 +857,9 @@
               </div>
             </div>
             <p class="micro muted canvas__note">
-              Nomor rangka hanya dipakai untuk mencocokkan data kendaraan dan
-              tidak disimpan. Tagihan resmi mengikuti notis pajak di loket.
+              Data kendaraan dari BPAD tersedia sampai pukul 21.00 WITA. Nomor
+              rangka hanya dipakai untuk mencocokkan data kendaraan dan tidak
+              disimpan. Tagihan resmi mengikuti notis pajak di loket.
             </p>
           </div>
         </div>

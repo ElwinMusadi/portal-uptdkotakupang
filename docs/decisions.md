@@ -571,3 +571,13 @@ Kalkulator PKB di dashboard dan simulasi di portal sebelumnya menghitung dari po
 | Masa pajak | Mesin menghitung masa berjalan pada tahun pembayaran. Bila jatuh tempo pajak berada di tahun sesudah tanggal bayar (PKB tahun itu sudah lunas), PINTU tidak menampilkan rincian dan meminta tanggal bayar di tahun jatuh tempo. |
 
 Belum dibuat: plat kuning (angkutan umum) tetap dihitung di loket; pembayaran lebih awal untuk jatuh tempo di tahun berikutnya belum bisa dihitung mesin.
+
+## D-042 · 2026-10-14 · Jam layanan data kendaraan BPAD
+
+API data kendaraan BPAD hanya aktif sampai pukul 21.00 WITA. Sebelumnya, pencarian di luar jam itu hanya dijawab "Data kendaraan sedang tidak dapat diambil", tanpa penjelasan.
+
+| Hal | Keputusan |
+|---|---|
+| Keterangan | Portal (di bawah cek biaya pajak di Beranda dan Layanan) dan Kalkulator PKB menyebut bahwa data kendaraan dari BPAD tersedia **sampai pukul 21.00 WITA**. Jam mulai **belum pasti** (keputusan pemilik), jadi tidak disebut. |
+| Di luar jam | **Ditolak tanpa menghubungi API** (keputusan pemilik): "Data kendaraan dari BPAD hanya tersedia sampai pukul 21.00 WITA. Coba lagi besok." (`503`). Selama jam mulai belum diketahui, hanya pukul 21.00–24.00 WITA yang dianggap tutup; selepas tengah malam PINTU tetap mencoba API. |
+| Pengaturan | `NJKB_SERVICE_CLOSES_AT` (bawaan `21:00`) dan `NJKB_SERVICE_OPENS_AT` (kosong), format `HH:MM` WITA. Bila jam mulai diisi, pesan menjadi "… pukul 07.00–21.00 WITA. Coba lagi pukul 07.00 WITA." dan jam sebelum buka ikut ditolak. Keterangan di portal dan Kalkulator PKB ditulis tetap, jadi perlu disunting bila jamnya berubah. |

@@ -29,8 +29,11 @@ class VehicleLookupTest extends TestCase
             'services.njkb.base_url' => 'https://api.uptdpenda-kupang.web.id',
             'services.njkb.client_id' => 'pintu-uji.access',
             'services.njkb.client_secret' => 'rahasia-uji',
+            'services.njkb.opens_at' => null,
+            'services.njkb.closes_at' => '21:00',
         ]);
         Sleep::fake();
+        $this->travelTo(Carbon::parse('2026-10-14 10:00:00', 'Asia/Makassar'));
     }
 
     public function test_returns_401_to_guests(): void
@@ -274,12 +277,52 @@ class VehicleLookupTest extends TestCase
         config([$key => $value]);
         Http::fake();
         Log::spy();
+        // A missing configuration is reported even outside BPAD's service hours
+        $this->travelTo(Carbon::parse('2026-10-14 22:00:00', 'Asia/Makassar'));
 
         $this->actingAs(User::factory()->create())->getJson('/api/kendaraan/DH1234AB')
             ->assertServiceUnavailable()
             ->assertExactJson(['message' => 'Pencarian data kendaraan belum dikonfigurasi.']);
         Http::assertNothingSent();
         Log::shouldHaveReceived('error')->once()->with('NJKB API is not configured');
+    }
+
+    #[TestWith(['20:59:59', null, '21:00', null])]
+    #[TestWith(['21:00:00', null, '21:00', 'Data kendaraan dari BPAD hanya tersedia sampai pukul 21.00 WITA. Coba lagi besok.'])]
+    #[TestWith(['23:59:00', null, '21:00', 'Data kendaraan dari BPAD hanya tersedia sampai pukul 21.00 WITA. Coba lagi besok.'])]
+    #[TestWith(['00:30:00', null, '21:00', null])]
+    #[TestWith(['06:59:00', '07:00', '21:00', 'Data kendaraan dari BPAD hanya tersedia pukul 07.00–21.00 WITA. Coba lagi pukul 07.00 WITA.'])]
+    #[TestWith(['07:00:00', '07:00', '21:00', null])]
+    #[TestWith(['21:30:00', '07:00', '21:00', 'Data kendaraan dari BPAD hanya tersedia pukul 07.00–21.00 WITA. Coba lagi besok pukul 07.00 WITA.'])]
+    #[TestWith(['22:30:00', null, '22:00', 'Data kendaraan dari BPAD hanya tersedia sampai pukul 22.00 WITA. Coba lagi besok.'])]
+    #[TestWith(['22:30:00', 'pagi', '9 malam', null])]
+    #[TestWith(['22:30:00', null, '', null])]
+    public function test_does_not_ask_the_api_outside_bpad_service_hours(string $time, ?string $opensAt, string $closesAt, ?string $message): void
+    {
+        config(['services.njkb.opens_at' => $opensAt, 'services.njkb.closes_at' => $closesAt]);
+        $this->travelTo(Carbon::parse("2026-10-14 {$time}", 'Asia/Makassar'));
+        Http::fake([self::UPSTREAM => Http::response(null, 404)]);
+
+        $response = $this->actingAs(User::factory()->create())->getJson('/api/kendaraan/DH1234AB');
+
+        if ($message === null) {
+            $response->assertNotFound();
+            Http::assertSentCount(1);
+        } else {
+            $response->assertServiceUnavailable()->assertExactJson(['message' => $message]);
+            Http::assertNothingSent();
+        }
+    }
+
+    public function test_tells_a_visitor_the_service_hours_after_closing_time(): void
+    {
+        $this->travelTo(Carbon::parse('2026-10-14 21:15:00', 'Asia/Makassar'));
+        Http::fake();
+
+        $this->postJson('/api/public/kendaraan', ['nopol' => 'DH1234AB', 'rangka' => 'A5678'])
+            ->assertServiceUnavailable()
+            ->assertExactJson(['message' => 'Data kendaraan dari BPAD hanya tersedia sampai pukul 21.00 WITA. Coba lagi besok.']);
+        Http::assertNothingSent();
     }
 
     public function test_never_logs_the_plate_number_or_personal_data(): void

@@ -45,6 +45,9 @@ return [
         'client_id' => env('NJKB_ACCESS_CLIENT_ID'),
         'client_secret' => env('NJKB_ACCESS_CLIENT_SECRET'),
         'timeout' => (int) env('NJKB_API_TIMEOUT_SECONDS', 8),
+        // BPAD's service hours in WITA ("HH:MM", D-042); no opening time means it is not known yet
+        'opens_at' => env('NJKB_SERVICE_OPENS_AT'),
+        'closes_at' => env('NJKB_SERVICE_CLOSES_AT', '21:00'),
     ],
 
 ];

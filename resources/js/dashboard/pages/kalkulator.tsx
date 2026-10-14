@@ -236,7 +236,8 @@ function PesanPencarian({ hasil }: { hasil: Pencarian }) {
     case "kosong":
       return (
         <p className="text-sm text-muted-foreground">
-          Data kendaraan terisi otomatis bila nomor polisi terdaftar.
+          Data kendaraan terisi otomatis bila nomor polisi terdaftar. Data dari BPAD tersedia sampai pukul
+          21.00 WITA; di luar jam itu, isi data kendaraan secara manual.
         </p>
       )
     case "format":

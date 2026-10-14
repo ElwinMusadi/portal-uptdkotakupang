@@ -15,7 +15,8 @@ use Illuminate\Support\Sleep;
  * PINTU's own Cloudflare Access Service Token, an 8-second timeout, at most
  * one retry and only for network failures and HTTP 502/503/504, no
  * redirects (the token must never follow one), and Retry-After honoured
- * after HTTP 429. Nothing about the vehicle or its owner is logged or
+ * after HTTP 429. Outside BPAD's service hours the API is not asked at all
+ * (D-042). Nothing about the vehicle or its owner is logged or
  * stored; a failure logs only the upstream request ID, status and error code.
  */
 class LookUpVehicle
@@ -24,6 +25,11 @@ class LookUpVehicle
      * Cache key holding the time until which the API asked PINTU to wait (HTTP 429).
      */
     public const string WAIT_UNTIL = 'njkb:tunggu-sampai';
+
+    /**
+     * Time zone of BPAD's service hours.
+     */
+    private const string TIME_ZONE = 'Asia/Makassar';
 
     /**
      * Weight per vehicle kind when the API has no NJKB reference, as BOBOT_MAP
@@ -99,6 +105,11 @@ class LookUpVehicle
             Log::error('NJKB API is not configured');
 
             return ['status' => 'unavailable', 'message' => 'Pencarian data kendaraan belum dikonfigurasi.'];
+        }
+
+        $closed = $this->outsideServiceHours();
+        if ($closed !== null) {
+            return ['status' => 'unavailable', 'message' => $closed];
         }
 
         $timeout = config()->integer('services.njkb.timeout');
@@ -297,6 +308,45 @@ class LookUpVehicle
     private function text(mixed $value): ?string
     {
         return is_string($value) && trim($value) !== '' ? trim($value) : null;
+    }
+
+    /**
+     * The answer to a lookup outside BPAD's service hours (D-042), given
+     * without asking the API, or null while it is open. Until the opening
+     * time is known, only the hours from closing to midnight count as
+     * closed; earlier hours are left to the API.
+     */
+    private function outsideServiceHours(): ?string
+    {
+        $opensAt = $this->clockTime(config('services.njkb.opens_at'));
+        $closesAt = $this->clockTime(config('services.njkb.closes_at'));
+
+        if ($closesAt === null) {
+            return null;
+        }
+
+        $now = now(self::TIME_ZONE)->format('H:i');
+        $opens = $opensAt === null ? null : str_replace(':', '.', $opensAt);
+        $closes = str_replace(':', '.', $closesAt);
+        $hours = $opens === null ? "sampai pukul {$closes} WITA" : "pukul {$opens}–{$closes} WITA";
+
+        if ($now >= $closesAt) {
+            return "Data kendaraan dari BPAD hanya tersedia {$hours}. Coba lagi besok".($opens === null ? '.' : " pukul {$opens} WITA.");
+        }
+
+        if ($opensAt !== null && $now < $opensAt) {
+            return "Data kendaraan dari BPAD hanya tersedia {$hours}. Coba lagi pukul {$opens} WITA.";
+        }
+
+        return null;
+    }
+
+    /**
+     * A time of day as "HH:MM", or null for anything else.
+     */
+    private function clockTime(mixed $value): ?string
+    {
+        return is_string($value) && preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $value) === 1 ? $value : null;
     }
 
     /**

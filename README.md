@@ -57,7 +57,7 @@ php artisan migrate
 
 Jalankan `php artisan key:generate` **hanya** bila `APP_KEY` di `.env` masih kosong; menjalankannya ulang akan membatalkan sesi dan data terenkripsi.
 
-Data kendaraan untuk Kalkulator PKB dan cek biaya pajak di portal ([D-041](docs/decisions.md#d-041--2026-10-14--kalkulator-pkb-dan-cek-biaya-pajak-memakai-mesin-kalkulator-pajak-tarif--simulasi-dipensiunkan)) dibaca dari API NJKB BPAD NTT dengan token layanan Cloudflare Access milik PINTU: isi `NJKB_ACCESS_CLIENT_ID` dan `NJKB_ACCESS_CLIENT_SECRET` di `.env`. Jangan memakai token aplikasi lain. Tanpa token, pencarian menjawab "Pencarian data kendaraan belum dikonfigurasi." dan kalkulator tetap bisa diisi manual.
+Data kendaraan untuk Kalkulator PKB dan cek biaya pajak di portal ([D-041](docs/decisions.md#d-041--2026-10-14--kalkulator-pkb-dan-cek-biaya-pajak-memakai-mesin-kalkulator-pajak-tarif--simulasi-dipensiunkan)) dibaca dari API NJKB BPAD NTT dengan token layanan Cloudflare Access milik PINTU: isi `NJKB_ACCESS_CLIENT_ID` dan `NJKB_ACCESS_CLIENT_SECRET` di `.env`. Jangan memakai token aplikasi lain. Tanpa token, pencarian menjawab "Pencarian data kendaraan belum dikonfigurasi." dan kalkulator tetap bisa diisi manual. API BPAD hanya aktif sampai pukul 21.00 WITA; jam layanannya diatur dengan `NJKB_SERVICE_CLOSES_AT` dan `NJKB_SERVICE_OPENS_AT` ([D-042](docs/decisions.md#d-042--2026-10-14--jam-layanan-data-kendaraan-bpad)).
 
 ## Menjalankan
 
