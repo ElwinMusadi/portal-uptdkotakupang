@@ -67,6 +67,13 @@ Route::withoutMiddleware([
 Route::view('/dashboard', 'dashboard')->middleware('auth')->name('dashboard');
 
 /*
+ * Absensi Lapangan for officers (React, resources/js/absen): an installable
+ * web app for clocking in at field activities (D-034). Guests are sent to
+ * /login and come back here.
+ */
+Route::view('/absen', 'absen')->middleware('auth')->name('absen');
+
+/*
  * One-time activation links from `php artisan pintu:create-admin`: the new
  * administrator chooses a password and the account becomes active.
  */

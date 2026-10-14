@@ -22,7 +22,7 @@ function Topik({ id, judul, deskripsi, children }: { id: string; judul: string; 
 }
 
 const ENDPOINT: [string, string, string][] = [
-  ["GET", "/koleksi/{nama}", "Daftar entri (berita, dokumen, layanan, keliling, pesan, absensi, …)"],
+  ["GET", "/koleksi/{nama}", "Daftar entri (berita, dokumen, layanan, keliling, pesan, …)"],
   ["POST", "/koleksi/{nama}", "Tambah entri"],
   ["PATCH", "/koleksi/{nama}/{id}", "Ubah sebagian entri"],
   ["POST", "/koleksi/{nama}/hapus", "Hapus entri, body { ids: [...] }"],
@@ -99,11 +99,13 @@ export default function HalamanPanduan() {
 
       <Topik id="alat" judul="Alat bantu petugas" deskripsi="Untuk kerja internal; tidak tampil di portal publik.">
         <p>
-          <Link to="/absensi" className="underline underline-offset-4">Absensi Lapangan</Link> merekam foto dan
-          titik GPS saat petugas tiba dan selesai di lokasi kegiatan, mis. Samsat Keliling atau operasi
-          gabungan. Peramban akan meminta izin kamera dan lokasi; keduanya hanya bekerja lewat HTTPS. Bila GPS
-          tidak tersedia, tulis keterangan tempat. Catatan absensi tidak bisa diubah agar tetap sah sebagai
-          bukti, hanya bisa dihapus.
+          <Link to="/absensi" className="underline underline-offset-4">Absensi Lapangan</Link> mencatat
+          clock-in petugas di kegiatan lapangan seperti tilang gabungan. Administrator menetapkan tanggal, titik
+          lokasi, radius, dan petugas yang ditugaskan. Petugas membuka aplikasi{" "}
+          <a href="/absen" className="underline underline-offset-4">Absensi PINTU</a> di ponsel (bisa dipasang ke
+          layar utama), lalu clock-in dengan swafoto dan lokasi GPS pada tanggal kegiatan; di luar radius,
+          clock-in ditolak. Kamera dan lokasi hanya bekerja lewat HTTPS. Clock-out dilakukan dengan mesin sidik
+          jari di lapangan.
         </p>
         <p>
           <Link to="/kalkulator" className="underline underline-offset-4">Kalkulator PKB</Link> menghitung
@@ -142,7 +144,7 @@ export default function HalamanPanduan() {
           </p>
         )}
         <p className="text-muted-foreground">
-          Foto diperkecil otomatis sebelum disimpan (sisi terpanjang 1600 px, foto absensi 1024 px). Berkas
+          Foto diperkecil otomatis sebelum disimpan (sisi terpanjang 1600 px, swafoto absensi 1024 px). Berkas
           dokumen maksimal 10 MB.
         </p>
       </Topik>

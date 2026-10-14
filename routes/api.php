@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Dashboard\ActivityController;
 use App\Http\Controllers\Dashboard\ArticleController;
 use App\Http\Controllers\Dashboard\ArticleDeletionController;
+use App\Http\Controllers\Dashboard\ClockInController;
 use App\Http\Controllers\Dashboard\ContactController;
 use App\Http\Controllers\Dashboard\DocumentationController;
 use App\Http\Controllers\Dashboard\DocumentationDeletionController;
@@ -15,6 +16,8 @@ use App\Http\Controllers\Dashboard\DocumentDeletionController;
 use App\Http\Controllers\Dashboard\FaqController;
 use App\Http\Controllers\Dashboard\FaqDeletionController;
 use App\Http\Controllers\Dashboard\FaqOrderController;
+use App\Http\Controllers\Dashboard\FieldActivityController;
+use App\Http\Controllers\Dashboard\FieldActivityDeletionController;
 use App\Http\Controllers\Dashboard\HomepageController;
 use App\Http\Controllers\Dashboard\MessageController;
 use App\Http\Controllers\Dashboard\MessageDeletionController;
@@ -65,6 +68,7 @@ use App\Models\Article;
 use App\Models\Document;
 use App\Models\Documentation;
 use App\Models\Faq;
+use App\Models\FieldActivity;
 use App\Models\Message;
 use App\Models\MobileServiceStop;
 use App\Models\OrganizationUnit;
@@ -352,6 +356,25 @@ Route::middleware('auth:sanctum')->group(function (): void {
      */
     Route::post('/unggah', [UploadController::class, 'store'])->middleware('throttle:uploads')->name('unggah.store');
     Route::get('/berkas/{upload}', [UploadController::class, 'show'])->whereUlid('upload')->can('view', 'upload')->name('berkas.show');
+
+    /*
+     * Absensi Lapangan (D-034). Administrators set up field activities and
+     * read the clock-ins; officers clock in from the /absen app at the
+     * activities assigned to them (FieldActivityPolicy).
+     */
+    Route::prefix('absensi/kegiatan')->name('absensi.kegiatan.')->whereUlid('activity')->group(function (): void {
+        Route::get('/', [FieldActivityController::class, 'index'])->can('viewAny', FieldActivity::class)->name('index');
+        Route::post('/', [FieldActivityController::class, 'store'])->can('create', FieldActivity::class)->name('store');
+        Route::post('/hapus', [FieldActivityDeletionController::class, 'store'])->can('deleteAny', FieldActivity::class)->name('hapus');
+        Route::get('/{activity}', [FieldActivityController::class, 'show'])->can('view', 'activity')->name('show');
+        Route::patch('/{activity}', [FieldActivityController::class, 'update'])->can('update', 'activity')->name('update');
+    });
+    Route::get('/absen', [ClockInController::class, 'index'])->name('absen.index');
+    Route::post('/absen/{activity}', [ClockInController::class, 'store'])
+        ->whereUlid('activity')
+        ->can('clockIn', 'activity')
+        ->middleware('throttle:uploads')
+        ->name('absen.store');
 
     Route::get('/aktivitas', ActivityController::class)->name('aktivitas');
 });

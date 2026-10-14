@@ -31,7 +31,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // Passwords are compared exactly as typed
         $middleware->trimStrings(except: ['sandi', 'sandi_ulang']);
 
-        $middleware->redirectGuestsTo('/login?lanjut='.rawurlencode('dashboard/'));
+        // After signing in, officers return to the attendance app, everyone else to the dashboard (D-034)
+        $middleware->redirectGuestsTo(fn (Request $request): string => '/login?lanjut='.rawurlencode($request->is('absen') ? 'absen' : 'dashboard/'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(function (Request $request, Throwable $e): bool {

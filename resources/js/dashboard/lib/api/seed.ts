@@ -8,7 +8,6 @@
  */
 import { newId } from "@/lib/id"
 import type {
-  Absensi,
   Aktivitas,
   Beralur,
   Berita,
@@ -666,18 +665,18 @@ function faq(sekarang: Date): Faq[] {
   }))
 }
 
-/** Rotasi Samsat Keliling + titik perkiraan (contoh) untuk data absensi */
-const ROTASI_KELILING: Array<[Hari, string, string, string, string, number, number]> = [
-  [1, "08:00", "12:00", "Kantor Kelurahan Oebobo", "Kec. Oebobo", -10.1655, 123.6107],
-  [1, "13:00", "15:00", "Kantor Kelurahan Fatululi", "Kec. Oebobo", -10.1725, 123.6185],
-  [2, "08:00", "12:00", "Kantor Kelurahan Oesapa", "Kec. Kelapa Lima", -10.146, 123.636],
-  [2, "13:00", "15:00", "Kantor Kelurahan Sikumana", "Kec. Maulafa", -10.2002, 123.615],
-  [3, "08:00", "12:00", "Kantor Kelurahan Penfui", "Kec. Maulafa", -10.169, 123.664],
-  [3, "13:00", "15:00", "Kantor Kelurahan Liliba", "Kec. Oebobo", -10.184, 123.642],
-  [4, "08:00", "12:00", "Kantor Kelurahan Naikoten I", "Kec. Kota Raja", -10.169, 123.588],
-  [4, "13:00", "15:00", "Kantor Kelurahan Oepura", "Kec. Maulafa", -10.188, 123.596],
-  [5, "08:00", "11:00", "Kantor Kelurahan Alak", "Kec. Alak", -10.188, 123.534],
-  [5, "08:00", "11:00", "Kantor Kelurahan Fontein", "Kec. Kota Raja", -10.162, 123.581],
+/** Rotasi Samsat Keliling (contoh) */
+const ROTASI_KELILING: Array<[Hari, string, string, string, string]> = [
+  [1, "08:00", "12:00", "Kantor Kelurahan Oebobo", "Kec. Oebobo"],
+  [1, "13:00", "15:00", "Kantor Kelurahan Fatululi", "Kec. Oebobo"],
+  [2, "08:00", "12:00", "Kantor Kelurahan Oesapa", "Kec. Kelapa Lima"],
+  [2, "13:00", "15:00", "Kantor Kelurahan Sikumana", "Kec. Maulafa"],
+  [3, "08:00", "12:00", "Kantor Kelurahan Penfui", "Kec. Maulafa"],
+  [3, "13:00", "15:00", "Kantor Kelurahan Liliba", "Kec. Oebobo"],
+  [4, "08:00", "12:00", "Kantor Kelurahan Naikoten I", "Kec. Kota Raja"],
+  [4, "13:00", "15:00", "Kantor Kelurahan Oepura", "Kec. Maulafa"],
+  [5, "08:00", "11:00", "Kantor Kelurahan Alak", "Kec. Alak"],
+  [5, "08:00", "11:00", "Kantor Kelurahan Fontein", "Kec. Kota Raja"],
 ]
 
 function keliling(sekarang: Date): JadwalKeliling[] {
@@ -958,49 +957,6 @@ function pesan(sekarang: Date): Pesan[] {
     })
   }
   return hasil.sort((a, b) => b.diterima.localeCompare(a.diterima)).map((p, i) => ({ ...p, urutan: i }))
-}
-
-/** Contoh absensi tiga hari kerja terakhir, mengikuti rotasi Samsat Keliling (tanpa foto) */
-function absensi(sekarang: Date): Absensi[] {
-  const rnd = acak(1016)
-  const hasil: Absensi[] = []
-  let hariKerja = 0
-  for (let hariLalu = 1; hariLalu <= 10 && hariKerja < 3; hariLalu++) {
-    const pagi = waktu(sekarang, hariLalu, 9)
-    const hari = new Date(new Date(pagi).getTime() + 8 * 3600000).getUTCDay()
-    const slot = ROTASI_KELILING.find(([h]) => h === hari)
-    if (!slot) continue
-    hariKerja++
-    const [, mulai, selesai, lokasi, , lat, lng] = slot
-    const kelurahan = lokasi.replace("Kantor Kelurahan ", "")
-    const petugas = hariKerja === 2 ? "Petugas Seksi Penetapan dan Penagihan" : OPERATOR
-    for (const tipe of ["datang", "pulang"] as const) {
-      const [jam, menit] = (tipe === "datang" ? mulai : selesai).split(":").map(Number)
-      const geser = tipe === "datang" ? -Math.floor(4 + rnd() * 10) : Math.floor(2 + rnd() * 12)
-      const w = waktu(sekarang, hariLalu, jam, menit + geser)
-      hasil.push({
-        id: newId(),
-        urutan: 0,
-        dibuat: w,
-        diperbarui: w,
-        tipe,
-        kegiatan: `Samsat Keliling · ${kelurahan}`,
-        jenis: "keliling",
-        waktu: w,
-        petugas,
-        nip: "",
-        foto: null,
-        lokasi: {
-          lat: Number((lat + (rnd() - 0.5) * 0.0004).toFixed(6)),
-          lng: Number((lng + (rnd() - 0.5) * 0.0004).toFixed(6)),
-          akurasi: Math.round(6 + rnd() * 14),
-        },
-        tempat: `Halaman ${lokasi}`,
-        catatan: tipe === "pulang" ? `Layanan selesai, ${Math.round(38 + rnd() * 30)} transaksi.` : "",
-      })
-    }
-  }
-  return hasil.sort((a, b) => b.waktu.localeCompare(a.waktu)).map((a, i) => ({ ...a, urutan: i }))
 }
 
 function tiketDari(rnd: () => number): string {
@@ -1369,7 +1325,6 @@ export function buatSeed(sekarang = new Date()): Snapshot {
       pesan: pesan(sekarang),
       halaman: halaman(sekarang),
       pemutakhiran: pemutakhiran(sekarang),
-      absensi: absensi(sekarang),
     },
     pengaturan: pengaturan(sekarang),
     aktivitas: aktivitas(sekarang),

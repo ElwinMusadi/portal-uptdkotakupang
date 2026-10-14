@@ -112,7 +112,7 @@ export const NAV_GRUP: GrupNav[] = [
   {
     label: "Alat Bantu",
     item: [
-      { judul: "Absensi Lapangan", url: "/absensi", ikon: IconCamera, tambah: "/absensi?baru=1", labelTambah: "Absen sekarang", keterangan: "Foto dan lokasi kehadiran di kegiatan lapangan" },
+      { judul: "Absensi Lapangan", url: "/absensi", ikon: IconCamera, keterangan: "Clock-in kegiatan lapangan dengan swafoto dan lokasi" },
       { judul: "Kalkulator PKB", url: "/kalkulator", ikon: IconCalculator, keterangan: "Estimasi tagihan untuk petugas loket, termasuk amnesti" },
     ],
   },

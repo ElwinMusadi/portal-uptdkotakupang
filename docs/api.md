@@ -81,6 +81,11 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET`, `POST` | `/api/koleksi/penyesuaian` | Administrator, pengelola Jam Pelayanan | tersedia |
 | `GET`, `PATCH` | `/api/koleksi/penyesuaian/{id}` | Administrator, pengelola Jam Pelayanan | tersedia |
 | `POST` | `/api/koleksi/penyesuaian/hapus` | Administrator, pengelola Jam Pelayanan | tersedia |
+| `GET`, `POST` | `/api/absensi/kegiatan` | Administrator | tersedia |
+| `GET`, `PATCH` | `/api/absensi/kegiatan/{id}` | Administrator | tersedia |
+| `POST` | `/api/absensi/kegiatan/hapus` | Administrator | tersedia |
+| `GET` | `/api/absen` | pegawai login | tersedia |
+| `POST` | `/api/absen/{id}` | petugas yang ditugaskan di kegiatan itu | tersedia |
 | `GET` | `/api/aktivitas` | pegawai login | tersedia |
 | — | koleksi dan pengaturan lain di `/api/koleksi/…`, `/api/pengaturan/…` (kontrak dashboard) | pegawai login | belum dibuat, lihat [docs/dashboard.md](dashboard.md#menyambungkan-ke-server-rest-api) |
 
@@ -642,7 +647,7 @@ Kode: `app/Http/Controllers/Dashboard/OwnAccountController.php`, `app/Http/Reque
 
 ## Unggahan di dashboard
 
-Penyimpanan berkas dari dashboard ([D-028](decisions.md#d-028--2026-10-14--unggahan-disimpan-di-laravel-cloud-object-storage)). Tamu mendapat `401`. Dashboard memakainya untuk tujuan yang modulnya sudah di server, saat ini `visiMisi`, `profil` ([D-029](decisions.md#d-029--2026-10-14--foto-tentang-uptd-dan-maklumat-diunggah-ke-server-profil-disusun-dari-renstra-dan-rpjmd)), `dokumen` ([D-030](decisions.md#d-030--2026-10-14--regulasi--unduhan-tersimpan-di-server-dengan-alur-persetujuan)), `berita` ([D-031](decisions.md#d-031--2026-10-14--berita--pengumuman-tersimpan-di-server-pengelola-berita-menerbitkan-sendiri)), `dokumentasi` ([D-032](decisions.md#d-032--2026-10-14--dokumentasi-kegiatan-tersimpan-di-server-galeri-disusun-per-bulan)), dan `unit` ([D-033](decisions.md#d-033--2026-10-14--struktur-organisasi-tersimpan-di-server-nip-pejabat-tidak-ditampilkan-di-portal)); unggahan lain tetap di peramban sampai modulnya pindah.
+Penyimpanan berkas dari dashboard ([D-028](decisions.md#d-028--2026-10-14--unggahan-disimpan-di-laravel-cloud-object-storage)). Tamu mendapat `401`. Dashboard memakainya untuk tujuan yang modulnya sudah di server, saat ini `visiMisi`, `profil` ([D-029](decisions.md#d-029--2026-10-14--foto-tentang-uptd-dan-maklumat-diunggah-ke-server-profil-disusun-dari-renstra-dan-rpjmd)), `dokumen` ([D-030](decisions.md#d-030--2026-10-14--regulasi--unduhan-tersimpan-di-server-dengan-alur-persetujuan)), `berita` ([D-031](decisions.md#d-031--2026-10-14--berita--pengumuman-tersimpan-di-server-pengelola-berita-menerbitkan-sendiri)), `dokumentasi` ([D-032](decisions.md#d-032--2026-10-14--dokumentasi-kegiatan-tersimpan-di-server-galeri-disusun-per-bulan)), dan `unit` ([D-033](decisions.md#d-033--2026-10-14--struktur-organisasi-tersimpan-di-server-nip-pejabat-tidak-ditampilkan-di-portal)). Aplikasi Absensi PINTU memakai tujuan `absensi` ([D-034](decisions.md#d-034--2026-10-14--absensi-lapangan-tersimpan-di-server-petugas-clock-in-lewat-aplikasi-absen)).
 
 | Alamat | Permintaan | Respons |
 |---|---|---|
@@ -680,6 +685,40 @@ Dipakai halaman *Pesan & Pengaduan* di dashboard ([D-016](decisions.md#d-016--20
 Kontak harus berupa email atau nomor telepon/WhatsApp (min. 9 angka); layanan salah satu dari *Umum / portal PINTU*, *Pajak tahunan*, *Perpanjangan STNK 5 tahun*, *Mutasi & balik nama*, *Duplikat STNK*, *Samsat Keliling*.
 
 Kode: `app/Http/Controllers/Dashboard/MessageController.php`, `MessageDeletionController.php`, `app/Http/Requests/Dashboard/*Message*`, `app/Actions/ReceiveMessage.php`, `UpdateMessage.php`, `app/Models/Message.php`, `MessageResponse.php`, `app/Policies/MessagePolicy.php`, `app/Rules/ContactAddress.php`. Tes: `tests/Feature/MessageControllerTest.php`.
+
+## Absensi Lapangan di dashboard
+
+Dipakai halaman *Absensi Lapangan* di dashboard ([D-034](decisions.md#d-034--2026-10-14--absensi-lapangan-tersimpan-di-server-petugas-clock-in-lewat-aplikasi-absen)). Tamu mendapat `401`; pegawai selain Administrator mendapat `403` `{"message": "Hanya Administrator yang dapat mengelola kegiatan lapangan."}`. Perubahan kegiatan tidak dicatat di log aktivitas.
+
+```json
+{
+  "id": "01m4…", "nama": "Tilang gabungan Jl. El Tari", "tanggal": "2026-10-20", "tempat": "Depan Kantor Gubernur",
+  "lat": -10.1637, "lng": 123.5974, "radius": 150, "catatan": "",
+  "petugas": [{ "id": "01m4…", "nama": "…", "nip": "…" }],
+  "jumlahHadir": 1, "dibuat": "…", "diperbarui": "…"
+}
+```
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `GET /api/absensi/kegiatan` | — | `200` semua kegiatan, tanggal terbaru lebih dulu lalu menurut nama; petugas urut nama. |
+| `GET /api/absensi/kegiatan/{id}` | — | `200` satu kegiatan ditambah `absen`, clock-in petugasnya: `[{ "id", "petugas": { "id", "nama", "nip" }, "waktu", "lat", "lng", "akurasi", "jarak", "foto" }]`, termasuk petugas yang tidak lagi ditugaskan. `foto` adalah alamat `/api/berkas/{id}`. `404` bila tidak ada. |
+| `POST /api/absensi/kegiatan` | isi kegiatan seperti di atas, `petugas` berupa daftar ID akun | `201`. |
+| `PATCH /api/absensi/kegiatan/{id}` | sebagian isi; `petugas`, bila dikirim, menggantikan daftar petugas | `200`. Clock-in yang sudah tercatat tetap, dengan jarak saat itu. |
+| `POST /api/absensi/kegiatan/hapus` | `{"ids": ["…"]}` | `204`; clock-in dan swafotonya ikut terhapus. Kegiatan yang sudah tidak ada dilewati. |
+
+Isi divalidasi seperti formulir dashboard: nama dan tempat wajib (maks. 160 karakter); tanggal `YYYY-MM-DD`; `lat` −90 sampai 90 dan `lng` −180 sampai 180, dibulatkan 6 desimal; radius bilangan bulat 20–2000 meter; catatan maks. 300; `petugas` wajib dikirim saat menambah, berisi maks. 200 ID akun yang ada tanpa duplikat; tanpa karakter kontrol.
+
+### Clock-in petugas
+
+Dipakai aplikasi Absensi PINTU di `/absen`. Tamu mendapat `401`. Swafoto diunggah lebih dulu lewat `POST /api/unggah` dengan `modul=absensi`.
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `GET /api/absen` | — | `200` `{"tanggal": "2026-10-20", "kegiatan": [{ "id", "nama", "tempat", "lat", "lng", "radius", "catatan", "absen": null }]}`: kegiatan hari ini (WITA) yang menugaskan pegawai itu, urut nama. Setelah ia clock-in, `absen` berisi `{ "waktu", "jarak", "akurasi" }`. |
+| `POST /api/absen/{id}` | `{"foto": "<alamat swafoto>", "lat": -10.16371, "lng": 123.59742, "akurasi": 12.4}` | `201` `{"waktu": "…", "jarak": 3, "akurasi": 13}`. Waktu dari jam server; akurasi dibulatkan ke atas. `403` `{"message": "Anda tidak ditugaskan di kegiatan ini."}`. `422` per isian: `kegiatan` bila sudah clock-in (`"Anda sudah clock-in di kegiatan ini pukul 07.45 WITA."`) atau bukan tanggal kegiatan (`"Clock-in kegiatan ini hanya dibuka pada tanggal kegiatan."`); `akurasi` bila lebih buruk dari ±100 m; `lokasi` bila di luar radius (`"Anda berada 240 m dari lokasi kegiatan. Clock-in hanya dalam radius 150 m."`); `foto` bila swafoto bukan unggahan `absensi` milik pegawai itu dari 15 menit terakhir yang belum dipakai (`"Ambil swafoto baru untuk clock-in."`). `429` bersama batas 30 unggahan per menit. |
+
+Kode: `app/Http/Controllers/Dashboard/FieldActivity*`, `app/Http/Controllers/Dashboard/ClockInController.php`, `app/Http/Requests/Dashboard/*FieldActivit*`, `app/Http/Requests/Dashboard/ClockInRequest.php`, `app/Actions/ClockIn.php`, `app/Models/FieldActivity.php`, `app/Models/FieldAttendance.php`, `app/Policies/FieldActivityPolicy.php`. Tes: `tests/Feature/FieldActivityControllerTest.php`, `tests/Feature/ClockInControllerTest.php`, `tests/Feature/ClockInPageTest.php`.
 
 ## `GET /api/public/faq`
 

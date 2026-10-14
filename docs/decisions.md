@@ -471,3 +471,21 @@ Struktur Organisasi kini tersimpan di server. Bagan dan uraian tugas di halaman 
 | Dashboard | Koleksi `unit` dan unggahan `unit` dikirim ke server. Batas isian formulir mengikuti server, dan keterangan NIP menyebut bahwa NIP tidak ditampilkan di portal. |
 
 Bagian "Empat peran. Satu alur sebelum terbit." di halaman yang sama tetap teks statis. Isinya belum mencerminkan alur yang berlaku: Layanan dan Regulasi & Unduhan disetujui Administrator, sedangkan Berita dan Dokumentasi diterbitkan pengelolanya sendiri.
+
+## D-034 · 2026-10-14 · Absensi Lapangan tersimpan di server; petugas clock-in lewat aplikasi /absen
+
+Absensi Lapangan kini tersimpan di server dan berganti bentuk: dari catatan datang dan pulang di peramban menjadi clock-in petugas di kegiatan lapangan seperti tilang gabungan. Clock-out tidak dicatat PINTU; petugas melakukannya dengan mesin sidik jari di lapangan setelah tugas selesai.
+
+| Hal | Keputusan |
+|---|---|
+| Aplikasi | **PWA `/absen` di aplikasi ini** (keputusan pemilik): halaman React tersendiri (`resources/js/absen`) yang bisa dipasang ke layar utama ponsel, dengan akun dan sesi yang sama dengan dashboard. Tamu dialihkan ke `/login?lanjut=absen` lalu kembali ke aplikasi. Service worker hanya menyimpan berkas build agar aplikasi cepat dibuka; halaman dan API selalu diambil dari server, dan clock-in tidak pernah diantrekan saat tidak ada koneksi. |
+| Kegiatan | Administrator menambah, menyunting, dan menghapus kegiatan di dashboard: nama, tanggal, tempat, titik lokasi (lintang, bujur), radius 20–2000 m, catatan untuk petugas, dan petugas yang ditugaskan (maks. 200). Menghapus kegiatan ikut menghapus clock-in dan swafotonya. Perubahan kegiatan tidak dicatat di log aktivitas karena Absensi bukan modul dashboard. |
+| Siapa yang clock-in | **Hanya petugas yang ditugaskan** di kegiatan itu (keputusan pemilik), satu kali per kegiatan. Administrator yang tidak ditugaskan juga tidak bisa clock-in. |
+| Waktu | **Sepanjang tanggal kegiatan menurut WITA** (keputusan pemilik), tanpa jendela jam. Waktu clock-in diambil dari jam server, bukan dari ponsel. |
+| Lokasi | Ponsel mengirim titik GPS dan akurasinya. Server menghitung jaraknya ke titik kegiatan (haversine, meter bulat) dan menolak clock-in di luar radius atau dengan akurasi lebih buruk dari ±100 m. Jarak dan akurasi disimpan bersama clock-in; mengubah titik atau radius kegiatan tidak mengubah clock-in yang sudah tercatat. Lokasi palsu (GPS *spoofing*) tidak dapat dideteksi dari peramban web; swafoto, jarak, dan akurasi menjadi bahan pemeriksaan. |
+| Swafoto | **Diambil langsung dari kamera depan** (keputusan pemilik), bukan dari galeri, diperkecil ke maks. 1024 px di ponsel, lalu diunggah ke bucket privat (tujuan `absensi`, D-028). Server hanya menerima swafoto yang diunggah petugas itu sendiri dalam 15 menit terakhir dan belum dipakai clock-in lain. |
+| Akses swafoto | Hanya petugas yang mengunggahnya dan Administrator (`GET /api/berkas/{id}`); tidak ada pembaca lain (menjawab D-028). |
+| Rekap | Administrator melihat daftar kegiatan dengan jumlah petugas yang sudah clock-in, dan rekap per kegiatan: jam clock-in (WITA), jarak, akurasi, swafoto, dan tautan peta. Pegawai lain melihat tautan ke aplikasi di menu Absensi Lapangan. |
+| Data lama | Koleksi `absensi` di peramban (datang dan pulang) dihapus dari dashboard dan dari cadangan JSON. Isinya contoh dan tidak dipindahkan. Tidak ada data awal kegiatan. |
+
+Kamera dan lokasi hanya bekerja lewat HTTPS, jadi aplikasi diuji penuh di Laravel Cloud, bukan di situs Herd lokal (`http`). Retensi swafoto tetap menunggu keputusan bersama unit hukum (D-028).

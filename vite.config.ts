@@ -6,13 +6,14 @@ import { defineConfig } from "vite"
 
 /**
  * Builds the React dashboard (resources/js/dashboard) into public/build.
- * Laravel serves it at /dashboard through resources/views/dashboard.blade.php.
+ * Laravel serves it at /dashboard through resources/views/dashboard.blade.php,
+ * and the officers' attendance app (resources/js/absen) at /absen.
  * The public portal (resources/views/portal, public/assets) needs no build.
  */
 export default defineConfig({
   plugins: [
     laravel({
-      input: ["resources/js/dashboard/main.tsx"],
+      input: ["resources/js/dashboard/main.tsx", "resources/js/absen/main.tsx"],
       refresh: true,
     }),
     react(),

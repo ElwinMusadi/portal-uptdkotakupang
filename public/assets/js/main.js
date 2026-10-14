@@ -2256,6 +2256,8 @@
     let lanjut = new URLSearchParams(location.search).get("lanjut") || "";
     // Pengalihan dari server membawa layar dashboard sebagai hash halaman ini (/login?lanjut=dashboard%2F#/berita)
     if (lanjut === "dashboard/" && /^#\/[\w\-\/?=&%.]*$/.test(location.hash)) lanjut += location.hash;
+    // Petugas yang masuk dari aplikasi absensi kembali ke sana (D-034)
+    if (lanjut === "absen") return "absen";
     return /^dashboard\/(#\/[\w\-\/?=&%.]*)?$/.test(lanjut) ? lanjut : "dashboard/";
   }
 

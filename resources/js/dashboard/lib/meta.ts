@@ -2,7 +2,6 @@ import { KOLEKSI_SERVER, PENGATURAN_SERVER } from "@/lib/api/hybrid"
 import type {
   Faq,
   Hari,
-  JenisKegiatan,
   JenisPesan,
   JenisUnit,
   KategoriBerita,
@@ -17,7 +16,6 @@ import type {
   StatusLoket,
   StatusPesan,
   SumberPesan,
-  TipeAbsen,
 } from "@/lib/api/types"
 
 export const KOLEKSI_LABEL: Record<NamaKoleksi, string> = {
@@ -32,7 +30,6 @@ export const KOLEKSI_LABEL: Record<NamaKoleksi, string> = {
   pesan: "Pesan & Pengaduan",
   halaman: "Halaman Statis",
   pemutakhiran: "Jadwal Pemutakhiran",
-  absensi: "Absensi Lapangan",
 }
 
 export const PENGATURAN_LABEL: Record<NamaPengaturan, string> = {
@@ -93,10 +90,6 @@ export function judulEntri<K extends NamaKoleksi>(koleksi: K, item: Koleksi[K]):
     }
     case "pemutakhiran":
       return String(x.konten ?? "")
-    case "absensi": {
-      const a = item as Koleksi["absensi"]
-      return `${TIPE_ABSEN[a.tipe]} · ${a.kegiatan}`
-    }
     default:
       return String(x.judul ?? "")
   }
@@ -307,18 +300,6 @@ export const MODUL_PANTAU: Record<ModulPantau, { label: string; rute: string }> 
   dokumen: { label: "Regulasi & Unduhan", rute: "/unduhan" },
   papan: { label: "Papan Layanan", rute: "/papan" },
   profil: { label: "Tentang UPTD", rute: "/profil" },
-}
-
-export const JENIS_KEGIATAN: Record<JenisKegiatan, string> = {
-  keliling: "Samsat Keliling",
-  operasi: "Operasi gabungan",
-  sosialisasi: "Sosialisasi",
-  lainnya: "Kegiatan lain",
-}
-
-export const TIPE_ABSEN: Record<TipeAbsen, string> = {
-  datang: "Datang",
-  pulang: "Pulang",
 }
 
 // Unit kerja menurut Renstra BPAD 2025–2029 (Pergub NTT Nomor 96 Tahun 2023)

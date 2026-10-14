@@ -1,0 +1,6 @@
+/*
+ * Aplikasi Absensi PINTU memakai tema dashboard; kelas Tailwind di folder
+ * ini ikut dipindai.
+ */
+@import "../dashboard/index.css";
+@source ".";

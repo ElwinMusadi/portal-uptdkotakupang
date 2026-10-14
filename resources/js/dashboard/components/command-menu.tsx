@@ -148,9 +148,9 @@ function CommandMenu({ open, setOpen }: CommandMenuContext) {
         </CommandGroup>
         <CommandSeparator />
         <CommandGroup heading="Tindakan">
-          <CommandItem value="absen sekarang absensi lapangan" onSelect={() => jalankan(() => navigate("/absensi?baru=1"))}>
+          <CommandItem value="absen clock-in absensi lapangan" onSelect={() => jalankan(() => window.location.assign("/absen"))}>
             <IconCamera />
-            Absen kegiatan lapangan
+            Buka aplikasi absensi
           </CommandItem>
           <CommandItem
             value="lihat portal publik"

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -109,5 +110,15 @@ class User extends Authenticatable
     public function activationKey(): string
     {
         return hash_hmac('sha256', (string) $this->getAuthPassword(), (string) config('app.key'));
+    }
+
+    /**
+     * The field activities this officer is assigned to (D-034).
+     *
+     * @return BelongsToMany<FieldActivity, $this>
+     */
+    public function fieldActivities(): BelongsToMany
+    {
+        return $this->belongsToMany(FieldActivity::class);
     }
 }

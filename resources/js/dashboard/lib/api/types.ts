@@ -256,34 +256,6 @@ export interface Pemutakhiran extends Entri {
 /* Alat bantu internal (tidak tampil di portal publik)                 */
 /* ------------------------------------------------------------------ */
 
-export type JenisKegiatan = "keliling" | "operasi" | "sosialisasi" | "lainnya"
-export type TipeAbsen = "datang" | "pulang"
-
-export interface Koordinat {
-  lat: number
-  lng: number
-  /** Perkiraan akurasi dalam meter */
-  akurasi: number
-}
-
-/** Bukti kehadiran petugas pada kegiatan lapangan: foto + titik lokasi */
-export interface Absensi extends Entri {
-  tipe: TipeAbsen
-  kegiatan: string
-  jenis: JenisKegiatan
-  /** Waktu absen, diisi otomatis saat formulir dikirim */
-  waktu: IsoDateTime
-  petugas: string
-  nip: string
-  /** Foto bukti (data URL saat mode lokal, URL server saat terhubung API) */
-  foto: string | null
-  /** Titik GPS; null bila peramban tidak memberi izin lokasi */
-  lokasi: Koordinat | null
-  /** Keterangan tempat, mis. "Halaman Kantor Kelurahan Oesapa" */
-  tempat: string
-  catatan: string
-}
-
 export interface Aktivitas {
   id: Id
   waktu: IsoDateTime
@@ -305,7 +277,6 @@ export interface Koleksi {
   pesan: Pesan
   halaman: Halaman
   pemutakhiran: Pemutakhiran
-  absensi: Absensi
 }
 
 export type NamaKoleksi = keyof Koleksi

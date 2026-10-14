@@ -97,7 +97,7 @@ resources/js/dashboard/
 | Beranda | `#/beranda` | pengaturan `beranda` | `index.html` |
 | Halaman Statis | `#/halaman` | koleksi `halaman` | `kebijakan-privasi.html`, `syarat-ketentuan.html` |
 | Jadwal Pemutakhiran | `#/pemutakhiran` | koleksi `pemutakhiran` | — (internal) |
-| Absensi Lapangan | `#/absensi` | koleksi `absensi` | — (internal) |
+| Absensi Lapangan | `#/absensi` | server (`/api/absensi/kegiatan`); aplikasi petugas di `/absen` | — (internal) |
 | Kalkulator PKB | `#/kalkulator` | pengaturan `tarif` | — (internal) |
 | Pengaturan | `#/pengaturan` | pengaturan `situs`, `akun`, cadangan data | — |
 
@@ -118,7 +118,7 @@ Peran tiap tahap mengikuti rancangan: **penyedia** (unit pemilik data), **pemeri
 
 ### Alat bantu
 
-- **Absensi Lapangan** merekam foto (dikecilkan menjadi maks. 1024 px) dan titik GPS saat petugas tiba atau selesai di lokasi kegiatan. Kamera dan lokasi hanya bisa dipakai lewat HTTPS atau `localhost`. Bila izin lokasi ditolak, keterangan tempat wajib diisi. Catatan absensi tidak bisa diubah, hanya dihapus.
+- **Absensi Lapangan** ([D-034](decisions.md#d-034--2026-10-14--absensi-lapangan-tersimpan-di-server-petugas-clock-in-lewat-aplikasi-absen)): Administrator mengelola kegiatan lapangan seperti tilang gabungan (tanggal, titik lokasi, radius, dan petugas yang ditugaskan) dan membuka rekap clock-in per kegiatan: jam (WITA), jarak, akurasi, swafoto, dan tautan peta. Petugas clock-in lewat aplikasi Absensi PINTU di `/absen` (`resources/js/absen`), yang bisa dipasang ke layar utama ponsel, dengan swafoto dari kamera depan (maks. 1024 px) dan lokasi GPS. Kamera dan lokasi hanya bisa dipakai lewat HTTPS atau `localhost`. Pegawai selain Administrator melihat tautan ke aplikasi di halaman ini. Data kegiatan selalu dibaca dari server (`lib/absensi.ts`); tidak ada salinannya di IndexedDB.
 - **Kalkulator PKB** memakai rumus yang sama dengan simulasi di portal (`public/assets/js/main.js`), ditambah sakelar amnesti yang menghapus denda keterlambatan. Tarifnya dibaca dari server; sebelum tarif pertama kali disimpan, kalkulator menampilkan peringatan bahwa tarif belum ditetapkan.
 
 ## Model data
@@ -126,7 +126,7 @@ Peran tiap tahap mengikuti rancangan: **penyedia** (unit pemilik data), **pemeri
 Sumber kebenarannya `resources/js/dashboard/lib/api/types.ts`. Ada dua bentuk data:
 
 - **Koleksi**: daftar entri. Setiap entri punya `id`, `dibuat`, `diperbarui` (ISO 8601), dan `urutan`. Konten beralur menambahkan `status`, `penyedia`, `pemeriksa`, `catatanRevisi`, `terbitPada`, dan `riwayat`.
-  Nama koleksi: `berita`, `dokumentasi`, `dokumen`, `layanan`, `faq`, `keliling`, `penyesuaian`, `unit`, `pesan`, `halaman`, `pemutakhiran`, `absensi`.
+  Nama koleksi: `berita`, `dokumentasi`, `dokumen`, `layanan`, `faq`, `keliling`, `penyesuaian`, `unit`, `pesan`, `halaman`, `pemutakhiran`.
 - **Pengaturan**: satu dokumen per halaman.
   Nama pengaturan: `situs`, `beranda`, `papan`, `jam`, `tarif`, `statistik`, `profil`, `visiMisi`, `kontak`, `akun`.
 
@@ -166,7 +166,7 @@ Tanpa `VITE_API_URL`, dashboard berjalan dalam **mode campuran** (`lib/api/hybri
 {
   "versi": 1,
   "diekspor": "2026-10-10T02:00:00.000Z",
-  "koleksi": { "berita": [], "dokumentasi": [], "…": [], "absensi": [] },
+  "koleksi": { "berita": [], "dokumentasi": [], "…": [], "pemutakhiran": [] },
   "pengaturan": { "situs": {}, "beranda": {}, "…": {} },
   "aktivitas": []
 }
@@ -208,7 +208,7 @@ Ketentuan:
 - Pesan galat dikirim sebagai JSON `{ "pesan": "…" }` (atau `{ "message": "…" }`) dan ditampilkan apa adanya. Galat validasi (`422`) membawa `errors` per isian; formulir entri menampilkannya di isian yang bersangkutan.
 - Server yang mengisi `id`, `dibuat`, `diperbarui`, dan `urutan`, mencatat log aktivitas, serta memeriksa hak akses sesuai peran.
 - **Bersihkan HTML** dari kolom teks kaya (`isi`) dengan daftar tag yang diizinkan sebelum disimpan atau ditampilkan di portal.
-- Portal publik hanya membaca entri yang boleh tampil lewat endpoint publik tersendiri, bukan kontrak admin ini. FAQ: `published` + `publik` + `tampil` (lihat [docs/api.md](api.md)); modul lain menyusul. Koleksi `pesan`, `absensi`, dan `pemutakhiran` serta pengaturan `akun` hanya untuk internal.
+- Portal publik hanya membaca entri yang boleh tampil lewat endpoint publik tersendiri, bukan kontrak admin ini. FAQ: `published` + `publik` + `tampil` (lihat [docs/api.md](api.md)); modul lain menyusul. Koleksi `pesan` dan `pemutakhiran`, pengaturan `akun`, serta data Absensi Lapangan hanya untuk internal.
 
 ## Sesi login
 
