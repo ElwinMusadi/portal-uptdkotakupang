@@ -4,18 +4,27 @@ import type { AksiAlur } from "@/lib/meta"
 
 export type KoleksiBeralur = "berita" | "dokumentasi" | "dokumen" | "layanan"
 
+/** Koleksi yang entrinya terkunci bagi selain Administrator saat menunggu persetujuan atau terbit (D-022, D-030) */
+const KUNCI_ADMINISTRATOR: readonly KoleksiBeralur[] = ["layanan", "dokumen"]
+
 /**
- * Entri yang menunggu persetujuan atau sudah terbit hanya bisa diubah
- * Administrator, termasuk menyetujui, mengembalikan dari tahap persetujuan,
- * dan menarik dari portal. Server menegakkannya untuk koleksi yang sudah
- * tersimpan di sana (D-022); untuk koleksi di peramban semua langkah tetap
- * terbuka.
+ * Entri Persyaratan Layanan dan Regulasi & Unduhan yang menunggu persetujuan
+ * atau sudah terbit hanya bisa diubah Administrator, termasuk menyetujui,
+ * mengembalikan dari tahap persetujuan, dan menarik dari portal. Server
+ * menegakkannya untuk koleksi yang sudah tersimpan di sana (D-022, D-030).
+ * Pengelola Berita & Pengumuman menjalankan semua langkah sendiri (D-031);
+ * untuk koleksi di peramban semua langkah tetap terbuka.
  */
 export function bolehUbahAlur(koleksi: KoleksiBeralur, status: StatusAlur): boolean {
-  return !diServer(koleksi) || sesi().peran === "administrator" || (status !== "persetujuan" && status !== "terbit")
+  return (
+    !diServer(koleksi) ||
+    !KUNCI_ADMINISTRATOR.includes(koleksi) ||
+    sesi().peran === "administrator" ||
+    (status !== "persetujuan" && status !== "terbit")
+  )
 }
 
-/** Urutan dan penghapusan entri di server hanya untuk Administrator (D-022) */
+/** Urutan dan penghapusan entri di server hanya untuk Administrator (D-022, D-030, D-031) */
 export function khususAdministrator(koleksi: KoleksiBeralur): boolean {
   return diServer(koleksi) && sesi().peran !== "administrator"
 }

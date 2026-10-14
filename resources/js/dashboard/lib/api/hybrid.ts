@@ -15,7 +15,7 @@ import type {
 
 /**
  * Koleksi dan pengaturan yang sudah tersimpan di server PINTU (D-011, D-013,
- * D-014, D-015, D-016, D-017, D-018, D-019, D-020, D-021, D-022, D-023, D-024, D-025, D-026, D-027, D-030). Yang lain
+ * D-014, D-015, D-016, D-017, D-018, D-019, D-020, D-021, D-022, D-023, D-024, D-025, D-026, D-027, D-030, D-031). Yang lain
  * menyusul satu per satu; sampai saat itu tetap di IndexedDB peramban. Pengaturan "akun" adalah profil akun yang
  * sedang masuk.
  */
@@ -28,6 +28,7 @@ export const KOLEKSI_SERVER: readonly NamaKoleksi[] = [
   "halaman",
   "pemutakhiran",
   "dokumen",
+  "berita",
 ]
 export const PENGATURAN_SERVER: readonly NamaPengaturan[] = [
   "jam",
@@ -43,7 +44,7 @@ export const PENGATURAN_SERVER: readonly NamaPengaturan[] = [
 ]
 
 /** Unggahan yang sudah disimpan di server (D-028): tujuan yang modulnya sudah di server */
-export const UNGGAHAN_SERVER: readonly TujuanUnggah[] = ["visiMisi", "profil", "dokumen"]
+export const UNGGAHAN_SERVER: readonly TujuanUnggah[] = ["visiMisi", "profil", "dokumen", "berita"]
 
 /**
  * Mode campuran selama konten dipindahkan ke server secara bertahap. Koleksi

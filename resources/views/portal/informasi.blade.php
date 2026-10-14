@@ -204,23 +204,15 @@
     </a>
   </section>
 
-  <section class="section section--tight">
+  <section class="section section--tight" data-berita-utama-bagian hidden>
     <div class="container">
-      <a class="feature-post" href="berita-detail.html" data-reveal>
-        <div class="ph ph--blue feature-post__media"><svg aria-hidden="true"><use href="#ill-desk"/></svg><span class="ph__label">Foto peluncuran · contoh</span></div>
-        <div>
-          <p class="post-meta"><span class="tag">Berita</span><time datetime="2026-10-27">27 Oktober 2026</time><span class="dot" aria-hidden="true"></span><span>4 menit baca</span></p>
-          <h2 class="h2" style="margin-top:18px">PINTU resmi diluncurkan. <span class="tone">Informasi Samsat kini di satu portal.</span></h2>
-          <p class="body" style="margin-top:18px">Persyaratan, jadwal, dan lokasi Samsat Keliling kini dapat dicek dari rumah. Seluruh isi diverifikasi petugas sebelum terbit.</p>
-          <p style="margin-top:24px"><span class="link-arrow">Baca selengkapnya<svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span></p>
-        </div>
-      </a>
+      <a class="feature-post" data-berita-utama></a>
     </div>
   </section>
 
   <section class="section section--flush-top">
     <div class="container">
-      <div class="toolbar" style="margin-bottom:36px" data-reveal>
+      <div class="toolbar" style="margin-bottom:36px" data-reveal data-berita-saringan hidden>
         <div class="chips" role="group" aria-label="Saring kategori" data-filter-group="posts">
           <button class="chip" type="button" aria-pressed="true" data-filter="semua">Semua</button>
           <button class="chip" type="button" aria-pressed="false" data-filter="berita">Berita</button>
@@ -231,66 +223,20 @@
         <label class="search"><span class="sr-only">Cari berita</span><svg class="i" aria-hidden="true"><use href="#i-search"/></svg><input class="input" type="search" placeholder="Cari judul atau topik" data-filter-search="posts"></label>
       </div>
 
-      <div class="posts" id="posts">
-        <a class="post" href="berita-detail.html" data-cat="keliling" data-reveal>
-          <div class="ph ph--sage post__media"><svg aria-hidden="true"><use href="#ill-tent"/></svg><span class="ph__label">Samsat Keliling · Oesapa</span></div>
-          <p class="post-meta"><span class="tag">Samsat Keliling</span><time datetime="2026-10-23">23 Okt 2026</time></p>
-          <h3>Samsat Keliling menjangkau 31 kelurahan tahun ini.</h3>
-          <p>Layanan jemput bola menjadi pilihan warga yang sulit datang ke kantor di jam kerja.</p>
-        </a>
-        <a class="post" href="berita-detail.html" data-cat="edukasi" data-reveal>
-          <div class="ph ph--sand post__media"><svg aria-hidden="true"><use href="#ill-car"/></svg><span class="ph__label">Edukasi</span></div>
-          <p class="post-meta"><span class="tag">Edukasi</span><time datetime="2026-10-20">20 Okt 2026</time></p>
-          <h3>Lima berkas yang paling sering terlupa saat perpanjangan STNK.</h3>
-          <p>Mulai dari BPKB halaman 2–3 sampai map. Cek daftar ini sebelum berangkat.</p>
-        </a>
-        <a class="post" href="berita-detail.html" data-cat="berita" data-reveal>
-          <div class="ph ph--blue post__media"><svg aria-hidden="true"><use href="#ill-desk"/></svg><span class="ph__label">Kasir non-tunai</span></div>
-          <p class="post-meta"><span class="tag">Berita</span><time datetime="2026-10-16">16 Okt 2026</time></p>
-          <h3>Pembayaran QRIS kini tersedia di semua kasir.</h3>
-          <p>Wajib pajak cukup memindai kode dari aplikasi bank atau dompet digital.</p>
-        </a>
-        <a class="post" href="berita-detail.html" data-cat="pengumuman" data-reveal>
-          <div class="ph ph--rose post__media"><svg aria-hidden="true"><use href="#ill-building"/></svg><span class="ph__label">Pengumuman</span></div>
-          <p class="post-meta"><span class="tag">Pengumuman</span><time datetime="2026-10-12">12 Okt 2026</time></p>
-          <h3>Penyesuaian jam layanan Jumat selama kegiatan apel bersama.</h3>
-          <p>Loket tetap buka pukul 08.00 dengan penerimaan berkas hingga 10.30.</p>
-        </a>
-        <a class="post" href="berita-detail.html" data-cat="edukasi" data-reveal>
-          <div class="ph ph--slate post__media"><svg aria-hidden="true"><use href="#ill-desk"/></svg><span class="ph__label">Edukasi</span></div>
-          <p class="post-meta"><span class="tag">Edukasi</span><time datetime="2026-10-08">8 Okt 2026</time></p>
-          <h3>Cara membaca notis pajak kendaraan Anda.</h3>
-          <p>Pokok PKB, opsen, dan SWDKLLJ dijelaskan baris demi baris.</p>
-        </a>
-        <a class="post" href="berita-detail.html" data-cat="berita" data-reveal>
-          <div class="ph ph--sage post__media"><svg aria-hidden="true"><use href="#ill-crowd"/></svg><span class="ph__label">Sosialisasi</span></div>
-          <p class="post-meta"><span class="tag">Berita</span><time datetime="2026-10-02">2 Okt 2026</time></p>
-          <h3>Sosialisasi pajak kendaraan bersama ketua RT di Kecamatan Alak.</h3>
-          <p>Warga bertanya langsung soal mutasi, balik nama, dan program pemutihan.</p>
-        </a>
-      </div>
+      <div class="posts" id="posts" data-berita-daftar></div>
+      <p class="center muted" role="status" data-berita-status style="padding:48px 0">Memuat berita…</p>
       <p class="center muted" data-filter-empty="posts" hidden style="padding:48px 0">Tidak ada tulisan yang cocok. Coba kata kunci lain.</p>
-
-      <nav class="pager" aria-label="Halaman" style="margin-top:56px">
-        <span aria-current="page">1</span><a href="#">2</a><a href="#">3</a><a href="#" aria-label="Halaman berikutnya"><svg class="i i--sm" aria-hidden="true"><use href="#i-chevron-right"/></svg></a>
-      </nav>
     </div>
   </section>
 
-  <section class="section section--flush-top">
+  <section class="section section--flush-top" data-berita-pengumuman-bagian hidden>
     <div class="container split">
       <div class="split__sticky" data-reveal>
         <p class="eyebrow">Arsip pengumuman</p>
         <h2 class="h2" style="margin-top:20px">Singkat. <span class="tone">Bertanggal jelas.</span></h2>
       </div>
-      <ul class="notice-list" role="list" data-reveal>
-        <li><a href="berita-detail.html"><time datetime="2026-10-27">27 Okt 2026</time><strong>Program pemutihan denda PKB diperpanjang hingga 31 Desember 2026.</strong><svg class="i i--sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></a></li>
-        <li><a href="jadwal.html#keliling"><time datetime="2026-10-23">23 Okt 2026</time><strong>Jadwal Samsat Keliling pekan depan telah terbit.</strong><svg class="i i--sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></a></li>
-        <li><a href="berita-detail.html"><time datetime="2026-10-12">12 Okt 2026</time><strong>Penyesuaian jam layanan Jumat selama apel bersama.</strong><svg class="i i--sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></a></li>
-        <li><a href="berita-detail.html"><time datetime="2026-10-01">1 Okt 2026</time><strong>Waspada penipuan yang mengatasnamakan petugas Samsat.</strong><svg class="i i--sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></a></li>
-      </ul>
+      <ul class="notice-list" role="list" data-berita-pengumuman></ul>
     </div>
-    <div class="container"><p class="proto-note" style="margin-top:24px">Seluruh judul, tanggal, dan foto di halaman ini adalah contoh tata letak.</p></div>
   </section>
 </main>
 

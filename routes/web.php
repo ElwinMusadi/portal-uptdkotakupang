@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\ArticlePageController;
 use App\Http\Controllers\Auth\AccountActivationController;
 use App\Http\Middleware\EnsureAccountIsActive;
+use App\Models\Article;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,7 +24,6 @@ $portalPages = [
     'layanan',
     'jadwal',
     'informasi',
-    'berita-detail',
     'dokumentasi',
     'unduhan',
     'kontak',
@@ -51,6 +52,11 @@ Route::withoutMiddleware([
 
         return redirect(filled($query) ? "{$path}?{$query}" : $path, 301);
     })->whereIn('page', ['index', ...$portalPages]);
+
+    // One article per address, filled from the public API (D-031). The former example page leads to the news list.
+    Route::get('/berita/{slug}', ArticlePageController::class)->where('slug', Article::SLUG_PATTERN)->name('portal.berita');
+    Route::permanentRedirect('/berita-detail', '/informasi');
+    Route::permanentRedirect('/berita-detail.html', '/informasi');
 });
 
 /*

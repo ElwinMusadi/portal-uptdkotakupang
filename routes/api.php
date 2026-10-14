@@ -5,6 +5,8 @@ use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\AccountStatusController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Dashboard\ActivityController;
+use App\Http\Controllers\Dashboard\ArticleController;
+use App\Http\Controllers\Dashboard\ArticleDeletionController;
 use App\Http\Controllers\Dashboard\ContactController;
 use App\Http\Controllers\Dashboard\DocumentController;
 use App\Http\Controllers\Dashboard\DocumentDeletionController;
@@ -35,6 +37,7 @@ use App\Http\Controllers\Dashboard\UpdateStandardDeletionController;
 use App\Http\Controllers\Dashboard\UpdateStandardOrderController;
 use App\Http\Controllers\Dashboard\UploadController;
 use App\Http\Controllers\Dashboard\VisionMissionController;
+use App\Http\Controllers\PublicArticleController;
 use App\Http\Controllers\PublicContactController;
 use App\Http\Controllers\PublicDocumentController;
 use App\Http\Controllers\PublicFaqController;
@@ -51,6 +54,7 @@ use App\Http\Controllers\PublicStatisticsController;
 use App\Http\Controllers\PublicTariffController;
 use App\Http\Controllers\PublicVisionMissionController;
 use App\Http\Middleware\EnsureAccountIsActive;
+use App\Models\Article;
 use App\Models\Document;
 use App\Models\Faq;
 use App\Models\Message;
@@ -252,6 +256,20 @@ Route::middleware('auth:sanctum')->group(function (): void {
     });
 
     /*
+     * Berita & Pengumuman (ArticlePolicy) with the publication workflow.
+     * Module managers take every step themselves, publishing included;
+     * only administrators delete (D-031). Articles are listed by date, so
+     * there is no reorder endpoint.
+     */
+    Route::prefix('koleksi/berita')->name('koleksi.berita.')->whereUlid('article')->group(function (): void {
+        Route::get('/', [ArticleController::class, 'index'])->can('viewAny', Article::class)->name('index');
+        Route::post('/', [ArticleController::class, 'store'])->can('create', Article::class)->name('store');
+        Route::post('/hapus', [ArticleDeletionController::class, 'store'])->can('deleteAny', Article::class)->name('hapus');
+        Route::get('/{article}', [ArticleController::class, 'show'])->can('view', 'article')->name('show');
+        Route::patch('/{article}', [ArticleController::class, 'update'])->can('update', 'article')->name('update');
+    });
+
+    /*
      * Regulasi & Unduhan (DocumentPolicy) with the publication workflow, as
      * for services: module managers prepare, submit and review; administrators
      * approve, withdraw and delete (D-030). The portal sorts documents by
@@ -321,6 +339,10 @@ Route::prefix('public')
         Route::get('/profil', PublicProfileController::class)->name('profil.show');
         Route::get('/layanan', PublicServiceController::class)->name('layanan.index');
         Route::get('/dokumen', PublicDocumentController::class)->name('dokumen.index');
+        Route::get('/berita', [PublicArticleController::class, 'index'])->name('berita.index');
+        Route::get('/berita/{slug}', [PublicArticleController::class, 'show'])
+            ->where('slug', Article::SLUG_PATTERN)
+            ->name('berita.show');
         Route::get('/beranda', PublicHomepageController::class)->name('beranda.show');
         Route::get('/situs', PublicSiteController::class)->name('situs.show');
         Route::get('/halaman/{slug}', PublicStaticPageController::class)

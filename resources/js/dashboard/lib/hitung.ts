@@ -2,6 +2,7 @@ import * as React from "react"
 
 import type {
   Beralur,
+  Berita,
   Dokumen,
   IsoDateTime,
   Layanan,
@@ -30,13 +31,17 @@ export const JENIS_KOLEKSI: Record<KoleksiBeralur, string> = {
   layanan: "Persyaratan",
 }
 
-/** Pengganti daftar layanan dan dokumen bagi yang tidak boleh membacanya; tetap sama antar-render */
+/** Pengganti daftar berita, layanan, dan dokumen bagi yang tidak boleh membacanya; tetap sama antar-render */
+const TANPA_BERITA: Berita[] = []
 const TANPA_LAYANAN: Layanan[] = []
 const TANPA_DOKUMEN: Dokumen[] = []
 
 /** Konten yang melewati alur publikasi dari empat koleksi, terbatas pada modul pengguna */
 export function useItemAlur() {
-  const berita = useKoleksi("berita")
+  // Di server hanya pengelola Berita & Pengumuman yang boleh membacanya (alurnya tidak tampil bagi yang lain)
+  const bacaBerita = bolehModul("berita")
+  const berita = useKoleksi("berita", { aktif: bacaBerita })
+  const dataBerita = bacaBerita ? berita.data : TANPA_BERITA
   const dokumentasi = useKoleksi("dokumentasi")
   // Di server hanya pengelola Regulasi & Unduhan yang boleh membacanya (alurnya tidak tampil bagi yang lain)
   const bacaDokumen = bolehModul("dokumen")
@@ -48,18 +53,18 @@ export function useItemAlur() {
   const dataLayanan = bacaLayanan ? layanan.data : TANPA_LAYANAN
 
   const data = React.useMemo<ItemAlur[] | undefined>(() => {
-    if (!berita.data || !dokumentasi.data || !dataDokumen || !dataLayanan) return undefined
+    if (!dataBerita || !dokumentasi.data || !dataDokumen || !dataLayanan) return undefined
     const jenisBerita = (k: string) => (k === "pengumuman" ? "Pengumuman" : "Berita")
     const modul = sesi().modul
     return [
-      ...berita.data.map((b) => ({ ...b, koleksi: "berita" as const, jenis: jenisBerita(b.kategori), url: `/berita/${b.id}` })),
+      ...dataBerita.map((b) => ({ ...b, koleksi: "berita" as const, jenis: jenisBerita(b.kategori), url: `/berita/${b.id}` })),
       ...dokumentasi.data.map((d) => ({ ...d, koleksi: "dokumentasi" as const, jenis: "Dokumentasi", url: `/dokumentasi?ubah=${d.id}` })),
       ...dataDokumen.map((d) => ({ ...d, koleksi: "dokumen" as const, jenis: "Unduhan", url: `/unduhan?ubah=${d.id}` })),
       ...dataLayanan.map((l) => ({ ...l, judul: l.nama, koleksi: "layanan" as const, jenis: "Persyaratan", url: `/layanan/${l.id}` })),
     ]
       .filter((x) => modul.includes(x.koleksi))
       .sort((a, b) => b.diperbarui.localeCompare(a.diperbarui))
-  }, [berita.data, dokumentasi.data, dataDokumen, dataLayanan])
+  }, [dataBerita, dokumentasi.data, dataDokumen, dataLayanan])
 
   return { data, memuat: !data }
 }
@@ -84,7 +89,8 @@ export function nilaiPemutakhiran(p: Pemutakhiran, terakhir: string | undefined)
 /** Waktu pembaruan terakhir tiap modul yang dipantau */
 export function useTerakhirModul(): Partial<Record<ModulPantau, string>> {
   const { data: waktu } = useWaktuPengaturan()
-  const berita = useKoleksi("berita").data
+  // Di server: hanya pengelola Berita & Pengumuman dan Jadwal Pemutakhiran yang boleh membacanya.
+  const berita = useKoleksi("berita", { aktif: bolehModul("berita", "pemutakhiran") }).data
   const dokumentasi = useKoleksi("dokumentasi").data
   // Di server: hanya pengelola Regulasi & Unduhan dan Jadwal Pemutakhiran yang boleh membacanya.
   const dokumen = useKoleksi("dokumen", { aktif: bolehModul("dokumen", "pemutakhiran") }).data

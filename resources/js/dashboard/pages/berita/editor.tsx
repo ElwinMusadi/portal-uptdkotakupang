@@ -26,8 +26,8 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import type { Berita } from "@/lib/api"
-import { alurBaru } from "@/lib/alur"
+import { diServer, type Berita } from "@/lib/api"
+import { alurBaru, khususAdministrator } from "@/lib/alur"
 import { sesi } from "@/lib/auth"
 import { hariIniIso, menitBaca, slugify } from "@/lib/format"
 import { validasiFormulir } from "@/lib/formulir"
@@ -37,13 +37,13 @@ import * as v from "@/lib/validasi"
 
 const schema = z.object({
   judul: v.wajib("Judul").max(160, "Judul maksimal 160 karakter."),
-  slug: v.slug,
+  slug: v.slug.max(80, "Slug maksimal 80 karakter."),
   kategori: z.enum(["berita", "pengumuman", "keliling", "edukasi"]),
   ringkasan: v.wajib("Ringkasan").max(240, "Ringkasan maksimal 240 karakter."),
   isi: v.wajib("Isi tulisan"),
   sampul: z.string().nullable(),
-  keteranganSampul: v.teks,
-  kreditFoto: v.teks,
+  keteranganSampul: v.teks.max(200, "Keterangan foto maksimal 200 karakter."),
+  kreditFoto: v.teks.max(120, "Kredit foto maksimal 120 karakter."),
   tanggal: v.tanggalIso,
   sorotan: z.boolean(),
   pengumumanBeranda: z.boolean(),
@@ -155,10 +155,10 @@ function IsiEditor({ entri, semua }: { entri: Berita | null; semua: Berita[] }) 
           ...nilai,
         })
       }
-      // hanya satu tulisan utama di halaman Informasi
+      // hanya satu tulisan utama di halaman Informasi; di server tanda pada tulisan lain dilepas otomatis (D-031)
       if (nilai.sorotan) {
         const lain = semua.filter((b) => b.sorotan && b.id !== tersimpan.id)
-        for (const b of lain) await ubah.mutateAsync({ id: b.id, patch: { sorotan: false } })
+        if (!diServer("berita")) for (const b of lain) await ubah.mutateAsync({ id: b.id, patch: { sorotan: false } })
         if (lain.length) toast.info("Sorotan dipindahkan ke tulisan ini.")
       }
       form.reset(nilai)
@@ -180,7 +180,7 @@ function IsiEditor({ entri, semua }: { entri: Berita | null; semua: Berita[] }) 
             Semua tulisan
           </Link>
         </Button>
-        {entri && (
+        {entri && !khususAdministrator("berita") && (
           <Button
             variant="ghost"
             size="sm"

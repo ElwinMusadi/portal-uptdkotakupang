@@ -188,64 +188,44 @@
   <article>
     <header class="container page-hero">
       <div class="article-head">
-        <ol class="crumbs" role="list"><li><a href="index.html">Beranda</a></li><li><a href="informasi.html">Berita</a></li><li aria-current="page">PINTU resmi diluncurkan</li></ol>
-        <p class="post-meta"><span class="tag">Berita</span><time datetime="2026-10-27">Selasa, 27 Oktober 2026</time><span class="dot" aria-hidden="true"></span><span>4 menit baca</span></p>
-        <h1 class="h-display" style="margin-top:22px" data-reveal>PINTU resmi diluncurkan. <span class="tone">Informasi Samsat di satu portal.</span></h1>
-        <p class="lead" style="margin-top:24px;max-width:60ch" data-reveal>Persyaratan, jadwal, dan lokasi Samsat Keliling kini dapat dicek dari rumah. Seluruh isi diverifikasi petugas sebelum terbit.</p>
+        <ol class="crumbs" role="list"><li><a href="index.html">Beranda</a></li><li><a href="informasi.html">Berita</a></li><li aria-current="page" data-berita-crumb>Berita</li></ol>
+        <p class="post-meta" data-berita-meta hidden><span class="tag" data-berita-kategori></span><time data-berita-tanggal></time><span class="dot" aria-hidden="true"></span><span data-berita-menit></span></p>
+        <h1 class="h-display" style="margin-top:22px" data-berita-judul>Memuat tulisan…</h1>
+        <p class="lead" style="margin-top:24px;max-width:60ch" role="status" data-berita-ringkasan></p>
       </div>
     </header>
 
     <div class="container container--wide">
-      <figure data-reveal>
-        <div class="ph ph--blue article-media"><svg aria-hidden="true"><use href="#ill-desk"/></svg><span class="ph__label">Foto peluncuran · contoh</span></div>
-        <figcaption class="caption-row"><p>Petugas loket mencoba portal PINTU bersama wajib pajak.</p><p>Foto: Subbagian Tata Usaha</p></figcaption>
+      <figure data-berita-foto hidden>
+        <div class="ph ph--blue article-media" data-berita-media></div>
+        <figcaption class="caption-row"><p data-berita-keterangan></p><p data-berita-kredit></p></figcaption>
       </figure>
     </div>
 
-    <div class="section section--tight">
+    <div class="section section--tight" data-berita-badan hidden>
       <div class="container article-body">
         <aside class="article-aside" aria-label="Info artikel">
           <dl style="display:grid;gap:20px">
-            <div><dt>Diterbitkan</dt><dd>27 Okt 2026, 09.15 WITA</dd></div>
-            <div><dt>Diperbarui</dt><dd>27 Okt 2026, 14.02 WITA</dd></div>
-            <div><dt>Diverifikasi oleh</dt><dd>Kepala Subbagian Tata Usaha</dd></div>
+            <div><dt>Diterbitkan</dt><dd data-berita-terbit></dd></div>
+            <div><dt>Diperbarui</dt><dd data-berita-diperbarui></dd></div>
+            <div data-berita-pemeriksa-baris><dt>Diverifikasi oleh</dt><dd data-berita-pemeriksa></dd></div>
             <div><dt>Bagikan</dt><dd class="share" style="margin-top:8px">
               <button type="button" data-copy-link aria-label="Salin tautan"><svg class="i" aria-hidden="true"><use href="#i-link"/></svg></button>
-              <a href="https://wa.me/?text=PINTU%20Samsat%20Kota%20Kupang" target="_blank" rel="noopener" aria-label="Bagikan ke WhatsApp"><svg class="i" aria-hidden="true"><use href="#i-message"/></svg></a>
-              <a href="https://www.facebook.com/sharer/sharer.php" target="_blank" rel="noopener" aria-label="Bagikan ke Facebook"><svg class="i" aria-hidden="true"><use href="#i-facebook"/></svg></a>
+              <a href="https://wa.me/?text=PINTU%20Samsat%20Kota%20Kupang" target="_blank" rel="noopener" aria-label="Bagikan ke WhatsApp" data-berita-wa><svg class="i" aria-hidden="true"><use href="#i-message"/></svg></a>
+              <a href="https://www.facebook.com/sharer/sharer.php" target="_blank" rel="noopener" aria-label="Bagikan ke Facebook" data-berita-fb><svg class="i" aria-hidden="true"><use href="#i-facebook"/></svg></a>
             </dd></div>
           </dl>
         </aside>
 
-        <div class="prose">
-          <p>Selama ini, informasi persyaratan layanan Samsat Kota Kupang ditempel pada kertas di meja dan kaca loket. Kertas mudah rusak dan harus diganti terus-menerus. Warga juga perlu bertanya langsung kepada petugas untuk hal yang sebenarnya bisa dibaca sebelum datang.</p>
-          <p>PINTU, singkatan dari Portal Informasi dan Pelayanan, hadir untuk menjawab masalah itu. Semua informasi resmi UPTD Pendapatan Daerah Wilayah Kota Kupang kini terhimpun di satu alamat.</p>
-          <h2>Apa saja yang tersedia.</h2>
-          <ul>
-            <li>Persyaratan lima layanan utama, lengkap dengan jumlah lembar fotokopi.</li>
-            <li>Jam loket dengan status buka atau tutup secara langsung.</li>
-            <li>Jadwal dan lokasi Samsat Keliling setiap minggu.</li>
-            <li>Berita, pengumuman, dokumentasi kegiatan, serta dokumen regulasi.</li>
-            <li>Formulir masukan dan kanal pengaduan.</li>
-          </ul>
-          <blockquote>“Informasi yang sama, untuk semua orang, kapan saja. Itu inti dari PINTU.”</blockquote>
-          <h2>Bagaimana isinya dijaga.</h2>
-          <p>Setiap informasi melewati empat peran sebelum terbit: penyedia data dari unit terkait, pemeriksa, atasan langsung sebagai penyetuju, dan operator sebagai pengelola publikasi. Jadwal Samsat Keliling diperbarui mingguan, sedangkan persyaratan diperbarui setiap ada perubahan regulasi.</p>
-          <h2>Sampaikan masukan Anda.</h2>
-          <p>Ada informasi yang kurang jelas atau belum tercantum? Kirimkan lewat <a href="kontak.html#masukan">formulir masukan</a>. Masukan pengguna menjadi bahan evaluasi dan pemutakhiran portal.</p>
-        </div>
+        <div class="prose" data-berita-isi></div>
       </div>
     </div>
   </article>
 
-  <section class="section section--flush-top">
+  <section class="section section--flush-top" data-berita-lain-bagian hidden>
     <div class="container">
       <div class="toolbar" style="margin-bottom:28px"><p class="eyebrow">Baca juga</p><a class="link-arrow small" href="informasi.html">Semua berita<svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></a></div>
-      <div class="posts">
-        <a class="post" href="berita-detail.html"><div class="ph ph--sage post__media"><svg aria-hidden="true"><use href="#ill-tent"/></svg></div><p class="post-meta"><span class="tag">Samsat Keliling</span><time>23 Okt 2026</time></p><h3>Samsat Keliling menjangkau 31 kelurahan tahun ini.</h3></a>
-        <a class="post" href="berita-detail.html"><div class="ph ph--sand post__media"><svg aria-hidden="true"><use href="#ill-car"/></svg></div><p class="post-meta"><span class="tag">Edukasi</span><time>20 Okt 2026</time></p><h3>Lima berkas yang paling sering terlupa saat perpanjangan STNK.</h3></a>
-        <a class="post" href="berita-detail.html"><div class="ph ph--blue post__media"><svg aria-hidden="true"><use href="#ill-desk"/></svg></div><p class="post-meta"><span class="tag">Berita</span><time>16 Okt 2026</time></p><h3>Pembayaran QRIS kini tersedia di semua kasir.</h3></a>
-      </div>
+      <div class="posts" data-berita-lain></div>
     </div>
   </section>
 </main>

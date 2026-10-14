@@ -16,6 +16,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET` | `/api/public/profil` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/layanan` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/dokumen` | anonim, hanya baca | tersedia |
+| `GET` | `/api/public/berita`, `/api/public/berita/{slug}` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/beranda` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/halaman/{slug}` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/situs` | anonim, hanya baca | tersedia |
@@ -57,6 +58,9 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET`, `POST` | `/api/koleksi/dokumen` | Administrator, pengelola Regulasi & Unduhan (daftar: juga pengelola Jadwal Pemutakhiran) | tersedia |
 | `GET`, `PATCH` | `/api/koleksi/dokumen/{id}` | Administrator, pengelola Regulasi & Unduhan; dokumen yang menunggu persetujuan atau terbit hanya Administrator | tersedia |
 | `POST` | `/api/koleksi/dokumen/hapus` | Administrator | tersedia |
+| `GET`, `POST` | `/api/koleksi/berita` | Administrator, pengelola Berita & Pengumuman (daftar: juga pengelola Jadwal Pemutakhiran) | tersedia |
+| `GET`, `PATCH` | `/api/koleksi/berita/{id}` | Administrator, pengelola Berita & Pengumuman, termasuk tulisan yang terbit | tersedia |
+| `POST` | `/api/koleksi/berita/hapus` | Administrator | tersedia |
 | `GET` | `/api/koleksi/halaman` | Administrator, pengelola Halaman Statis | tersedia |
 | `GET`, `PATCH` | `/api/koleksi/halaman/{id}` | Administrator, pengelola Halaman Statis | tersedia |
 | `GET` | `/api/koleksi/pemutakhiran` | semua pegawai; daftarnya sebatas modul pengguna, lengkap bagi Administrator dan pengelola Jadwal Pemutakhiran | tersedia |
@@ -390,6 +394,37 @@ Isi divalidasi seperti formulir dashboard: nama (maks. 120 karakter), slug unik 
 
 Kode: `app/Http/Controllers/Dashboard/Service*`, `app/Http/Requests/Dashboard/*Service*`, `app/Http/Requests/Dashboard/Concerns/TakesWorkflowStep.php`, `app/Actions/UpdateWorkflowEntry.php`, `app/Models/Service.php`, `app/Models/Concerns/HasPublicationWorkflow.php`, `app/Enums/WorkflowStatus.php`, `app/Policies/ServicePolicy.php`, `database/migrations/*_insert_initial_services.php`. Tes: `tests/Feature/ServiceControllerTest.php`, `ServiceWorkflowTest.php`.
 
+## Berita & Pengumuman di dashboard
+
+Dipakai halaman *Berita & Pengumuman* di dashboard ([D-031](decisions.md#d-031--2026-10-14--berita--pengumuman-tersimpan-di-server-pengelola-berita-menerbitkan-sendiri)). Tamu mendapat `401`; pegawai yang tidak mengelola modul `berita` mendapat `403` `{"message": "Modul Berita & Pengumuman belum ditugaskan kepada Anda."}`. Pengelola Jadwal Pemutakhiran boleh memakai `GET /api/koleksi/berita` saja.
+
+```json
+{
+  "id": "01m4…", "judul": "PINTU resmi diluncurkan. Informasi Samsat kini di satu portal.",
+  "slug": "pintu-resmi-diluncurkan", "kategori": "berita", "ringkasan": "…", "isi": "<p>…</p>",
+  "sampul": "https://…/berita/2026/10/01m4….jpg", "keteranganSampul": "…", "kreditFoto": "Subbagian Tata Usaha",
+  "tanggal": "2026-10-14", "sorotan": true, "pengumumanBeranda": false,
+  "status": "terbit", "penyedia": "Pengelola publikasi", "pemeriksa": "Kepala Subbagian Tata Usaha", "catatanRevisi": "",
+  "terbitPada": "2026-10-14T01:00:00+00:00",
+  "riwayat": [{ "waktu": "…", "oleh": "Maria Bria", "aksi": "menyetujui dan menerbitkan", "ke": "terbit" }],
+  "urutan": 0, "dibuat": "…", "diperbarui": "…"
+}
+```
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `GET /api/koleksi/berita` | — | `200` semua tulisan, tanggal tayang terbaru lebih dulu, termasuk yang belum terbit. |
+| `GET /api/koleksi/berita/{id}` | — | `200` satu tulisan; `404` bila tidak ada. |
+| `POST /api/koleksi/berita` | isi tulisan seperti di atas, tanpa kolom alur | `201` sebagai draf, dengan riwayat "menyiapkan draf" atas nama akun yang masuk. Status, riwayat, catatan revisi, dan waktu terbit dari klien diabaikan. |
+| `PATCH /api/koleksi/berita/{id}` | sebagian isi, `status` untuk langkah alur, `catatanRevisi` saat mengembalikan | `200`. Langkah alur dan pesannya sama dengan layanan (`"Langkah ini tidak tersedia untuk tulisan berstatus Draf."`), tetapi pengelola Berita boleh menjalankan semuanya, termasuk menerbitkan dan menarik, dan boleh mengubah tulisan yang sudah terbit. Menandai `sorotan` melepas tanda itu dari tulisan lain tanpa mengubah `diperbarui` mereka. |
+| `POST /api/koleksi/berita/hapus` | `{"ids": ["…"]}` | `204`; foto sampul tulisan yang dihapus ikut terhapus. Hanya Administrator; pegawai lain `403` `{"message": "Hanya Administrator yang dapat menghapus tulisan."}`. |
+
+Tidak ada `PUT /api/koleksi/berita/urutan`: tulisan diurutkan menurut tanggal tayang.
+
+Isi divalidasi seperti formulir dashboard: judul (maks. 160 karakter), slug unik (huruf kecil, angka, tanda hubung; maks. 80), ringkasan (maks. 240), isi, tanggal tayang (`YYYY-MM-DD`), dan penyedia wajib. Kategori harus `berita`, `pengumuman`, `keliling`, atau `edukasi`. Keterangan foto maks. 200, kredit foto maks. 120. Teks tidak boleh berisi karakter kontrol. Isi adalah HTML seperti yang ditulis editor (aturan yang sama dengan Halaman Statis, maks. 100.000 karakter). Foto sampul harus alamat unggahan PINTU untuk tujuan `berita` (`{"sampul": ["Foto sampul harus diunggah lewat dashboard."]}`) yang belum dipakai tulisan lain (`"Foto ini sudah dipakai tulisan lain. Unggah ulang fotonya."`). Foto yang diganti atau dikosongkan dihapus bersama catatannya.
+
+Kode: `app/Http/Controllers/Dashboard/Article*`, `app/Http/Requests/Dashboard/*Article*`, `app/Models/Article.php`, `app/Policies/ArticlePolicy.php`, `database/migrations/*_insert_initial_articles.php`. Tes: `tests/Feature/ArticleControllerTest.php`, `ArticleWorkflowTest.php`.
+
 ## Regulasi & Unduhan di dashboard
 
 Dipakai halaman *Regulasi & Unduhan* di dashboard ([D-030](decisions.md#d-030--2026-10-14--regulasi--unduhan-tersimpan-di-server-dengan-alur-persetujuan)), dengan alur publikasi yang sama dengan Persyaratan Layanan. Tamu mendapat `401`; pegawai yang tidak mengelola modul `dokumen` mendapat `403` `{"message": "Modul Regulasi & Unduhan belum ditugaskan kepada Anda."}`. Pengelola Jadwal Pemutakhiran boleh memakai `GET /api/koleksi/dokumen` saja.
@@ -543,7 +578,7 @@ Kode: `app/Http/Controllers/Dashboard/OwnAccountController.php`, `app/Http/Reque
 
 ## Unggahan di dashboard
 
-Penyimpanan berkas dari dashboard ([D-028](decisions.md#d-028--2026-10-14--unggahan-disimpan-di-laravel-cloud-object-storage)). Tamu mendapat `401`. Dashboard memakainya untuk tujuan yang modulnya sudah di server, saat ini `visiMisi`, `profil` ([D-029](decisions.md#d-029--2026-10-14--foto-tentang-uptd-dan-maklumat-diunggah-ke-server-profil-disusun-dari-renstra-dan-rpjmd)), dan `dokumen` ([D-030](decisions.md#d-030--2026-10-14--regulasi--unduhan-tersimpan-di-server-dengan-alur-persetujuan)); unggahan lain tetap di peramban sampai modulnya pindah.
+Penyimpanan berkas dari dashboard ([D-028](decisions.md#d-028--2026-10-14--unggahan-disimpan-di-laravel-cloud-object-storage)). Tamu mendapat `401`. Dashboard memakainya untuk tujuan yang modulnya sudah di server, saat ini `visiMisi`, `profil` ([D-029](decisions.md#d-029--2026-10-14--foto-tentang-uptd-dan-maklumat-diunggah-ke-server-profil-disusun-dari-renstra-dan-rpjmd)), `dokumen` ([D-030](decisions.md#d-030--2026-10-14--regulasi--unduhan-tersimpan-di-server-dengan-alur-persetujuan)), dan `berita` ([D-031](decisions.md#d-031--2026-10-14--berita--pengumuman-tersimpan-di-server-pengelola-berita-menerbitkan-sendiri)); unggahan lain tetap di peramban sampai modulnya pindah.
 
 | Alamat | Permintaan | Respons |
 |---|---|---|
@@ -753,6 +788,22 @@ Halaman Regulasi & Unduhan ([D-030](decisions.md#d-030--2026-10-14--regulasi--un
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 
 Kode: `app/Http/Controllers/PublicDocumentController.php`, `app/Actions/ListPublicDocuments.php`. Tes: `tests/Feature/PublicDocumentControllerTest.php`.
+
+## `GET /api/public/berita` dan `GET /api/public/berita/{slug}`
+
+Halaman Informasi, halaman `/berita/{slug}`, dan ubin *Pengumuman* di papan layanan beranda ([D-031](decisions.md#d-031--2026-10-14--berita--pengumuman-tersimpan-di-server-pengelola-berita-menerbitkan-sendiri), `initInformasi()`, `initBerita()`, dan `initPengumumanBeranda()` di `public/assets/js/main.js`). Hanya tulisan berstatus `terbit`, tanpa `id` dan tanpa kolom alur selain `terbitPada`.
+
+| Hal | Perilaku |
+|---|---|
+| Daftar | `GET /api/public/berita` → `200` daftar tulisan tanpa isi, tanggal tayang terbaru lebih dulu (lalu waktu terbit terbaru): `judul`, `slug`, `kategori`, `ringkasan`, `sampul`, `keteranganSampul`, `tanggal`, `sorotan`, `pengumumanBeranda`, `menitBaca`, `terbitPada`. `[]` bila belum ada yang terbit. |
+| Satu tulisan | `GET /api/public/berita/{slug}` → `200` dengan `isi` (HTML editor), `kreditFoto`, `pemeriksa` (tampil sebagai "Diverifikasi oleh"), dan `diperbarui`. Tulisan yang tidak ada atau tidak terbit dijawab `404` `{"message": "Data tidak ditemukan."}`. Portal menyalin isi lewat daftar elemen yang diizinkan, memasang teks sebagai teks polos, dan hanya memakai foto beralamat `http(s)`. |
+| `menitBaca` | Perkiraan waktu baca isi: 200 kata per menit, dibulatkan, minimal 1. |
+| Galat | `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah batas laju yang sama dengan `GET /api/public/faq`; `503` bila data tidak bisa dibaca, tidak pernah daftar kosong sebagai gantinya. |
+| Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
+
+Halaman `/berita/{slug}` adalah `resources/views/portal/berita-detail.blade.php`. Alamat relatifnya ditulis ulang menjadi alamat dari akar situs oleh `ArticlePageController`; slug yang bukan huruf kecil, angka, dan tanda hubung dijawab `404`.
+
+Kode: `app/Http/Controllers/PublicArticleController.php`, `app/Http/Controllers/ArticlePageController.php`, `app/Actions/ListPublicArticles.php`, `app/Actions/ShowPublicArticle.php`. Tes: `tests/Feature/PublicArticleControllerTest.php`, `tests/Feature/PortalPagesTest.php`.
 
 ## `GET /api/public/beranda`
 

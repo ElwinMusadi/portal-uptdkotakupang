@@ -425,3 +425,20 @@ Regulasi & Unduhan kini tersimpan di server dengan alur publikasi yang sama deng
 Alur publikasi kini dipakai bersama oleh layanan dan dokumen: status dan riwayat di model, pemeriksaan langkah di permintaan, dan aksi pembaruan yang sama. Berita dan Dokumentasi dapat memakainya saat pindah ke server.
 
 Belum dibuat: berkas atau tautan untuk sembilan dokumen awal. Administrator perlu mengunggahnya dari naskah resmi, mencocokkan judul dan keterangannya, lalu menerbitkannya.
+
+## D-031 · 2026-10-14 · Berita & Pengumuman tersimpan di server; pengelola Berita menerbitkan sendiri
+
+Berita & Pengumuman kini tersimpan di server dengan alur publikasi. Halaman Informasi, halaman satu tulisan di `/berita/{slug}`, dan ubin *Pengumuman* di papan layanan beranda membaca tulisan yang terbit dari API.
+
+| Hal | Keputusan |
+|---|---|
+| Penyimpanan | Tabel `articles` menyimpan judul, slug unik (alamat tulisan), kategori (`berita`, `pengumuman`, `keliling`, `edukasi`), ringkasan, isi HTML dari editor (diperiksa seperti Halaman Statis, D-024), foto sampul, keterangan dan kredit foto, tanggal tayang, tanda tulisan utama dan tampil di beranda, serta kolom alur. |
+| Alur dan akses | **Pengelola Berita & Pengumuman menjalankan semua langkah sendiri** (keputusan pemilik), karena pengumuman sering mendesak. Langkah itu mencakup menyetujui dan menerbitkan, menarik dari portal, dan mengubah tulisan yang sudah terbit. **Hanya Administrator yang menghapus.** Langkah alurnya sama dengan layanan dan dicatat di riwayat. Pengelola Jadwal Pemutakhiran boleh membaca daftarnya. |
+| Foto sampul | Foto diunggah dari dashboard (tujuan `berita`, D-028), dan satu foto hanya dipakai satu tulisan. Foto yang diganti, dikosongkan, atau tulisannya dihapus ikut terhapus. |
+| Tulisan utama | Hanya satu tulisan yang bertanda utama. Menandai satu tulisan melepas tanda pada tulisan lain tanpa mengubah waktu pembaruannya. Halaman Informasi menampilkan tulisan utama terbaru yang terbit; bila tidak ada, tulisan terbaru. |
+| Data awal | **Hanya artikel peluncuran PINTU yang dimasukkan, sebagai draf** (keputusan pemilik), bertanggal hari migrasi dan bertanda tulisan utama. Tulisan lain di halaman Informasi adalah contoh tata letak dan tidak dimasukkan. Isinya tetap seperti contoh; paragraf tentang "empat peran" perlu disesuaikan dengan alur yang berlaku sebelum artikel diterbitkan. |
+| Portal | `GET /api/public/berita` memberikan tulisan terbit tanpa isi, terbaru lebih dulu menurut tanggal tayang. `GET /api/public/berita/{slug}` memberikan satu tulisan terbit beserta isinya. Keduanya tanpa ID dan riwayat. **Halaman satu tulisan beralamat `/berita/{slug}` dan diisi skrip** (keputusan pemilik). Server menulis ulang alamat relatif halaman itu menjadi alamat dari akar situs, karena di bawah `/berita/` alamat relatif tidak lagi menunjuk ke tempat yang benar. Alamat contoh lama `/berita-detail` dialihkan ke `/informasi`. |
+| Tampilan portal | Halaman Informasi menampilkan tulisan utama, daftar tulisan lain dengan saringan kategori dan pencarian, serta arsip enam pengumuman terbaru. Navigasi halaman (1, 2, 3) yang hanya contoh dihapus, sehingga semua tulisan terbit tampil. Tulisan tanpa foto memakai ilustrasi kategori. Papan layanan beranda menampilkan pengumuman terbaru yang ditandai tampil di beranda, dengan tanda "Baru" selama tujuh hari setelah terbit. Bila belum ada tulisan terbit, setiap bagian menyatakannya. Bila API gagal, tampil keterangan dan tombol coba lagi. Tanggal tayang hanya ditampilkan, bukan jadwal terbit. |
+| Dashboard | Unggahan `berita` dikirim ke server. Penghapusan hanya ditawarkan kepada Administrator. Penyunting tidak terkunci bagi pengelola Berita. Ringkasan, antrean kerja, menu perintah, Jadwal Pemutakhiran, dan *Pengaturan › Data* hanya membaca berita bila pengguna boleh membacanya. |
+
+Bilah pengumuman di halaman Informasi tetap diatur di Pengaturan Situs (D-026). Untuk menautkannya ke sebuah tulisan, isi tujuan tautan dengan `./berita/{slug}`.

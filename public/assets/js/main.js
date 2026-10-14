@@ -963,6 +963,271 @@
     muat(false);
   }
 
+  /* ---------- Berita & pengumuman ----------
+     Tulisan dikelola di dashboard (Berita & Pengumuman) dan dibaca dari
+     GET /api/public/berita (daftar tanpa isi) dan /api/public/berita/{slug}
+     (D-031); hanya tulisan terbit yang diberikan. Halaman Informasi
+     menampilkan tulisan utama, daftar bersaringan, dan arsip pengumuman;
+     /berita/{slug} menampilkan satu tulisan; papan layanan di beranda
+     menampilkan pengumuman terbaru yang ditandai tampil di beranda. Teks
+     dipasang sebagai teks, isi tulisan disalin lewat daftar elemen yang
+     diizinkan (salinIsi), dan foto hanya dari alamat http(s). */
+  const teksBerita = (x) => typeof x === "string";
+  const ringkasanBeritaValid = (b) => ["judul", "slug", "kategori", "ringkasan", "keteranganSampul", "tanggal"].every((f) => teksBerita(b?.[f]))
+    && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(b.slug) && /^\d{4}-\d{2}-\d{2}$/.test(b.tanggal)
+    && (b.sampul === null || teksBerita(b.sampul)) && Number.isInteger(b.menitBaca)
+    && (b.terbitPada === null || teksBerita(b.terbitPada));
+
+  async function muatDaftarBerita() {
+    const data = await ambilJson("/api/public/berita");
+    const valid = Array.isArray(data) && data.every((b) => ringkasanBeritaValid(b)
+      && typeof b.sorotan === "boolean" && typeof b.pengumumanBeranda === "boolean");
+    if (!valid) throw new Error("Respons tidak dikenal");
+    return data;
+  }
+
+  async function muatBerita(slug) {
+    const b = await ambilJson(`/api/public/berita/${encodeURIComponent(slug)}`);
+    const valid = ringkasanBeritaValid(b) && ["isi", "kreditFoto", "pemeriksa"].every((f) => teksBerita(b[f]))
+      && (b.diperbarui === null || teksBerita(b.diperbarui));
+    if (!valid) throw new Error("Respons tidak dikenal");
+    return b;
+  }
+
+  // Label, warna bingkai, dan ilustrasi pengganti foto per kategori
+  const KATEGORI_BERITA = {
+    berita: ["Berita", "blue", "desk"],
+    pengumuman: ["Pengumuman", "rose", "building"],
+    keliling: ["Samsat Keliling", "sage", "tent"],
+    edukasi: ["Edukasi", "sand", "car"],
+  };
+  const kategoriBerita = (k) => KATEGORI_BERITA[k] || KATEGORI_BERITA.berita;
+  const alamatBerita = (slug) => `/berita/${encodeURIComponent(slug)}`;
+
+  // Tanggal tayang (YYYY-MM-DD) tanpa geser zona waktu: "27 Okt 2026", "27 Oktober 2026", atau "Selasa, 27 Oktober 2026"
+  function tanggalBerita(t, gaya = "pendek") {
+    const [y, m, d] = t.split("-").map(Number);
+    if (gaya === "pendek") return `${d} ${BULAN[m - 1]} ${y}`;
+    const penuh = `${d} ${BULAN_PENUH[m - 1]} ${y}`;
+    return gaya === "hari" ? `${HARI[new Date(Date.UTC(y, m - 1, d)).getUTCDay()]}, ${penuh}` : penuh;
+  }
+
+  // Waktu terbit atau diperbarui dalam WITA, mis. "27 Okt 2026, 09.15 WITA"
+  function waktuBerita(iso) {
+    const w = nowWita(new Date(iso));
+    return `${w.d} ${BULAN[w.mo - 1]} ${w.y}, ${pad(w.h)}.${pad(w.m)} WITA`;
+  }
+
+  // Bingkai foto: sampul bila ada, selain itu ilustrasi kategori
+  function mediaBerita(b, kelas) {
+    const [, warna, ilustrasi] = kategoriBerita(b.kategori);
+    const foto = gambarAman(b.sampul);
+    return `<div class="ph ph--${warna} ${kelas}">${foto
+      ? `<img src="${esc(foto)}" alt="" loading="lazy" decoding="async">`
+      : `<svg aria-hidden="true"><use href="#ill-${ilustrasi}"/></svg>`}</div>`;
+  }
+
+  // Judul dua nada seperti contoh halaman: kalimat pertama polos, sisanya redup
+  function judulDuaNada(el, judul) {
+    const titik = judul.indexOf(". ");
+    if (titik > 0) duaNada(el, judul.slice(0, titik + 2), judul.slice(titik + 2));
+    else el.textContent = judul;
+  }
+
+  const kartuBerita = (b, denganRingkasan) => `<a class="post" href="${alamatBerita(b.slug)}" data-cat="${esc(b.kategori)}">
+          ${mediaBerita(b, "post__media")}
+          <p class="post-meta"><span class="tag">${esc(kategoriBerita(b.kategori)[0])}</span><time datetime="${esc(b.tanggal)}">${tanggalBerita(b.tanggal)}</time></p>
+          <h3>${esc(b.judul)}</h3>${denganRingkasan ? `
+          <p>${esc(b.ringkasan)}</p>` : ""}
+        </a>`;
+
+  function tombolCobaLagi(aksi) {
+    const tombol = document.createElement("button");
+    tombol.type = "button";
+    tombol.className = "link";
+    tombol.textContent = "Coba lagi";
+    tombol.addEventListener("click", aksi);
+    return tombol;
+  }
+
+  function initInformasi() {
+    const daftar = $("[data-berita-daftar]");
+    if (!daftar) return;
+    const status = $("[data-berita-status]");
+    const utama = $("[data-berita-utama]");
+    const pengumuman = $("[data-berita-pengumuman]");
+    const saringan = $("[data-berita-saringan]");
+    const cari = $('[data-filter-search="posts"]');
+
+    const tampilkan = (data) => {
+      // Tulisan utama: sorotan terbaru, atau tulisan terbaru bila tidak ada
+      const pilihan = data.find((b) => b.sorotan) || data[0];
+      utama.closest("section").hidden = !pilihan;
+      if (pilihan) {
+        utama.href = alamatBerita(pilihan.slug);
+        utama.innerHTML = `${mediaBerita(pilihan, "feature-post__media")}
+        <div>
+          <p class="post-meta"><span class="tag">${esc(kategoriBerita(pilihan.kategori)[0])}</span><time datetime="${esc(pilihan.tanggal)}">${tanggalBerita(pilihan.tanggal, "panjang")}</time><span class="dot" aria-hidden="true"></span><span>${pilihan.menitBaca} menit baca</span></p>
+          <h2 class="h2" style="margin-top:18px"></h2>
+          <p class="body" style="margin-top:18px">${esc(pilihan.ringkasan)}</p>
+          <p style="margin-top:24px"><span class="link-arrow">Baca selengkapnya<svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span></p>
+        </div>`;
+        judulDuaNada($("h2", utama), pilihan.judul);
+      }
+
+      const lain = data.filter((b) => b !== pilihan);
+      daftar.innerHTML = lain.map((b) => kartuBerita(b, true)).join("");
+      saringan.hidden = !lain.length;
+      status.hidden = data.length > 0;
+      status.textContent = "Belum ada berita atau pengumuman yang terbit.";
+      // Terapkan saringan dan pencarian yang sudah dipilih pengunjung
+      if (lain.length) cari?.dispatchEvent(new Event("input"));
+
+      const arsip = data.filter((b) => b.kategori === "pengumuman").slice(0, 6);
+      pengumuman.closest("section").hidden = !arsip.length;
+      pengumuman.innerHTML = arsip.map((b) => `<li><a href="${alamatBerita(b.slug)}"><time datetime="${esc(b.tanggal)}">${tanggalBerita(b.tanggal)}</time><strong>${esc(b.judul)}</strong><svg class="i i--sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></a></li>`).join("");
+    };
+
+    const muat = async (fokus) => {
+      status.hidden = false;
+      status.textContent = "Memuat berita…";
+      try {
+        tampilkan(await muatDaftarBerita());
+      } catch {
+        daftar.textContent = "";
+        saringan.hidden = true;
+        const retry = tombolCobaLagi(() => muat(true));
+        status.textContent = "Berita belum dapat dimuat. ";
+        status.append(retry);
+        if (fokus) retry.focus();
+      }
+    };
+
+    muat(false);
+  }
+
+  function initBerita() {
+    const judul = $("[data-berita-judul]");
+    if (!judul) return;
+    const ringkasan = $("[data-berita-ringkasan]");
+    const slug = location.pathname.match(/^\/berita\/([a-z0-9]+(?:-[a-z0-9]+)*)\/?$/)?.[1] ?? "";
+
+    const tampilkan = (b) => {
+      document.title = `${b.judul.replace(/\.$/, "")} — PINTU UPTD Pendapatan Daerah Wilayah Kota Kupang`;
+      $('meta[name="description"]')?.setAttribute("content", b.ringkasan);
+      const [label, warna] = kategoriBerita(b.kategori);
+      $("[data-berita-crumb]").textContent = b.judul.split(". ")[0].replace(/\.$/, "");
+      $("[data-berita-kategori]").textContent = label;
+      const tanggal = $("[data-berita-tanggal]");
+      tanggal.dateTime = b.tanggal;
+      tanggal.textContent = tanggalBerita(b.tanggal, "hari");
+      $("[data-berita-menit]").textContent = `${b.menitBaca} menit baca`;
+      $("[data-berita-meta]").hidden = false;
+      judulDuaNada(judul, b.judul);
+      ringkasan.removeAttribute("role");
+      ringkasan.textContent = b.ringkasan;
+
+      const foto = gambarAman(b.sampul);
+      $("[data-berita-foto]").hidden = !foto;
+      if (foto) {
+        const img = document.createElement("img");
+        img.src = foto;
+        img.alt = b.keteranganSampul;
+        img.decoding = "async";
+        const media = $("[data-berita-media]");
+        media.className = `ph ph--${warna} article-media`;
+        media.replaceChildren(img);
+        $("[data-berita-keterangan]").textContent = b.keteranganSampul;
+        $("[data-berita-kredit]").textContent = b.kreditFoto ? `Foto: ${b.kreditFoto}` : "";
+      }
+
+      $("[data-berita-terbit]").textContent = b.terbitPada ? waktuBerita(b.terbitPada) : tanggalBerita(b.tanggal);
+      $("[data-berita-diperbarui]").textContent = b.diperbarui ? waktuBerita(b.diperbarui) : "—";
+      $("[data-berita-pemeriksa]").textContent = b.pemeriksa;
+      $("[data-berita-pemeriksa-baris]").hidden = !b.pemeriksa;
+      const alamat = `${location.origin}${alamatBerita(b.slug)}`;
+      $("[data-berita-wa]").href = `https://wa.me/?text=${encodeURIComponent(`${b.judul} ${alamat}`)}`;
+      $("[data-berita-fb]").href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(alamat)}`;
+
+      const isi = $("[data-berita-isi]");
+      isi.replaceChildren();
+      salinIsi(new DOMParser().parseFromString(b.isi, "text/html").body, isi);
+      // Tautan relatif di isi (mis. kontak.html#masukan) dihitung dari akar situs, bukan dari /berita/
+      $$("a[href]", isi).forEach((a) => {
+        const href = a.getAttribute("href");
+        if (!/^(?:[a-z][a-z0-9+.-]*:|\/|#)/i.test(href)) a.href = new URL(href, `${location.origin}/`).href;
+      });
+      $("[data-berita-badan]").hidden = false;
+    };
+
+    // Tulisan yang tidak ada (belum terbit, ditarik, atau salah alamat) dan galat memuat
+    const pesan = (judulPesan, teks, tambahan) => {
+      document.title = `${judulPesan.replace(/\.$/, "")} — PINTU UPTD Pendapatan Daerah Wilayah Kota Kupang`;
+      judul.textContent = judulPesan;
+      ringkasan.replaceChildren(teks, tambahan);
+      $("[data-berita-badan]").hidden = true;
+      $("[data-berita-foto]").hidden = true;
+      $("[data-berita-meta]").hidden = true;
+    };
+
+    const tampilkanLain = async () => {
+      try {
+        const lain = (await muatDaftarBerita()).filter((b) => b.slug !== slug).slice(0, 3);
+        $("[data-berita-lain]").innerHTML = lain.map((b) => kartuBerita(b, false)).join("");
+        $("[data-berita-lain-bagian]").hidden = !lain.length;
+      } catch {
+        // "Baca juga" hanya pelengkap; tulisan utama tetap tampil
+      }
+    };
+
+    const muat = async (fokus) => {
+      judul.textContent = "Memuat tulisan…";
+      ringkasan.setAttribute("role", "status");
+      ringkasan.textContent = "";
+      try {
+        if (!slug) throw new Error("Status 404");
+        tampilkan(await muatBerita(slug));
+      } catch (e) {
+        if (e.message === "Status 404") {
+          const semua = document.createElement("a");
+          semua.className = "link";
+          semua.href = "/informasi";
+          semua.textContent = "Lihat semua berita";
+          pesan("Tulisan tidak ditemukan.", "Tulisan ini belum terbit, sudah ditarik, atau alamatnya berubah. ", semua);
+        } else {
+          const retry = tombolCobaLagi(() => muat(true));
+          pesan("Tulisan belum dapat dimuat.", "Periksa sambungan internet Anda. ", retry);
+          if (fokus) retry.focus();
+        }
+      }
+    };
+
+    muat(false);
+    tampilkanLain();
+  }
+
+  // Papan layanan beranda: pengumuman terbaru yang ditandai tampil di beranda
+  function initPengumumanBeranda() {
+    const judul = $("[data-papan-pengumuman-judul]");
+    if (!judul) return;
+    const teks = $("[data-papan-pengumuman-teks]");
+    const baru = $("[data-papan-pengumuman-baru]");
+    const tautan = $("[data-papan-pengumuman-tautan]");
+
+    muatDaftarBerita().then((data) => {
+      const p = data.find((b) => b.pengumumanBeranda);
+      judul.textContent = p ? p.judul : "Belum ada pengumuman.";
+      teks.textContent = p ? p.ringkasan : "Pengumuman resmi UPTD akan tampil di sini.";
+      tautan.hidden = !p;
+      if (p) tautan.href = alamatBerita(p.slug);
+      // "Baru" selama tujuh hari setelah terbit
+      baru.hidden = !(p?.terbitPada && Date.now() - new Date(p.terbitPada).getTime() < 7 * 864e5);
+    }).catch(() => {
+      judul.textContent = "Pengumuman belum dapat dimuat.";
+      teks.textContent = "";
+    });
+  }
+
   /* ---------- Beranda ----------
      Teks beranda dikelola di dashboard (Beranda) dan dibaca dari
      GET /api/public/beranda (D-023). Teks di HTML sama dengan isi awal di
@@ -1953,7 +2218,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil(); initLayanan(); initDokumen(); initBeranda(); initHalaman(); initSitus();
+    initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil(); initLayanan(); initDokumen(); initInformasi(); initBerita(); initPengumumanBeranda(); initBeranda(); initHalaman(); initSitus();
     initDash(); initSim(); initDialogs(); initGag(); initFilters(); initGallery(); initFaq(); initForms(); initPesanForm(); initAuthFit(); initUtilities();
   });
 })();

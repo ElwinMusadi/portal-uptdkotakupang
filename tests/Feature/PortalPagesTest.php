@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\ArticlePageController;
 use App\Models\Message;
 use App\Models\Setting;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -23,7 +24,7 @@ class PortalPagesTest extends TestCase
             'layanan' => ['/layanan', 'layanan'],
             'jadwal' => ['/jadwal', 'jadwal'],
             'informasi' => ['/informasi', 'informasi'],
-            'berita detail' => ['/berita-detail', 'berita-detail'],
+            'berita' => ['/berita/pintu-resmi-diluncurkan', 'berita-detail'],
             'dokumentasi' => ['/dokumentasi', 'dokumentasi'],
             'unduhan' => ['/unduhan', 'unduhan'],
             'kontak' => ['/kontak', 'kontak'],
@@ -35,7 +36,18 @@ class PortalPagesTest extends TestCase
         ];
     }
 
-    #[DataProvider('pages')]
+    /**
+     * The portal pages served exactly as their files are written: all but
+     * the article page, whose addresses are made root-relative.
+     *
+     * @return array<string, array{string, string}>
+     */
+    public static function pagesAsWritten(): array
+    {
+        return array_filter(self::pages(), fn (array $page): bool => $page[1] !== 'berita-detail');
+    }
+
+    #[DataProvider('pagesAsWritten')]
     public function test_serves_each_portal_page_byte_for_byte_as_written(string $uri, string $view): void
     {
         $response = $this->get($uri);
@@ -126,7 +138,7 @@ class PortalPagesTest extends TestCase
         }
         if (str_contains($html, '<footer class="footer">')) {
             $this->assertStringContainsString('<p data-kontak-alamat>Memuat alamat…</p>', $html, $view);
-            $this->assertMatchesRegularExpression('/<ul role="list" data-kontak-hubungi>\s*<li><a href="kontak.html#pengaduan">Kanal pengaduan<\/a><\/li>\s*<\/ul>/', $html, $view);
+            $this->assertMatchesRegularExpression('/<ul role="list" data-kontak-hubungi>\s*<li><a href="\/?kontak.html#pengaduan">Kanal pengaduan<\/a><\/li>\s*<\/ul>/', $html, $view);
         }
     }
 
@@ -233,6 +245,74 @@ class PortalPagesTest extends TestCase
         $this->assertStringContainsString('<ul class="docs" id="docs" role="list" data-reveal data-dokumen-daftar></ul>', $html);
         $this->assertStringContainsString('<p class="center muted" role="status" data-dokumen-status style="padding:48px 0">Memuat dokumen…</p>', $html);
         $this->assertStringContainsString('<div class="toolbar" style="margin-bottom:28px" data-reveal data-dokumen-saringan hidden>', $html);
+    }
+
+    public function test_leaves_the_news_to_the_public_api(): void
+    {
+        $news = $this->get('/informasi')->assertOk()->getContent();
+        $article = $this->get('/berita/pintu-resmi-diluncurkan')->assertOk()->getContent();
+        $home = $this->get('/')->assertOk()->getContent();
+
+        foreach (['class="post"', 'class="pager"', 'Pembayaran QRIS', 'contoh tata letak', '<li><a href="berita-detail.html">'] as $example) {
+            $this->assertStringNotContainsString($example, $news);
+        }
+        $this->assertStringContainsString('<section class="section section--tight" data-berita-utama-bagian hidden>', $news);
+        $this->assertStringContainsString('<div class="posts" id="posts" data-berita-daftar></div>', $news);
+        $this->assertStringContainsString('<p class="center muted" role="status" data-berita-status style="padding:48px 0">Memuat berita…</p>', $news);
+        $this->assertStringContainsString('<ul class="notice-list" role="list" data-berita-pengumuman></ul>', $news);
+
+        foreach (['Selama ini, informasi persyaratan', '27 Oktober 2026', 'class="post"', 'Kepala Subbagian Tata Usaha'] as $example) {
+            $this->assertStringNotContainsString($example, $article);
+        }
+        $this->assertStringContainsString('<h1 class="h-display" style="margin-top:22px" data-berita-judul>Memuat tulisan…</h1>', $article);
+        $this->assertStringContainsString('<div class="prose" data-berita-isi></div>', $article);
+
+        $this->assertStringNotContainsString('Berlaku untuk keterlambatan pajak tahunan', $home);
+        $this->assertStringContainsString('data-papan-pengumuman-judul>', $home);
+    }
+
+    public function test_serves_the_article_page_with_addresses_from_the_site_root(): void
+    {
+        $response = $this->get('/berita/pintu-resmi-diluncurkan');
+        $html = $response->assertOk()->assertHeader('Content-Type', 'text/html; charset=UTF-8')->getContent();
+
+        $this->assertSame(0, preg_match('/\s(?:href|src)="(?![a-z][a-z0-9+.-]*:|\/|#)/i', $html));
+        $this->assertStringContainsString('<link rel="stylesheet" href="/assets/css/tokens.css">', $html);
+        $this->assertStringContainsString('<script src="/assets/js/main.js" defer></script>', $html);
+        $this->assertStringContainsString('<a class="link-arrow small" href="/informasi.html">', $html);
+        $this->assertStringContainsString('<a class="skip-link" href="#main">', $html);
+        $this->assertStringContainsString('<use href="#i-link"/>', $html);
+        $this->assertStringContainsString('href="https://wa.me/?text=PINTU%20Samsat%20Kota%20Kupang"', $html);
+        $this->assertSame(
+            file_get_contents(resource_path('views/portal/berita-detail.blade.php')),
+            preg_replace('/(\s(?:href|src)=")\/(?!\/)/', '$1', $html),
+        );
+        $this->assertSame([], $response->headers->getCookies());
+    }
+
+    public function test_makes_only_relative_addresses_root_relative(): void
+    {
+        $html = '<link href="assets/a.css"><script src="assets/a.js"></script><a href="profil.html#visi"><a href="/kontak"><a href="#main"><use href="#i-x"/><a href="https://wa.me/"><a href="mailto:a@b.go.id">';
+
+        $this->assertSame(
+            '<link href="/assets/a.css"><script src="/assets/a.js"></script><a href="/profil.html#visi"><a href="/kontak"><a href="#main"><use href="#i-x"/><a href="https://wa.me/"><a href="mailto:a@b.go.id">',
+            ArticlePageController::fromSiteRoot($html),
+        );
+    }
+
+    #[TestWith(['/berita/Judul'])]
+    #[TestWith(['/berita/judul--ganda'])]
+    #[TestWith(['/berita/judul/lain'])]
+    public function test_answers_404_for_an_article_address_without_a_slug(string $uri): void
+    {
+        $this->get($uri)->assertNotFound();
+    }
+
+    #[TestWith(['/berita-detail'])]
+    #[TestWith(['/berita-detail.html'])]
+    public function test_sends_the_former_example_article_to_the_news_list(string $uri): void
+    {
+        $this->get($uri)->assertMovedPermanently()->assertRedirect('/informasi');
     }
 
     public function test_keeps_the_initial_homepage_texts_in_the_markup_for_the_public_api_to_replace(): void

@@ -801,15 +801,22 @@
                 </div>
                 <div class="tile board__notice">
                   <p class="tile__label">
-                    Pengumuman <span class="board__new">Baru</span>
+                    Pengumuman
+                    <span class="board__new" data-papan-pengumuman-baru hidden
+                      >Baru</span
+                    >
                   </p>
-                  <p class="board__notice-title">
-                    Program pemutihan denda PKB diperpanjang.
+                  <p class="board__notice-title" data-papan-pengumuman-judul>
+                    Memuat pengumuman…
                   </p>
-                  <p class="board__notice-text">
-                    Berlaku untuk keterlambatan pajak tahunan. Bawa notis
-                    terakhir ke loket pajak tahunan.
-                  </p>
+                  <p class="board__notice-text" data-papan-pengumuman-teks></p>
+                  <a
+                    class="board__link"
+                    data-papan-pengumuman-tautan
+                    hidden
+                    >Baca pengumuman<svg class="i i--sm" aria-hidden="true">
+                      <use href="#i-arrow-right" /></svg
+                  ></a>
                 </div>
                 <div class="tile board__loket">
                   <ul class="board__counters" role="list" data-papan-loket></ul>

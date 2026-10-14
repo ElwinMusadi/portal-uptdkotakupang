@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import type { Berita } from "@/lib/api"
+import { khususAdministrator } from "@/lib/alur"
 import { tanggal, waktuRelatif } from "@/lib/format"
 import { KATEGORI_BERITA, STATUS_ALUR } from "@/lib/meta"
 import { useKoleksi } from "@/lib/queries"
@@ -21,6 +22,8 @@ export default function DaftarBerita() {
   const { data, isLoading } = useKoleksi("berita")
   const hapus = useHapus("berita", "tulisan")
   const { jalankan, dialog } = useAksiAlur("berita")
+  // Penghapusan hanya untuk Administrator (D-031)
+  const khususAdmin = khususAdministrator("berita")
 
   const kolom = [
     k.accessor("judul", {
@@ -80,7 +83,7 @@ export default function DaftarBerita() {
         <MenuBaris
           label={row.original.judul}
           onSunting={() => navigate(`/berita/${row.original.id}`)}
-          onHapus={() => void hapus([row.original.id], row.original.judul)}
+          onHapus={khususAdmin ? undefined : () => void hapus([row.original.id], row.original.judul)}
         >
           <DropdownMenuSeparator />
           <MenuAksiAlur koleksi="berita" item={row.original} jalankan={(i, a) => void jalankan(i, a)} />
@@ -120,13 +123,18 @@ export default function DaftarBerita() {
             nilai: (b) => b.status,
           },
         ]}
-        tindakanMassal={(baris, bersihkan) => (
-          <TombolHapusMassal
-            onClick={async () => {
-              if (await hapus(baris.map((b) => b.id))) bersihkan()
-            }}
-          />
-        )}
+        pilih={!khususAdmin}
+        tindakanMassal={
+          khususAdmin
+            ? undefined
+            : (baris, bersihkan) => (
+                <TombolHapusMassal
+                  onClick={async () => {
+                    if (await hapus(baris.map((b) => b.id))) bersihkan()
+                  }}
+                />
+              )
+        }
         kosong={{
           judul: "Belum ada tulisan",
           deskripsi: "Tulis berita atau pengumuman pertama untuk portal.",

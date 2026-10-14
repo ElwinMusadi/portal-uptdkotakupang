@@ -61,7 +61,7 @@ export function CommandMenuProvider({ children }: { children: React.ReactNode })
 function CommandMenu({ open, setOpen }: CommandMenuContext) {
   const navigate = useNavigate()
   const { setTheme } = useTheme()
-  const { data: berita } = useKoleksi("berita")
+  const { data: berita } = useKoleksi("berita", { aktif: bolehModul("berita") })
   const { data: layanan } = useKoleksi("layanan", { aktif: bolehModul("layanan") })
   const { data: dokumen } = useKoleksi("dokumen", { aktif: bolehModul("dokumen") })
   const buatCepat = navUntuk(BUAT_CEPAT, sesi())
