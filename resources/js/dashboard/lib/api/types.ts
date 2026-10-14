@@ -317,6 +317,8 @@ export interface Beranda {
     tombolUrl: string
     catatan: string
   }
+  /** Video YouTube di balik tombol "Tonton alur pelayanan"; tautan kosong = tombol tidak tampil (D-040) */
+  video: { url: string; label: string; durasi: string; judul: string }
   nilai: { id: Id; judul: string; deskripsi: string }[]
   layananUtama: Judul2Nada & { deskripsi: string }
   /** Logo mitra di bucket publik; inisial dipakai bila belum ada logo (D-037) */

@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Exceptions\PublicContentUnavailableException;
 use App\Models\Setting;
+use App\Rules\YoutubeUrl;
 use Illuminate\Database\QueryException;
 
 class ShowPublicHomepage
@@ -28,9 +29,17 @@ class ShowPublicHomepage
 
         $homepage = Setting::upgradeHomepage($setting?->value ?? Setting::INITIAL_HOMEPAGE);
         $withoutId = fn (array $items): array => array_map(fn (array $item): array => array_diff_key($item, ['id' => true]), $items);
+        $videoId = YoutubeUrl::id($homepage['video']['url']);
 
         return [
             ...$homepage,
+            // The portal embeds the video by its ID; no link, no button (D-040)
+            'video' => $videoId === null ? null : [
+                'id' => $videoId,
+                'label' => $homepage['video']['label'],
+                'durasi' => $homepage['video']['durasi'],
+                'judul' => $homepage['video']['judul'],
+            ],
             'nilai' => $withoutId($homepage['nilai']),
             'mitra' => $withoutId($homepage['mitra']),
             'kanal' => $withoutId($homepage['kanal']),

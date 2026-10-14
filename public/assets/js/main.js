@@ -1459,6 +1459,7 @@
       && Array.isArray(b.mitra) && b.mitra.every((m) => teks(m?.singkatan) && teks(m.nama) && (m.logo === null || teks(m.logo)))
       && Array.isArray(b.kanal) && b.kanal.every((k) => teks(k?.kelompok) && Array.isArray(k.item) && k.item.every((t) => teks(t?.teks) && teks(t.tautan)))
       && teks(b.biaya.catatanNotis) && teks(b.biaya.wajibDibawa) && Array.isArray(b.biaya.jaminan) && b.biaya.jaminan.every(teks)
+      && (b.video === null || (/^[\w-]{11}$/.test(b.video?.id) && ["label", "durasi", "judul"].every((f) => teks(b.video[f]))))
       && (b.diperbarui === null || teks(b.diperbarui));
     if (!valid) throw new Error("Respons tidak dikenal");
     return b;
@@ -1470,6 +1471,27 @@
     const nilai = $("[data-beranda-nilai]");
     const mitra = $("[data-beranda-mitra]");
     const kanal = $("[data-beranda-kanal]");
+
+    /* Video alur pelayanan (D-040): tombolnya tampil hanya bila video sudah
+       diisi di dashboard. Pemutar YouTube mode privasi (youtube-nocookie.com)
+       baru dimuat saat dialog dibuka dan dilepas saat ditutup, jadi beranda
+       tidak memuat apa pun dari YouTube dan video berhenti saat ditutup. */
+    const tombolVideo = $("[data-beranda-video]");
+    const dialogVideo = $("#dlg-video");
+    const pemutarVideo = $("[data-beranda-video-pemutar]");
+    const judulVideo = $("[data-beranda-video-judul]");
+    let idVideo = "";
+    tombolVideo?.addEventListener("click", () => {
+      if (!/^[\w-]{11}$/.test(idVideo)) return;
+      const iframe = document.createElement("iframe");
+      iframe.src = `https://www.youtube-nocookie.com/embed/${idVideo}?autoplay=1&rel=0`;
+      iframe.title = judulVideo.textContent.trim();
+      iframe.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+      iframe.allowFullscreen = true;
+      iframe.referrerPolicy = "strict-origin-when-cross-origin";
+      pemutarVideo.replaceChildren(iframe);
+    });
+    dialogVideo?.addEventListener("close", () => pemutarVideo.replaceChildren());
     // Ikon yang tertulis di HTML, menurut posisi butirnya
     const ikonNilai = $$(".feature > svg", nilai).map((el) => el.outerHTML);
     const ikonKanal = $$(".kanal__col", kanal).map((kolom) => $$(".kanal__ic", kolom).map((el) => el.outerHTML));
@@ -1508,6 +1530,18 @@
       const catatan = $("[data-beranda-catatan]");
       catatan.replaceChildren($("svg", catatan), b.hero.catatan);
       catatan.hidden = !b.hero.catatan;
+
+      if (tombolVideo) {
+        idVideo = b.video?.id ?? "";
+        tombolVideo.hidden = !b.video;
+        if (b.video) {
+          $("[data-beranda-video-label]", tombolVideo).textContent = b.video.label;
+          const durasi = $("[data-beranda-video-durasi]", tombolVideo);
+          durasi.textContent = b.video.durasi;
+          durasi.hidden = !b.video.durasi;
+          judulVideo.textContent = b.video.judul || b.video.label;
+        }
+      }
 
       nilai.innerHTML = b.nilai.map((n, i) =>
         `<div class="feature is-in" data-reveal>${ikonNilai[i] ?? IKON_NILAI}<h2 class="title">${esc(n.judul)}</h2>${n.deskripsi ? `<p>${esc(n.deskripsi)}</p>` : ""}</div>`).join("");

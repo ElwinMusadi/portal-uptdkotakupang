@@ -357,6 +357,12 @@ class PortalPagesTest extends TestCase
         }
         $this->assertSame(4, substr_count($html, 'data-beranda-judul="'));
         $this->assertSame(6, substr_count($html, 'data-beranda-teks="'));
+        // The video button stays hidden until the public API gives a video (D-040)
+        $this->assertMatchesRegularExpression('/<button\s+class="play-pill"[^>]*\sdata-beranda-video\s+hidden\s*>/', $html);
+        foreach (['data-beranda-video-label', 'data-beranda-video-durasi', 'data-beranda-video-pemutar', 'data-beranda-video-judul'] as $hook) {
+            $this->assertStringContainsString($hook, $html);
+        }
+        $this->assertStringNotContainsString('2:14', $html);
     }
 
     public function test_sends_the_contact_form_to_the_message_api_with_the_services_it_accepts(): void

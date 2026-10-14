@@ -343,10 +343,13 @@
                 class="play-pill"
                 type="button"
                 data-open-dialog="dlg-video"
+                data-beranda-video
+                hidden
               >
                 <span class="play-pill__btn"
                   ><svg aria-hidden="true"><use href="#i-play" /></svg></span
-                >Tonton alur pelayanan <small>2:14</small>
+                ><span data-beranda-video-label>Tonton alur pelayanan</span>
+                <small data-beranda-video-durasi hidden></small>
               </button>
               <span class="board__tag" data-papan-waktu>Memuat…</span>
             </div>
@@ -1030,7 +1033,7 @@
       </section>
     </main>
 
-    <dialog class="dialog" id="dlg-video" aria-labelledby="dlg-video-title">
+    <dialog class="dialog dialog--video" id="dlg-video" aria-labelledby="dlg-video-title">
       <div class="dialog__body">
         <button
           class="dialog__close"
@@ -1040,16 +1043,10 @@
         >
           <svg class="i i--sm" aria-hidden="true"><use href="#i-x" /></svg>
         </button>
-        <div class="ph ph--slate dialog__media">
-          <span class="ph__label">Video profil · 2:14</span>
-        </div>
-        <h3 class="title" id="dlg-video-title" style="margin-top: 20px">
-          Video alur pelayanan sedang disiapkan.
+        <div class="dialog__media dialog__media--video" data-beranda-video-pemutar></div>
+        <h3 class="title" id="dlg-video-title" style="margin-top: 16px" data-beranda-video-judul>
+          Tonton alur pelayanan
         </h3>
-        <p class="small muted" style="margin-top: 6px">
-          Video akan tayang setelah melalui verifikasi dan persetujuan atasan,
-          sesuai alur publikasi PINTU.
-        </p>
       </div>
     </dialog>
 

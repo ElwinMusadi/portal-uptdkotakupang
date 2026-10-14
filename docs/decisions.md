@@ -543,3 +543,14 @@ Menjawab catatan di D-033: bagian "Empat peran. Satu alur sebelum terbit." di ha
 |---|---|
 | Struktur Organisasi | **Ditulis ulang sesuai alur** (keputusan pemilik), tata letak empat kartu tetap: "Empat langkah. Satu alur sebelum terbit." Persyaratan layanan, regulasi, berita, dan dokumentasi kegiatan melewati alur ini; jadwal dan informasi harian diperbarui langsung oleh petugas yang ditugaskan. Langkahnya: disiapkan pengelola modul; diperiksa dan dicocokkan dengan sumber resmi; disetujui Administrator (persyaratan layanan dan regulasi) atau pengelolanya (berita dan dokumentasi); terbit dengan tanggal tercatat, dan informasi yang tidak berlaku lagi ditarik ke arsip. |
 | Login | **Ikut disesuaikan** (keputusan pemilik): panel samping menyebut pengelola modul, pemeriksaan, persetujuan oleh Administrator untuk layanan dan regulasi atau oleh pengelolanya untuk berita dan dokumentasi, lalu terbit. |
+
+## D-040 · 2026-10-14 · Video alur pelayanan diatur dari Dashboard › Beranda
+
+Tombol "Tonton alur pelayanan" di bawah papan layanan beranda sebelumnya placeholder prototipe: dialognya hanya berisi "Video alur pelayanan sedang disiapkan." dan durasi contoh 2:14.
+
+| Hal | Keputusan |
+|---|---|
+| Isian | **Tautan YouTube, label tombol, durasi, dan judul** (keputusan pemilik) di bagian baru "Video alur pelayanan" pada dokumen Beranda. Tautan bagikan (`youtu.be`), tonton, Shorts, live, dan sematan diterima, lalu disimpan sebagai tautan tonton tanpa parameter pelacak seperti `si`. Durasi opsional dan ditulis sendiri (mis. 2:14); judul opsional, bila kosong label tombol yang dipakai. |
+| Tanpa video | **Tombol disembunyikan** (keputusan pemilik) selama tautan kosong; dialog "sedang disiapkan" dihapus. |
+| Pemutar | **Mode privasi, dimuat saat dibuka** (keputusan pemilik): sematan `youtube-nocookie.com`, baru dimuat ketika dialog dibuka dan dilepas saat ditutup, sehingga beranda tidak memuat apa pun dari YouTube dan video berhenti ketika dialog ditutup. API publik hanya memberikan ID videonya. |
+| Akses | Pengelola Beranda, sama dengan isi Beranda lainnya. Dashboard yang masih terbuka dengan versi lama tetap bisa menyimpan tanpa menghapus video yang tersimpan. |

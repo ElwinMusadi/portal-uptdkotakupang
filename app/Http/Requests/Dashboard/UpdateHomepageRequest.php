@@ -3,9 +3,11 @@
 namespace App\Http\Requests\Dashboard;
 
 use App\Enums\UploadTarget;
+use App\Models\Setting;
 use App\Rules\PlainText;
 use App\Rules\PortalLink;
 use App\Rules\UploadUrl;
+use App\Rules\YoutubeUrl;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -69,6 +71,11 @@ class UpdateHomepageRequest extends FormRequest
             'hero.tombolLabel' => ['required', 'string', 'max:40', new PlainText('Label tombol')],
             'hero.tombolUrl' => ['nullable', 'string', 'max:300', new PortalLink('Tautan tombol')],
             'hero.catatan' => ['nullable', 'string', 'max:160', new PlainText('Catatan pembuka')],
+            'video' => ['sometimes', 'array'],
+            'video.url' => ['nullable', 'string', 'max:300', new YoutubeUrl('Tautan video')],
+            'video.label' => ['nullable', 'required_with:video.url', 'string', 'max:40', new PlainText('Label tombol video')],
+            'video.durasi' => ['nullable', 'string', 'regex:/^\d{1,2}:\d{2}(?::\d{2})?\z/'],
+            'video.judul' => ['nullable', 'string', 'max:120', new PlainText('Judul video')],
             'nilai' => ['present', 'list', 'max:6'],
             'nilai.*' => ['required', 'array'],
             'nilai.*.id' => ['required', 'string', 'max:40', 'distinct'],
@@ -119,6 +126,7 @@ class UpdateHomepageRequest extends FormRequest
             'max' => ':Attribute maksimal :max karakter.',
             'distinct' => ':Attribute tercantum dua kali.',
             'required_with' => ':Attribute wajib diisi bila tautannya diisi.',
+            'video.durasi.regex' => 'Tulis durasi video seperti 2:14 atau 1:02:30.',
             'nilai.max' => 'Maksimal :max nilai utama.',
             'mitra.max' => 'Maksimal :max mitra.',
             'kanal.max' => 'Maksimal :max kelompok kanal.',
@@ -141,6 +149,11 @@ class UpdateHomepageRequest extends FormRequest
             'hero.tombolLabel' => 'label tombol',
             'hero.tombolUrl' => 'tautan tombol',
             'hero.catatan' => 'catatan pembuka',
+            'video' => 'video',
+            'video.url' => 'tautan video',
+            'video.label' => 'label tombol video',
+            'video.durasi' => 'durasi video',
+            'video.judul' => 'judul video',
             'nilai' => 'nilai utama',
             'nilai.*' => 'nilai utama',
             'nilai.*.id' => 'nilai utama',
@@ -202,6 +215,13 @@ class UpdateHomepageRequest extends FormRequest
                 'tombolUrl' => $text('hero.tombolUrl'),
                 'catatan' => $text('hero.catatan'),
             ],
+            // A dashboard opened before the video existed sends none; the saved one stays
+            'video' => $this->has('video') ? [
+                'url' => YoutubeUrl::canonical($text('video.url')) ?? '',
+                'label' => $text('video.label'),
+                'durasi' => $text('video.durasi'),
+                'judul' => $text('video.judul'),
+            ] : Setting::homepage()['video'],
             'nilai' => array_map(fn (array $value): array => [
                 'id' => $value['id'],
                 'judul' => $value['judul'],

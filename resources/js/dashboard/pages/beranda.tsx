@@ -1,4 +1,4 @@
-import { IconServer } from "@tabler/icons-react"
+import { IconExternalLink, IconServer } from "@tabler/icons-react"
 import { z } from "zod"
 
 import { Bagian, Baris, Halaman, PengantarHalaman } from "@/components/data/page"
@@ -12,6 +12,27 @@ import { newId } from "@/lib/id"
 import * as v from "@/lib/validasi"
 
 const maks = (n: number) => `Maksimal ${n} karakter.`
+
+/** ID video YouTube dari tautan bagikan, tonton, Shorts, live, atau sematan; null bila bukan (sama dengan server, D-040) */
+function idYoutube(tautan: string): string | null {
+  let u: URL
+  try {
+    u = new URL(tautan.trim())
+  } catch {
+    return null
+  }
+  if (!/^https?:$/.test(u.protocol)) return null
+  const host = u.hostname.toLowerCase().replace(/^(www|m)\./, "")
+  const id =
+    host === "youtu.be"
+      ? u.pathname.slice(1)
+      : !["youtube.com", "youtube-nocookie.com"].includes(host)
+        ? null
+        : u.pathname === "/watch"
+          ? u.searchParams.get("v")
+          : (u.pathname.match(/^\/(?:embed|shorts|live)\/([^/]+)\/?$/)?.[1] ?? null)
+  return id && /^[\w-]{11}$/.test(id) ? id : null
+}
 
 const judul2 = z.object({
   judul: v.wajib("Judul").max(80, maks(80)),
@@ -30,6 +51,18 @@ const schema = z.object({
     tombolUrl: v.tautan.max(300, maks(300)),
     catatan: v.teks.max(160, maks(160)),
   }),
+  video: z
+    .object({
+      url: z
+        .string()
+        .trim()
+        .max(300, maks(300))
+        .refine((u) => !u || idYoutube(u) !== null, "Gunakan tautan video YouTube, mis. https://youtu.be/…"),
+      label: v.teks.max(40, maks(40)),
+      durasi: z.string().trim().refine((d) => !d || /^\d{1,2}:\d{2}(:\d{2})?$/.test(d), "Tulis durasi seperti 2:14 atau 1:02:30."),
+      judul: v.teks.max(120, maks(120)),
+    })
+    .refine((x) => !x.url || x.label.trim(), { message: "Isi label tombol untuk video ini.", path: ["label"] }),
   nilai: z
     .array(z.object({ id: z.string(), judul: v.wajib("Judul").max(60, maks(60)), deskripsi: v.teks.max(200, maks(200)) }))
     .max(6, "Maksimal 6 nilai utama."),
@@ -70,6 +103,7 @@ const schema = z.object({
 
 const BAGIAN = [
   ["hero", "Pembuka"],
+  ["video", "Video"],
   ["nilai", "Nilai utama"],
   ["layanan-utama", "Layanan utama"],
   ["mitra", "Mitra"],
@@ -121,6 +155,42 @@ export default function HalamanBeranda() {
                   <FieldTeks control={form.control} name="hero.tombolUrl" label="Tujuan tombol" placeholder="layanan.html" />
                 </Baris>
                 <FieldTeks control={form.control} name="hero.catatan" label="Catatan kepercayaan" />
+              </Bagian>
+
+              <Bagian
+                id="bagian-video"
+                judul="Video alur pelayanan"
+                deskripsi="Tombol “Tonton alur pelayanan” di bawah papan layanan membuka video YouTube ini. Tombolnya tidak tampil selama tautan kosong."
+              >
+                <FieldTeks
+                  control={form.control}
+                  name="video.url"
+                  label="Tautan YouTube"
+                  inputMode="url"
+                  placeholder="https://youtu.be/…"
+                  deskripsi="Tautan bagikan, tonton, atau Shorts. Disimpan sebagai tautan tonton tanpa parameter pelacak."
+                />
+                <Baris>
+                  <FieldTeks control={form.control} name="video.label" label="Label tombol" />
+                  <FieldTeks control={form.control} name="video.durasi" label="Durasi" placeholder="2:14" deskripsi="Opsional, tampil di tombol." />
+                </Baris>
+                <FieldTeks
+                  control={form.control}
+                  name="video.judul"
+                  label="Judul di bawah video"
+                  deskripsi="Opsional. Bila kosong, label tombol yang dipakai."
+                />
+                {n.video?.url && idYoutube(n.video.url) && (
+                  <a
+                    href={`https://www.youtube.com/watch?v=${idYoutube(n.video.url)}`}
+                    target="_blank"
+                    rel="noopener"
+                    className="inline-flex w-fit items-center gap-1.5 text-sm underline underline-offset-4"
+                  >
+                    <IconExternalLink className="size-4" aria-hidden="true" />
+                    Lihat video di YouTube
+                  </a>
+                )}
               </Bagian>
 
               <Bagian id="bagian-nilai" judul="Nilai utama" deskripsi="Tiga janji singkat di bawah papan layanan.">

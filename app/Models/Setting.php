@@ -243,6 +243,8 @@ class Setting extends Model
             'tombolUrl' => 'layanan.html',
             'catatan' => 'Gratis dan tanpa perantara. Setiap informasi diverifikasi petugas UPTD.',
         ],
+        // The "Tonton alur pelayanan" button under the service board, hidden while its link is empty (D-040)
+        'video' => ['url' => '', 'label' => 'Tonton alur pelayanan', 'durasi' => '', 'judul' => ''],
         'nilai' => [
             ['id' => 'nilai-1', 'judul' => 'Persyaratan jelas.', 'deskripsi' => 'Daftar berkas setiap layanan, lengkap dengan jumlah lembar fotokopi yang perlu dibawa.'],
             ['id' => 'nilai-2', 'judul' => 'Jadwal terbaru.', 'deskripsi' => 'Jam loket dan lokasi Samsat Keliling diperbarui petugas setiap hari kerja.'],
@@ -426,9 +428,10 @@ class Setting extends Model
 
     /**
      * A Beranda document in its current shape, whenever it was saved: every
-     * partner has a logo address or null (D-037), and every channel is a
-     * text with a link, empty when it has none (D-038). Channels saved as
-     * plain text get no link.
+     * partner has a logo address or null (D-037), every channel is a text
+     * with a link, empty when it has none (D-038), and there is a video, with
+     * no link until one is saved (D-040). Channels saved as plain text get no
+     * link.
      *
      * @param  array<string, mixed>  $homepage
      * @return array<string, mixed>
@@ -440,6 +443,7 @@ class Setting extends Model
             ...$group,
             'item' => array_map(fn (string|array $channel): array => is_string($channel) ? ['teks' => $channel, 'tautan' => ''] : $channel, $group['item']),
         ], $homepage['kanal']);
+        $homepage['video'] = [...self::INITIAL_HOMEPAGE['video'], ...($homepage['video'] ?? [])];
 
         return $homepage;
     }

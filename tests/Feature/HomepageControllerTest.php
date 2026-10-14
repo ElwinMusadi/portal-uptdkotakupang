@@ -45,6 +45,7 @@ class HomepageControllerTest extends TestCase
             ->assertJsonPath('nilai.*.judul', ['Persyaratan jelas.', 'Jadwal terbaru.', 'Tanpa perantara.'])
             ->assertJsonPath('mitra.*.singkatan', ['BP', 'PL', 'JR', 'BN', 'QR', 'SG'])
             ->assertJsonPath('mitra.*.logo', [null, null, null, null, null, null])
+            ->assertJsonPath('video', ['url' => '', 'label' => 'Tonton alur pelayanan', 'durasi' => '', 'judul' => ''])
             ->assertJsonPath('kanal.*.kelompok', ['Kantor', 'Keliling', 'Digital', 'Informasi', 'Pengaduan'])
             ->assertJsonPath('kanal.0.item.1', ['teks' => "Loket 5\u{00A0}tahunan", 'tautan' => ''])
             ->assertJsonPath('biaya.jaminan', ['Bukti bayar resmi', 'Bisa non-tunai', 'Tercatat di sistem'])
@@ -184,7 +185,9 @@ class HomepageControllerTest extends TestCase
         $homepage = Setting::INITIAL_HOMEPAGE;
         $homepage['mitra'] = [['id' => 'mitra-1', 'singkatan' => 'BP', 'nama' => 'BPAD Provinsi NTT']];
         $homepage['kanal'] = [['id' => 'kanal-1', 'kelompok' => 'Pengaduan', 'item' => ['SP4N-LAPOR!', 'Kotak saran']]];
+        unset($homepage['video']);
         (new Setting)->forceFill(['name' => Setting::HOMEPAGE, 'value' => $homepage])->save();
+        $this->assertSame(['url' => '', 'label' => 'Tonton alur pelayanan', 'durasi' => '', 'judul' => ''], Setting::homepage()['video']);
         $employee = $this->berandaEmployee();
 
         $shown = $this->actingAs($employee)->getJson('/api/pengaturan/beranda')
@@ -198,7 +201,8 @@ class HomepageControllerTest extends TestCase
             ->assertOk()
             ->assertJsonPath('mitra.0.logo', null)
             ->assertJsonPath('kanal.0.item.1', ['teks' => 'Kotak saran', 'tautan' => '']);
-        $this->assertSame($shown, Setting::homepage());
+        // Same content; the saved document lists the video right after the opening
+        $this->assertEquals($shown, Setting::homepage());
     }
 
     public function test_accepts_channels_sent_as_plain_text_by_an_older_dashboard(): void
@@ -218,6 +222,82 @@ class HomepageControllerTest extends TestCase
             ->assertOk()
             ->assertJsonPath('kanal.0.item', [['teks' => 'Kotak saran', 'tautan' => ''], ['teks' => 'Ombudsman NTT', 'tautan' => '']])
             ->assertJsonPath('kanal.1.item', [['teks' => 'SIGNAL', 'tautan' => '']]);
+    }
+
+    #[TestWith(['https://youtu.be/25sRCp-IFxI?si=PKD-EyH-_dDyIiFU'])]
+    #[TestWith(['https://www.youtube.com/watch?v=25sRCp-IFxI&t=10s'])]
+    #[TestWith(['https://m.youtube.com/watch?v=25sRCp-IFxI'])]
+    #[TestWith(['https://youtube.com/shorts/25sRCp-IFxI?feature=share'])]
+    #[TestWith(['https://www.youtube.com/live/25sRCp-IFxI'])]
+    #[TestWith(['https://www.youtube-nocookie.com/embed/25sRCp-IFxI'])]
+    public function test_saves_the_video_as_a_plain_watch_link(string $url): void
+    {
+        $homepage = Setting::INITIAL_HOMEPAGE;
+        $homepage['video'] = ['url' => $url, 'label' => 'Tonton alur pelayanan', 'durasi' => '2:14', 'judul' => null];
+
+        $response = $this->actingAs($this->berandaEmployee())->putJson('/api/pengaturan/beranda', $homepage);
+
+        $response->assertOk()->assertJsonPath('video', [
+            'url' => 'https://www.youtube.com/watch?v=25sRCp-IFxI',
+            'label' => 'Tonton alur pelayanan',
+            'durasi' => '2:14',
+            'judul' => '',
+        ]);
+    }
+
+    public function test_validates_the_video(): void
+    {
+        $homepage = Setting::INITIAL_HOMEPAGE;
+        $homepage['video'] = ['url' => 'https://evil.example/watch?v=25sRCp-IFxI', 'label' => str_repeat('a', 41), 'durasi' => '2 menit', 'judul' => "Judul\u{0007}"];
+
+        $this->actingAs($this->berandaEmployee())->putJson('/api/pengaturan/beranda', $homepage)
+            ->assertUnprocessable()
+            ->assertOnlyJsonValidationErrors([
+                'video.url' => 'Tautan video: gunakan tautan video YouTube, mis. https://youtu.be/… atau https://www.youtube.com/watch?v=….',
+                'video.label' => 'Label tombol video maksimal 40 karakter.',
+                'video.durasi' => 'Tulis durasi video seperti 2:14 atau 1:02:30.',
+                'video.judul' => 'Judul video berisi karakter kontrol yang tidak diizinkan.',
+            ]);
+
+        $homepage['video'] = ['url' => 'https://youtu.be/25sRCp-IFxI', 'label' => '', 'durasi' => '1:02:30', 'judul' => ''];
+        $this->actingAs($this->berandaEmployee())->putJson('/api/pengaturan/beranda', $homepage)
+            ->assertUnprocessable()
+            ->assertOnlyJsonValidationErrors(['video.label' => 'Label tombol video wajib diisi bila tautannya diisi.']);
+        $this->assertDatabaseCount('settings', 0);
+    }
+
+    #[TestWith(['ftp://youtu.be/25sRCp-IFxI'])]
+    #[TestWith(['https://youtu.be/25sRCp'])]
+    #[TestWith(['https://www.youtube.com/watch?v=25sRCp-IFxI1'])]
+    #[TestWith(['https://youtube.com.evil.example/watch?v=25sRCp-IFxI'])]
+    #[TestWith(['https://www.youtube.com/@uptdkupang'])]
+    #[TestWith(['https://youtu.be/25sRCp-IFxI/lain'])]
+    #[TestWith(['https://www.youtube.com/embed/25sRCp-IFxI/lain'])]
+    #[TestWith(['https://www.youtube.com/watch?v[]=25sRCp-IFxI'])]
+    public function test_rejects_links_that_are_not_youtube_videos(string $url): void
+    {
+        $homepage = Setting::INITIAL_HOMEPAGE;
+        $homepage['video']['url'] = $url;
+
+        $this->actingAs($this->berandaEmployee())->putJson('/api/pengaturan/beranda', $homepage)
+            ->assertUnprocessable()
+            ->assertOnlyJsonValidationErrors(['video.url']);
+    }
+
+    public function test_keeps_the_saved_video_when_an_older_dashboard_sends_none(): void
+    {
+        $employee = $this->berandaEmployee();
+        $homepage = Setting::INITIAL_HOMEPAGE;
+        $homepage['video'] = ['url' => 'https://youtu.be/25sRCp-IFxI', 'label' => 'Tonton alur pelayanan', 'durasi' => '2:14', 'judul' => 'Alur pelayanan PINTU'];
+        $this->actingAs($employee)->putJson('/api/pengaturan/beranda', $homepage)->assertOk();
+
+        unset($homepage['video']);
+        $homepage['hero']['judul'] = 'Judul baru.';
+        $this->actingAs($employee)->putJson('/api/pengaturan/beranda', $homepage)
+            ->assertOk()
+            ->assertJsonPath('hero.judul', 'Judul baru.')
+            ->assertJsonPath('video.url', 'https://www.youtube.com/watch?v=25sRCp-IFxI')
+            ->assertJsonPath('video.judul', 'Alur pelayanan PINTU');
     }
 
     private function logo(): Upload

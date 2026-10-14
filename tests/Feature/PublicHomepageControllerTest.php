@@ -25,7 +25,19 @@ class PublicHomepageControllerTest extends TestCase
             ->assertJsonPath('nilai.0', ['judul' => 'Persyaratan jelas.', 'deskripsi' => 'Daftar berkas setiap layanan, lengkap dengan jumlah lembar fotokopi yang perlu dibawa.'])
             ->assertJsonPath('mitra.0', ['singkatan' => 'BP', 'nama' => 'BPAD Provinsi NTT', 'logo' => null])
             ->assertJsonPath('kanal.4', ['kelompok' => 'Pengaduan', 'item' => [['teks' => 'SP4N-LAPOR!', 'tautan' => ''], ['teks' => 'Kotak saran', 'tautan' => ''], ['teks' => 'Ombudsman NTT', 'tautan' => '']]])
+            ->assertJsonPath('video', null)
             ->assertJsonPath('diperbarui', null);
+    }
+
+    public function test_gives_the_video_by_its_youtube_id_without_the_link(): void
+    {
+        $homepage = Setting::INITIAL_HOMEPAGE;
+        $homepage['video'] = ['url' => 'https://www.youtube.com/watch?v=25sRCp-IFxI', 'label' => 'Tonton alur pelayanan', 'durasi' => '2:14', 'judul' => 'Alur pelayanan PINTU'];
+        (new Setting)->forceFill(['name' => Setting::HOMEPAGE, 'value' => $homepage])->save();
+
+        $this->getJson('/api/public/beranda')
+            ->assertOk()
+            ->assertJsonPath('video', ['id' => '25sRCp-IFxI', 'label' => 'Tonton alur pelayanan', 'durasi' => '2:14', 'judul' => 'Alur pelayanan PINTU']);
     }
 
     public function test_returns_the_saved_document_with_its_time_and_without_item_ids(): void

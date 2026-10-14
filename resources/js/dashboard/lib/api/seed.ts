@@ -1044,6 +1044,7 @@ function pengaturan(sekarang: Date): Pengaturan {
         tombolUrl: "layanan.html",
         catatan: "Gratis dan tanpa perantara. Setiap informasi diverifikasi petugas UPTD.",
       },
+      video: { url: "", label: "Tonton alur pelayanan", durasi: "", judul: "" },
       nilai: [
         { id: id(), judul: "Persyaratan jelas.", deskripsi: "Daftar berkas setiap layanan, lengkap dengan jumlah lembar fotokopi yang perlu dibawa." },
         { id: id(), judul: "Jadwal terbaru.", deskripsi: "Jam loket dan lokasi Samsat Keliling diperbarui petugas setiap hari kerja." },
