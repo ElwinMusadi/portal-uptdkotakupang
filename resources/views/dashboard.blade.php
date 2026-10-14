@@ -11,9 +11,9 @@
     <link rel="apple-touch-icon" href="{{ asset('assets/img/apple-touch-icon.png') }}" />
     <title>Dashboard PINTU — UPTD Pendapatan Daerah Wilayah Kota Kupang</title>
     <script>
-      // Terapkan tema sebelum aplikasi dimuat agar tidak berkedip
+      // Terapkan tema sebelum aplikasi dimuat agar tidak berkedip; bawaannya Terang
       try {
-        var t = localStorage.getItem("pintu.tema") || "system"
+        var t = localStorage.getItem("pintu.tema") || "light"
         var dark = t === "dark" || (t === "system" && matchMedia("(prefers-color-scheme: dark)").matches)
         if (dark) document.documentElement.classList.add("dark")
       } catch (e) {}

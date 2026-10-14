@@ -52,7 +52,7 @@ Dashboard memakai rute hash (`/dashboard/#/berita`), jadi satu rute Laravel (`/d
 ## Struktur folder
 
 ```
-resources/views/dashboard.blade.php  ← halaman induk (tema terang/gelap dipasang sebelum React dimuat)
+resources/views/dashboard.blade.php  ← halaman induk (tema terang/gelap dipasang sebelum React dimuat; bawaannya Terang)
 public/assets/img/                   ← lambang NTT dan favicon (dipakai bersama portal)
 vite.config.ts                       ← entri resources/js/dashboard/main.tsx, keluaran public/build
 resources/js/dashboard/

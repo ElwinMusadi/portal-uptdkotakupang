@@ -489,3 +489,12 @@ Absensi Lapangan kini tersimpan di server dan berganti bentuk: dari catatan data
 | Data lama | Koleksi `absensi` di peramban (datang dan pulang) dihapus dari dashboard dan dari cadangan JSON. Isinya contoh dan tidak dipindahkan. Tidak ada data awal kegiatan. |
 
 Kamera dan lokasi hanya bekerja lewat HTTPS, jadi aplikasi diuji penuh di Laravel Cloud, bukan di situs Herd lokal (`http`). Retensi swafoto tetap menunggu keputusan bersama unit hukum (D-028).
+
+## D-035 · 2026-10-14 · Navbar portal berbentuk notch; tema bawaan dashboard Terang
+
+| Hal | Keputusan |
+|---|---|
+| Navbar portal | **Notch yang menempel di tepi atas halaman** (keputusan pemilik, mengikuti bahasa desain referensi Kage "tinykpi navigation"): sudut bawah membulat 20 px, lekuk 16 px di kedua sisi yang menyatukan notch dengan tepi atas, tetap terlihat saat digulir. Menggantikan pil mengambang. |
+| Isi | **Semua menu tetap ada, dipadatkan** (keputusan pemilik): Profil, Layanan, Jadwal, Informasi, Kontak & Pengaduan, ikon Login Pegawai, dan tombol "Cek Persyaratan"; teks 13 px, tombol 36 px. Di bawah 1001 px tautan masuk ke tombol Menu di dalam notch, dan menu seluler terbuka di bawahnya. Markup header di semua halaman tidak berubah; perubahan hanya di `components.css`. |
+| Warna | **Tetap warna PINTU** (keputusan pemilik): ink #0F1319, tautan redup, tombol putih, dan aksen #7FA4FF untuk fokus dan halaman aktif. |
+| Tema dashboard | **Terang menjadi tema bawaan** dashboard dan aplikasi `/absen` (keputusan pemilik), menggantikan "ikuti sistem". Pilihan Gelap atau Sistem yang sudah disimpan pegawai tetap dihormati. |

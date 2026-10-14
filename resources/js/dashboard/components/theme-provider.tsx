@@ -12,14 +12,15 @@ type ThemeContextValue = {
 
 const ThemeContext = React.createContext<ThemeContextValue | null>(null)
 
+/** Tema yang dipilih pegawai, atau Terang bila belum pernah memilih */
 function readStoredTheme(): Theme {
   try {
     const value = localStorage.getItem(STORAGE_KEY)
     if (value === "light" || value === "dark" || value === "system") return value
   } catch {
-    // localStorage bisa diblokir (mode privat); pakai tema sistem
+    // localStorage bisa diblokir (mode privat); pakai tema bawaan
   }
-  return "system"
+  return "light"
 }
 
 function systemPrefersDark() {

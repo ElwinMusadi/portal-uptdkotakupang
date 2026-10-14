@@ -104,7 +104,7 @@ PINTU
 └── Design System (design-system.html)
 ```
 
-Navigasi utama dibatasi **lima** tautan (Profil, Layanan, Jadwal, Informasi, Kontak & Pengaduan) sesuai pola navbar pil referensi; turunan muncul sebagai dropdown gelap. Lebar navbar mengikuti isinya. Akses pegawai dibuat ringkas: ikon **Login Pegawai** di navbar (berlabel untuk pembaca layar dan tooltip), tombol di menu seluler, dan tautan di footer. Navbar desktop tampil mulai 1001px; di bawahnya dipakai menu seluler.
+Navigasi utama dibatasi **lima** tautan (Profil, Layanan, Jadwal, Informasi, Kontak & Pengaduan) dalam navbar gelap berbentuk notch yang menempel di tepi atas halaman (sudut bawah membulat, lekuk di kedua sisi, tetap terlihat saat digulir; D-035); turunan muncul sebagai dropdown gelap. Lebar navbar mengikuti isinya. Akses pegawai dibuat ringkas: ikon **Login Pegawai** di navbar (berlabel untuk pembaca layar dan tooltip), tombol di menu seluler, dan tautan di footer. Navbar desktop tampil mulai 1001px; di bawahnya dipakai menu seluler.
 
 ---
 
@@ -173,7 +173,7 @@ Sumber kebenaran: `assets/css/tokens.css`. Panduan visual hidup: `design-system.
 
 ### 6.5 Komponen
 
-Navbar pil mengambang + dropdown gelap + ikon Login Pegawai · tombol (dark, light, ghost, night; 48/38/30px) · tautan garis bawah animasi · eyebrow · headline dua nada · media + baris keterangan · strip tiga fitur · tab bernomor · daftar kategori aktif · lencana mitra · chip filter · tag status · akordeon · tile metrik + sparkline · baris filter waktu · pil notch · kanvas bento · kartu biaya · formulir (input, select, textarea, sakelar, radio-chip) · tabel · remah roti · placeholder foto · dialog/lightbox · toast · bagan organisasi · kanban.
+Navbar notch di tepi atas + dropdown gelap + ikon Login Pegawai · tombol (dark, light, ghost, night; 48/38/30px) · tautan garis bawah animasi · eyebrow · headline dua nada · media + baris keterangan · strip tiga fitur · tab bernomor · daftar kategori aktif · lencana mitra · chip filter · tag status · akordeon · tile metrik + sparkline · baris filter waktu · pil notch · kanvas bento · kartu biaya · formulir (input, select, textarea, sakelar, radio-chip) · tabel · remah roti · placeholder foto · dialog/lightbox · toast · bagan organisasi · kanban.
 
 ### 6.6 Gerak
 
@@ -196,7 +196,7 @@ Navbar pil mengambang + dropdown gelap + ikon Login Pegawai · tombol (dark, lig
 
 | # | Seksi referensi | Adaptasi PINTU |
 |---|---|---|
-| 1 | Navbar pil gelap | Lambang + "PINTU / Samsat Kota Kupang", 5 menu (termasuk "Kontak & Pengaduan"), ikon Login Pegawai, dan "Cek Persyaratan"; lebar mengikuti isi |
+| 1 | Navbar notch gelap | Lambang + "PINTU / Samsat Kota Kupang", 5 menu (termasuk "Kontak & Pengaduan"), ikon Login Pegawai, dan "Cek Persyaratan"; lebar mengikuti isi |
 | 2 | Hero maskot | Lambang Provinsi NTT di tengah, eyebrow nama UPTD, "Semua informasi Samsat. *Lewat satu pintu.*", CTA hitam, mikrokopi gembok "Gratis dan tanpa perantara." |
 | 3 | Media produk + caption | **Papan layanan hari ini** (antrean, waktu tunggu, Samsat Keliling, pengumuman, status loket) + tombol video profil |
 | 4 | Strip tiga fitur | "Persyaratan jelas." · "Jadwal terbaru." · "Tanpa perantara." |
