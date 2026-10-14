@@ -442,3 +442,16 @@ Berita & Pengumuman kini tersimpan di server dengan alur publikasi. Halaman Info
 | Dashboard | Unggahan `berita` dikirim ke server. Penghapusan hanya ditawarkan kepada Administrator. Penyunting tidak terkunci bagi pengelola Berita. Ringkasan, antrean kerja, menu perintah, Jadwal Pemutakhiran, dan *Pengaturan › Data* hanya membaca berita bila pengguna boleh membacanya. |
 
 Bilah pengumuman di halaman Informasi tetap diatur di Pengaturan Situs (D-026). Untuk menautkannya ke sebuah tulisan, isi tujuan tautan dengan `./berita/{slug}`.
+
+## D-032 · 2026-10-14 · Dokumentasi Kegiatan tersimpan di server; galeri disusun per bulan
+
+Dokumentasi Kegiatan kini tersimpan di server dengan alur publikasi. Galeri di halaman Dokumentasi membaca kegiatan yang terbit beserta fotonya dari API.
+
+| Hal | Keputusan |
+|---|---|
+| Penyimpanan | Tabel `documentations` menyimpan nama kegiatan, kategori (`keliling`, `sosialisasi`, `operasi`, `internal`), lokasi, tanggal kegiatan, deskripsi, daftar foto (maks. 30, masing-masing dengan keterangan dan urutan tampil), serta kolom alur. |
+| Foto | Foto diunggah dari dashboard (tujuan `dokumentasi`, D-028), dan satu foto hanya dipakai satu kegiatan. Foto yang dihapus dari kegiatan, atau kegiatannya dihapus, ikut terhapus. **Kegiatan terbit wajib memiliki minimal satu foto.** |
+| Alur dan akses | **Sama dengan Berita** (keputusan pemilik): pengelola Dokumentasi Kegiatan menjalankan semua langkah sendiri, termasuk menerbitkan, menarik, dan mengubah kegiatan yang sudah terbit. Hanya Administrator yang menghapus. Pengelola Jadwal Pemutakhiran boleh membaca daftarnya. |
+| Data awal | **Sembilan kegiatan contoh dari dashboard dimasukkan sebagai draf tanpa foto** (keputusan pemilik), dengan nama, lokasi, tanggal, dan deskripsinya. Isinya belum terverifikasi; dua di antaranya bertanggal November 2026 sebagai rencana kegiatan. Penyedia mengikuti contoh, dan pemeriksanya kepala unit penyedia. |
+| Portal | `GET /api/public/dokumentasi` memberikan kegiatan terbit beserta fotonya, terbaru lebih dulu, tanpa ID dan tanpa kolom alur selain waktu terbit. **Galeri disusun per bulan** (keputusan pemilik): yang tampil lebih dulu adalah foto bulan terbaru. Bagian Arsip berisi tombol untuk setiap bulan pada tahun terbaru dan satu tombol per tahun sebelumnya (mis. "Arsip 2025"). Saringan kategori bekerja di dalam periode yang dipilih, dan ringkasan menyebut periode serta jumlah fotonya. Setiap foto menjadi satu ubin galeri, dengan keterangan foto atau nama kegiatan, lokasi, dan tanggal. Lightbox menampilkan foto utuh. Bila belum ada kegiatan terbit, halaman menyatakannya dan menyembunyikan saringan serta arsip. Bila API gagal, tampil keterangan dan tombol coba lagi. Catatan "Placeholder ilustrasi" dihapus. |
+| Dashboard | Unggahan `dokumentasi` dikirim ke server. Penghapusan hanya ditawarkan kepada Administrator. Ringkasan, antrean kerja, Jadwal Pemutakhiran, dan *Pengaturan › Data* hanya membaca dokumentasi bila pengguna boleh membacanya. |

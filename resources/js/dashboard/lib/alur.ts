@@ -12,7 +12,8 @@ const KUNCI_ADMINISTRATOR: readonly KoleksiBeralur[] = ["layanan", "dokumen"]
  * atau sudah terbit hanya bisa diubah Administrator, termasuk menyetujui,
  * mengembalikan dari tahap persetujuan, dan menarik dari portal. Server
  * menegakkannya untuk koleksi yang sudah tersimpan di sana (D-022, D-030).
- * Pengelola Berita & Pengumuman menjalankan semua langkah sendiri (D-031);
+ * Pengelola Berita & Pengumuman dan Dokumentasi Kegiatan menjalankan semua
+ * langkah sendiri (D-031, D-032);
  * untuk koleksi di peramban semua langkah tetap terbuka.
  */
 export function bolehUbahAlur(koleksi: KoleksiBeralur, status: StatusAlur): boolean {
@@ -24,7 +25,7 @@ export function bolehUbahAlur(koleksi: KoleksiBeralur, status: StatusAlur): bool
   )
 }
 
-/** Urutan dan penghapusan entri di server hanya untuk Administrator (D-022, D-030, D-031) */
+/** Urutan dan penghapusan entri di server hanya untuk Administrator (D-022, D-030, D-031, D-032) */
 export function khususAdministrator(koleksi: KoleksiBeralur): boolean {
   return diServer(koleksi) && sesi().peran !== "administrator"
 }

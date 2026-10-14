@@ -1228,6 +1228,122 @@
     });
   }
 
+  /* ---------- Dokumentasi kegiatan ----------
+     Kegiatan dikelola di dashboard (Dokumentasi Kegiatan) dan dibaca dari
+     GET /api/public/dokumentasi (D-032); hanya kegiatan terbit beserta
+     fotonya. Galeri menampilkan satu periode: bulan terbaru, atau periode
+     yang dipilih di bagian arsip (bulan-bulan pada tahun terbaru, tahun
+     sebelumnya digabung per tahun). Saringan kategori bekerja di dalam
+     periode itu. Foto hanya dari alamat http(s); teks dipasang sebagai teks.
+     Klik foto membuka lightbox (initGallery). */
+  async function muatDokumentasi() {
+    const data = await ambilJson("/api/public/dokumentasi");
+    const teks = (x) => typeof x === "string";
+    const valid = Array.isArray(data) && data.every((d) =>
+      ["judul", "kategori", "lokasi", "tanggal", "deskripsi"].every((f) => teks(d?.[f]))
+      && /^\d{4}-\d{2}-\d{2}$/.test(d.tanggal)
+      && Array.isArray(d.foto) && d.foto.every((f) => teks(f?.src) && teks(f.keterangan))
+      && (d.terbitPada === null || teks(d.terbitPada)));
+    if (!valid) throw new Error("Respons tidak dikenal");
+    return data;
+  }
+
+  // Warna bingkai per kategori, tampak sebelum foto termuat
+  const WARNA_DOKUMENTASI = { keliling: "sage", sosialisasi: "rose", operasi: "slate", internal: "blue" };
+  // Ukuran ubin bergiliran dalam satu periode agar susunan galeri tetap bervariasi
+  const UBIN_GALERI = ["b", "", "t", "", "w", "", "", "w", "", ""];
+
+  function initDokumentasi() {
+    const galeri = $("[data-dok-galeri]");
+    if (!galeri) return;
+    const status = $("[data-dok-status]");
+    const kosong = $("[data-dok-kosong]");
+    const saringan = $("[data-dok-saringan]");
+    const ringkasan = $("[data-dok-ringkasan]");
+    const kategoriChips = $$("[data-dok-kategori] [data-filter]");
+    const arsip = $("[data-dok-arsip]");
+    const pilihanPeriode = $("[data-dok-periode]");
+    let kategori = "semua";
+    let periode = "";
+    let daftarPeriode = [];
+
+    const terapkan = () => {
+      let tampil = 0;
+      $$(".gallery__item", galeri).forEach((it) => {
+        const cocok = it.dataset.periode === periode && (kategori === "semua" || it.dataset.cat === kategori);
+        it.hidden = !cocok;
+        if (cocok) tampil++;
+      });
+      kosong.hidden = tampil > 0 || !daftarPeriode.length;
+      const p = daftarPeriode.find((x) => x.kunci === periode);
+      ringkasan.textContent = p ? `${p.panjang} · ${tampil} foto` : "";
+      $$("[data-pilih-periode]", pilihanPeriode).forEach((c) => c.setAttribute("aria-pressed", String(c.dataset.pilihPeriode === periode)));
+    };
+
+    const tampilkan = (data) => {
+      // Data urut tanggal terbaru: bulan-bulan tahun terbaru, lalu satu periode per tahun sebelumnya
+      const tahunTerbaru = data[0]?.tanggal.slice(0, 4);
+      const kunciPeriode = (t) => (t.slice(0, 4) === tahunTerbaru ? t.slice(0, 7) : t.slice(0, 4));
+      const foto = data.flatMap((d) => d.foto.map((f) => ({ src: gambarAman(f.src), keterangan: f.keterangan, d })).filter((f) => f.src));
+      daftarPeriode = [...new Set(foto.map((f) => kunciPeriode(f.d.tanggal)))].map((k) => {
+        if (k.length === 4) return { kunci: k, label: `Arsip ${k}`, panjang: `Tahun ${k}` };
+        const [y, m] = k.split("-").map(Number);
+        return { kunci: k, label: `${BULAN[m - 1]} ${y}`, panjang: `${BULAN_PENUH[m - 1]} ${y}` };
+      });
+
+      const urutan = {};
+      galeri.innerHTML = foto.map((f) => {
+        const kunci = kunciPeriode(f.d.tanggal);
+        const ubin = UBIN_GALERI[(urutan[kunci] = (urutan[kunci] ?? -1) + 1) % UBIN_GALERI.length];
+        const judul = f.keterangan || f.d.judul;
+        const tanggal = tanggalBerita(f.d.tanggal);
+        return `<button class="gallery__item${ubin ? ` gallery__item--${ubin}` : ""}" type="button" data-cat="${esc(f.d.kategori)}" data-periode="${esc(kunci)}" data-src="${esc(f.src)}" data-title="${esc(judul)}" data-meta="${esc(`${f.d.lokasi} · ${tanggal}`)}">
+        <span class="ph ph--${WARNA_DOKUMENTASI[f.d.kategori] || "slate"}"><img src="${esc(f.src)}" alt="" loading="lazy" decoding="async"></span>
+        <span class="gallery__cap"><strong>${esc(judul)}</strong><span>${tanggal}</span></span>
+      </button>`;
+      }).join("");
+
+      pilihanPeriode.innerHTML = daftarPeriode.map((p) => `<button class="chip" type="button" aria-pressed="false" data-pilih-periode="${esc(p.kunci)}">${esc(p.label)}</button>`).join("");
+      arsip.hidden = daftarPeriode.length < 2;
+      saringan.hidden = !foto.length;
+      status.hidden = foto.length > 0;
+      status.textContent = "Belum ada dokumentasi kegiatan yang terbit.";
+      periode = daftarPeriode[0]?.kunci ?? "";
+      terapkan();
+    };
+
+    kategoriChips.forEach((c) => c.addEventListener("click", () => {
+      kategori = c.dataset.filter;
+      kategoriChips.forEach((x) => x.setAttribute("aria-pressed", String(x === c)));
+      terapkan();
+    }));
+    pilihanPeriode.addEventListener("click", (e) => {
+      const c = e.target.closest("[data-pilih-periode]");
+      if (!c) return;
+      periode = c.dataset.pilihPeriode;
+      terapkan();
+      galeri.closest("section").scrollIntoView();
+    });
+
+    const muat = async (fokus) => {
+      status.hidden = false;
+      status.textContent = "Memuat dokumentasi…";
+      try {
+        tampilkan(await muatDokumentasi());
+      } catch {
+        galeri.textContent = "";
+        saringan.hidden = true;
+        arsip.hidden = true;
+        const retry = tombolCobaLagi(() => muat(true));
+        status.textContent = "Dokumentasi belum dapat dimuat. ";
+        status.append(retry);
+        if (fokus) retry.focus();
+      }
+    };
+
+    muat(false);
+  }
+
   /* ---------- Beranda ----------
      Teks beranda dikelola di dashboard (Beranda) dan dibaca dari
      GET /api/public/beranda (D-023). Teks di HTML sama dengan isi awal di
@@ -1926,11 +2042,22 @@
       const it = list[idx];
       const media = $(".lightbox__media", dlg);
       media.className = "ph lightbox__media " + ($(".ph", it).className.match(/ph--\w+/)?.[0] || "");
+      // Foto kegiatan dari dashboard (data-src); tanpa foto, bingkai ilustrasi saja
+      const foto = document.createElement("img");
+      foto.src = it.dataset.src ?? "";
+      foto.alt = it.dataset.title;
+      media.replaceChildren(...(it.dataset.src ? [foto] : []));
       $("[data-lb-title]", dlg).textContent = it.dataset.title;
       $("[data-lb-meta]", dlg).textContent = it.dataset.meta;
       $("[data-lb-count]", dlg).textContent = `${idx + 1} / ${list.length}`;
     };
-    $$(".gallery__item").forEach((it) => it.addEventListener("click", () => { show(items().indexOf(it)); dlg.showModal(); }));
+    // Lewat galeri, karena item dipasang skrip setelah halaman dimuat (initDokumentasi)
+    $$(".gallery").forEach((g) => g.addEventListener("click", (e) => {
+      const it = e.target.closest(".gallery__item");
+      if (!it) return;
+      show(items().indexOf(it));
+      dlg.showModal();
+    }));
     $("[data-lb-prev]", dlg).addEventListener("click", () => show(idx - 1));
     $("[data-lb-next]", dlg).addEventListener("click", () => show(idx + 1));
     dlg.addEventListener("keydown", (e) => {
@@ -2218,7 +2345,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil(); initLayanan(); initDokumen(); initInformasi(); initBerita(); initPengumumanBeranda(); initBeranda(); initHalaman(); initSitus();
+    initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil(); initLayanan(); initDokumen(); initInformasi(); initBerita(); initPengumumanBeranda(); initDokumentasi(); initBeranda(); initHalaman(); initSitus();
     initDash(); initSim(); initDialogs(); initGag(); initFilters(); initGallery(); initFaq(); initForms(); initPesanForm(); initAuthFit(); initUtilities();
   });
 })();

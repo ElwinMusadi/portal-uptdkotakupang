@@ -391,6 +391,8 @@
 .ph svg { position: absolute; inset: auto 0 0 0; width: 100%; height: 70%; color: rgba(15,19,25,.16); }
 /* Foto sampul berita yang mengisi bingkai */
 .ph > img { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; object-fit: cover; }
+/* Foto kegiatan di lightbox tampil utuh */
+.lightbox__media > img { object-fit: contain; background: var(--night); }
 .ph__label { position: relative; z-index: 1; margin: 14px; padding: 4px 10px; border-radius: var(--r-pill); background: rgba(255,255,255,.7); font-size: 11.5px; font-weight: 500; color: var(--ink-2); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .ph--blue { --ph-a: #CBD6EE; --ph-b: #9FB1D8; }
 .ph--sand { --ph-a: #E3D9C3; --ph-b: #C8B48D; }

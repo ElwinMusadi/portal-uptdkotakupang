@@ -17,6 +17,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET` | `/api/public/layanan` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/dokumen` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/berita`, `/api/public/berita/{slug}` | anonim, hanya baca | tersedia |
+| `GET` | `/api/public/dokumentasi` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/beranda` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/halaman/{slug}` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/situs` | anonim, hanya baca | tersedia |
@@ -61,6 +62,9 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET`, `POST` | `/api/koleksi/berita` | Administrator, pengelola Berita & Pengumuman (daftar: juga pengelola Jadwal Pemutakhiran) | tersedia |
 | `GET`, `PATCH` | `/api/koleksi/berita/{id}` | Administrator, pengelola Berita & Pengumuman, termasuk tulisan yang terbit | tersedia |
 | `POST` | `/api/koleksi/berita/hapus` | Administrator | tersedia |
+| `GET`, `POST` | `/api/koleksi/dokumentasi` | Administrator, pengelola Dokumentasi Kegiatan (daftar: juga pengelola Jadwal Pemutakhiran) | tersedia |
+| `GET`, `PATCH` | `/api/koleksi/dokumentasi/{id}` | Administrator, pengelola Dokumentasi Kegiatan, termasuk kegiatan yang terbit | tersedia |
+| `POST` | `/api/koleksi/dokumentasi/hapus` | Administrator | tersedia |
 | `GET` | `/api/koleksi/halaman` | Administrator, pengelola Halaman Statis | tersedia |
 | `GET`, `PATCH` | `/api/koleksi/halaman/{id}` | Administrator, pengelola Halaman Statis | tersedia |
 | `GET` | `/api/koleksi/pemutakhiran` | semua pegawai; daftarnya sebatas modul pengguna, lengkap bagi Administrator dan pengelola Jadwal Pemutakhiran | tersedia |
@@ -425,6 +429,35 @@ Isi divalidasi seperti formulir dashboard: judul (maks. 160 karakter), slug unik
 
 Kode: `app/Http/Controllers/Dashboard/Article*`, `app/Http/Requests/Dashboard/*Article*`, `app/Models/Article.php`, `app/Policies/ArticlePolicy.php`, `database/migrations/*_insert_initial_articles.php`. Tes: `tests/Feature/ArticleControllerTest.php`, `ArticleWorkflowTest.php`.
 
+## Dokumentasi Kegiatan di dashboard
+
+Dipakai halaman *Dokumentasi Kegiatan* di dashboard ([D-032](decisions.md#d-032--2026-10-14--dokumentasi-kegiatan-tersimpan-di-server-galeri-disusun-per-bulan)). Tamu mendapat `401`; pegawai yang tidak mengelola modul `dokumentasi` mendapat `403` `{"message": "Modul Dokumentasi Kegiatan belum ditugaskan kepada Anda."}`. Pengelola Jadwal Pemutakhiran boleh memakai `GET /api/koleksi/dokumentasi` saja.
+
+```json
+{
+  "id": "01m4…", "judul": "Samsat Keliling di Kelurahan Oesapa.", "kategori": "keliling",
+  "lokasi": "Kec. Kelapa Lima", "tanggal": "2026-10-21", "deskripsi": "…",
+  "foto": [{ "id": "a", "src": "https://…/dokumentasi/2026/10/01m4….jpg", "keterangan": "Warga mengantre di kelurahan." }],
+  "status": "terbit", "penyedia": "Seksi Penetapan dan Penagihan", "pemeriksa": "Kepala Seksi Penetapan dan Penagihan",
+  "catatanRevisi": "", "terbitPada": "2026-10-21T03:00:00+00:00", "riwayat": [ … ],
+  "urutan": 0, "dibuat": "…", "diperbarui": "…"
+}
+```
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `GET /api/koleksi/dokumentasi` | — | `200` semua kegiatan, tanggal terbaru lebih dulu, termasuk yang belum terbit. |
+| `GET /api/koleksi/dokumentasi/{id}` | — | `200` satu kegiatan; `404` bila tidak ada. |
+| `POST /api/koleksi/dokumentasi` | isi kegiatan seperti di atas, tanpa kolom alur | `201` sebagai draf, dengan riwayat "menyiapkan draf" atas nama akun yang masuk. Status, riwayat, catatan revisi, dan waktu terbit dari klien diabaikan. |
+| `PATCH /api/koleksi/dokumentasi/{id}` | sebagian isi, `status` untuk langkah alur, `catatanRevisi` saat mengembalikan | `200`. Langkah alur dan pesannya sama dengan layanan (`"Langkah ini tidak tersedia untuk kegiatan berstatus Draf."`). Pengelola Dokumentasi boleh menjalankan semuanya dan boleh mengubah kegiatan yang sudah terbit. `422` `{"foto": ["Unggah minimal satu foto sebelum kegiatan diterbitkan."]}` bila kegiatan akan terbit, atau tetap terbit, tanpa foto. |
+| `POST /api/koleksi/dokumentasi/hapus` | `{"ids": ["…"]}` | `204`; foto kegiatan yang dihapus ikut terhapus. Hanya Administrator; pegawai lain `403` `{"message": "Hanya Administrator yang dapat menghapus dokumentasi."}`. |
+
+Tidak ada `PUT /api/koleksi/dokumentasi/urutan`: kegiatan diurutkan menurut tanggal.
+
+Isi divalidasi seperti formulir dashboard: nama kegiatan (maks. 160 karakter), lokasi (maks. 120), tanggal (`YYYY-MM-DD`), dan penyedia wajib; kategori `keliling`, `sosialisasi`, `operasi`, atau `internal`; deskripsi maks. 600; tanpa karakter kontrol. `foto` wajib dikirim (boleh kosong untuk draf), maks. 30 foto dengan ID unik dan keterangan maks. 200. Alamat setiap foto harus unggahan PINTU untuk tujuan `dokumentasi` (`{"foto.0.src": ["Foto harus diunggah lewat dashboard."]}`), tidak tercantum dua kali, dan belum dipakai kegiatan lain (`"Foto ini sudah dipakai kegiatan lain. Unggah ulang fotonya."`). Foto yang dihapus dari daftar dihapus bersama catatannya.
+
+Kode: `app/Http/Controllers/Dashboard/Documentation*`, `app/Http/Requests/Dashboard/*Documentation*`, `app/Models/Documentation.php`, `app/Policies/DocumentationPolicy.php`, `database/migrations/*_insert_initial_documentations.php`. Tes: `tests/Feature/DocumentationControllerTest.php`, `DocumentationWorkflowTest.php`.
+
 ## Regulasi & Unduhan di dashboard
 
 Dipakai halaman *Regulasi & Unduhan* di dashboard ([D-030](decisions.md#d-030--2026-10-14--regulasi--unduhan-tersimpan-di-server-dengan-alur-persetujuan)), dengan alur publikasi yang sama dengan Persyaratan Layanan. Tamu mendapat `401`; pegawai yang tidak mengelola modul `dokumen` mendapat `403` `{"message": "Modul Regulasi & Unduhan belum ditugaskan kepada Anda."}`. Pengelola Jadwal Pemutakhiran boleh memakai `GET /api/koleksi/dokumen` saja.
@@ -578,7 +611,7 @@ Kode: `app/Http/Controllers/Dashboard/OwnAccountController.php`, `app/Http/Reque
 
 ## Unggahan di dashboard
 
-Penyimpanan berkas dari dashboard ([D-028](decisions.md#d-028--2026-10-14--unggahan-disimpan-di-laravel-cloud-object-storage)). Tamu mendapat `401`. Dashboard memakainya untuk tujuan yang modulnya sudah di server, saat ini `visiMisi`, `profil` ([D-029](decisions.md#d-029--2026-10-14--foto-tentang-uptd-dan-maklumat-diunggah-ke-server-profil-disusun-dari-renstra-dan-rpjmd)), `dokumen` ([D-030](decisions.md#d-030--2026-10-14--regulasi--unduhan-tersimpan-di-server-dengan-alur-persetujuan)), dan `berita` ([D-031](decisions.md#d-031--2026-10-14--berita--pengumuman-tersimpan-di-server-pengelola-berita-menerbitkan-sendiri)); unggahan lain tetap di peramban sampai modulnya pindah.
+Penyimpanan berkas dari dashboard ([D-028](decisions.md#d-028--2026-10-14--unggahan-disimpan-di-laravel-cloud-object-storage)). Tamu mendapat `401`. Dashboard memakainya untuk tujuan yang modulnya sudah di server, saat ini `visiMisi`, `profil` ([D-029](decisions.md#d-029--2026-10-14--foto-tentang-uptd-dan-maklumat-diunggah-ke-server-profil-disusun-dari-renstra-dan-rpjmd)), `dokumen` ([D-030](decisions.md#d-030--2026-10-14--regulasi--unduhan-tersimpan-di-server-dengan-alur-persetujuan)), `berita` ([D-031](decisions.md#d-031--2026-10-14--berita--pengumuman-tersimpan-di-server-pengelola-berita-menerbitkan-sendiri)), dan `dokumentasi` ([D-032](decisions.md#d-032--2026-10-14--dokumentasi-kegiatan-tersimpan-di-server-galeri-disusun-per-bulan)); unggahan lain tetap di peramban sampai modulnya pindah.
 
 | Alamat | Permintaan | Respons |
 |---|---|---|
@@ -804,6 +837,18 @@ Halaman Informasi, halaman `/berita/{slug}`, dan ubin *Pengumuman* di papan laya
 Halaman `/berita/{slug}` adalah `resources/views/portal/berita-detail.blade.php`. Alamat relatifnya ditulis ulang menjadi alamat dari akar situs oleh `ArticlePageController`; slug yang bukan huruf kecil, angka, dan tanda hubung dijawab `404`.
 
 Kode: `app/Http/Controllers/PublicArticleController.php`, `app/Http/Controllers/ArticlePageController.php`, `app/Actions/ListPublicArticles.php`, `app/Actions/ShowPublicArticle.php`. Tes: `tests/Feature/PublicArticleControllerTest.php`, `tests/Feature/PortalPagesTest.php`.
+
+## `GET /api/public/dokumentasi`
+
+Galeri halaman Dokumentasi Kegiatan ([D-032](decisions.md#d-032--2026-10-14--dokumentasi-kegiatan-tersimpan-di-server-galeri-disusun-per-bulan), `initDokumentasi()` dan `initGallery()` di `public/assets/js/main.js`). Daftar kegiatan berstatus `terbit`, tanggal terbaru lebih dulu, tanpa `id` dan tanpa kolom alur selain `terbitPada`: `judul`, `kategori`, `lokasi`, `tanggal`, `deskripsi`, `foto` (`src` dan `keterangan`, sesuai urutan di dashboard).
+
+| Hal | Perilaku |
+|---|---|
+| Berhasil | `200` daftar kegiatan, `[]` bila belum ada yang terbit. Portal mengelompokkan foto per bulan pada tahun terbaru dan per tahun sebelumnya, hanya memakai foto beralamat `http(s)`, dan menampilkan teks sebagai teks polos. |
+| Galat | `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah batas laju yang sama dengan `GET /api/public/faq`; `503` bila data tidak bisa dibaca, tidak pernah daftar kosong sebagai gantinya. |
+| Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
+
+Kode: `app/Http/Controllers/PublicDocumentationController.php`, `app/Actions/ListPublicDocumentations.php`. Tes: `tests/Feature/PublicDocumentationControllerTest.php`.
 
 ## `GET /api/public/beranda`
 

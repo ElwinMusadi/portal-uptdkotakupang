@@ -197,70 +197,27 @@
   </section>
 
   <section class="container">
-    <div class="toolbar" style="margin-bottom:28px" data-reveal>
-      <div class="chips" role="group" aria-label="Saring kegiatan" data-filter-group="gallery">
+    <div class="toolbar" style="margin-bottom:28px" data-reveal data-dok-saringan hidden>
+      <div class="chips" role="group" aria-label="Saring kegiatan" data-dok-kategori>
         <button class="chip" type="button" aria-pressed="true" data-filter="semua">Semua</button>
         <button class="chip" type="button" aria-pressed="false" data-filter="keliling">Samsat Keliling</button>
         <button class="chip" type="button" aria-pressed="false" data-filter="sosialisasi">Sosialisasi</button>
         <button class="chip" type="button" aria-pressed="false" data-filter="operasi">Operasi gabungan</button>
         <button class="chip" type="button" aria-pressed="false" data-filter="internal">Internal</button>
       </div>
-      <p class="small muted">Oktober 2026 · 10 foto</p>
+      <p class="small muted" role="status" data-dok-ringkasan></p>
     </div>
 
-    <div class="gallery" id="gallery" data-reveal>
-      <button class="gallery__item gallery__item--b" type="button" data-cat="keliling" data-title="Samsat Keliling di Kelurahan Oesapa." data-meta="Kec. Kelapa Lima · 21 Okt 2026">
-        <span class="ph ph--sage"><svg aria-hidden="true"><use href="#ill-tent"/></svg></span>
-        <span class="gallery__cap"><strong>Samsat Keliling di Kelurahan Oesapa.</strong><span>21 Okt 2026</span></span>
-      </button>
-      <button class="gallery__item" type="button" data-cat="internal" data-title="Uji coba portal PINTU bersama petugas loket." data-meta="Ruang rapat UPTD · 18 Nov 2026">
-        <span class="ph ph--blue"><svg aria-hidden="true"><use href="#ill-desk"/></svg></span>
-        <span class="gallery__cap"><strong>Uji coba portal PINTU.</strong><span>18 Nov 2026</span></span>
-      </button>
-      <button class="gallery__item gallery__item--t" type="button" data-cat="operasi" data-title="Operasi gabungan pemeriksaan pajak kendaraan." data-meta="Jl. El Tari · 15 Okt 2026">
-        <span class="ph ph--slate"><svg aria-hidden="true"><use href="#ill-car"/></svg></span>
-        <span class="gallery__cap"><strong>Operasi gabungan.</strong><span>15 Okt 2026</span></span>
-      </button>
-      <button class="gallery__item" type="button" data-cat="sosialisasi" data-title="Sosialisasi pajak kendaraan bersama ketua RT." data-meta="Kec. Alak · 2 Okt 2026">
-        <span class="ph ph--rose"><svg aria-hidden="true"><use href="#ill-crowd"/></svg></span>
-        <span class="gallery__cap"><strong>Sosialisasi di Alak.</strong><span>2 Okt 2026</span></span>
-      </button>
-      <button class="gallery__item gallery__item--w" type="button" data-cat="keliling" data-title="Antrean Samsat Keliling di Kelurahan Sikumana." data-meta="Kec. Maulafa · 14 Okt 2026">
-        <span class="ph ph--sand"><svg aria-hidden="true"><use href="#ill-crowd"/></svg></span>
-        <span class="gallery__cap"><strong>Antrean di Sikumana.</strong><span>14 Okt 2026</span></span>
-      </button>
-      <button class="gallery__item" type="button" data-cat="internal" data-title="Konsultasi alur pengelolaan informasi dengan atasan langsung." data-meta="Ruang Kepala UPTD · 6 Okt 2026">
-        <span class="ph ph--slate"><svg aria-hidden="true"><use href="#ill-desk"/></svg></span>
-        <span class="gallery__cap"><strong>Konsultasi alur informasi.</strong><span>6 Okt 2026</span></span>
-      </button>
-      <button class="gallery__item" type="button" data-cat="sosialisasi" data-title="Sosialisasi alur pengelolaan konten kepada operator." data-meta="Aula UPTD · 4 Nov 2026">
-        <span class="ph ph--blue"><svg aria-hidden="true"><use href="#ill-crowd"/></svg></span>
-        <span class="gallery__cap"><strong>Sosialisasi operator.</strong><span>4 Nov 2026</span></span>
-      </button>
-      <button class="gallery__item gallery__item--w" type="button" data-cat="operasi" data-title="Pemeriksaan fisik kendaraan saat operasi gabungan." data-meta="Jl. Frans Seda · 15 Okt 2026">
-        <span class="ph ph--sand"><svg aria-hidden="true"><use href="#ill-car"/></svg></span>
-        <span class="gallery__cap"><strong>Cek fisik di lapangan.</strong><span>15 Okt 2026</span></span>
-      </button>
-      <button class="gallery__item" type="button" data-cat="keliling" data-title="Pelayanan Samsat Keliling di Kelurahan Penfui." data-meta="Kec. Maulafa · 8 Okt 2026">
-        <span class="ph ph--sage"><svg aria-hidden="true"><use href="#ill-tent"/></svg></span>
-        <span class="gallery__cap"><strong>Samsat Keliling Penfui.</strong><span>8 Okt 2026</span></span>
-      </button>
-      <button class="gallery__item" type="button" data-cat="internal" data-title="Gedung Kantor Bersama Samsat Kota Kupang." data-meta="Dokumentasi kantor · Okt 2026">
-        <span class="ph ph--rose"><svg aria-hidden="true"><use href="#ill-building"/></svg></span>
-        <span class="gallery__cap"><strong>Kantor bersama.</strong><span>Okt 2026</span></span>
-      </button>
-    </div>
-    <p class="center muted" data-filter-empty="gallery" hidden style="padding:48px 0">Belum ada foto untuk kategori ini.</p>
-    <p class="proto-note" style="margin-top:20px">Placeholder ilustrasi. Ganti dengan foto kegiatan resmi yang telah disetujui.</p>
+    <div class="gallery" id="gallery" data-reveal data-dok-galeri></div>
+    <p class="center muted" role="status" data-dok-status style="padding:48px 0">Memuat dokumentasi…</p>
+    <p class="center muted" data-dok-kosong hidden style="padding:48px 0">Belum ada foto untuk kategori ini.</p>
   </section>
 
-  <section class="section">
+  <section class="section" data-dok-arsip hidden>
     <div class="container center" data-reveal>
       <p class="eyebrow">Arsip</p>
       <h2 class="h2" style="margin-top:20px">Cari kegiatan lama. <span class="tone">Berdasarkan bulan.</span></h2>
-      <div class="chips" style="justify-content:center;margin-top:32px">
-        <a class="chip is-active" href="#gallery">Okt 2026</a><a class="chip" href="#gallery">Sep 2026</a><a class="chip" href="#gallery">Agu 2026</a><a class="chip" href="#gallery">Jul 2026</a><a class="chip" href="#gallery">Arsip 2025</a>
-      </div>
+      <div class="chips" style="justify-content:center;margin-top:32px" role="group" aria-label="Pilih bulan" data-dok-periode></div>
     </div>
   </section>
 </main>

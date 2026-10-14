@@ -271,6 +271,20 @@ class PortalPagesTest extends TestCase
         $this->assertStringContainsString('data-papan-pengumuman-judul>', $home);
     }
 
+    public function test_leaves_the_activity_photos_to_the_public_api(): void
+    {
+        $html = $this->get('/dokumentasi')->assertOk()->getContent();
+
+        foreach (['class="gallery__item', 'Placeholder ilustrasi', 'Oktober 2026 · 10 foto', 'data-filter-group="gallery"', '<a class="chip'] as $example) {
+            $this->assertStringNotContainsString($example, $html);
+        }
+        $this->assertStringContainsString('<div class="gallery" id="gallery" data-reveal data-dok-galeri></div>', $html);
+        $this->assertStringContainsString('<p class="center muted" role="status" data-dok-status style="padding:48px 0">Memuat dokumentasi…</p>', $html);
+        $this->assertStringContainsString('<div class="toolbar" style="margin-bottom:28px" data-reveal data-dok-saringan hidden>', $html);
+        $this->assertStringContainsString('<section class="section" data-dok-arsip hidden>', $html);
+        $this->assertStringContainsString('<dialog class="dialog lightbox" id="lightbox" aria-label="Pratinjau foto">', $html);
+    }
+
     public function test_serves_the_article_page_with_addresses_from_the_site_root(): void
     {
         $response = $this->get('/berita/pintu-resmi-diluncurkan');

@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import type { Dokumentasi } from "@/lib/api"
-import { alurBaru } from "@/lib/alur"
+import { alurBaru, khususAdministrator } from "@/lib/alur"
 import { sesi } from "@/lib/auth"
 import { hariIniIso, tanggal } from "@/lib/format"
 import { KATEGORI_DOKUMENTASI, PEMERIKSA, STATUS_ALUR, UNIT_PENYEDIA } from "@/lib/meta"
@@ -22,12 +22,20 @@ import { useKoleksi } from "@/lib/queries"
 import * as v from "@/lib/validasi"
 
 const schema = z.object({
-  judul: v.wajib("Nama kegiatan"),
+  judul: v.wajib("Nama kegiatan").max(160, "Nama kegiatan maksimal 160 karakter."),
   kategori: z.enum(["keliling", "sosialisasi", "operasi", "internal"]),
-  lokasi: v.wajib("Lokasi"),
+  lokasi: v.wajib("Lokasi").max(120, "Lokasi maksimal 120 karakter."),
   tanggal: v.tanggalIso,
-  deskripsi: v.teks,
-  foto: z.array(z.object({ id: z.string(), src: z.string().nullable(), keterangan: z.string() })),
+  deskripsi: v.teks.max(600, "Deskripsi maksimal 600 karakter."),
+  foto: z
+    .array(
+      z.object({
+        id: z.string(),
+        src: z.string().nullable(),
+        keterangan: z.string().max(200, "Keterangan foto maksimal 200 karakter."),
+      })
+    )
+    .max(30, "Maksimal 30 foto per kegiatan."),
   penyedia: v.wajib("Unit penyedia"),
   pemeriksa: v.teks,
 })
@@ -39,6 +47,8 @@ export default function HalamanDokumentasi() {
   const { data, isLoading } = useKoleksi("dokumentasi")
   const hapus = useHapus("dokumentasi", "kegiatan")
   const { jalankan, dialog, memproses } = useAksiAlur("dokumentasi")
+  // Penghapusan hanya untuk Administrator (D-032)
+  const khususAdmin = khususAdministrator("dokumentasi")
 
   const ed = useEditorEntri({
     koleksi: "dokumentasi",
@@ -123,7 +133,7 @@ export default function HalamanDokumentasi() {
         <MenuBaris
           label={row.original.judul}
           onSunting={() => ed.bukaUbah(row.original.id)}
-          onHapus={() => void hapus([row.original.id], row.original.judul)}
+          onHapus={khususAdmin ? undefined : () => void hapus([row.original.id], row.original.judul)}
         >
           <DropdownMenuSeparator />
           <MenuAksiAlur koleksi="dokumentasi" item={row.original} jalankan={(i, a) => void jalankan(i, a)} />
@@ -161,13 +171,18 @@ export default function HalamanDokumentasi() {
             nilai: (d) => d.status,
           },
         ]}
-        tindakanMassal={(baris, bersihkan) => (
-          <TombolHapusMassal
-            onClick={async () => {
-              if (await hapus(baris.map((b) => b.id))) bersihkan()
-            }}
-          />
-        )}
+        pilih={!khususAdmin}
+        tindakanMassal={
+          khususAdmin
+            ? undefined
+            : (baris, bersihkan) => (
+                <TombolHapusMassal
+                  onClick={async () => {
+                    if (await hapus(baris.map((b) => b.id))) bersihkan()
+                  }}
+                />
+              )
+        }
         kosong={{
           judul: "Belum ada dokumentasi",
           deskripsi: "Tambahkan foto kegiatan pertama.",
@@ -184,7 +199,7 @@ export default function HalamanDokumentasi() {
         terbuka={ed.terbuka}
         tutup={ed.tutup}
         judul={ed.entri ? "Sunting dokumentasi" : "Tambah dokumentasi kegiatan"}
-        deskripsi="Kegiatan baru tersimpan sebagai draf dan tayang setelah disetujui."
+        deskripsi="Kegiatan baru tersimpan sebagai draf dan tayang setelah disetujui. Kegiatan terbit perlu minimal satu foto."
         form={ed.form}
         simpan={ed.simpan}
         menyimpan={ed.menyimpan}

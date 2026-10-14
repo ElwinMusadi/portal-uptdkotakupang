@@ -197,21 +197,22 @@ function unduhJson(nama: string, data: unknown) {
 }
 
 function JumlahKoleksi() {
-  const dokumentasi = useKoleksi("dokumentasi").data?.length
   // Koleksi di server hanya dihitung bila modulnya boleh dibaca pengguna.
   const bacaPesan = !diServer("pesan") || bolehModul("pesan")
   const bacaKeliling = !diServer("keliling") || bolehModul("keliling", "pemutakhiran")
   const bacaLayanan = !diServer("layanan") || bolehModul("layanan", "pemutakhiran")
   const bacaDokumen = !diServer("dokumen") || bolehModul("dokumen", "pemutakhiran")
   const bacaBerita = !diServer("berita") || bolehModul("berita", "pemutakhiran")
+  const bacaDokumentasi = !diServer("dokumentasi") || bolehModul("dokumentasi", "pemutakhiran")
   const pesan = useKoleksi("pesan", { aktif: bacaPesan }).data?.length
   const keliling = useKoleksi("keliling", { aktif: bacaKeliling }).data?.length
   const layanan = useKoleksi("layanan", { aktif: bacaLayanan }).data?.length
   const dokumen = useKoleksi("dokumen", { aktif: bacaDokumen }).data?.length
   const berita = useKoleksi("berita", { aktif: bacaBerita }).data?.length
+  const dokumentasi = useKoleksi("dokumentasi", { aktif: bacaDokumentasi }).data?.length
   const baris: [string, number | null | undefined][] = [
     [KOLEKSI_LABEL.berita, bacaBerita ? berita : null],
-    [KOLEKSI_LABEL.dokumentasi, dokumentasi],
+    [KOLEKSI_LABEL.dokumentasi, bacaDokumentasi ? dokumentasi : null],
     [KOLEKSI_LABEL.dokumen, bacaDokumen ? dokumen : null],
     [KOLEKSI_LABEL.layanan, bacaLayanan ? layanan : null],
     [KOLEKSI_LABEL.keliling, bacaKeliling ? keliling : null],
