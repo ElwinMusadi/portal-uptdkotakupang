@@ -164,8 +164,28 @@ export interface Faq extends Entri {
 
 export type Hari = 0 | 1 | 2 | 3 | 4 | 5 | 6
 
+/** Jenis layanan di luar kantor (D-043) */
+export type JenisLayananLuar = "keliling" | "gerai" | "sementara"
+
+export type UnitKeliling = "01" | "02" | "03"
+
+/**
+ * Jadwal layanan di luar kantor (D-043): Samsat Keliling pada satu tanggal,
+ * gerai tetap pada hari-harinya, atau loket sementara di antara dua tanggal.
+ * Nama koleksinya tetap "keliling".
+ */
 export interface JadwalKeliling extends Entri {
-  hari: Hari
+  jenis: JenisLayananLuar
+  /** Unit Samsat Keliling; null untuk gerai dan loket */
+  unit: UnitKeliling | null
+  /** Nama gerai atau loket; kosong untuk Samsat Keliling */
+  nama: string
+  /** Tanggal pertama (Samsat Keliling: tanggal layanannya); null bila tanpa batas */
+  tanggalMulai: IsoDate | null
+  /** Tanggal terakhir; null bila tanpa batas */
+  tanggalSelesai: IsoDate | null
+  /** Hari layanan, 0 = Minggu */
+  hari: Hari[]
   mulai: Jam
   selesai: Jam
   lokasi: string
@@ -173,6 +193,12 @@ export interface JadwalKeliling extends Entri {
   layanan: string
   catatan: string
   aktif: boolean
+}
+
+/** Lokasi yang bisa dipilih saat mengisi jadwal layanan luar kantor (D-044) */
+export interface LokasiLayanan extends Entri {
+  nama: string
+  kecamatan: string
 }
 
 export interface PenyesuaianJadwal extends Entri {
@@ -272,6 +298,7 @@ export interface Koleksi {
   layanan: Layanan
   faq: Faq
   keliling: JadwalKeliling
+  lokasi: LokasiLayanan
   penyesuaian: PenyesuaianJadwal
   unit: UnitKerja
   pesan: Pesan

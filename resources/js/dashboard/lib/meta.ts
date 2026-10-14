@@ -2,6 +2,8 @@ import { KOLEKSI_SERVER, PENGATURAN_SERVER } from "@/lib/api/hybrid"
 import type {
   Faq,
   Hari,
+  JadwalKeliling,
+  JenisLayananLuar,
   JenisPesan,
   JenisUnit,
   KategoriBerita,
@@ -24,7 +26,8 @@ export const KOLEKSI_LABEL: Record<NamaKoleksi, string> = {
   dokumen: "Regulasi & Unduhan",
   layanan: "Persyaratan Layanan",
   faq: "Tanya Jawab",
-  keliling: "Samsat Keliling",
+  keliling: "Layanan Luar Kantor",
+  lokasi: "Lokasi Layanan Luar Kantor",
   penyesuaian: "Penyesuaian Jadwal",
   unit: "Struktur Organisasi",
   pesan: "Pesan & Pengaduan",
@@ -46,8 +49,8 @@ export const PENGATURAN_LABEL: Record<NamaPengaturan, string> = {
 
 /** Modul yang sudah tersimpan di server, mis. "Tanya Jawab, Samsat Keliling, dan Jam Pelayanan" */
 export const LABEL_MODUL_SERVER = daftarKata([
-  // Penyesuaian jadwal bagian dari modul Jam Pelayanan
-  ...KOLEKSI_SERVER.filter((k) => k !== "penyesuaian").map((k) => KOLEKSI_LABEL[k]),
+  // Penyesuaian jadwal bagian dari modul Jam Pelayanan, lokasi bagian dari Layanan Luar Kantor
+  ...KOLEKSI_SERVER.filter((k) => k !== "penyesuaian" && k !== "lokasi").map((k) => KOLEKSI_LABEL[k]),
   ...PENGATURAN_SERVER.map((n) => PENGATURAN_LABEL[n]),
 ])
 
@@ -67,17 +70,31 @@ export const HARI_LABEL: Record<Hari, string> = {
 }
 
 /** Judul singkat sebuah entri, dipakai di log aktivitas, dialog, dan pencarian */
+export const JENIS_LAYANAN_LUAR: Record<JenisLayananLuar, string> = {
+  keliling: "Samsat Keliling",
+  gerai: "Gerai Tetap",
+  sementara: "Loket Sementara",
+}
+
+/** Yang melayani: unit Samsat Keliling, atau nama gerai atau loket */
+export function namaLayananLuar(j: Pick<JadwalKeliling, "jenis" | "unit" | "nama">): string {
+  return j.jenis === "keliling" ? `Samsat Keliling ${j.unit ?? ""}`.trim() : j.nama
+}
+
 export function judulEntri<K extends NamaKoleksi>(koleksi: K, item: Koleksi[K]): string {
   const x = item as unknown as Record<string, unknown>
   switch (koleksi) {
     case "layanan":
     case "unit":
+    case "lokasi":
       return String(x.nama ?? "")
     case "faq":
       return String(x.pertanyaan ?? "")
     case "keliling": {
       const k = item as Koleksi["keliling"]
-      return `${HARI_LABEL[k.hari]} · ${k.lokasi}`
+      return k.jenis === "keliling"
+        ? `${namaLayananLuar(k)} · ${k.tanggalMulai ?? ""} · ${k.lokasi}`
+        : `${namaLayananLuar(k)} · ${k.lokasi}`
     }
     case "penyesuaian": {
       const p = item as Koleksi["penyesuaian"]
@@ -291,7 +308,7 @@ export const STATUS_LOKET: Record<StatusLoket, { label: string; nada: Nada }> = 
 }
 
 export const MODUL_PANTAU: Record<ModulPantau, { label: string; rute: string }> = {
-  keliling: { label: "Samsat Keliling", rute: "/jadwal/keliling" },
+  keliling: { label: "Layanan Luar Kantor", rute: "/jadwal/keliling" },
   dokumentasi: { label: "Dokumentasi Kegiatan", rute: "/dokumentasi" },
   jam: { label: "Jam Pelayanan", rute: "/jadwal/jam" },
   layanan: { label: "Persyaratan Layanan", rute: "/layanan" },

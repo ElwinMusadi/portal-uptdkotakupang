@@ -67,16 +67,20 @@ class PortalPagesTest extends TestCase
         $this->assertStringNotContainsString('<details', $outsideTemplate);
     }
 
-    public function test_leaves_the_samsat_keliling_schedule_to_the_public_api(): void
+    public function test_leaves_the_schedule_of_service_outside_the_office_to_the_public_api(): void
     {
         $home = $this->get('/')->assertOk()->getContent();
         $schedule = $this->get('/jadwal')->assertOk()->getContent();
 
         $this->assertSame(1, preg_match('/<ul[^>]*data-keliling-today>(.*?)<\/ul>/s', $home, $today));
         $this->assertSame(1, preg_match('/<div[^>]*data-keliling-week[^>]*>(.*?)<\/div>/s', $schedule, $week));
+        $this->assertSame(1, preg_match('/<div[^>]*data-keliling-gerai>(.*?)<\/div>/s', $schedule, $outlets));
+        $this->assertSame(1, preg_match('/<div[^>]*data-keliling-sementara>(.*?)<\/div>/s', $schedule, $counters));
         $this->assertStringNotContainsString('Kantor Kelurahan', $today[1]);
         $this->assertStringContainsString('Memuat jadwal', $today[1]);
         $this->assertSame('<p class="muted" role="status">Memuat jadwal minggu ini…</p>', trim($week[1]));
+        $this->assertSame('<p class="muted">Memuat gerai tetap…</p>', trim($outlets[1]));
+        $this->assertSame('<p class="muted">Memuat loket sementara…</p>', trim($counters[1]));
     }
 
     #[TestWith(['/'])]

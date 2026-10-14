@@ -74,10 +74,15 @@ export function useAktivitas(limit = 50) {
   })
 }
 
+/** Koleksi yang ikut berubah di server, mis. jadwal luar kantor menambah lokasi baru ke daftar (D-044) */
+const KOLEKSI_TERKAIT: Partial<Record<NamaKoleksi, NamaKoleksi[]>> = { keliling: ["lokasi"] }
+
 function useSegarkan() {
   const qc = useQueryClient()
   return (k?: NamaKoleksi) => {
-    if (k) void qc.invalidateQueries({ queryKey: qk.koleksi(k) })
+    if (k) {
+      for (const x of [k, ...(KOLEKSI_TERKAIT[k] ?? [])]) void qc.invalidateQueries({ queryKey: qk.koleksi(x) })
+    }
     void qc.invalidateQueries({ queryKey: qk.aktivitas })
   }
 }

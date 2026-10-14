@@ -22,6 +22,7 @@ import type {
 export const KOLEKSI_SERVER: readonly NamaKoleksi[] = [
   "faq",
   "keliling",
+  "lokasi",
   "penyesuaian",
   "pesan",
   "layanan",

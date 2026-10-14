@@ -5,8 +5,9 @@ namespace App\Http\Requests\Dashboard;
 use App\Models\MobileServiceStop;
 
 /**
- * Changes to a Samsat Keliling stop: any of the fields of a new stop, each
- * checked by the same rules when sent.
+ * Changes to a schedule entry of service outside the office: any of the
+ * fields of a new entry, each checked by the same rules when sent, and the
+ * changed entry checked as a whole for its kind.
  */
 class UpdateMobileServiceStopRequest extends StoreMobileServiceStopRequest
 {

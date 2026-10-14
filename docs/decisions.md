@@ -581,3 +581,30 @@ API data kendaraan BPAD hanya aktif sampai pukul 21.00 WITA. Sebelumnya, pencari
 | Keterangan | Portal (di bawah cek biaya pajak di Beranda dan Layanan) dan Kalkulator PKB menyebut bahwa data kendaraan dari BPAD tersedia **sampai pukul 21.00 WITA**. Jam mulai **belum pasti** (keputusan pemilik), jadi tidak disebut. |
 | Di luar jam | **Ditolak tanpa menghubungi API** (keputusan pemilik): "Data kendaraan dari BPAD hanya tersedia sampai pukul 21.00 WITA. Coba lagi besok." (`503`). Selama jam mulai belum diketahui, hanya pukul 21.00–24.00 WITA yang dianggap tutup; selepas tengah malam PINTU tetap mencoba API. |
 | Pengaturan | `NJKB_SERVICE_CLOSES_AT` (bawaan `21:00`) dan `NJKB_SERVICE_OPENS_AT` (kosong), format `HH:MM` WITA. Bila jam mulai diisi, pesan menjadi "… pukul 07.00–21.00 WITA. Coba lagi pukul 07.00 WITA." dan jam sebelum buka ikut ditolak. Keterangan di portal dan Kalkulator PKB ditulis tetap, jadi perlu disunting bila jamnya berubah. |
+
+## D-043 · 2026-10-15 · Layanan Luar Kantor: tiga unit Samsat Keliling, gerai tetap, dan loket sementara
+
+Samsat Keliling sebelumnya dicatat sebagai satu jadwal mingguan per hari (D-013). Kenyataannya ada tiga unit (Samsat Keliling 01, 02, dan 03) yang bergiliran di lokasi berbeda setiap minggu dan bisa ditugaskan ke acara seperti festival. Di luar kantor juga ada gerai tetap (Samsat Corner, Mall Pelayanan Publik) dan loket musiman atau kondisional (kantor lurah, pasar, pameran).
+
+| Hal | Keputusan |
+|---|---|
+| Samsat Keliling | **Per tanggal dengan unit** (keputusan pemilik): setiap jadwal punya tanggal, jam, lokasi, dan unit 01–03; harinya mengikuti tanggal dan boleh Senin sampai Minggu. Tombol **Salin ke minggu berikutnya** menyalin jadwal satu minggu (Senin–Minggu) ke hari yang sama minggu berikutnya dalam keadaan **nonaktif**, agar unit dan lokasinya diperiksa dulu; jadwal yang sudah ada untuk unit, tanggal, jam mulai, dan lokasi yang sama tidak disalin lagi. |
+| Gerai tetap | Nama, hari buka, jam, dan lokasi; tanggal berlaku mulai dan sampai boleh kosong. Jam yang berbeda per hari dicatat sebagai baris tersendiri. |
+| Loket sementara | Nama, tanggal mulai dan selesai (paling lama satu tahun), hari buka di antaranya, jam, dan lokasi. |
+| Dashboard | **Satu menu, tiga tab** (keputusan pemilik): menu Samsat Keliling menjadi **Layanan Luar Kantor** dengan tab Samsat Keliling, Gerai Tetap, dan Loket Sementara. Modul `keliling` tetap dipakai, jadi pegawai yang mengelola Samsat Keliling otomatis mengelola ketiganya; nama modulnya kini Layanan Luar Kantor. |
+| Portal | **Semua jenis** (keputusan pemilik). Halaman Jadwal: agenda Samsat Keliling dan loket sementara per tanggal dari hari ini sampai Minggu pekan depan, lalu daftar gerai tetap dan loket sementara yang belum berakhir. Tile beranda dan notch kanal menjadi "Di luar kantor hari ini" dan memuat semua yang melayani hari ini (empat pertama, sisanya disebut jumlahnya). |
+| Data lama | **Dipindahkan, nonaktif** (keputusan pemilik): jadwal Senin di Bundaran PU menjadi Samsat Keliling 01 pada Senin 19 Oktober 2026, belum tampil di portal sampai diaktifkan. |
+
+Belum dibuat: nomor polisi atau petugas per unit Samsat Keliling, dan penandaan bentrok bila satu unit dijadwalkan di dua tempat pada jam yang sama.
+
+## D-044 · 2026-10-15 · Daftar lokasi dan salin jadwal per hari
+
+Mengisi Lokasi jadwal layanan luar kantor (D-043) satu per satu lambat, dan jadwal yang sama untuk beberapa hari harus diketik ulang.
+
+| Hal | Keputusan |
+|---|---|
+| Daftar lokasi | Isian Lokasi menjadi pilihan dari **daftar lokasi** (nama dan kecamatan; memilih lokasi sekaligus mengisi kecamatannya). Administrator dan pegawai pengelola Layanan Luar Kantor menambah, mengubah, dan menghapus lokasi di tab **Lokasi**. Daftar ini awalnya berisi lokasi yang sudah dipakai jadwal. Nama lokasi unik tanpa membedakan huruf besar dan kecil. |
+| Lokasi baru | Lokasi tetap bisa diketik bila belum ada di daftar, dan **otomatis masuk daftar** (keputusan pemilik) beserta kecamatannya saat jadwal disimpan atau lokasinya diubah. Menyalakan atau mematikan jadwal tidak menambahkan kembali lokasi yang sudah dihapus dari daftar. |
+| Mengubah lokasi | **Tidak mengubah jadwal yang sudah ada** (keputusan pemilik): jadwal menyimpan nama lokasinya sendiri, jadi mengubah atau menghapus lokasi di daftar hanya berlaku untuk pengisian berikutnya. |
+| Salin per hari | **Dari kartu hari** di pratinjau mingguan (keputusan pemilik): tombol Salin pada hari yang berjadwal menyalin semua jadwal Samsat Keliling hari itu (unit, jam, lokasi, layanan, catatan) ke hari-hari yang dicentang di minggu yang sama dan minggu berikutnya, paling banyak 14 hari sekali salin. Hari yang sudah lewat tidak bisa dipilih. Jadwal yang sudah ada di hari tujuan untuk unit, jam mulai, dan lokasi yang sama dilewati. |
+| Status salinan | **Mengikuti jadwal asal** (keputusan pemilik): jadwal aktif disalin aktif dan langsung tampil di portal. Salin minggu (D-043) tetap menyalin dalam keadaan nonaktif. |

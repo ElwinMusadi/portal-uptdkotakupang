@@ -17,6 +17,7 @@ import type {
   Halaman,
   Hari,
   JadwalKeliling,
+  LokasiLayanan,
   JenisPesan,
   Layanan,
   Pemutakhiran,
@@ -665,34 +666,48 @@ function faq(sekarang: Date): Faq[] {
   }))
 }
 
-/** Rotasi Samsat Keliling (contoh) */
-const ROTASI_KELILING: Array<[Hari, string, string, string, string]> = [
-  [1, "08:00", "12:00", "Kantor Kelurahan Oebobo", "Kec. Oebobo"],
-  [1, "13:00", "15:00", "Kantor Kelurahan Fatululi", "Kec. Oebobo"],
-  [2, "08:00", "12:00", "Kantor Kelurahan Oesapa", "Kec. Kelapa Lima"],
-  [2, "13:00", "15:00", "Kantor Kelurahan Sikumana", "Kec. Maulafa"],
-  [3, "08:00", "12:00", "Kantor Kelurahan Penfui", "Kec. Maulafa"],
-  [3, "13:00", "15:00", "Kantor Kelurahan Liliba", "Kec. Oebobo"],
-  [4, "08:00", "12:00", "Kantor Kelurahan Naikoten I", "Kec. Kota Raja"],
-  [4, "13:00", "15:00", "Kantor Kelurahan Oepura", "Kec. Maulafa"],
-  [5, "08:00", "11:00", "Kantor Kelurahan Alak", "Kec. Alak"],
-  [5, "08:00", "11:00", "Kantor Kelurahan Fontein", "Kec. Kota Raja"],
+/** Samsat Keliling minggu ini (contoh): [hari sejak Senin, unit, mulai, selesai, lokasi, kecamatan] */
+const ROTASI_KELILING: Array<[number, "01" | "02" | "03", string, string, string, string]> = [
+  [0, "01", "08:00", "12:00", "Kantor Kelurahan Oebobo", "Kec. Oebobo"],
+  [0, "02", "08:00", "12:00", "Kantor Kelurahan Oesapa", "Kec. Kelapa Lima"],
+  [1, "01", "08:00", "12:00", "Kantor Kelurahan Penfui", "Kec. Maulafa"],
+  [2, "03", "08:00", "12:00", "Kantor Kelurahan Naikoten I", "Kec. Kota Raja"],
+  [3, "02", "08:00", "12:00", "Kantor Kelurahan Alak", "Kec. Alak"],
+  [5, "01", "06:00", "09:00", "CFD Eltari", "Kec. Oebobo"],
+  [5, "02", "17:00", "19:00", "Taman Nostalgia", "Kec. Kota Lama"],
 ]
 
 function keliling(sekarang: Date): JadwalKeliling[] {
-  return ROTASI_KELILING.map(([hari, mulai, selesai, lokasi, kecamatan], i) => ({
+  const senin = new Date(sekarang)
+  senin.setDate(sekarang.getDate() - ((sekarang.getDay() + 6) % 7))
+  const iso = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+  const dasar = { dibuat: waktu(sekarang, 45), diperbarui: waktu(sekarang, 8, 15, 30), layanan: "Pajak tahunan", catatan: "", aktif: true }
+  const stop = ROTASI_KELILING.map(([selisih, unit, mulai, selesai, lokasi, kecamatan], i): JadwalKeliling => {
+    const d = new Date(senin)
+    d.setDate(senin.getDate() + selisih)
+    return { ...dasar, id: newId(), urutan: i, jenis: "keliling", unit, nama: "", tanggalMulai: iso(d), tanggalSelesai: iso(d), hari: [d.getDay() as Hari], mulai, selesai, lokasi, kecamatan }
+  })
+  const akhirLoket = new Date(senin)
+  akhirLoket.setDate(senin.getDate() + 4)
+  return [
+    ...stop,
+    { ...dasar, id: newId(), urutan: stop.length, jenis: "gerai", unit: null, nama: "Samsat Corner", tanggalMulai: null, tanggalSelesai: null, hari: [1, 2, 3, 4, 5], mulai: "10:00", selesai: "17:00", lokasi: "Lippo Plaza Kupang", kecamatan: "Kec. Oebobo" },
+    { ...dasar, id: newId(), urutan: stop.length + 1, jenis: "gerai", unit: null, nama: "Mall Pelayanan Publik", tanggalMulai: null, tanggalSelesai: null, hari: [1, 2, 3, 4, 5], mulai: "08:00", selesai: "15:00", lokasi: "Gedung MPP Kota Kupang", kecamatan: "Kec. Kota Raja" },
+    { ...dasar, id: newId(), urutan: stop.length + 2, jenis: "sementara", unit: null, nama: "Loket Kantor Lurah Oebobo", tanggalMulai: iso(senin), tanggalSelesai: iso(akhirLoket), hari: [1, 2, 3, 4, 5], mulai: "08:00", selesai: "12:00", lokasi: "Kantor Lurah Oebobo", kecamatan: "Kec. Oebobo" },
+  ]
+}
+
+function lokasi(sekarang: Date): LokasiLayanan[] {
+  const nama = new Map<string, string>()
+  for (const [, , , , l, k] of ROTASI_KELILING) nama.set(l, k)
+  return [...nama].map(([l, k], i) => ({
     id: newId(),
     urutan: i,
     dibuat: waktu(sekarang, 45),
-    diperbarui: waktu(sekarang, 8, 15, 30),
-    hari,
-    mulai,
-    selesai,
-    lokasi,
-    kecamatan,
-    layanan: "Pajak tahunan",
-    catatan: "",
-    aktif: true,
+    diperbarui: waktu(sekarang, 45),
+    nama: l,
+    kecamatan: k,
   }))
 }
 
@@ -1310,6 +1325,7 @@ export function buatSeed(sekarang = new Date()): Snapshot {
       layanan: layanan(sekarang),
       faq: faq(sekarang),
       keliling: keliling(sekarang),
+      lokasi: lokasi(sekarang),
       penyesuaian: penyesuaian(sekarang),
       unit: unit(sekarang),
       pesan: pesan(sekarang),

@@ -34,9 +34,14 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET`, `PATCH` | `/api/koleksi/faq/{id}` | Administrator, pengelola Tanya Jawab | tersedia |
 | `PUT` | `/api/koleksi/faq/urutan` | Administrator, pengelola Tanya Jawab | tersedia |
 | `POST` | `/api/koleksi/faq/hapus` | Administrator | tersedia |
-| `GET`, `POST` | `/api/koleksi/keliling` | Administrator, pengelola Samsat Keliling (daftar: juga pengelola Jadwal Pemutakhiran) | tersedia |
-| `GET`, `PATCH` | `/api/koleksi/keliling/{id}` | Administrator, pengelola Samsat Keliling | tersedia |
-| `POST` | `/api/koleksi/keliling/hapus` | Administrator, pengelola Samsat Keliling | tersedia |
+| `GET`, `POST` | `/api/koleksi/keliling` | Administrator, pengelola Layanan Luar Kantor (daftar: juga pengelola Jadwal Pemutakhiran) | tersedia |
+| `GET`, `PATCH` | `/api/koleksi/keliling/{id}` | Administrator, pengelola Layanan Luar Kantor | tersedia |
+| `POST` | `/api/koleksi/keliling/hapus` | Administrator, pengelola Layanan Luar Kantor | tersedia |
+| `POST` | `/api/koleksi/keliling/salin-minggu` | Administrator, pengelola Layanan Luar Kantor | tersedia |
+| `POST` | `/api/koleksi/keliling/salin-hari` | Administrator, pengelola Layanan Luar Kantor | tersedia |
+| `GET`, `POST` | `/api/koleksi/lokasi` | Administrator, pengelola Layanan Luar Kantor | tersedia |
+| `GET`, `PATCH` | `/api/koleksi/lokasi/{id}` | Administrator, pengelola Layanan Luar Kantor | tersedia |
+| `POST` | `/api/koleksi/lokasi/hapus` | Administrator, pengelola Layanan Luar Kantor | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/jam` | Administrator, pengelola Jam Pelayanan | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/papan` | Administrator, pengelola Papan Layanan | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/statistik` | Administrator, pengelola Statistik Layanan | tersedia |
@@ -145,7 +150,7 @@ Kunci modul untuk `modul` ([D-010](decisions.md#d-010--2026-10-13--penugasan-mod
 | `faq` | Tanya Jawab | `kontak` | Kontak & Kanal |
 | `layanan` | Persyaratan Layanan | `beranda` | Beranda |
 | `jam` | Jam Pelayanan (termasuk koleksi `penyesuaian`) | `halaman` | Halaman Statis |
-| `keliling` | Samsat Keliling | `pemutakhiran` | Jadwal Pemutakhiran |
+| `keliling` | Layanan Luar Kantor (dulu Samsat Keliling) | `pemutakhiran` | Jadwal Pemutakhiran |
 
 Endpoint konten dashboard (`/api/koleksi/…`, `/api/pengaturan/…`) wajib menolak pegawai yang tidak mengelola modul koleksi atau pengaturan itu. `/api/koleksi/faq`, `/api/koleksi/keliling`, `/api/koleksi/penyesuaian`, `/api/koleksi/pesan`, `/api/koleksi/layanan`, `/api/koleksi/halaman`, `/api/koleksi/pemutakhiran`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/statistik`, `/api/pengaturan/kontak`, `/api/pengaturan/visiMisi`, `/api/pengaturan/profil`, dan `/api/pengaturan/beranda` sudah melakukannya; daftar Jadwal Pemutakhiran boleh dibaca semua pegawai, sebatas standar modul mereka, dan Pengaturan Situs, yang bukan milik modul mana pun, boleh dibaca semua pegawai tetapi hanya disimpan Administrator (`/api/pengaturan/situs`).
 
@@ -184,27 +189,54 @@ Log aktivitas dashboard di server, terbaru lebih dulu, sebatas modul yang dikelo
 
 Kode: `app/Http/Controllers/Dashboard/`, `app/Http/Requests/Dashboard/`, `app/Policies/FaqPolicy.php`, `app/Rules/FaqText.php`, `app/Actions/RecordActivity.php`, `app/Http/Resources/FaqResource.php`, `app/Http/Resources/ActivityResource.php`. Tes: `tests/Feature/FaqControllerTest.php`, `FaqOrderControllerTest.php`, `FaqDeletionControllerTest.php`, `FaqPolicyTest.php`, `ActivityControllerTest.php`.
 
-## Samsat Keliling di dashboard
+## Layanan Luar Kantor di dashboard
 
-Dipakai halaman *Samsat Keliling* di dashboard ([D-013](decisions.md#d-013--2026-10-13--samsat-keliling-tersimpan-di-server-batas-laju-api-publik-300)). Tamu mendapat `401`; pegawai yang tidak mengelola modul `keliling` mendapat `403` `{"message": "Modul Samsat Keliling belum ditugaskan kepada Anda."}`. Pengelola Jadwal Pemutakhiran boleh memakai `GET /api/koleksi/keliling` saja.
+Dipakai halaman *Layanan Luar Kantor* di dashboard ([D-013](decisions.md#d-013--2026-10-13--samsat-keliling-tersimpan-di-server-batas-laju-api-publik-300), [D-043](decisions.md#d-043--2026-10-15--layanan-luar-kantor-tiga-unit-samsat-keliling-gerai-tetap-dan-loket-sementara)): Samsat Keliling per tanggal, gerai tetap, dan loket sementara dalam satu koleksi. Tamu mendapat `401`; pegawai yang tidak mengelola modul `keliling` mendapat `403` `{"message": "Modul Layanan Luar Kantor belum ditugaskan kepada Anda."}`. Pengelola Jadwal Pemutakhiran boleh memakai `GET /api/koleksi/keliling` saja.
 
 Data jadwal:
 
 ```json
-{ "id": "01m4…", "hari": 1, "mulai": "08:00", "selesai": "12:00", "lokasi": "Kantor Kelurahan Oebobo", "kecamatan": "Kec. Oebobo", "layanan": "Pajak tahunan", "catatan": "", "aktif": true, "urutan": 0, "dibuat": "2026-10-13T08:00:00+00:00", "diperbarui": "2026-10-13T08:00:00+00:00" }
+{ "id": "01m4…", "jenis": "keliling", "unit": "01", "nama": "", "tanggalMulai": "2026-10-17", "tanggalSelesai": "2026-10-17", "hari": [6], "mulai": "06:00", "selesai": "09:00", "lokasi": "CFD Eltari", "kecamatan": "Kec. Oebobo", "layanan": "Pajak tahunan", "catatan": "", "aktif": true, "urutan": 0, "dibuat": "2026-10-15T08:00:00+00:00", "diperbarui": "2026-10-15T08:00:00+00:00" }
 ```
 
 | Alamat | Permintaan | Respons |
 |---|---|---|
-| `GET /api/koleksi/keliling` | — | `200` semua jadwal, urut hari lalu jam. |
+| `GET /api/koleksi/keliling` | — | `200` semua jadwal, urut jenis, tanggal mulai, lalu jam. |
 | `GET /api/koleksi/keliling/{id}` | — | `200` data jadwal; `404` bila tidak ada. |
-| `POST /api/koleksi/keliling` | `{"hari", "mulai", "selesai", "lokasi", "kecamatan", "layanan", "aktif"}` wajib, `"catatan"` boleh kosong | `201` data jadwal. `id` dan `urutan` dari klien diabaikan. |
-| `PATCH /api/koleksi/keliling/{id}` | sebagian dari isian di atas | `200` data jadwal. Jam selesai dibandingkan dengan jam mulai yang akan tersimpan. |
+| `POST /api/koleksi/keliling` | lihat aturan per jenis di bawah | `201` data jadwal. `id` dan `urutan` dari klien diabaikan. |
+| `PATCH /api/koleksi/keliling/{id}` | sebagian dari isian | `200` data jadwal. Jadwal diperiksa utuh: isian yang dikirim di atas isian yang tersimpan. |
 | `POST /api/koleksi/keliling/hapus` | `{"ids": ["…"]}` | `204`. ID yang sudah tidak ada dilewati. |
+| `POST /api/koleksi/keliling/salin-hari` | `{"dari": "2026-10-19", "ke": ["2026-10-20", "2026-10-21"]}` | `200` daftar salinan ([D-044](decisions.md#d-044--2026-10-15--daftar-lokasi-dan-salin-jadwal-per-hari)): semua jadwal Samsat Keliling bertanggal `dari` disalin ke setiap tanggal `ke` (urut tanggal) dengan `aktif` sama seperti jadwal asalnya. Jadwal yang sudah ada di sana untuk unit, tanggal, jam mulai, dan lokasi yang sama dilewati; `[]` bila tidak ada yang disalin. `422` bila `dari` atau salah satu `ke` bukan tanggal, `ke` kosong, berulang, sama dengan `dari`, atau lebih dari 14 tanggal. |
+| `POST /api/koleksi/keliling/salin-minggu` | `{"dari": "2026-10-12"}` (Senin) | `200` daftar salinan: jadwal Samsat Keliling bertanggal Senin–Minggu itu disalin ke hari yang sama minggu berikutnya dengan `aktif` `false`. Jadwal yang sudah ada di sana untuk unit, tanggal, jam mulai, dan lokasi yang sama dilewati; `[]` bila tidak ada yang disalin. `422` bila `dari` bukan tanggal Senin. |
 
-Aturan isian (`422` dengan pesan per isian): `hari` 1 (Senin) sampai 6 (Sabtu); `mulai` dan `selesai` berformat `HH:MM`, selesai setelah mulai; `lokasi` maks. 120, `kecamatan` maks. 60, `layanan` maks. 80, dan `catatan` maks. 300 karakter, teks polos tanpa karakter kontrol dan berisi teks yang terlihat; `aktif` boolean. Catatan kosong disimpan sebagai `""`. Log aktivitas memakai aksi `menambahkan`, `memperbarui`, dan `menghapus` dengan target seperti "Senin · Kantor Kelurahan Oebobo".
+Aturan isian (`422` dengan pesan per isian):
 
-Kode: `app/Http/Controllers/Dashboard/MobileServiceStop*`, `app/Http/Requests/Dashboard/*MobileServiceStop*`, `app/Policies/MobileServiceStopPolicy.php`, `app/Models/MobileServiceStop.php`, `app/Actions/DeleteEntries.php`. Tes: `tests/Feature/MobileServiceStopControllerTest.php`, `MobileServiceStopDeletionControllerTest.php`.
+- `jenis` `keliling`, `gerai`, atau `sementara`. `mulai` dan `selesai` berformat `HH:MM`, selesai setelah mulai. `lokasi` maks. 120, `kecamatan` maks. 60, `layanan` maks. 80, dan `catatan` maks. 300 karakter, teks polos tanpa karakter kontrol; `aktif` boolean. Catatan kosong disimpan sebagai `""`.
+- **keliling**: `unit` `01`, `02`, atau `03` dan `tanggalMulai` (`YYYY-MM-DD`) wajib. Server mengisi `tanggalSelesai` sama dengan `tanggalMulai`, `hari` dengan hari tanggal itu, dan `nama` kosong.
+- **gerai**: `nama` (maks. 120) dan `hari` (daftar 0–6, 0 = Minggu, tanpa pengulangan) wajib; `tanggalMulai` dan `tanggalSelesai` boleh `null`. `unit` selalu `null`.
+- **sementara**: `nama`, `hari`, `tanggalMulai`, dan `tanggalSelesai` wajib; selesai tidak sebelum mulai, rentangnya kurang dari 366 hari, dan minimal satu hari terpilih jatuh di antaranya. `unit` selalu `null`.
+
+Log aktivitas memakai aksi `menambahkan`, `memperbarui`, `menghapus`, dan `menyalin`, dengan target seperti "Samsat Keliling 01 · Sabtu, 2026-10-17 · CFD Eltari", "Samsat Corner · Lippo Plaza Kupang", "3 jadwal Samsat Keliling ke minggu 2026-10-19", atau "4 jadwal Samsat Keliling dari 2026-10-19".
+
+Lokasi yang dikirim saat menambah jadwal, atau saat lokasinya diubah, masuk daftar lokasi bila belum ada (tanpa membedakan huruf besar dan kecil), dengan kecamatan jadwal itu dan log "menambahkan Lokasi …" ([D-044](decisions.md#d-044--2026-10-15--daftar-lokasi-dan-salin-jadwal-per-hari)).
+
+### Daftar lokasi
+
+Pilihan isian Lokasi di halaman *Layanan Luar Kantor* ([D-044](decisions.md#d-044--2026-10-15--daftar-lokasi-dan-salin-jadwal-per-hari)). Tamu mendapat `401`; pegawai yang tidak mengelola modul `keliling` mendapat `403` `{"message": "Modul Layanan Luar Kantor belum ditugaskan kepada Anda."}`.
+
+```json
+{ "id": "01m4…", "nama": "CFD Eltari", "kecamatan": "Kec. Oebobo", "urutan": 0, "dibuat": "2026-10-15T08:00:00+00:00", "diperbarui": "2026-10-15T08:00:00+00:00" }
+```
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `GET /api/koleksi/lokasi` | — | `200` semua lokasi, urut nama. |
+| `GET /api/koleksi/lokasi/{id}` | — | `200` data lokasi; `404` bila tidak ada. |
+| `POST /api/koleksi/lokasi` | `{"nama", "kecamatan"}` | `201` data lokasi. `422` bila nama (maks. 120) atau kecamatan (maks. 60) kosong, berisi karakter kontrol, atau nama sudah ada di daftar tanpa membedakan huruf besar dan kecil: "Lokasi ini sudah ada di daftar." |
+| `PATCH /api/koleksi/lokasi/{id}` | sebagian dari isian di atas | `200` data lokasi. Jadwal yang memakai nama lama tidak ikut berubah. |
+| `POST /api/koleksi/lokasi/hapus` | `{"ids": ["…"]}` | `204`. Jadwal yang memakai lokasi itu tidak ikut terhapus. |
+
+Log aktivitas: "menambahkan", "memperbarui", dan "menghapus" dengan target seperti "Lokasi CFD Eltari". Kode: `app/Http/Controllers/Dashboard/ServiceLocationController.php`, `app/Actions/RememberServiceLocation.php`. Tes: `tests/Feature/ServiceLocationControllerTest.php`.
 
 ## Jam Pelayanan di dashboard
 
@@ -757,17 +789,26 @@ Kode: `app/Http/Controllers/PublicFaqController.php`, `app/Actions/ListPublicFaq
 
 ## `GET /api/public/keliling`
 
-Jadwal Samsat Keliling untuk portal publik ([D-013](decisions.md#d-013--2026-10-13--samsat-keliling-tersimpan-di-server-batas-laju-api-publik-300)). Beranda dan halaman Jadwal memuatnya setiap kali dibuka (`initKeliling()` di `public/assets/js/main.js`).
+Jadwal layanan di luar kantor untuk portal publik ([D-043](decisions.md#d-043--2026-10-15--layanan-luar-kantor-tiga-unit-samsat-keliling-gerai-tetap-dan-loket-sementara)). Beranda dan halaman Jadwal memuatnya setiap kali dibuka (`initKeliling()` di `public/assets/js/main.js`).
 
 ```json
-[
-  { "hari": 1, "mulai": "08:00", "selesai": "12:00", "lokasi": "Kantor Kelurahan Oebobo", "kecamatan": "Kec. Oebobo", "layanan": "Pajak tahunan", "catatan": "" }
-]
+{
+  "dari": "2026-10-15", "sampai": "2026-10-25",
+  "jadwal": [
+    { "tanggal": "2026-10-17", "jenis": "keliling", "nama": "Samsat Keliling 01", "mulai": "06:00", "selesai": "09:00", "lokasi": "CFD Eltari", "kecamatan": "Kec. Oebobo", "layanan": "Pajak tahunan", "catatan": "" }
+  ],
+  "gerai": [
+    { "nama": "Samsat Corner", "tanggalMulai": null, "tanggalSelesai": null, "hari": [1, 2, 3, 4, 5], "mulai": "10:00", "selesai": "17:00", "lokasi": "Lippo Plaza Kupang", "kecamatan": "Kec. Oebobo", "layanan": "Pajak tahunan", "catatan": "" }
+  ],
+  "sementara": [
+    { "nama": "Loket Kantor Lurah Oebobo", "tanggalMulai": "2026-10-19", "tanggalSelesai": "2026-10-23", "hari": [1, 2, 3, 4, 5], "mulai": "08:00", "selesai": "12:00", "lokasi": "Kantor Lurah Oebobo", "kecamatan": "Kec. Oebobo", "layanan": "Pajak tahunan", "catatan": "" }
+  ]
+}
 ```
 
 | Hal | Perilaku |
 |---|---|
-| Berhasil | `200`, jadwal yang `aktif` saja, urut `hari`, `mulai`, `selesai`, lalu ID internal; `[]` bila tidak ada. Tanpa ID, `aktif`, `urutan`, atau waktu simpan. Teks dikirim persis seperti tersimpan dan wajib ditampilkan sebagai teks polos. |
+| Berhasil | `200`, jadwal `aktif` saja. `dari` adalah hari ini (WITA) dan `sampai` Minggu pekan depan. `jadwal` berisi setiap jenis pada setiap tanggal ia melayani di rentang itu, urut tanggal, jam mulai, jam selesai, jenis (Samsat Keliling, loket sementara, gerai), dan nama; `nama` Samsat Keliling berbentuk "Samsat Keliling 01". `gerai` dan `sementara` berisi gerai dan loket yang belum berakhir beserta hari dan tanggalnya. Daftar kosong bila tidak ada. Tanpa ID, `aktif`, `urutan`, atau waktu simpan. Teks dikirim persis seperti tersimpan dan wajib ditampilkan sebagai teks polos. |
 | Galat | `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah batas laju yang sama dengan `GET /api/public/faq`; `503` bila tabel tidak bisa dibaca, tidak pernah daftar kosong sebagai gantinya. |
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 

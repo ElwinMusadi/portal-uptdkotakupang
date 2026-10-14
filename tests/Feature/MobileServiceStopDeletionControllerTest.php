@@ -28,13 +28,13 @@ class MobileServiceStopDeletionControllerTest extends TestCase
 
         $response = $this->actingAs($monitor)->postJson('/api/koleksi/keliling/hapus', ['ids' => [$stop->id]]);
 
-        $response->assertForbidden()->assertExactJson(['message' => 'Modul Samsat Keliling belum ditugaskan kepada Anda.']);
+        $response->assertForbidden()->assertExactJson(['message' => 'Modul Layanan Luar Kantor belum ditugaskan kepada Anda.']);
         $this->assertModelExists($stop);
     }
 
     public function test_lets_employees_of_the_module_delete_stops_and_logs_one_by_its_title(): void
     {
-        $stop = MobileServiceStop::factory()->create(['hari' => 5, 'lokasi' => 'Kantor Kelurahan Alak']);
+        $stop = MobileServiceStop::factory()->on('2026-10-23', '02')->create(['lokasi' => 'Kantor Kelurahan Alak']);
         $kept = MobileServiceStop::factory()->create();
         $employee = User::factory()->withModules(DashboardModule::Keliling)->create();
 
@@ -49,7 +49,7 @@ class MobileServiceStopDeletionControllerTest extends TestCase
             'user_id' => $employee->id,
             'module' => 'keliling',
             'action' => 'menghapus',
-            'target' => 'Jumat · Kantor Kelurahan Alak',
+            'target' => 'Samsat Keliling 02 · Jumat, 2026-10-23 · Kantor Kelurahan Alak',
         ]);
     }
 

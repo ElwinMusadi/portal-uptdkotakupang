@@ -90,7 +90,7 @@ export default function HalamanPanduan() {
 
       <Topik id="pemutakhiran" judul="Standar pemutakhiran">
         <p>
-          Setiap jenis konten punya batas frekuensi, mis. jadwal Samsat Keliling setiap Jumat dan jam
+          Setiap jenis konten punya batas frekuensi, mis. jadwal Samsat Keliling (menu Layanan Luar Kantor) setiap Jumat dan jam
           pelayanan setiap bulan. Dashboard menghitung waktu pembaruan terakhir dari modul terkait dan
           menandai konten yang <strong>jatuh tempo</strong>. Atur standarnya di{" "}
           <Link to="/pemutakhiran" className="underline underline-offset-4">Jadwal Pemutakhiran</Link>.

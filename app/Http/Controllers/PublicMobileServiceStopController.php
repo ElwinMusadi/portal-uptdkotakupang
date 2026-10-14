@@ -10,9 +10,10 @@ use Illuminate\Validation\ValidationException;
 class PublicMobileServiceStopController extends Controller
 {
     /**
-     * List the active Samsat Keliling stops for the public portal. The
-     * schedule is complete and unpaginated, so query parameters are rejected
-     * rather than silently ignored.
+     * The public schedule of service outside the office (D-043): Samsat
+     * Keliling, fixed outlets and temporary counters. It is complete and
+     * unpaginated, so query parameters are rejected rather than silently
+     * ignored.
      */
     public function __invoke(Request $request, ListPublicMobileServiceStops $listStops): JsonResponse
     {

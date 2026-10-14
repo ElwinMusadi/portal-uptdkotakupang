@@ -8,14 +8,15 @@ use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
 /**
- * Samsat Keliling stops belong to the Samsat Keliling module (D-010):
- * administrators and the employees assigned to it manage them, deletion
- * included (D-013). Managers of Jadwal Pemutakhiran may also list them,
+ * Service outside the office (Samsat Keliling stops, fixed outlets and
+ * temporary counters, D-043) belongs to the module once named Samsat
+ * Keliling, now Layanan Luar Kantor (D-010): administrators and the
+ * employees assigned to it manage the entries, deletion included (D-013). Managers of Jadwal Pemutakhiran may also list them,
  * read-only, because they monitor when every module was last updated.
  */
 class MobileServiceStopPolicy
 {
-    private const string MODULE_ONLY = 'Modul Samsat Keliling belum ditugaskan kepada Anda.';
+    private const string MODULE_ONLY = 'Modul Layanan Luar Kantor belum ditugaskan kepada Anda.';
 
     /**
      * Determine whether the user can list the stops.

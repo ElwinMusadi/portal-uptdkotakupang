@@ -4,7 +4,7 @@ Dashboard pengelolaan konten portal **PINTU** (UPTD Pendapatan Daerah Wilayah Ko
 
 Tata letaknya mengikuti template [shadcn/ui *dashboard-01*](https://ui.shadcn.com/blocks#dashboard-01): sidebar, kartu KPI, grafik area interaktif, dan tabel data. Warna dan tipografinya disesuaikan dengan design system portal.
 
-> **Status.** Login sudah diperiksa server (lihat [Sesi login](#sesi-login)) dan Tanya Jawab, Samsat Keliling, Pesan & Pengaduan, Persyaratan Layanan, Jam Pelayanan, Papan Layanan, Statistik Layanan, Kontak & Kanal, Visi & Misi, Tentang UPTD, Beranda, Halaman Statis, Jadwal Pemutakhiran, Pengaturan Situs, serta profil akun sudah tersimpan di server (lihat [Penyimpanan data](#penyimpanan-data)). Konten lain masih tersimpan di peramban (IndexedDB) sampai gilirannya pindah ke server; kontraknya ada di bagian [Menyambungkan ke server](#menyambungkan-ke-server-rest-api).
+> **Status.** Login sudah diperiksa server (lihat [Sesi login](#sesi-login)) dan Tanya Jawab, Layanan Luar Kantor, Pesan & Pengaduan, Persyaratan Layanan, Jam Pelayanan, Papan Layanan, Statistik Layanan, Kontak & Kanal, Visi & Misi, Tentang UPTD, Beranda, Halaman Statis, Jadwal Pemutakhiran, Pengaturan Situs, serta profil akun sudah tersimpan di server (lihat [Penyimpanan data](#penyimpanan-data)). Konten lain masih tersimpan di peramban (IndexedDB) sampai gilirannya pindah ke server; kontraknya ada di bagian [Menyambungkan ke server](#menyambungkan-ke-server-rest-api).
 
 ## Menjalankan
 
@@ -87,7 +87,7 @@ resources/js/dashboard/
 | Tanya Jawab | `#/faq` | koleksi `faq` | `index.html#faq` |
 | Persyaratan Layanan | `#/layanan` | koleksi `layanan` | `layanan.html` |
 | Jam Pelayanan | `#/jadwal/jam` | pengaturan `jam`, koleksi `penyesuaian` | `jadwal.html` |
-| Samsat Keliling | `#/jadwal/keliling` | koleksi `keliling` | `jadwal.html#keliling` |
+| Layanan Luar Kantor | `#/jadwal/keliling` | koleksi `keliling` | `jadwal.html#keliling` |
 | Papan Layanan | `#/papan` | pengaturan `papan` | `index.html` |
 | Tentang UPTD | `#/profil` | pengaturan `profil` | `profil.html` |
 | Visi & Misi | `#/visi-misi` | pengaturan `visiMisi` | `visi-misi.html` |
@@ -236,7 +236,7 @@ Pegawai UPTD hanya melihat modul yang ditugaskan Administrator ([D-010](decision
 - `app/nav.ts` adalah satu-satunya sumber: setiap item menu konten punya `modul`, item khusus Administrator punya `khusus`. `navUntuk()` menyaring menu samping, pencarian, dan "Buat konten"; `GRUP_MODUL` menyusun centang modul di panel akun dengan judul dan kelompok yang sama dengan menu.
 - `Layout` mencocokkan alamat yang dibuka dengan item menu. Bila item itu tidak boleh dilihat, halaman diganti pesan "Modul ini belum ditugaskan kepada Anda" atau "Khusus Administrator".
 - `useItemAlur()` dan `usePemutakhiran()` di `lib/hitung.ts` menyaring konten dan jadwal per modul, sehingga Ringkasan dan Alur Publikasi ikut terbatas. Daftar Jadwal Pemutakhiran juga sudah disaring server ([D-025](decisions.md#d-025--2026-10-14--jadwal-pemutakhiran-tersimpan-di-server)). Kartu dan grafik pesan hanya tampil bagi pengelola Pesan & Pengaduan.
-- Untuk Tanya Jawab, Samsat Keliling, Pesan & Pengaduan, Persyaratan Layanan, Jam Pelayanan, Papan Layanan, Statistik Layanan, Kontak & Kanal, Visi & Misi, Tentang UPTD, Beranda, Halaman Statis, dan Jadwal Pemutakhiran, server ikut menegakkannya (`FaqPolicy`, `MobileServiceStopPolicy`, `MessagePolicy`, `ServicePolicy`, `SettingPolicy`, `ScheduleAdjustmentPolicy`, `StaticPagePolicy`, `UpdateStandardPolicy`): pegawai tanpa modul itu mendapat `403`. Pengaturan Situs bukan milik modul mana pun: semua pegawai membacanya, hanya Administrator yang menyimpannya, dan formulirnya hanya-baca bagi pegawai lain. Karena itu Ringkasan hanya memuat jadwal Samsat Keliling bagi pengelolanya dan pengelola Jadwal Pemutakhiran (`useKoleksi(…, { aktif })`), isi Papan Layanan hanya bagi pengelolanya (`usePengaturan(…, { aktif })`), dan pesan (lencana menu, kartu, grafik, antrean kerja, jumlah di *Pengaturan › Data*) hanya bagi pengelola Pesan & Pengaduan; yang lain memakai waktu simpannya. Untuk konten yang masih di IndexedDB, pembatasan ini baru mengatur tampilan; endpoint konten berikutnya wajib memeriksa modul yang sama.
+- Untuk Tanya Jawab, Layanan Luar Kantor, Pesan & Pengaduan, Persyaratan Layanan, Jam Pelayanan, Papan Layanan, Statistik Layanan, Kontak & Kanal, Visi & Misi, Tentang UPTD, Beranda, Halaman Statis, dan Jadwal Pemutakhiran, server ikut menegakkannya (`FaqPolicy`, `MobileServiceStopPolicy`, `MessagePolicy`, `ServicePolicy`, `SettingPolicy`, `ScheduleAdjustmentPolicy`, `StaticPagePolicy`, `UpdateStandardPolicy`): pegawai tanpa modul itu mendapat `403`. Pengaturan Situs bukan milik modul mana pun: semua pegawai membacanya, hanya Administrator yang menyimpannya, dan formulirnya hanya-baca bagi pegawai lain. Karena itu Ringkasan hanya memuat jadwal Samsat Keliling bagi pengelolanya dan pengelola Jadwal Pemutakhiran (`useKoleksi(…, { aktif })`), isi Papan Layanan hanya bagi pengelolanya (`usePengaturan(…, { aktif })`), dan pesan (lencana menu, kartu, grafik, antrean kerja, jumlah di *Pengaturan › Data*) hanya bagi pengelola Pesan & Pengaduan; yang lain memakai waktu simpannya. Untuk konten yang masih di IndexedDB, pembatasan ini baru mengatur tampilan; endpoint konten berikutnya wajib memeriksa modul yang sama.
 
 ## Tanya Jawab
 
@@ -247,12 +247,16 @@ Halaman *Tanya Jawab* (`#/faq`, `pages/faq.tsx`) adalah modul pertama yang tersi
 - Hapus, per baris maupun massal, hanya untuk Administrator. Pegawai UPTD menyembunyikan entri dengan sakelar atau menariknya dari portal.
 - Beranda portal membaca `GET /api/public/faq` ([D-012](decisions.md#d-012--2026-10-13--beranda-menampilkan-tanya-jawab-dari-api-publik)). Bila tidak ada entri yang *Di portal*, bagian Tanya Jawab di beranda disembunyikan.
 
-## Samsat Keliling
+## Layanan Luar Kantor
 
-Halaman *Samsat Keliling* (`#/jadwal/keliling`, `pages/jadwal/keliling.tsx`) tersimpan di server sejak [D-013](decisions.md#d-013--2026-10-13--samsat-keliling-tersimpan-di-server-batas-laju-api-publik-300).
+Halaman *Layanan Luar Kantor* (`#/jadwal/keliling`, `pages/jadwal/keliling.tsx`) tersimpan di server sejak [D-013](decisions.md#d-013--2026-10-13--samsat-keliling-tersimpan-di-server-batas-laju-api-publik-300) dan mencakup tiga jenis sejak [D-043](decisions.md#d-043--2026-10-15--layanan-luar-kantor-tiga-unit-samsat-keliling-gerai-tetap-dan-loket-sementara). Tab aktif tersimpan di alamat (`?jenis=gerai`), jadi `?jenis=sementara&baru=1` langsung membuka formulir loket sementara.
 
-- Pengelola modul boleh menambah, menyunting, menonaktifkan, dan menghapus jadwal. Jadwal yang aktif langsung tampil di beranda (jadwal hari ini) dan halaman Jadwal portal (`GET /api/public/keliling`).
-- Jadwal contoh dari penyimpanan peramban tidak dipindahkan ke server; halaman ini kosong sampai petugas memasukkan jadwal yang sudah diverifikasi.
+- **Samsat Keliling**: jadwal per tanggal dengan unit 01–03. Pratinjau mingguan (Senin–Minggu) menampilkan semua jadwal, yang nonaktif ditandai. Tombol *Salin ke minggu berikutnya* menyalin minggu yang sedang ditampilkan ke minggu berikutnya dalam keadaan nonaktif; periksa unit dan lokasinya, lalu aktifkan. Daftar menampilkan jadwal hari ini dan yang akan datang lebih dulu.
+- **Isian Lokasi** ([D-044](decisions.md#d-044--2026-10-15--daftar-lokasi-dan-salin-jadwal-per-hari)) dipilih dari daftar lokasi (sekaligus mengisi kecamatan) atau diketik bila belum ada; lokasi yang diketik masuk daftar saat jadwal disimpan. Tab **Lokasi** mengelola daftar itu: tambah, ubah, hapus, dan jumlah jadwal mendatang yang memakainya. Mengubah atau menghapus lokasi tidak mengubah jadwal yang sudah tersimpan.
+- **Salin per hari** ([D-044](decisions.md#d-044--2026-10-15--daftar-lokasi-dan-salin-jadwal-per-hari)): tombol Salin pada kartu hari di pratinjau mingguan menyalin semua jadwal Samsat Keliling hari itu ke hari-hari yang dicentang (minggu yang sama atau berikutnya); statusnya mengikuti jadwal asal.
+- **Gerai Tetap**: gerai rutin seperti Samsat Corner dan Mall Pelayanan Publik, dengan hari dan jam buka. Jam yang berbeda per hari dicatat sebagai baris tersendiri.
+- **Loket Sementara**: loket musiman atau acara, mis. di kantor lurah, pasar, atau pameran, dengan tanggal mulai dan selesai.
+- Jadwal yang aktif langsung tampil di beranda ("Di luar kantor hari ini") dan halaman Jadwal portal (`GET /api/public/keliling`).
 
 ## Jam Pelayanan
 

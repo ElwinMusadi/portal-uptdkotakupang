@@ -21,6 +21,8 @@ import type {
 } from "./types"
 
 const NAMA_KOLEKSI = Object.keys(KOLEKSI_LABEL) as NamaKoleksi[]
+/** Koleksi yang belum ada di cadangan versi awal */
+const KOLEKSI_BARU: readonly NamaKoleksi[] = ["lokasi"]
 const NAMA_PENGATURAN = Object.keys(PENGATURAN_LABEL) as NamaPengaturan[]
 const BATAS_AKTIVITAS = 300
 
@@ -335,6 +337,8 @@ export function periksaSnapshot(snap: unknown): asserts snap is Snapshot {
     throw new ApiError("Cadangan dibuat oleh versi dashboard yang lebih baru.")
   }
   for (const k of NAMA_KOLEKSI) {
+    // Koleksi yang ditambahkan belakangan boleh tidak ada di cadangan lama
+    if (KOLEKSI_BARU.includes(k) && (s.koleksi as Record<string, unknown>)[k] === undefined) continue
     if (!Array.isArray((s.koleksi as Record<string, unknown>)[k])) {
       throw new ApiError(`Cadangan tidak lengkap: koleksi "${k}" tidak ditemukan.`)
     }

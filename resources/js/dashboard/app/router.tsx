@@ -72,7 +72,7 @@ export const router = createHashRouter([
       { path: "layanan/baru", ...halaman("Tambah layanan", () => import("@/pages/layanan/editor")) },
       { path: "layanan/:id", ...halaman("Sunting layanan", () => import("@/pages/layanan/editor")) },
       { path: "jadwal/jam", ...halaman("Jam Pelayanan", () => import("@/pages/jadwal/jam")) },
-      { path: "jadwal/keliling", ...halaman("Samsat Keliling", () => import("@/pages/jadwal/keliling")) },
+      { path: "jadwal/keliling", ...halaman("Layanan Luar Kantor", () => import("@/pages/jadwal/keliling")) },
       { path: "papan", ...halaman("Papan Layanan", () => import("@/pages/papan")) },
       // Tarif & Simulasi dipensiunkan (D-041); tautan lama menuju Kalkulator PKB
       { path: "tarif", loader: () => redirect("/kalkulator") },

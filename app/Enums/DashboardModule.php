@@ -45,7 +45,7 @@ enum DashboardModule: string
             self::Faq => 'Tanya Jawab',
             self::Layanan => 'Persyaratan Layanan',
             self::Jam => 'Jam Pelayanan',
-            self::Keliling => 'Samsat Keliling',
+            self::Keliling => 'Layanan Luar Kantor',
             self::Papan => 'Papan Layanan',
             self::Tarif => 'Tarif & Simulasi',
             self::Profil => 'Tentang UPTD',

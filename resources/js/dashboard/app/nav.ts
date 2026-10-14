@@ -86,7 +86,7 @@ export const NAV_GRUP: GrupNav[] = [
     item: [
       { judul: "Persyaratan Layanan", url: "/layanan", ikon: IconChecklist, portal: "layanan.html", tambah: "/layanan/baru", modul: ["layanan"] },
       { judul: "Jam Pelayanan", url: "/jadwal/jam", ikon: IconClockHour4, portal: "jadwal.html", modul: ["jam"] },
-      { judul: "Samsat Keliling", url: "/jadwal/keliling", ikon: IconTruck, portal: "jadwal.html#keliling", tambah: "/jadwal/keliling?baru=1", modul: ["keliling"] },
+      { judul: "Layanan Luar Kantor", url: "/jadwal/keliling", ikon: IconTruck, portal: "jadwal.html#keliling", tambah: "/jadwal/keliling?baru=1", modul: ["keliling"] },
       { judul: "Papan Layanan", url: "/papan", ikon: IconAlarm, portal: "index.html", modul: ["papan"] },
     ],
   },

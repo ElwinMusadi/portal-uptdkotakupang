@@ -22,6 +22,8 @@ use App\Http\Controllers\Dashboard\HomepageController;
 use App\Http\Controllers\Dashboard\MessageController;
 use App\Http\Controllers\Dashboard\MessageDeletionController;
 use App\Http\Controllers\Dashboard\MobileServiceStopController;
+use App\Http\Controllers\Dashboard\MobileServiceStopCopyController;
+use App\Http\Controllers\Dashboard\MobileServiceStopDayCopyController;
 use App\Http\Controllers\Dashboard\MobileServiceStopDeletionController;
 use App\Http\Controllers\Dashboard\OpeningHoursController;
 use App\Http\Controllers\Dashboard\OrganizationUnitController;
@@ -34,6 +36,8 @@ use App\Http\Controllers\Dashboard\ScheduleAdjustmentDeletionController;
 use App\Http\Controllers\Dashboard\ServiceBoardController;
 use App\Http\Controllers\Dashboard\ServiceController;
 use App\Http\Controllers\Dashboard\ServiceDeletionController;
+use App\Http\Controllers\Dashboard\ServiceLocationController;
+use App\Http\Controllers\Dashboard\ServiceLocationDeletionController;
 use App\Http\Controllers\Dashboard\ServiceOrderController;
 use App\Http\Controllers\Dashboard\SettingTimestampController;
 use App\Http\Controllers\Dashboard\SiteController;
@@ -74,6 +78,7 @@ use App\Models\MobileServiceStop;
 use App\Models\OrganizationUnit;
 use App\Models\ScheduleAdjustment;
 use App\Models\Service;
+use App\Models\ServiceLocation;
 use App\Models\Setting;
 use App\Models\StaticPage;
 use App\Models\UpdateStandard;
@@ -132,15 +137,29 @@ Route::middleware('auth:sanctum')->group(function (): void {
     });
 
     /*
-     * Samsat Keliling stops (MobileServiceStopPolicy). The dashboard sorts
-     * them by day and time, so there is no reorder endpoint.
+     * Layanan Luar Kantor: Samsat Keliling stops, fixed outlets and temporary
+     * counters (MobileServiceStopPolicy, D-043). The dashboard sorts them by
+     * date and time, so there is no reorder endpoint; salin-minggu copies a
+     * week of Samsat Keliling stops to the next week and salin-hari one day's
+     * stops to other days (D-044).
      */
     Route::prefix('koleksi/keliling')->name('koleksi.keliling.')->whereUlid('stop')->group(function (): void {
         Route::get('/', [MobileServiceStopController::class, 'index'])->can('viewAny', MobileServiceStop::class)->name('index');
         Route::post('/', [MobileServiceStopController::class, 'store'])->can('create', MobileServiceStop::class)->name('store');
         Route::post('/hapus', [MobileServiceStopDeletionController::class, 'store'])->can('deleteAny', MobileServiceStop::class)->name('hapus');
+        Route::post('/salin-minggu', MobileServiceStopCopyController::class)->can('create', MobileServiceStop::class)->name('salin-minggu');
+        Route::post('/salin-hari', MobileServiceStopDayCopyController::class)->can('create', MobileServiceStop::class)->name('salin-hari');
         Route::get('/{stop}', [MobileServiceStopController::class, 'show'])->can('view', 'stop')->name('show');
         Route::patch('/{stop}', [MobileServiceStopController::class, 'update'])->can('update', 'stop')->name('update');
+    });
+
+    // The list of places picked for service outside the office (ServiceLocationPolicy, D-044)
+    Route::prefix('koleksi/lokasi')->name('koleksi.lokasi.')->whereUlid('location')->group(function (): void {
+        Route::get('/', [ServiceLocationController::class, 'index'])->can('viewAny', ServiceLocation::class)->name('index');
+        Route::post('/', [ServiceLocationController::class, 'store'])->can('create', ServiceLocation::class)->name('store');
+        Route::post('/hapus', [ServiceLocationDeletionController::class, 'store'])->can('deleteAny', ServiceLocation::class)->name('hapus');
+        Route::get('/{location}', [ServiceLocationController::class, 'show'])->can('view', 'location')->name('show');
+        Route::patch('/{location}', [ServiceLocationController::class, 'update'])->can('update', 'location')->name('update');
     });
 
     /*

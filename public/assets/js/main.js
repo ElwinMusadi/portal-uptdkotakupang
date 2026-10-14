@@ -1673,40 +1673,91 @@
       .catch(() => {});
   }
 
-  /* ---------- Samsat Keliling ----------
-     Jadwal dikelola di dashboard dan dibaca dari GET /api/public/keliling,
-     yang hanya memberikan lokasi aktif. Teksnya di-escape sebelum dipasang.
-     Tidak ada jadwal cadangan: bila API gagal, pengunjung melihat pesan dan
-     tombol coba lagi. */
-  async function muatKeliling() {
-    const data = await ambilJson("/api/public/keliling");
-    if (!Array.isArray(data)) throw new Error("Respons bukan daftar");
-    return data.filter((s) => Number.isInteger(s?.hari) && ["mulai", "selesai", "lokasi", "kecamatan", "catatan"].every((k) => typeof s[k] === "string"));
+  /* ---------- Layanan luar kantor ----------
+     Samsat Keliling 01–03, gerai tetap, dan loket sementara dikelola di
+     dashboard (Layanan Luar Kantor, D-043) dan dibaca dari
+     GET /api/public/keliling: "jadwal" berisi yang melayani pada setiap
+     tanggal dari hari ini sampai Minggu pekan depan, "gerai" gerai tetap, dan
+     "sementara" loket sementara yang belum berakhir. Teksnya di-escape sebelum
+     dipasang. Tidak ada jadwal cadangan: bila API gagal, pengunjung melihat
+     pesan dan tombol coba lagi. */
+  const URUT_HARI = [1, 2, 3, 4, 5, 6, 0];
+  const tglIso = (iso) => {
+    const [y, m, d] = iso.split("-").map(Number);
+    return { y, m, d, wd: new Date(Date.UTC(y, m - 1, d)).getUTCDay() };
+  };
+  const tglTeks = (iso) => { const t = tglIso(iso); return `${t.d} ${BULAN[t.m - 1]} ${t.y}`; };
+
+  /** "Senin–Jumat", "Setiap hari", atau "Senin, Rabu, Jumat" */
+  function ringkasHari(hari) {
+    const urut = URUT_HARI.filter((h) => hari.includes(h));
+    if (urut.length === 7) return "Setiap hari";
+    const pos = urut.map((h) => URUT_HARI.indexOf(h));
+    const beruntun = pos.every((p, i) => i === 0 || p === pos[i - 1] + 1);
+    return urut.length >= 3 && beruntun ? `${HARI[urut[0]]}–${HARI[urut[urut.length - 1]]}` : urut.map((h) => HARI[h]).join(", ");
   }
 
-  // Senin–Jumat, ditambah Sabtu bila ada jadwalnya. Bila hari terakhir minggu ini
-  // sudah lewat (atau hari Minggu), tampilkan jadwal minggu depan.
-  function mingguKeliling(stops, t) {
-    if (!stops.length) return '<p class="muted">Belum ada jadwal Samsat Keliling.</p>';
-    const hari = [1, 2, 3, 4, 5, ...(stops.some((s) => s.hari === 6) ? [6] : [])];
-    const mingguDepan = t.wd === 0 || t.wd > hari[hari.length - 1];
-    const base = new Date(Date.UTC(t.y, t.mo - 1, t.d));
-    const monday = new Date(base);
-    monday.setUTCDate(base.getUTCDate() + (mingguDepan ? (8 - t.wd) % 7 : -((t.wd + 6) % 7)));
-    return hari.map((wd, i) => {
-      const d = new Date(monday); d.setUTCDate(monday.getUTCDate() + i);
-      const state = mingguDepan ? "" : wd === t.wd ? "is-today" : wd < t.wd ? "is-past" : "";
-      const label = state === "is-today" ? '<span class="tag tag--accent">Hari ini</span>' : state === "is-past" ? '<span class="tag">Selesai</span>' : '<span class="tag tag--line">Terjadwal</span>';
-      const titik = stops.filter((s) => s.hari === wd);
-      const isi = titik.length
-        ? titik.map((s) => `
+  async function muatKeliling() {
+    const data = await ambilJson("/api/public/keliling");
+    if (!data || !Array.isArray(data.jadwal) || !Array.isArray(data.gerai) || !Array.isArray(data.sementara)) throw new Error("Respons tidak dikenal");
+    const isi = (s) => ["nama", "mulai", "selesai", "lokasi", "kecamatan", "layanan", "catatan"].every((k) => typeof s?.[k] === "string");
+    const tgl = (x) => typeof x === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x);
+    const hari = (s) => Array.isArray(s.hari) && s.hari.every((h) => Number.isInteger(h) && h >= 0 && h <= 6);
+    return {
+      jadwal: data.jadwal.filter((s) => isi(s) && tgl(s.tanggal) && ["keliling", "gerai", "sementara"].includes(s.jenis)),
+      gerai: data.gerai.filter((s) => isi(s) && hari(s)),
+      sementara: data.sementara.filter((s) => isi(s) && hari(s) && tgl(s.tanggalMulai) && tgl(s.tanggalSelesai)),
+    };
+  }
+
+  const petaKeliling = (s) => `<a class="link-arrow" href="https://maps.google.com/?q=${esc(encodeURIComponent(s.lokasi + " Kota Kupang"))}" target="_blank" rel="noopener">Buka peta<svg class="i" aria-hidden="true"><use href="#i-arrow-up-right"/></svg></a>`;
+  const kartuTempat = (s, atas, rincian) => `
         <div class="stop">
-          <p class="stop__time"><span>${esc(rentang(s))} WITA</span>${label}</p>
-          <strong>${esc(s.lokasi)}</strong><span>${esc(s.kecamatan)}</span>${s.catatan ? `<span>${esc(s.catatan)}</span>` : ""}
-          <a class="link-arrow" href="https://maps.google.com/?q=${esc(encodeURIComponent(s.lokasi + " Kota Kupang"))}" target="_blank" rel="noopener">Buka peta<svg class="i" aria-hidden="true"><use href="#i-arrow-up-right"/></svg></a>
-        </div>`).join("")
-        : '<p class="muted">Tidak ada jadwal.</p>';
-      return `<div class="week__day ${state}"><p class="week__date"><strong>${HARI[wd]}</strong><span>${d.getUTCDate()} ${BULAN[d.getUTCMonth()]} ${d.getUTCFullYear()}</span></p><div class="week__stops">${isi}</div></div>`;
+          ${atas}
+          <span class="stop__unit">${esc(s.nama)}</span>
+          <strong>${esc(s.lokasi)}</strong><span>${esc(s.kecamatan)}</span>${rincian}${s.catatan ? `<span>${esc(s.catatan)}</span>` : ""}
+          ${petaKeliling(s)}
+        </div>`;
+
+  // Samsat Keliling dan loket sementara per tanggal; gerai tetap punya daftarnya sendiri.
+  function agendaKeliling(jadwal, hariIni) {
+    const berpindah = jadwal.filter((s) => s.jenis !== "gerai");
+    const tanggal = [...new Set(berpindah.map((s) => s.tanggal))];
+    if (!tanggal.length) return '<p class="muted">Belum ada jadwal Samsat Keliling atau loket sementara sampai Minggu depan. Jadwal minggu depan terbit setiap Jumat.</p>';
+    return tanggal.map((iso) => {
+      const t = tglIso(iso);
+      const label = iso === hariIni ? '<span class="tag tag--accent">Hari ini</span>' : '<span class="tag tag--line">Terjadwal</span>';
+      const isi = berpindah.filter((s) => s.tanggal === iso)
+        .map((s) => kartuTempat(s, `<p class="stop__time"><span>${esc(rentang(s))} WITA</span>${label}</p>`, ""))
+        .join("");
+      return `<div class="week__day ${iso === hariIni ? "is-today" : ""}"><p class="week__date"><strong>${HARI[t.wd]}</strong><span>${tglTeks(iso)}</span></p><div class="week__stops">${isi}</div></div>`;
+    }).join("");
+  }
+
+  // Satu kartu per gerai (nama dan lokasi) dengan setiap hari dan jam bukanya.
+  function daftarGerai(gerai, hariIni) {
+    if (!gerai.length) return '<p class="muted">Belum ada gerai tetap.</p>';
+    const kelompok = new Map();
+    gerai.forEach((g) => {
+      const kunci = `${g.nama}\n${g.lokasi}`;
+      if (!kelompok.has(kunci)) kelompok.set(kunci, []);
+      kelompok.get(kunci).push(g);
+    });
+    return [...kelompok.values()].map((baris) => {
+      const jam = baris.map((g) => {
+        const berlaku = g.tanggalMulai && g.tanggalMulai > hariIni ? ` · mulai ${tglTeks(g.tanggalMulai)}` : g.tanggalSelesai ? ` · sampai ${tglTeks(g.tanggalSelesai)}` : "";
+        return `<span>${esc(ringkasHari(g.hari))} · ${esc(rentang(g))} WITA${berlaku}</span>`;
+      }).join("");
+      return kartuTempat(baris[0], "", jam);
+    }).join("");
+  }
+
+  function daftarSementara(loket, hariIni) {
+    if (!loket.length) return '<p class="muted">Tidak ada loket sementara saat ini.</p>';
+    return loket.map((s) => {
+      const tanggal = s.tanggalMulai === s.tanggalSelesai ? tglTeks(s.tanggalMulai) : `${tglTeks(s.tanggalMulai)} – ${tglTeks(s.tanggalSelesai)}`;
+      const tag = s.tanggalMulai > hariIni ? '<span class="tag tag--line">Akan datang</span>' : '<span class="tag tag--accent">Berlangsung</span>';
+      return kartuTempat(s, `<p class="stop__time"><span>${tanggal}</span>${tag}</p>`, `<span>${esc(ringkasHari(s.hari))} · ${esc(rentang(s))} WITA</span>`);
     }).join("");
   }
 
@@ -1714,34 +1765,41 @@
     const counts = $$("[data-keliling-count]");
     const todays = $$("[data-keliling-today]");
     const week = $("[data-keliling-week]");
-    if (!(counts.length || todays.length || week)) return;
+    const geraiEl = $("[data-keliling-gerai]");
+    const sementaraEl = $("[data-keliling-sementara]");
+    if (!(counts.length || todays.length || week || geraiEl || sementaraEl)) return;
 
-    const tampilkan = (stops) => {
+    const tampilkan = (data) => {
       const t = nowWita();
-      const pada = (wd) => stops.filter((s) => s.hari === wd);
-      const today = pada(t.wd);
-      const berikut = [1, 2, 3, 4, 5, 6].map((i) => (t.wd + i) % 7).find((wd) => pada(wd).length);
+      const hariIni = `${t.y}-${pad(t.mo)}-${pad(t.d)}`;
+      const today = data.jadwal.filter((s) => s.tanggal === hariIni);
+      const berikut = data.jadwal.find((s) => s.tanggal > hariIni);
       counts.forEach((el) => (el.textContent = today.length ? `${today.length} titik` : "Tidak ada hari ini"));
       todays.forEach((ul) => {
+        const lebih = today.length - 4;
         ul.innerHTML = today.length
-          ? today.map((s) => `<li><span class="board__time mono">${esc(rentang(s))}</span><span><strong>${esc(s.lokasi)}</strong><small>${esc(s.kecamatan)}</small></span></li>`).join("")
-          : `<li><span class="board__time mono">${HARI[t.wd]}</span><span><strong>Tidak ada Samsat Keliling hari ini.</strong><small>${berikut === undefined ? "Belum ada jadwal." : `Jadwal berikutnya hari ${HARI[berikut]}.`}</small></span></li>`;
+          ? today.slice(0, 4).map((s) => `<li><span class="board__time mono">${esc(rentang(s))}</span><span><strong>${esc(s.lokasi)}</strong><small>${esc(s.nama)} · ${esc(s.kecamatan)}</small></span></li>`).join("")
+            + (lebih > 0 ? `<li><span class="board__time mono">+${lebih}</span><span><strong>Lokasi lain hari ini</strong><small>Lihat di halaman Jadwal.</small></span></li>` : "")
+          : `<li><span class="board__time mono">${HARI[t.wd]}</span><span><strong>Tidak ada layanan di luar kantor hari ini.</strong><small>${berikut ? `Jadwal berikutnya ${HARI[tglIso(berikut.tanggal).wd]}, ${tglTeks(berikut.tanggal)}.` : "Belum ada jadwal."}</small></span></li>`;
       });
-      if (week) week.innerHTML = mingguKeliling(stops, t);
+      if (week) week.innerHTML = agendaKeliling(data.jadwal, hariIni);
+      if (geraiEl) geraiEl.innerHTML = daftarGerai(data.gerai, hariIni);
+      if (sementaraEl) sementaraEl.innerHTML = daftarSementara(data.sementara, hariIni);
     };
 
     const gagal = () => {
       counts.forEach((el) => (el.textContent = "Tidak tersedia"));
       todays.forEach((ul) => (ul.innerHTML = '<li><span class="board__time mono">—</span><span><strong>Jadwal belum dapat dimuat.</strong><small>Coba muat ulang halaman.</small></span></li>'));
+      [geraiEl, sementaraEl].forEach((el) => el && (el.innerHTML = '<p class="muted">Jadwal belum dapat dimuat.</p>'));
       if (!week) return;
-      week.innerHTML = '<p class="muted" role="status">Jadwal Samsat Keliling belum dapat dimuat. <button type="button" class="link" data-keliling-retry>Coba lagi</button></p>';
+      week.innerHTML = '<p class="muted" role="status">Jadwal layanan di luar kantor belum dapat dimuat. <button type="button" class="link" data-keliling-retry>Coba lagi</button></p>';
       $("[data-keliling-retry]", week).addEventListener("click", () => muat(true));
     };
 
     const muat = async (fokus) => {
       if (week) {
         week.setAttribute("aria-busy", "true");
-        if (fokus) week.innerHTML = '<p class="muted" role="status">Memuat jadwal minggu ini…</p>';
+        if (fokus) week.innerHTML = '<p class="muted" role="status">Memuat jadwal…</p>';
       }
       try {
         tampilkan(await muatKeliling());

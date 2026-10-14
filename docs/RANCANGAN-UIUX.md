@@ -84,7 +84,7 @@ PINTU
 │   └── Cek biaya pajak (layanan.html#simulasi)
 ├── Jadwal
 │   ├── Jam pelayanan + status langsung (jadwal.html)
-│   └── Samsat Keliling mingguan (jadwal.html#keliling)
+│   └── Layanan di luar kantor: Samsat Keliling 01–03, gerai tetap, loket sementara (jadwal.html#keliling)
 ├── Informasi
 │   ├── Berita & Pengumuman (informasi.html) → Detail (berita-detail.html)
 │   ├── Dokumentasi Kegiatan (dokumentasi.html)
@@ -95,7 +95,7 @@ PINTU
 │   └── Dashboard pengelolaan konten (/dashboard, sumber di resources/js/dashboard/)
 │       ├── Ringkasan · Alur publikasi (kanban) · Pesan & pengaduan · Statistik layanan
 │       ├── Konten: berita & pengumuman, dokumentasi, regulasi & unduhan, tanya jawab
-│       ├── Layanan: persyaratan, jam pelayanan, Samsat Keliling, papan layanan
+│       ├── Layanan: persyaratan, jam pelayanan, layanan luar kantor, papan layanan
 │       ├── Profil instansi: tentang UPTD, visi & misi, struktur organisasi, kontak & kanal
 │       ├── Situs: beranda, halaman statis, jadwal pemutakhiran
 │       ├── Alat bantu: absensi lapangan (foto + GPS), kalkulator PKB (nomor polisi)

@@ -238,17 +238,32 @@
     <div class="container">
       <div class="split split--middle" style="margin-bottom: 40px">
         <div data-reveal>
-          <p class="eyebrow">Samsat Keliling</p>
+          <p class="eyebrow">Layanan di luar kantor</p>
           <h2 class="h2" style="margin-top:20px">Kami yang datang. <span class="tone">Ke kelurahan Anda.</span></h2>
         </div>
         <div data-reveal>
-          <p class="body">Bayar pajak tahunan tanpa ke kantor. Bawa STNK, notis, dan KTP asli. Jadwal minggu depan terbit setiap Jumat.</p>
+          <p class="body">Samsat Keliling 01, 02, dan 03 bergiliran mendatangi kelurahan dan keramaian warga. Ada juga gerai tetap dan loket sementara di dekat Anda. Bawa STNK, notis, dan KTP asli. Jadwal minggu depan terbit setiap Jumat.</p>
           <p class="trust" style="margin-top:14px"><svg class="i" aria-hidden="true"><use href="#i-info"/></svg>Samsat Keliling hanya melayani pajak tahunan.</p>
         </div>
       </div>
-      <!-- Jadwal dari dashboard, dimuat main.js lewat GET /api/public/keliling -->
-      <div class="week" data-keliling-week data-reveal>
+      <!-- Jadwal dari dashboard (Layanan Luar Kantor), dimuat main.js lewat GET /api/public/keliling -->
+      <h3 class="title-sm" data-reveal>Samsat Keliling &amp; loket sementara</h3>
+      <div class="week" data-keliling-week data-reveal style="margin-top:12px">
         <p class="muted" role="status">Memuat jadwal minggu ini…</p>
+      </div>
+      <div class="luar-kantor" data-reveal>
+        <div>
+          <h3 class="title-sm">Gerai tetap</h3>
+          <div class="luar-kantor__list" data-keliling-gerai>
+            <p class="muted">Memuat gerai tetap…</p>
+          </div>
+        </div>
+        <div>
+          <h3 class="title-sm">Loket sementara</h3>
+          <div class="luar-kantor__list" data-keliling-sementara>
+            <p class="muted">Memuat loket sementara…</p>
+          </div>
+        </div>
       </div>
     </div>
   </section>

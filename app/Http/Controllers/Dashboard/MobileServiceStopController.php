@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Actions\RecordActivity;
+use App\Actions\RememberServiceLocation;
 use App\Enums\DashboardModule;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dashboard\StoreMobileServiceStopRequest;
@@ -14,18 +15,20 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Samsat Keliling stops as the dashboard manages them (D-013). The public
- * portal reads only active stops through PublicMobileServiceStopController.
+ * Service outside the office as the dashboard manages it (D-013, D-043):
+ * Samsat Keliling stops, fixed outlets and temporary counters. The public
+ * portal reads only active entries through PublicMobileServiceStopController.
+ * A place typed into an entry joins the list of places (D-044).
  */
 class MobileServiceStopController extends Controller
 {
     /**
-     * List every stop by day and time.
+     * List every entry by kind, first date and time.
      */
     public function index(): AnonymousResourceCollection
     {
         return MobileServiceStopResource::collection(
-            MobileServiceStop::query()->orderBy('hari')->orderBy('mulai')->orderBy('selesai')->orderBy('id')->get()
+            MobileServiceStop::query()->orderBy('jenis')->orderBy('tanggal_mulai')->orderBy('mulai')->orderBy('selesai')->orderBy('id')->get()
         );
     }
 
@@ -38,16 +41,18 @@ class MobileServiceStopController extends Controller
     }
 
     /**
-     * Add a stop. The stop and its activity log entry are saved together.
+     * Add a stop. The stop, its place when new to the list, and their
+     * activity log entries are saved together.
      */
-    public function store(StoreMobileServiceStopRequest $request, RecordActivity $recordActivity): JsonResponse
+    public function store(StoreMobileServiceStopRequest $request, RecordActivity $recordActivity, RememberServiceLocation $rememberLocation): JsonResponse
     {
-        $stop = DB::transaction(function () use ($request, $recordActivity): MobileServiceStop {
-            $stop = new MobileServiceStop($request->validated());
+        $stop = DB::transaction(function () use ($request, $recordActivity, $rememberLocation): MobileServiceStop {
+            $stop = new MobileServiceStop($request->stop());
             $stop->urutan = (int) (MobileServiceStop::query()->max('urutan') ?? -1) + 1;
             $stop->save();
 
             $recordActivity->handle($request->user(), DashboardModule::Keliling, 'menambahkan', $stop->title());
+            $rememberLocation->handle($request->user(), $stop->lokasi, $stop->kecamatan);
 
             return $stop;
         });
@@ -56,15 +61,20 @@ class MobileServiceStopController extends Controller
     }
 
     /**
-     * Change a stop; an unchanged stop is not logged.
+     * Change a stop; an unchanged stop is not logged. A changed place joins
+     * the list of places when new to it.
      */
-    public function update(UpdateMobileServiceStopRequest $request, MobileServiceStop $stop, RecordActivity $recordActivity): MobileServiceStopResource
+    public function update(UpdateMobileServiceStopRequest $request, MobileServiceStop $stop, RecordActivity $recordActivity, RememberServiceLocation $rememberLocation): MobileServiceStopResource
     {
-        DB::transaction(function () use ($request, $stop, $recordActivity): void {
-            $stop->fill($request->validated())->save();
+        DB::transaction(function () use ($request, $stop, $recordActivity, $rememberLocation): void {
+            $stop->fill($request->stop())->save();
 
             if ($stop->wasChanged()) {
                 $recordActivity->handle($request->user(), DashboardModule::Keliling, 'memperbarui', $stop->title());
+            }
+
+            if ($stop->wasChanged('lokasi')) {
+                $rememberLocation->handle($request->user(), $stop->lokasi, $stop->kecamatan);
             }
         });
 

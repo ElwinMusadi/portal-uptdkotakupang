@@ -293,7 +293,7 @@
                 </div>
                 <div class="tile board__keliling">
                   <p class="tile__label">
-                    Samsat Keliling hari ini
+                    Di luar kantor hari ini
                     <svg class="i i--sm" aria-hidden="true">
                       <use href="#i-truck" />
                     </svg>
@@ -304,7 +304,7 @@
                       <span class="board__time mono">—</span
                       ><span
                         ><strong>Memuat jadwal…</strong
-                        ><small>Samsat Keliling hari ini</small></span
+                        ><small>Layanan di luar kantor hari ini</small></span
                       >
                     </li>
                   </ul>
@@ -576,7 +576,7 @@
             <div class="notch__item">
               <svg class="i" aria-hidden="true"><use href="#i-truck" /></svg
               ><span
-                ><small>Samsat Keliling hari ini</small
+                ><small>Di luar kantor hari ini</small
                 ><strong data-keliling-count>Memuat…</strong></span
               >
             </div>
