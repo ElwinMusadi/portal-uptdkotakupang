@@ -1,6 +1,6 @@
 # Rencana Implementasi — Antrean Online (Queue Management System)
 
-**Status:** rencana, menunggu persetujuan pemilik sebelum Irisan 1 dikerjakan. Keputusan pemilik dicatat di [D-051](decisions.md#d-051--2026-10-15--antrean-online-rencana-dan-keputusan-awal).
+**Status:** disetujui pemilik; **Irisan 1 selesai dibangun** (lihat §6), irisan berikutnya menyusul. Keputusan pemilik dicatat di [D-051](decisions.md#d-051--2026-10-15--antrean-online-rencana-dan-keputusan-awal).
 **Sumber:** flowchart pemilik *Flowchart Queue Management System* (draw.io, 11 jalur) dan tanya jawab dengan pemilik pada 15 Oktober 2026.
 
 Dokumen ini memakai kata baku **antrean** (seperti di Papan Layanan: "Nomor antrean dilayani").
@@ -206,8 +206,8 @@ Setiap irisan dikerjakan, diuji, diperiksa di browser, dilaporkan, lalu di-commi
 | Irisan | Isi | Hasil yang bisa diperiksa pemilik |
 |---|---|---|
 | **0. Persiapan** | Persetujuan rencana ini; keputusan §9; pengadaan perangkat (§8) | — |
-| **1. Fondasi + Meja Informasi** | Tabel dan pengaturan layanan/loket; isi awal A–D; penomoran A-001; halaman Meja Informasi; cetak 2 lembar 80 mm dengan QR; halaman lacak dasar | Mencetak tiket dan melacaknya dari ponsel |
-| **2. Loket pemanggil + layar TV** | Loket 1, Loket Kwitansi, Loket 2: panggil, panggil ulang, tunda, selesai; tiket lintas hari; layar TV dengan suara; pendaftaran layar | Memanggil nomor dan melihat/mendengarnya di layar |
+| **1. Fondasi + Meja Informasi** ✓ | Tabel layanan, tiket, dan riwayat; isi awal A–D; pengaturan layanan (Administrator); penomoran A-001; halaman Meja Informasi (cetak, cetak ulang, batal, daftar per tanggal); cetak 2 lembar 80 mm dengan QR lewat iframe; halaman lacak dasar. Tabel dan pengaturan loket/pos dipindah ke Irisan 2, karena baru dipakai saat memanggil | Mencetak tiket dan melacaknya dari ponsel |
+| **2. Loket pemanggil + layar TV** | Tabel dan pengaturan loket/pos; Loket 1, Loket Kwitansi, Loket 2: panggil, panggil ulang, tunda, selesai; tiket lintas hari; layar TV dengan suara; pendaftaran layar | Memanggil nomor dan melihat/mendengarnya di layar |
 | **3. Pos proses + pindai** | Penetapan (dengan perubahan data), Pelunasan, Cetak SKPD, Cetak STNK; pindai USB/kamera; tahap terlewat otomatis; halaman lacak lengkap dengan riwayat dan posisi | Satu berkas berjalan penuh dari cetak sampai selesai |
 | **4. Arsip + ringkasan** | Pencarian nomor polisi/nomor/tanggal, detail riwayat, hapus nomor polisi, ringkasan harian dan CSV | Mencari berkas yang "tercecer" |
 | **Uji coba** | Deploy ke Laravel Cloud (langkah pemilik); 1–2 minggu paralel dengan nomor manual, dimulai dari satu layanan, lalu semua | Evaluasi bersama petugas loket |
@@ -244,7 +244,7 @@ Pengujian setiap irisan: tes fitur untuk setiap endpoint (hak akses, validasi, p
 
 | No | Hal | Usulan |
 |---|---|---|
-| 1 | Pustaka pembuat QR (dependensi baru) | Satu pustaka kecil di sisi peramban untuk menggambar QR pada tiket dan halaman lacak; dipilih yang ringan dan masih dirawat |
+| 1 | Pustaka pembuat QR (dependensi baru) | **Diputuskan: uqr** (pemilik), tanpa dependensi, SVG di peramban |
 | 2 | Akun petugas non-UPTD (Polri di Cetak STNK/pengesahan, bank) bila ikut memindai | Pos tersebut dipindai petugas UPTD; atau akun boleh memakai NRP/nomor pegawai lain (mengubah D-007) |
 | 3 | Jumlah loket fisik per tahap dan layanan yang dilayani tiap loket | Diisi di Pengaturan Antrean saat Irisan 2; perlu daftar loket dari pemilik |
 | 4 | Antrean prioritas (lansia, disabilitas, ibu hamil) | Tanda "Prioritas" saat cetak yang membuat nomor dipanggil lebih dulu di setiap tahap, bila diinginkan |

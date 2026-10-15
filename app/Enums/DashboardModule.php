@@ -23,6 +23,8 @@ enum DashboardModule: string
     case Jam = 'jam';
     case Keliling = 'keliling';
     case Papan = 'papan';
+    /** Antrean Online: queue numbers printed at the information desk (D-051). */
+    case Antrean = 'antrean';
     /** Tarif & Simulasi, retired by D-041: the tax engine sets the rates. */
     case Tarif = 'tarif';
     case Profil = 'profil';
@@ -50,6 +52,7 @@ enum DashboardModule: string
             self::Jam => 'Jam Pelayanan',
             self::Keliling => 'Layanan Luar Kantor',
             self::Papan => 'Papan Layanan',
+            self::Antrean => 'Antrean Online',
             self::Tarif => 'Tarif & Simulasi',
             self::Profil => 'Tentang UPTD',
             self::VisiMisi => 'Visi & Misi',

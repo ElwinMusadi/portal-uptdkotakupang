@@ -31,6 +31,8 @@ use App\Http\Controllers\Dashboard\OrganizationUnitDeletionController;
 use App\Http\Controllers\Dashboard\OrganizationUnitOrderController;
 use App\Http\Controllers\Dashboard\OwnAccountController;
 use App\Http\Controllers\Dashboard\ProfileController;
+use App\Http\Controllers\Dashboard\QueueServiceController;
+use App\Http\Controllers\Dashboard\QueueTicketController;
 use App\Http\Controllers\Dashboard\RevenueCounterController;
 use App\Http\Controllers\Dashboard\RevenueImportController;
 use App\Http\Controllers\Dashboard\RevenueImportDeletionController;
@@ -65,6 +67,7 @@ use App\Http\Controllers\PublicMobileServiceStopController;
 use App\Http\Controllers\PublicOpeningHoursController;
 use App\Http\Controllers\PublicOrganizationController;
 use App\Http\Controllers\PublicProfileController;
+use App\Http\Controllers\PublicQueueTicketController;
 use App\Http\Controllers\PublicRevenueReportController;
 use App\Http\Controllers\PublicServiceBoardController;
 use App\Http\Controllers\PublicServiceController;
@@ -82,6 +85,8 @@ use App\Models\FieldActivity;
 use App\Models\Message;
 use App\Models\MobileServiceStop;
 use App\Models\OrganizationUnit;
+use App\Models\QueueService;
+use App\Models\QueueTicket;
 use App\Models\RevenueImport;
 use App\Models\ScheduleAdjustment;
 use App\Models\Service;
@@ -417,6 +422,29 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('/impor/hapus', [RevenueImportDeletionController::class, 'store'])->can('deleteAny', RevenueImport::class)->name('impor.hapus');
     });
 
+    /*
+     * Antrean Online (D-051): queue numbers printed at the information desk
+     * and the services they are printed for (QueueTicketPolicy,
+     * QueueServicePolicy; services are changed by administrators only).
+     */
+    Route::prefix('antrean')->name('antrean.')->group(function (): void {
+        Route::get('/layanan', [QueueServiceController::class, 'index'])->can('viewAny', QueueService::class)->name('layanan.index');
+        Route::put('/layanan/{queueService}', [QueueServiceController::class, 'update'])
+            ->can('update', QueueService::class)
+            ->whereUlid('queueService')
+            ->name('layanan.update');
+        Route::get('/tiket', [QueueTicketController::class, 'index'])->can('viewAny', QueueTicket::class)->name('tiket.index');
+        Route::post('/tiket', [QueueTicketController::class, 'store'])->can('create', QueueTicket::class)->name('tiket.store');
+        Route::post('/tiket/{queueTicket}/cetak-ulang', [QueueTicketController::class, 'reprint'])
+            ->can('create', QueueTicket::class)
+            ->whereUlid('queueTicket')
+            ->name('tiket.cetak-ulang');
+        Route::post('/tiket/{queueTicket}/batal', [QueueTicketController::class, 'cancel'])
+            ->can('cancel', QueueTicket::class)
+            ->whereUlid('queueTicket')
+            ->name('tiket.batal');
+    });
+
     // Vehicle data for the Kalkulator PKB from the private NJKB API (D-041)
     Route::get('/kendaraan/{nopol}', VehicleController::class)->middleware('throttle:kendaraan')->name('kendaraan.show');
 
@@ -455,6 +483,8 @@ Route::prefix('public')
             ->name('halaman.show');
         // Laporan Penerimaan: the imports shown on the portal, small groups masked (D-048)
         Route::get('/penerimaan', PublicRevenueReportController::class)->middleware('throttle:public-penerimaan')->name('penerimaan.show');
+        // Antrean Online: the taxpayer's tracking page behind a ticket's QR, by its random code only (D-051)
+        Route::get('/antrean/{kode}', PublicQueueTicketController::class)->where('kode', QueueTicket::TRACKING_CODE_PATTERN)->name('antrean.show');
         // The contact form; also limited to 5 messages per hour per address (D-016).
         Route::post('/pesan', PublicMessageController::class)->middleware('throttle:public-messages')->name('pesan.store');
         // The portal's tax check: plate number and the last five chassis characters (D-041)

@@ -75,6 +75,8 @@ export const router = createHashRouter([
       { path: "jadwal/jam", ...halaman("Jam Pelayanan", () => import("@/pages/jadwal/jam")) },
       { path: "jadwal/keliling", ...halaman("Layanan Luar Kantor", () => import("@/pages/jadwal/keliling")) },
       { path: "papan", ...halaman("Papan Layanan", () => import("@/pages/papan")) },
+      { path: "antrean", ...halaman("Antrean Online · Meja Informasi", () => import("@/pages/antrean/meja")) },
+      { path: "antrean/pengaturan", ...halaman("Pengaturan Antrean", () => import("@/pages/antrean/pengaturan")) },
       // Tarif & Simulasi dipensiunkan (D-041); tautan lama menuju Kalkulator PKB
       { path: "tarif", loader: () => redirect("/kalkulator") },
       { path: "profil", ...halaman("Tentang UPTD", () => import("@/pages/profil")) },

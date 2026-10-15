@@ -11,6 +11,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET` | `/api/public/papan` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/statistik` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/penerimaan` | anonim, hanya baca, parameter `tanggal` atau `bulan` | tersedia |
+| `GET` | `/api/public/antrean/{kode}` | anonim, hanya baca, kode lacak dari QR tiket | tersedia |
 | `GET` | `/api/public/kontak` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/visi-misi` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/profil` | anonim, hanya baca | tersedia |
@@ -52,6 +53,10 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `POST` | `/api/penerimaan/impor/pratinjau` | Administrator, pengelola Laporan Penerimaan | tersedia |
 | `PATCH` | `/api/penerimaan/impor/{id}` | Administrator | tersedia |
 | `POST` | `/api/penerimaan/impor/hapus` | Administrator, pengelola Laporan Penerimaan | tersedia |
+| `GET` | `/api/antrean/layanan` | Administrator, pengelola Antrean Online | tersedia |
+| `PUT` | `/api/antrean/layanan/{id}` | Administrator | tersedia |
+| `GET`, `POST` | `/api/antrean/tiket` | Administrator, pengelola Antrean Online | tersedia |
+| `POST` | `/api/antrean/tiket/{id}/cetak-ulang`, `/api/antrean/tiket/{id}/batal` | Administrator, pengelola Antrean Online | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/kontak` | Administrator, pengelola Kontak & Kanal | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/visiMisi` | Administrator, pengelola Visi & Misi | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/profil` | Administrator, pengelola Tentang UPTD | tersedia |
@@ -407,6 +412,25 @@ Transaksi yang sama dikenali dari sidik HMAC-SHA256 (dengan `APP_KEY`) atas nomo
 | `revenue_transactions` | `id`, `revenue_import_id` (terhapus bersama impornya), `loket`, `tanggal`, `jenis_daftar`, `jenis_kendaraan`, `kepemilikan`, `merk`, `warna_plat`, `upt_asal`, `kecamatan`, `kelurahan`, `tahun_tunggakan`, dua belas komponen rupiah dan `jumlah` (bilangan bulat), `sidik` (unik); indeks `tanggal, loket` |
 
 Kode: `app/Actions/ReadStsFile.php`, `app/Actions/ImportRevenue.php`, `app/Actions/BuildRevenueReport.php`, `app/Actions/ListRevenueCounters.php`, `app/Http/Controllers/Dashboard/Revenue*`, `app/Http/Requests/Dashboard/*Revenue*`, `app/Http/Resources/RevenueImportResource.php`, `app/Models/RevenueImport.php`, `app/Models/RevenueTransaction.php`, `app/Policies/RevenueImportPolicy.php`. Tes: `tests/Feature/RevenueImportControllerTest.php`, `tests/Feature/RevenueReportControllerTest.php`, dengan berkas STS buatan dari `tests/Support/StsReport.php`.
+
+## Antrean Online di dashboard
+
+Modul `antrean` ([D-051](decisions.md#d-051--2026-10-15--antrean-online-rencana-dan-keputusan-awal), rencana: [`docs/rencana-antrean-online.md`](rencana-antrean-online.md)), halaman `#/antrean` (Meja Informasi) dan `#/antrean/pengaturan`. Irisan 1: mencetak nomor, mencetak ulang, membatalkan, dan mengatur layanan. Kebijakan: `QueueTicketPolicy` (Administrator dan pengelola modul), `QueueServicePolicy` (mengubah layanan khusus Administrator, "Hanya Administrator yang dapat mengubah layanan antrean.").
+
+| Permintaan | Isi | Hasil |
+|---|---|---|
+| `GET /api/antrean/layanan` | — | `200` daftar layanan urut Meja Informasi: `{id, kode, nama, cakupan, tahap, aktif}`. `tahap` urut alur: `pendaftaran`, `penetapan`, `kwitansi`, `pembayaran`, `cetak-skpd`, `cetak-stnk`, `penyerahan`. Isi awal dari migrasi: A Registrasi Ulang dan B Pengesahan semua tahap, C BBN/Mutasi tanpa `cetak-stnk`, D Pembayaran Online tanpa `cetak-skpd`. |
+| `PUT /api/antrean/layanan/{id}` | `{"nama", "cakupan", "tahap": [...], "aktif"}` | `200` layanan. Huruf kode tidak bisa diubah. Tahap diurutkan sesuai alur; sedikitnya satu, masing-masing sekali ("Setiap tahap hanya dipilih sekali."). Tercatat di log aktivitas ("memperbarui Layanan antrean A (…)") hanya bila ada yang berubah. Nomor yang sudah dicetak tetap memakai tahap saat dicetak. |
+| `GET /api/antrean/tiket?tanggal=YYYY-MM-DD` | tanggal opsional (bawaan: hari ini WITA) | `200` nomor pada tanggal itu, terbaru dulu. |
+| `POST /api/antrean/tiket` | `{"nopol": "DH 1234 AB", "layanan": "A"}` | `201` tiket. Nomor polisi dinormalisasi (huruf besar, tanpa spasi/tanda baca) dan harus 1–2 huruf, 1–4 angka, sampai 3 huruf. Layanan harus aktif ("Layanan ini tidak ada atau sedang tidak aktif."). Nomor = kode + "-" + urutan tiga digit per layanan per hari WITA (A-001, …), diambil sambil mengunci baris layanan. Tiket menunggu di tahap pertama layanannya. |
+| `POST /api/antrean/tiket/{id}/cetak-ulang` | — | `200` tiket yang sama (nomor dan QR tetap), dicatat di riwayat. Tiket batal ditolak `422`. |
+| `POST /api/antrean/tiket/{id}/batal` | `{"alasan"}` (wajib, maks. 200) | `200` tiket berstatus `batal`; tahapnya tetap. Membatalkan dua kali ditolak `422` ("Nomor A-001 sudah dibatalkan."). |
+
+Bentuk tiket: `{id, nomor, tanggal, layanan: {kode, nama}, nopol ("DH 1234 AB" atau null), status ("menunggu"|"batal"), tahap, tahapLayanan, urlLacak, dicetak, dicetakOleh, dibatalkan, alasanBatal}`. `urlLacak` adalah alamat `/lacak/{kode}` yang tersimpan di QR tiket; kode lacak 22 huruf dan angka acak.
+
+Tabel: `queue_services` (kode unik, `tahap` json), `queue_tickets` (kode lacak unik, tanggal WITA, `urut` unik per layanan dan tanggal, `nopol` diindeks dan disimpan sampai dihapus Administrator, `tahap_layanan` json salinan tahap saat dicetak), `queue_events` (riwayat: `dicetak`, `dicetak ulang`, `dibatalkan`, dengan tahap, keterangan, dan pegawai).
+
+Kode: `app/Http/Controllers/Dashboard/QueueTicketController.php`, `QueueServiceController.php`, `app/Actions/PrintQueueTicket.php`, `CancelQueueTicket.php`. Tes: `tests/Feature/QueueTicketControllerTest.php`, `QueueServiceControllerTest.php`.
 
 ## Kontak & Kanal di dashboard
 
@@ -980,6 +1004,35 @@ Parameter, opsional dan salah satu saja: `tanggal` (`YYYY-MM-DD`) untuk laporan 
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 
 Kode: `app/Http/Controllers/PublicRevenueReportController.php`, `app/Http/Requests/ShowPublicRevenueReportRequest.php`, `app/Actions/BuildPublicRevenueReport.php`, `app/Actions/BuildRevenueReport.php` (`published()`, `totals()`, `comparison()`, `breakdown()`, `days()`). Tes: `tests/Feature/PublicRevenueReportTest.php`.
+
+## `GET /api/public/antrean/{kode}`
+
+Halaman lacak `/lacak/{kode}` yang dibuka dari QR tiket antrean ([D-051](decisions.md#d-051--2026-10-15--antrean-online-rencana-dan-keputusan-awal), `resources/js/portal/antrean/lacak-antrean.tsx`). Hanya kode acak dari QR yang membuka tiket; tidak ada pencarian nomor atau nomor polisi.
+
+```json
+{
+  "nomor": "C-004", "tanggal": "2026-10-15",
+  "layanan": { "kode": "C", "nama": "BBN/Mutasi" },
+  "nopol": "DH 1234 AB",
+  "status": "menunggu", "tahap": "kwitansi",
+  "petunjuk": "Tunggu nomor Anda dipanggil di Loket Kwitansi.",
+  "tahapan": [
+    { "kunci": "pendaftaran", "nama": "Loket 1 – Pendaftaran", "keadaan": "selesai" },
+    { "kunci": "kwitansi", "nama": "Loket Kwitansi", "keadaan": "sekarang" },
+    { "kunci": "penyerahan", "nama": "Loket 2 – Penyerahan", "keadaan": "nanti" }
+  ],
+  "dicetak": "2026-10-15T01:00:00+00:00"
+}
+```
+
+| Hal | Perilaku |
+|---|---|
+| Isi | Nomor polisi tampil apa adanya (keputusan pemilik). `tahapan` hanya tahap layanan tiket itu; tahap sebelum yang sekarang `selesai`. Tidak memuat ID, nama petugas, atau alasan pembatalan. |
+| Batal | `status: "batal"`, `petunjuk` "Nomor antrean ini dibatalkan petugas. Silakan tanyakan ke Meja Informasi.", tidak ada tahap `sekarang`. |
+| Galat | `404` "Nomor antrean tidak ditemukan. Periksa kembali QR pada tiket Anda." untuk kode yang tidak ada; `404` untuk alamat yang bukan 22 huruf/angka; `422` `query` untuk parameter kueri apa pun; `429` dari batas API publik. |
+| Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. Halaman `/lacak/{kode}` bertanda `noindex, nofollow`. |
+
+Kode: `app/Http/Controllers/PublicQueueTicketController.php`, `app/Actions/ShowPublicQueueTicket.php`, `app/Http/Controllers/QueueTrackingPageController.php`. Tes: `tests/Feature/PublicQueueTicketTest.php`.
 
 ## `GET /api/public/kontak`
 

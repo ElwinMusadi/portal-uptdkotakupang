@@ -23,6 +23,7 @@ import {
   IconReportMoney,
   IconSettings,
   IconTargetArrow,
+  IconTicket,
   IconTruck,
   IconUsers,
   type Icon,
@@ -90,6 +91,7 @@ export const NAV_GRUP: GrupNav[] = [
       { judul: "Jam Pelayanan", url: "/jadwal/jam", ikon: IconClockHour4, portal: "jadwal.html", modul: ["jam"] },
       { judul: "Layanan Luar Kantor", url: "/jadwal/keliling", ikon: IconTruck, portal: "jadwal.html#keliling", tambah: "/jadwal/keliling?baru=1", modul: ["keliling"] },
       { judul: "Papan Layanan", url: "/papan", ikon: IconAlarm, portal: "index.html", modul: ["papan"] },
+      { judul: "Antrean Online", url: "/antrean", ikon: IconTicket, keterangan: "Cetak nomor antrean di Meja Informasi", modul: ["antrean"] },
     ],
   },
   {

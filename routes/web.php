@@ -2,8 +2,10 @@
 
 use App\Http\Controllers\ArticlePageController;
 use App\Http\Controllers\Auth\AccountActivationController;
+use App\Http\Controllers\QueueTrackingPageController;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Models\Article;
+use App\Models\QueueTicket;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -59,6 +61,9 @@ Route::withoutMiddleware([
     Route::get('/berita/{slug}', ArticlePageController::class)->where('slug', Article::SLUG_PATTERN)->name('portal.berita');
     Route::permanentRedirect('/berita-detail', '/informasi');
     Route::permanentRedirect('/berita-detail.html', '/informasi');
+
+    // The taxpayer's tracking page behind a queue ticket's QR (Antrean Online, D-051)
+    Route::get('/lacak/{kode}', QueueTrackingPageController::class)->where('kode', QueueTicket::TRACKING_CODE_PATTERN)->name('portal.lacak');
 
     // Portal scripts that Vite builds, loaded by the pages as written from fixed addresses: the tax check on Beranda and
     // Layanan (D-041) and the React components that take over [data-react] elements (D-045).

@@ -27,6 +27,7 @@ export const SEMUA_MODUL = [
   "jam",
   "keliling",
   "papan",
+  "antrean",
   "profil",
   "visiMisi",
   "unit",

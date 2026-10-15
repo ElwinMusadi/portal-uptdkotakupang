@@ -327,7 +327,7 @@ class AuthenticatedSessionControllerTest extends TestCase
             'peran' => 'administrator',
             'modul' => [
                 'pesan', 'statistik', 'penerimaan', 'berita', 'dokumentasi', 'dokumen', 'faq', 'layanan', 'jam', 'keliling',
-                'papan', 'profil', 'visiMisi', 'unit', 'kontak', 'beranda', 'halaman', 'pemutakhiran',
+                'papan', 'antrean', 'profil', 'visiMisi', 'unit', 'kontak', 'beranda', 'halaman', 'pemutakhiran',
             ],
             'masuk' => null,
         ]);

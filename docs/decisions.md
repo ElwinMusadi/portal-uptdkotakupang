@@ -693,7 +693,7 @@ Jadwal Pemutakhiran di dashboard masih bisa mencatat papan sebagai "Setiap hari 
 
 ## D-051 · 2026-10-15 · Antrean Online: rencana dan keputusan awal
 
-Pemilik meminta Sistem Antrean Online (Queue Management System) di bagian Layanan, berdasarkan flowchart pemilik: nomor antrean tercetak menggantikan nomor tulis tangan, satu nomor mengikuti berkas dari Meja Informasi sampai Loket 2 – Penyerahan, dan wajib pajak melacak tahap berkasnya lewat QR. Rencana lengkap: [`docs/rencana-antrean-online.md`](rencana-antrean-online.md). **Belum dibangun**; Irisan 1 dikerjakan setelah rencana disetujui.
+Pemilik meminta Sistem Antrean Online (Queue Management System) di bagian Layanan, berdasarkan flowchart pemilik: nomor antrean tercetak menggantikan nomor tulis tangan, satu nomor mengikuti berkas dari Meja Informasi sampai Loket 2 – Penyerahan, dan wajib pajak melacak tahap berkasnya lewat QR. Rencana lengkap: [`docs/rencana-antrean-online.md`](rencana-antrean-online.md), disetujui pemilik. **Irisan 1 dibangun** (Meja Informasi, cetak dua lembar, halaman lacak, pengaturan layanan); irisan berikutnya menyusul.
 
 | Hal | Keputusan |
 |---|---|
@@ -706,5 +706,6 @@ Pemilik meminta Sistem Antrean Online (Queue Management System) di bagian Layana
 | Lintas hari | Tiket yang belum selesai **tetap aktif dengan nomor lamanya**, ditandai tanggalnya (pemilik). |
 | Papan Layanan | **Tetap manual** (D-050) sampai antrean benar-benar berjalan, lalu diambil dari antrean (pemilik). |
 | Mulai pakai | **Uji coba paralel** dengan nomor manual (pemilik), setelah PINTU di-deploy ke Laravel Cloud. |
+| Pustaka QR | **uqr** 0.1.3 (keputusan pemilik): tanpa dependensi, menghasilkan SVG di peramban, hanya dimuat halaman Meja Informasi. |
 
-Belum diputuskan: pustaka pembuat QR (dependensi baru), akun petugas non-UPTD (D-007 mewajibkan NIP), daftar loket fisik, antrean prioritas, kalimat suara, penjelasan di Kebijakan Privasi, dan waktu deploy (rencana §9).
+Belum diputuskan: akun petugas non-UPTD (D-007 mewajibkan NIP), daftar loket fisik, antrean prioritas, kalimat suara, penjelasan di Kebijakan Privasi, dan waktu deploy (rencana §9).

@@ -35,18 +35,20 @@ class PortalPagesTest extends TestCase
             'design system' => ['/design-system', 'design-system'],
             'kebijakan privasi' => ['/kebijakan-privasi', 'kebijakan-privasi'],
             'syarat ketentuan' => ['/syarat-ketentuan', 'syarat-ketentuan'],
+            'lacak antrean' => ['/lacak/AbCdEfGhIjKlMnOpQrStUv', 'lacak'],
         ];
     }
 
     /**
      * The portal pages served exactly as their files are written: all but
-     * the article page, whose addresses are made root-relative.
+     * the article and queue tracking pages, whose addresses are made
+     * root-relative.
      *
      * @return array<string, array{string, string}>
      */
     public static function pagesAsWritten(): array
     {
-        return array_filter(self::pages(), fn (array $page): bool => $page[1] !== 'berita-detail');
+        return array_filter(self::pages(), fn (array $page): bool => ! in_array($page[1], ['berita-detail', 'lacak'], true));
     }
 
     /**
@@ -378,6 +380,31 @@ class PortalPagesTest extends TestCase
             preg_replace('/(\s(?:href|src)=")\/(?!\/)/', '$1', $html),
         );
         $this->assertSame([], $response->headers->getCookies());
+    }
+
+    public function test_serves_the_queue_tracking_page_with_addresses_from_the_site_root_and_kept_out_of_search(): void
+    {
+        $response = $this->get('/lacak/AbCdEfGhIjKlMnOpQrStUv');
+        $html = $response->assertOk()->assertHeader('Content-Type', 'text/html; charset=UTF-8')->getContent();
+
+        $this->assertSame(0, preg_match('/\s(?:href|src)="(?![a-z][a-z0-9+.-]*:|\/|#)/i', $html));
+        $this->assertStringContainsString('<meta name="robots" content="noindex, nofollow">', $html);
+        $this->assertStringContainsString('<div class="lacak" data-react="lacak-antrean">', $html);
+        $this->assertStringContainsString('<script type="module" src="/skrip/portal"></script>', $html);
+        $this->assertSame(
+            file_get_contents(resource_path('views/portal/lacak.blade.php')),
+            preg_replace('/(\s(?:href|src)=")\/(?!\/)/', '$1', $html),
+        );
+        $this->assertSame([], $response->headers->getCookies());
+    }
+
+    #[TestWith(['/lacak/AbCdEfGhIjKlMnOpQrStU'])]
+    #[TestWith(['/lacak/AbCdEfGhIjKlMnOpQrStUvW'])]
+    #[TestWith(['/lacak/AbCdEfGhIjKlMnOpQrSt-v'])]
+    #[TestWith(['/lacak'])]
+    public function test_answers_404_for_a_tracking_address_without_a_code(string $uri): void
+    {
+        $this->get($uri)->assertNotFound();
     }
 
     public function test_makes_only_relative_addresses_root_relative(): void

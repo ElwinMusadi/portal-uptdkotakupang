@@ -273,6 +273,13 @@ Halaman *Papan Layanan* (`#/papan`, `pages/papan.tsx`) tersimpan di server sejak
 - Server mengisi waktu *diperbarui* saat isi papan berubah; menyimpan isi yang sama tidak mengubahnya.
 - Beranda menampilkan isi terakhir setiap hari sampai diubah ([D-050](decisions.md#d-050--2026-10-15--papan-layanan-berlaku-setiap-hari)), dengan label "Diperbarui hari ini" pada hari selain hari penyimpanan. Selama loket tutup menurut Jam Pelayanan, semua loket tampil Tutup dan waktu tunggu tidak ditampilkan. Papan cukup disimpan bila ada perubahan.
 
+## Antrean Online
+
+Modul `antrean` ([D-051](decisions.md#d-051--2026-10-15--antrean-online-rencana-dan-keputusan-awal), rencana: [`rencana-antrean-online.md`](rencana-antrean-online.md)), menu *Layanan › Antrean Online*. Selalu dibaca dari server; kontraknya di [`api.md`](api.md#antrean-online-di-dashboard).
+
+- **Meja Informasi** (`#/antrean`, `pages/antrean/meja.tsx`): ketik nomor polisi, pilih layanan (A–D yang aktif), lalu *Cetak nomor* (atau Enter). Tiket dua lembar dicetak di printer thermal 80 mm (`lib/cetak-tiket.ts`): lembar 1 untuk wajib pajak, lembar 2 ditempel pada berkas, keduanya dengan nomor, layanan, nomor polisi, waktu, dan QR alamat halaman lacak (pustaka `uqr`). Pencetakan memakai iframe tersendiri dengan halaman 80 × 110 mm per lembar, jadi gaya cetak tidak memengaruhi halaman lain; Chrome/Edge dengan `--kiosk-printing` mencetak tanpa dialog. Kartu *Tiket terakhir* menampilkan QR dan tombol *Cetak ulang*. Daftar nomor per tanggal (diperbarui setiap 15 detik) dengan pencarian nomor/nomor polisi, saringan layanan, *Cetak ulang*, dan *Batalkan* (dengan alasan).
+- **Pengaturan Antrean** (`#/antrean/pengaturan`, khusus Administrator): nama, cakupan, tahap yang dilalui (tujuh tahap alur), dan aktif/tidak setiap layanan. Huruf kode tetap.
+
 ## Tarif & Simulasi (dipensiunkan)
 
 Halaman *Tarif & Simulasi* dipensiunkan oleh [D-041](decisions.md#d-041--2026-10-14--kalkulator-pkb-dan-cek-biaya-pajak-memakai-mesin-kalkulator-pajak-tarif--simulasi-dipensiunkan): Kalkulator PKB dan cek biaya pajak di portal menghitung dengan mesin kalkulator-pajak, jadi tidak ada tarif yang diatur di dashboard. Alamat `#/tarif` dialihkan ke Kalkulator PKB, dan modul `tarif` tidak lagi bisa ditugaskan.

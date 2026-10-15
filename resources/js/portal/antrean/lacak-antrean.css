@@ -1,0 +1,53 @@
+/* Lacak antrean di portal (D-051), dibangun Vite bersama komponennya */
+
+.lk { display: grid; gap: 20px; transition: opacity var(--dur-2) var(--ease); }
+.lk > * { min-width: 0; }
+.lk[aria-busy="true"] { opacity: 0.85; }
+
+.lk-pesan { display: grid; gap: 12px; justify-items: center; text-align: center; padding: 48px 24px; }
+.lk-pesan__judul { font-size: 17px; font-weight: 600; max-width: 48ch; }
+
+/* Tiket (panel gelap seperti papan layanan beranda) */
+.lk-tiket { display: grid; gap: 10px; }
+.lk-tiket > * { min-width: 0; }
+@media (min-width: 800px) {
+  .lk-tiket { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); }
+}
+.lk-tiket__utama, .lk-tiket__kini { display: grid; gap: 10px; align-content: start; padding: 20px 22px; }
+.lk-tiket__nomor {
+  font-size: clamp(48px, 12vw, 88px); font-weight: 600; letter-spacing: -0.04em; line-height: 1;
+  color: #fff; font-variant-numeric: tabular-nums;
+}
+.lk-tiket__layanan { font-size: 17px; font-weight: 600; color: #fff; }
+.lk-tiket__data { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px 16px; margin: 4px 0 0; }
+.lk-tiket__data dt { font-size: 12px; color: var(--night-muted); }
+.lk-tiket__data dd { margin: 2px 0 0; font-weight: 600; color: #fff; overflow-wrap: anywhere; }
+.lk-tiket__petunjuk { font-size: clamp(20px, 3vw, 28px); font-weight: 600; letter-spacing: -0.01em; line-height: 1.25; color: #fff; }
+.lk-tiket__kini { border-left: 3px solid var(--accent); }
+.lk-tiket__kini.is-batal { border-left-color: var(--danger-night); }
+
+/* Tahap berkas */
+.lk-tahap { display: grid; gap: 16px; }
+.lk-tahap__judul { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+.lk-tahap__daftar { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.lk-tahap__item { position: relative; display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 10px 0; }
+.lk-tahap__item:not(:last-child)::after {
+  content: ""; position: absolute; left: 11px; top: 34px; bottom: -10px; width: 2px; background: var(--line-2);
+}
+.lk-tahap__item.is-selesai:not(:last-child)::after { background: var(--ok); }
+.lk-tahap__titik {
+  position: relative; z-index: 1; display: inline-grid; place-items: center; width: 24px; height: 24px;
+  border: 2px solid var(--line-2); border-radius: 50%; background: var(--surface); color: #fff;
+}
+.lk-tahap__item.is-selesai .lk-tahap__titik { border-color: var(--ok); background: var(--ok); }
+.lk-tahap__item.is-sekarang .lk-tahap__titik { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent); }
+.lk-tahap__item.is-sekarang .lk-tahap__titik::after { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+.lk-tahap__nama { font-size: 15px; color: var(--text-2); }
+.lk-tahap__item.is-selesai .lk-tahap__nama { color: var(--ink); }
+.lk-tahap__item.is-sekarang .lk-tahap__nama { color: var(--ink); font-weight: 600; }
+.lk-tahap__keadaan { font-size: 12.5px; color: var(--text-2); }
+.lk-tahap__item.is-sekarang .lk-tahap__keadaan { color: var(--accent); font-weight: 600; }
+
+.lk-catatan { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px; }
+.lk-perbarui { background: none; border: 0; padding: 0; font: inherit; color: var(--accent); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.lk-perbarui:disabled { opacity: 0.5; cursor: default; }
