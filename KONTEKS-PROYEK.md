@@ -2,7 +2,7 @@
 
 > **Untuk agen AI dan pengembang berikutnya.** Satu berkas ini memuat seluruh konteks proyek PINTU sampai status terakhirnya: tujuan, arsitektur, aturan kerja dengan pemilik, keputusan, integrasi, cara menguji, jebakan lingkungan, dan pekerjaan yang tertunda. Baca berkas ini lebih dulu, lalu ikuti tautan ke dokumen rinci bila perlu.
 >
-> **Terakhir diperbarui:** 2026-10-15 · branch `laravel-development` · sampai commit Laporan Penerimaan tahap 2 (D-048, halaman portal, sesudah `8d481be`).
+> **Terakhir diperbarui:** 2026-10-15 · branch `laravel-development` · sampai commit porsi kecil "<0,1%" (sesudah `ba5aacf`, Laporan Penerimaan tahap 2, D-048).
 >
 > **Wajib diperbarui setiap ada perubahan** (lihat [§19](#19-prosedur-memperbarui-dokumen-ini)). Jangan pernah menulis rahasia (kata sandi, NIP akun uji, token, isi `.env`) di berkas ini.
 
@@ -76,15 +76,15 @@ Satu aplikasi Laravel berisi empat bagian:
 | Hal | Status |
 |---|---|
 | Branch kerja | `laravel-development` (`main` = situs statis lama yang masih dilayani Cloudflare Pages; jangan diubah) |
-| Commit terakhir di origin | `feat(pintu): publish the revenue report on the portal with small groups masked` (D-048, Laporan Penerimaan tahap 2), sesudah `8d481be` (D-047, Laporan Penerimaan tahap 1). Hash: `git log -3 --oneline` |
+| Commit terakhir di origin | `fix(pintu): write revenue shares below 0.05% as "<0,1%"` (porsi kecil Laporan Penerimaan), sesudah `ba5aacf` (D-048, Laporan Penerimaan tahap 2). Hash: `git log -3 --oneline` |
 | Working tree | Bersih |
 | Tes | `composer test`: **1101 tes lulus, 5041 assertion** (SQLite di memori). Uji mutasi: D-047 66 dari 67 mutan mati, D-048 36 dari 37 (sisanya setara) |
-| Pemeriksaan frontend | `npm run typecheck`, `npm run lint`, build Vite: lulus. Dashboard Laporan Penerimaan diperiksa di browser (415 px dan 1280 px). Halaman portal `/penerimaan` diperiksa di browser (430 px dan 1280 px): keadaan belum diterbitkan dengan API sungguhan, lalu laporan berisi data dev yang sudah disamarkan server (dihitung dalam transaksi yang dibatalkan, tanpa mengubah tanda tampil) lewat `fetch` tiruan: periode, saringan, kartu kelompok, tabel, CSV |
+| Pemeriksaan frontend | `npm run typecheck`, `npm run lint`, build Vite: lulus. Dashboard Laporan Penerimaan diperiksa di browser (415 px dan 1280 px). Halaman portal `/penerimaan` diperiksa di browser (430 px dan 1280 px): keadaan belum diterbitkan dengan API sungguhan, lalu laporan berisi data dev yang sudah disamarkan server (dihitung dalam transaksi yang dibatalkan, tanpa mengubah tanda tampil) lewat `fetch` tiruan: periode, saringan, kartu kelompok, tabel, CSV. Setelah pemilik menyalakan Portal, diperiksa lagi dengan API sungguhan: harian, bulanan, rentang, batang per hari, penyamaran pada 8 kombinasi periode dan saringan, 430 px |
 | Keputusan terakhir | D-048 (halaman portal Laporan Penerimaan) |
 | Deploy Laravel Cloud | **Belum.** Pemilik: "jangan deploy ke Laravel Cloud dulu" (D-035). Deploy adalah langkah pemilik |
 | Produksi | Masih Cloudflare Pages dari branch `main` (situs statis lama) |
 | API data kendaraan (NJKB) | Token PINTU terpasang di `.env` lokal dan lolos Cloudflare Access; Worker `njkb-api-ntt` sudah di-deploy pemilik dengan perbaikan 404 (commit `6a4c4f8`), terverifikasi 2026-10-15 07.04 WITA. **Uji dengan kendaraan sungguhan oleh pemilik belum dikonfirmasi** |
-| Data lokal | Database dev `pintu` berisi **data milik pemilik** (lihat [§12](#12-database-data-dan-migrasi)). Tabel `revenue_imports` dan `revenue_transactions` sudah dimigrasi; berkas STS harian 14 Oktober 2026 (320 transaksi, Rp563.444.182) dan bulanan September 2026 (7.318 transaksi baru + 1 ganda dilewati, Rp12.847.135.065) diimpor sebagai Loket SAMSAT lewat endpoint impor (berkas bulanan lewat `php artisan serve` sementara karena batas unggah Herd 2 MB, lihat §14) |
+| Data lokal | Database dev `pintu` berisi **data milik pemilik** (lihat [§12](#12-database-data-dan-migrasi)). Tabel `revenue_imports` dan `revenue_transactions` sudah dimigrasi; berkas STS harian 14 Oktober 2026 (320 transaksi, Rp563.444.182) dan bulanan September 2026 (7.318 transaksi baru + 1 ganda dilewati, Rp12.847.135.065) diimpor sebagai Loket SAMSAT lewat endpoint impor (berkas bulanan lewat `php artisan serve` sementara karena batas unggah Herd 2 MB, lihat §14). Pemilik menyalakan kolom **Portal** kedua impor itu (2026-10-15 malam), jadi `/penerimaan` menampilkan 1 September sampai 14 Oktober 2026 |
 
 **Isi terakhir yang disimpan pemilik di dashboard lokal** (penting saat menguji tampilan): judul pembuka beranda "Semua informasi SAMSAT" (**tanpa titik**, disimpan pemilik 07.55 WITA 2026-10-15) dengan kata bergilir Pajak, STNK, Mutasi, **BBNKB**, SAMSAT.
 
@@ -239,7 +239,7 @@ Berkas alat: `AGENTS.md`, `boost.json`, `kilo.json` (skill di `.agents/skills/`,
 |---|---|---|
 | `beranda/judul-pembuka.tsx` + `.css` | `<h1 data-react="judul-pembuka">` | Judul pembuka dari `GET /api/public/beranda`. Kata judul yang sama dengan salah satu *kata bergilir* bergulir vertikal ke kata lain (1,2 detik setelah tampil, 1,6 detik per kata), kembali ke kata judul, diam 10 detik, lalu berulang. Berhenti saat tab tidak dilihat; "kurangi gerak" = judul diam; pembaca layar membaca judul utuh. Bila lebar kata mengubah letak baris, kata diberi baris sendiri agar judul tidak melompat |
 | `beranda/lambang-pembuka.tsx` + `.css` | `<div class="hero__lambang" data-react="lambang-pembuka">` | Lambang NTT di tengah; logo Ditlantas (kiri) dan Jasa Raharja (kanan) disimpan di `<template data-lambang-mitra>`. ±2,5 detik setelah halaman dibuka keduanya keluar dari balik lambang (hanya otomatis sekali per muat). Lambang NTT menjadi tombol (`aria-expanded`) untuk menyembunyikan/memunculkan |
-| `penerimaan/laporan-penerimaan.tsx` + `.css` | `<div class="penerimaan" data-react="laporan-penerimaan">` di `/penerimaan` | Laporan Penerimaan publik (D-048) dari `GET /api/public/penerimaan`: periode harian/bulanan/rentang dalam tanggal yang tersedia, saringan bercentang (loket, jenis daftar, jenis kendaraan, kecamatan, kelurahan) dari `<details>`, panel gelap ringkasan (gaya dasbor transparansi beranda), batang per hari, kartu per kelompok dengan baris "Lainnya (disamarkan)" bergaris, tabel rincian bertab, unduh CSV. Periode dan saringan ditulis ke alamat halaman (`?dari=&sampai=&kecamatan=…`). Tanpa Recharts (±6 KB gzip) |
+| `penerimaan/laporan-penerimaan.tsx` + `.css` | `<div class="penerimaan" data-react="laporan-penerimaan">` di `/penerimaan` | Laporan Penerimaan publik (D-048) dari `GET /api/public/penerimaan`: periode harian/bulanan/rentang dalam tanggal yang tersedia, saringan bercentang (loket, jenis daftar, jenis kendaraan, kecamatan, kelurahan) dari `<details>`, panel gelap ringkasan (gaya dasbor transparansi beranda), batang per hari, kartu per kelompok dengan baris "Lainnya (disamarkan)" bergaris, tabel rincian bertab, unduh CSV. Porsi yang ada tetapi di bawah 0,05% ditulis "<0,1%" (sama di dashboard). Periode dan saringan ditulis ke alamat halaman (`?dari=&sampai=&kecamatan=…`). Tanpa Recharts (±6 KB gzip) |
 | `penerimaan/periode.ts`, `penerimaan/csv.ts` | (modul bersama) | Periode laporan (geser hari/bulan, label tanggal Indonesia) dan berkas CSV (titik koma, BOM); dipakai juga halaman dashboard Laporan Penerimaan |
 | `kata-bergilir.ts` | (modul bersama) | `kataDalamJudul()` dan `pisahJudul()`: pencocokan kata utuh tanpa membedakan huruf besar-kecil. Server memakai aturan yang sama (`Setting::rotatingWordIn`); dashboard mengimpornya untuk validasi |
 
@@ -548,7 +548,7 @@ Rincian lengkap di [`docs/decisions.md`](docs/decisions.md). "Pemilik" = keputus
 
 ## 17. Riwayat commit
 
-80 commit di `laravel-development` (per commit Laporan Penerimaan tahap 2). Tahapan besar:
+81 commit di `laravel-development` (per commit porsi kecil "<0,1%"). Tahapan besar:
 
 | Rentang | Isi |
 |---|---|
@@ -566,7 +566,8 @@ Rincian lengkap di [`docs/decisions.md`](docs/decisions.md). "Pemilik" = keputus
 | `docs(pintu): add the single-file project context for AI agents` | Berkas ini, aturan baca-dan-perbarui di `AGENTS.md`, rujukan di README |
 | `e0eb24d` | Foto pejabat di bagan Struktur terpotong bulat, dipangkas dari atas |
 | `8d481be` | Laporan Penerimaan tahap 1: impor berkas STS per loket, laporan harian/bulanan di dashboard (D-047) |
-| `feat(pintu): publish the revenue report on the portal with small groups masked` | Laporan Penerimaan tahap 2: halaman portal `/penerimaan`, sakelar Portal khusus Administrator, API publik dengan penyamaran (D-048) |
+| `ba5aacf` | Laporan Penerimaan tahap 2: halaman portal `/penerimaan`, sakelar Portal khusus Administrator, API publik dengan penyamaran (D-048) |
+| `fix(pintu): write revenue shares below 0.05% as "<0,1%"` | Porsi Laporan Penerimaan yang sangat kecil ditulis "<0,1%" di portal dan dashboard |
 
 Repository terkait: `njkb-api-ntt` `main` — `f7a1ee5` (izin konsumen PINTU), `6a4c4f8` (404 untuk nomor polisi tidak terdaftar, sudah di-deploy).
 
@@ -575,8 +576,6 @@ Repository terkait: `njkb-api-ntt` `main` — `f7a1ee5` (izin konsumen PINTU), `
 ## 18. Pekerjaan tertunda dan hal yang diketahui
 
 **Menunggu pemilik:**
-
-- Menyalakan kolom **Portal** untuk impor yang sudah diperiksa (Administrator, Dashboard › Laporan Penerimaan › Riwayat impor). Sampai itu, `/penerimaan` di portal menyatakan laporan belum diterbitkan.
 
 - Uji cek data kendaraan dengan kendaraan sungguhan (portal: nomor polisi + 5 karakter terakhir nomor rangka, sebelum 21.00 WITA) belum dikonfirmasi.
 - Deploy ke Laravel Cloud dan cutover domain (lihat §15).
@@ -633,6 +632,7 @@ Bila commit dibuat sebelum hash-nya diketahui, tulis status "belum di-commit" la
 
 | Tanggal | Perubahan |
 |---|---|
+| 2026-10-15 | Pemilik menyalakan Portal untuk impor 14 Oktober dan September; `/penerimaan` diperiksa dengan data sungguhan. Porsi yang ada tetapi di bawah 0,05% kini ditulis "<0,1%" di portal dan dashboard (dulu "0%"/"0,0%"), atas persetujuan pemilik. Status, §8.4, §17 (hash `ba5aacf`), §18 diperbarui |
 | 2026-10-15 | Laporan Penerimaan tahap 2 (D-048): halaman portal `/penerimaan` (komponen React, menu Informasi, tautan beranda), sakelar Portal khusus Administrator, `GET /api/public/penerimaan` dengan penyamaran; modul bersama `periode.ts` dan `csv.ts`. Status, §8.1, §8.4, §10.3, §10.4, §16, §17, §18 diperbarui. Diperiksa di browser (430 px dan 1280 px; perbaikan: angka di kotak kecil terpotong) dan pada data dev tanpa mengubah tanda tampil |
 | 2026-10-15 | Laporan Penerimaan tahap 1 (D-047): menu dan modul `penerimaan`, impor berkas STS dengan pratinjau, laporan harian/bulanan/rentang dengan saringan, bento, grafik, tabel, dan CSV; status, §9.1–9.2, §10.4–10.5, §12, §14 (batas PHP Herd, memori commit), §15, §16, §18 diperbarui. Diperiksa di browser setelah pemilik me-restart Claude Desktop (perbaikan: halaman melebar karena tabel riwayat impor dan deretan tab, lencana angka miliaran) |
 | 2026-10-15 | Foto pejabat di bagan Struktur Organisasi tidak lagi menjuntai keluar lingkaran: foto mengisi avatar dan dipangkas dari atas (§8.2) |

@@ -94,8 +94,11 @@ import {
 
 /* ---------- Angka ---------- */
 
+/** Porsi dalam persen; porsi yang ada tetapi di bawah 0,05% tidak dibulatkan menjadi "0,0%" */
 function persen(bagian: number, total: number): string {
-  return total > 0 ? `${angka((bagian / total) * 100, 1)}%` : "—"
+  if (total <= 0) return "—"
+  const p = (bagian / total) * 100
+  return p > 0 && p < 0.05 ? "<0,1%" : `${angka(p, 1)}%`
 }
 
 /** Rupiah ringkas untuk sumbu grafik, mis. "563 jt" */

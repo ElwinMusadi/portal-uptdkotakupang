@@ -79,8 +79,12 @@ const KOMPONEN: { kunci: string; label: string; nilai: (j: Jumlah) => number }[]
 const fmtAngka = new Intl.NumberFormat("id-ID")
 const angka = (n: number) => fmtAngka.format(n)
 const rupiah = (n: number) => `Rp${fmtAngka.format(Math.round(n))}`
-const persen = (bagian: number, total: number) =>
-  total > 0 ? `${new Intl.NumberFormat("id-ID", { maximumFractionDigits: 1 }).format((bagian / total) * 100)}%` : "—"
+/** Porsi dalam persen; porsi yang ada tetapi di bawah 0,05% tidak dibulatkan menjadi "0%" */
+function persen(bagian: number, total: number): string {
+  if (total <= 0) return "—"
+  const p = (bagian / total) * 100
+  return p > 0 && p < 0.05 ? "<0,1%" : `${new Intl.NumberFormat("id-ID", { maximumFractionDigits: 1 }).format(p)}%`
+}
 
 /** Rupiah ringkas untuk label batang, mis. "563,4 jt" */
 function rupiahRingkas(n: number): string {
