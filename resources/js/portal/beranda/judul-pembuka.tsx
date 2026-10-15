@@ -4,9 +4,9 @@
  * skrip dimuat; komponen ini lalu mengambil alih <h1> itu. Teks dibaca dari
  * GET /api/public/beranda dan dipakai bila beranda sudah pernah disimpan
  * (D-023); kata bergilir selalu dari sana. Kata judul yang bergilir berganti
- * dengan gulir vertikal satu putaran lalu berhenti di kata judul. Pembaca
- * layar selalu mendengar judul utuh, dan pengunjung yang memilih gerak
- * dikurangi melihat judul diam.
+ * dengan gulir vertikal satu putaran, diam sejenak di kata judul, lalu
+ * berulang. Pembaca layar selalu mendengar judul utuh, dan pengunjung yang
+ * memilih gerak dikurangi melihat judul diam.
  */
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { createRoot } from "react-dom/client"
@@ -18,6 +18,8 @@ import "./judul-pembuka.css"
 const JEDA_AWAL = 1200
 /** Lama setiap kata tampil (ms) */
 const TAHAN = 1600
+/** Lama kata judul diam sebelum putaran berikutnya (ms) */
+const JEDA_ULANG = 10_000
 
 interface IsiJudul {
   judul: string
@@ -74,7 +76,10 @@ function KataBergilir({ bagian }: { bagian: JudulBergilir }) {
   const [, isiSebelum, spasi] = /^([\s\S]*?)(\s*)$/.exec(bagian.sebelum) ?? ["", bagian.sebelum, ""]
   // Tanda baca yang menempel pada kata ikut satu baris dengannya
   const [, lekat, sisa] = /^(\S*)([\s\S]*)$/.exec(bagian.sesudah) ?? ["", "", bagian.sesudah]
+  // Banyaknya pergantian sejauh ini; kata yang tampil berputar di urutan
   const [langkah, setLangkah] = useState(0)
+  const kini = langkah % urutan.length
+  const tadi = (langkah - 1) % urutan.length
   const [lebar, setLebar] = useState<number[] | null>(null)
   const [barisSendiri, setBarisSendiri] = useState(false)
   const penanda = useRef<HTMLSpanElement>(null)
@@ -122,7 +127,7 @@ function KataBergilir({ bagian }: { bagian: JudulBergilir }) {
     }
   }, [])
 
-  // Satu putaran; menunggu bila tab sedang tidak dilihat
+  // Putaran demi putaran, dengan jeda di kata judul; menunggu bila tab sedang tidak dilihat
   const siap = lebar !== null
   useEffect(() => {
     if (!siap || matchMedia("(prefers-reduced-motion: reduce)").matches) return
@@ -135,7 +140,7 @@ function KataBergilir({ bagian }: { bagian: JudulBergilir }) {
       }
       i += 1
       setLangkah(i)
-      if (i < urutan.length - 1) waktu = window.setTimeout(maju, TAHAN)
+      waktu = window.setTimeout(maju, i % urutan.length === 0 ? JEDA_ULANG : TAHAN)
     }
     waktu = window.setTimeout(maju, JEDA_AWAL)
     return () => {
@@ -151,14 +156,14 @@ function KataBergilir({ bagian }: { bagian: JudulBergilir }) {
       {spasi}
       <span ref={satuan} className={barisSendiri ? "kata-gilir kata-gilir--baris" : "kata-gilir"}>
         <span className="sr-only">{urutan[0]}</span>
-        <span ref={kotak} className="kata-gilir__kotak" aria-hidden="true" style={lebar ? { width: `${lebar[langkah]}px` } : undefined}>
+        <span ref={kotak} className="kata-gilir__kotak" aria-hidden="true" style={lebar ? { width: `${lebar[kini]}px` } : undefined}>
           {langkah > 0 && (
             <span key={langkah - 1} className="kata-gilir__kata kata-gilir__kata--keluar">
-              {urutan[langkah - 1]}
+              {urutan[tadi]}
             </span>
           )}
           <span key={langkah} className={langkah > 0 ? "kata-gilir__kata kata-gilir__kata--masuk" : "kata-gilir__kata"}>
-            {urutan[langkah]}
+            {urutan[kini]}
           </span>
           <span ref={ukuran} className="kata-gilir__ukur">
             {urutan.map((k, i) => (

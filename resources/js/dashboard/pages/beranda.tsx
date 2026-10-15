@@ -175,7 +175,7 @@ export default function HalamanBeranda() {
                   label="Kata bergilir"
                   labelTambah="Tambah kata"
                   placeholder="Pajak"
-                  deskripsi="Kata di judul yang sama dengan salah satu kata ini berganti satu per satu sesuai urutan, satu putaran, lalu berhenti lagi di kata judul. Kosongkan daftarnya untuk judul tanpa animasi."
+                  deskripsi="Kata di judul yang sama dengan salah satu kata ini berganti satu per satu sesuai urutan sampai kembali ke kata judul, diam 10 detik, lalu berulang. Kosongkan daftarnya untuk judul tanpa animasi."
                 />
                 <FieldArea control={form.control} name="hero.deskripsi" label="Deskripsi" wajib rows={3} />
                 <Baris>

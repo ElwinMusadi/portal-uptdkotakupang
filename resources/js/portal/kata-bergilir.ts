@@ -1,8 +1,8 @@
 /*
  * Kata bergilir di judul pembuka beranda (D-045). Kata judul yang sama dengan
  * salah satu kata bergilir (kata utuh, huruf besar-kecil diabaikan) berganti
- * dengan kata lain sesuai urutan daftar, satu putaran, lalu berhenti lagi di
- * kata judul. Server mencocokkan dengan cara yang sama
+ * dengan kata lain sesuai urutan daftar sampai kembali ke kata judul, diam
+ * sejenak, lalu berulang. Server mencocokkan dengan cara yang sama
  * (Setting::rotatingWordIn), dan dashboard memakai berkas ini untuk memeriksa
  * judul sebelum menyimpan.
  */
@@ -12,7 +12,7 @@ export interface JudulBergilir {
   sebelum: string
   /** Teks judul sesudah kata bergilir */
   sesudah: string
-  /** Kata yang tampil berurutan: kata judul, kata lain, lalu kata judul lagi */
+  /** Satu putaran kata yang tampil berurutan: kata judul, lalu kata lain sesudahnya dalam daftar */
   urutan: string[]
 }
 
@@ -36,5 +36,5 @@ export function pisahJudul(judul: string, kata: readonly string[]): JudulBergili
   const lain = [...rapi.slice(i + 1), ...rapi.slice(0, i)].filter((k) => k !== "")
   if (lain.length === 0) return null
   const { indeks, teks } = cariKata(judul, rapi[i])!
-  return { sebelum: judul.slice(0, indeks), sesudah: judul.slice(indeks + teks.length), urutan: [teks, ...lain, teks] }
+  return { sebelum: judul.slice(0, indeks), sesudah: judul.slice(indeks + teks.length), urutan: [teks, ...lain] }
 }

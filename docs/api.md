@@ -982,7 +982,7 @@ Kode: `app/Http/Controllers/PublicOrganizationController.php`, `app/Actions/Show
 
 ## `GET /api/public/beranda`
 
-Teks beranda portal ([D-023](decisions.md#d-023--2026-10-14--teks-beranda-tersimpan-di-server-teks-html-tetap-sebagai-isi-awal), `initBeranda()` di `public/assets/js/main.js`; judul pembuka diisi komponen React `resources/js/portal/beranda/judul-pembuka.tsx`, [D-045](decisions.md#d-045--2026-10-15--portal-beralih-ke-react-bertahap-kata-bergilir-di-judul-pembuka)). Bentuknya sama dengan dokumen dashboard tanpa `id` butir, ditambah `diperbarui`: waktu terakhir disimpan, atau `null` selama isinya masih teks di HTML. `hero.kataBergilir` selalu dipakai, juga saat `diperbarui` `null`: kata judul yang sama dengan salah satunya bergilir satu putaran lalu berhenti di kata judul.
+Teks beranda portal ([D-023](decisions.md#d-023--2026-10-14--teks-beranda-tersimpan-di-server-teks-html-tetap-sebagai-isi-awal), `initBeranda()` di `public/assets/js/main.js`; judul pembuka diisi komponen React `resources/js/portal/beranda/judul-pembuka.tsx`, [D-045](decisions.md#d-045--2026-10-15--portal-beralih-ke-react-bertahap-kata-bergilir-di-judul-pembuka)). Bentuknya sama dengan dokumen dashboard tanpa `id` butir, ditambah `diperbarui`: waktu terakhir disimpan, atau `null` selama isinya masih teks di HTML. `hero.kataBergilir` selalu dipakai, juga saat `diperbarui` `null`: kata judul yang sama dengan salah satunya bergilir sampai kembali ke kata judul, diam 10 detik, lalu berulang.
 
 | Hal | Perilaku |
 |---|---|

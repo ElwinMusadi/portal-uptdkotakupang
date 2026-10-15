@@ -214,7 +214,7 @@ class Setting extends Model
         'hero' => [
             'eyebrow' => 'UPTD Pendapatan Daerah Wilayah Kota Kupang · SAMSAT Kota Kupang',
             'judul' => 'Semua informasi Samsat.',
-            // The title's matching word takes turns with the others for one round and stops on it (D-045)
+            // The title's matching word takes turns with the others round after round, resting on it in between (D-045)
             'kataBergilir' => ['Pajak', 'STNK', 'Mutasi', 'BBN', 'SAMSAT'],
             'lanjutan' => 'Lewat satu pintu.',
             'deskripsi' => 'PINTU adalah portal resmi informasi dan pelayanan pajak kendaraan di Kota Kupang. Cek persyaratan, jadwal, dan lokasi layanan sebelum Anda berangkat.',
