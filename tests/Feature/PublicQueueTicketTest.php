@@ -33,13 +33,14 @@ class PublicQueueTicketTest extends TestCase
             'status' => 'menunggu',
             'tahap' => 'pendaftaran',
             'petunjuk' => 'Tunggu nomor Anda dipanggil di Loket 1 – Pendaftaran.',
+            'posisi' => 0,
             'tahapan' => [
-                ['kunci' => 'pendaftaran', 'nama' => 'Loket 1 – Pendaftaran', 'keadaan' => 'sekarang'],
-                ['kunci' => 'penetapan', 'nama' => 'Penetapan', 'keadaan' => 'nanti'],
-                ['kunci' => 'kwitansi', 'nama' => 'Loket Kwitansi', 'keadaan' => 'nanti'],
-                ['kunci' => 'pembayaran', 'nama' => 'Pembayaran', 'keadaan' => 'nanti'],
-                ['kunci' => 'cetak-skpd', 'nama' => 'Cetak SKPD', 'keadaan' => 'nanti'],
-                ['kunci' => 'penyerahan', 'nama' => 'Loket 2 – Penyerahan', 'keadaan' => 'nanti'],
+                ['kunci' => 'pendaftaran', 'nama' => 'Loket 1 – Pendaftaran', 'keadaan' => 'sekarang', 'selesai' => null],
+                ['kunci' => 'penetapan', 'nama' => 'Penetapan', 'keadaan' => 'nanti', 'selesai' => null],
+                ['kunci' => 'kwitansi', 'nama' => 'Loket Kwitansi', 'keadaan' => 'nanti', 'selesai' => null],
+                ['kunci' => 'pembayaran', 'nama' => 'Pembayaran', 'keadaan' => 'nanti', 'selesai' => null],
+                ['kunci' => 'cetak-skpd', 'nama' => 'Cetak SKPD', 'keadaan' => 'nanti', 'selesai' => null],
+                ['kunci' => 'penyerahan', 'nama' => 'Loket 2 – Penyerahan', 'keadaan' => 'nanti', 'selesai' => null],
             ],
             'dicetak' => '2026-10-15T01:00:00+00:00',
         ]);
@@ -54,6 +55,47 @@ class PublicQueueTicketTest extends TestCase
         $this->track($ticket->kode_lacak)
             ->assertJsonPath('petunjuk', 'Tunggu nomor Anda dipanggil di Loket Kwitansi.')
             ->assertJsonPath('tahapan.*.keadaan', ['selesai', 'selesai', 'sekarang', 'nanti', 'nanti', 'nanti', 'nanti']);
+    }
+
+    public function test_gives_the_time_each_stage_was_last_done(): void
+    {
+        $ticket = QueueTicket::factory()->waitingAt(QueueStage::Kwitansi)->create();
+        foreach ([['pendaftaran', '2026-10-15 01:10:00'], ['pendaftaran', '2026-10-15 01:20:00'], ['penetapan', '2026-10-15 01:30:00'], ['kwitansi', '2026-10-15 01:00:00']] as [$stage, $at]) {
+            $ticket->events()->forceCreate(['queue_ticket_id' => $ticket->id, 'aksi' => 'tahap selesai', 'tahap' => $stage, 'created_at' => $at]);
+        }
+        $ticket->events()->forceCreate(['queue_ticket_id' => $ticket->id, 'aksi' => 'dipanggil', 'tahap' => 'kwitansi', 'created_at' => '2026-10-15 01:40:00']);
+
+        $this->track($ticket->kode_lacak)->assertJsonPath('tahapan.*.selesai', [
+            '2026-10-15T01:20:00+00:00', '2026-10-15T01:30:00+00:00', null, null, null, null, null,
+        ]);
+    }
+
+    public function test_counts_the_numbers_waiting_ahead_at_a_counter_of_any_service(): void
+    {
+        $ticket = QueueTicket::factory()->waitingAt(QueueStage::Kwitansi, '2026-10-15 02:00:00')->create(['id' => '01K7M00000000000000000000M']);
+        QueueTicket::factory()->of('B')->waitingAt(QueueStage::Kwitansi, '2026-10-15 01:00:00')->create();
+        QueueTicket::factory()->waitingAt(QueueStage::Kwitansi, '2026-10-15 02:00:00')->create(['id' => '01K7M00000000000000000000A']);
+        QueueTicket::factory()->waitingAt(QueueStage::Kwitansi, '2026-10-15 02:00:00')->create(['id' => '01K7M00000000000000000000Z']);
+        QueueTicket::factory()->waitingAt(QueueStage::Kwitansi, '2026-10-15 03:00:00')->create();
+        QueueTicket::factory()->waitingAt(QueueStage::Kwitansi, '2026-10-15 01:00:00')->create(['status' => 'ditunda']);
+        QueueTicket::factory()->waitingAt(QueueStage::Penyerahan, '2026-10-15 01:00:00')->create();
+
+        $this->track($ticket->kode_lacak)->assertJsonPath('posisi', 2);
+        $ticket->update(['status' => 'dipanggil']);
+        $this->track($ticket->kode_lacak)->assertJsonPath('posisi', null);
+        $ticket->update(['status' => 'menunggu', 'tahap' => QueueStage::Pembayaran]);
+        $this->track($ticket->kode_lacak)->assertJsonPath('posisi', null);
+    }
+
+    public function test_tells_a_number_out_for_a_data_change_to_wait(): void
+    {
+        $ticket = QueueTicket::factory()->create(['tahap' => QueueStage::Penetapan, 'status' => 'perubahan-data']);
+
+        $this->track($ticket->kode_lacak)
+            ->assertJsonPath('status', 'perubahan-data')
+            ->assertJsonPath('petunjuk', 'Data kendaraan Anda sedang diubah petugas. Setelah itu berkas Anda kembali ditetapkan.')
+            ->assertJsonPath('posisi', null)
+            ->assertJsonPath('tahapan.1.keadaan', 'sekarang');
     }
 
     public function test_says_a_cancelled_ticket_is_cancelled_without_the_reason(): void

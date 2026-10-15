@@ -35,6 +35,7 @@ use App\Http\Controllers\Dashboard\QueueCounterController;
 use App\Http\Controllers\Dashboard\QueueCounterDeskController;
 use App\Http\Controllers\Dashboard\QueueDisplayController;
 use App\Http\Controllers\Dashboard\QueueServiceController;
+use App\Http\Controllers\Dashboard\QueueStationController;
 use App\Http\Controllers\Dashboard\QueueTicketCallController;
 use App\Http\Controllers\Dashboard\QueueTicketController;
 use App\Http\Controllers\Dashboard\RevenueCounterController;
@@ -465,7 +466,13 @@ Route::middleware('auth:sanctum')->group(function (): void {
             Route::post('/tiket/{queueTicket}/panggil-ulang', [QueueTicketCallController::class, 'recall'])->can('call', QueueTicket::class)->name('tiket.panggil-ulang');
             Route::post('/tiket/{queueTicket}/tunda', [QueueTicketCallController::class, 'postpone'])->can('call', QueueTicket::class)->name('tiket.tunda');
             Route::post('/tiket/{queueTicket}/selesai', [QueueTicketCallController::class, 'finish'])->can('call', QueueTicket::class)->name('tiket.selesai');
+            // Slice 3: stations sending documents for a data change, and undoing a marking
+            Route::post('/tiket/{queueTicket}/perubahan-data', [QueueStationController::class, 'requireDataChange'])->can('mark', QueueTicket::class)->name('tiket.perubahan-data');
+            Route::post('/tiket/{queueTicket}/urungkan', [QueueStationController::class, 'undo'])->can('mark', QueueTicket::class)->name('tiket.urungkan');
         });
+        // Slice 3: the stations that mark stages done (Penetapan, Server, Pelunasan, Cetak SKPD, Cetak STNK)
+        Route::get('/pos/{pos}', [QueueStationController::class, 'show'])->can('mark', QueueTicket::class)->name('pos.show');
+        Route::post('/pos/{pos}/tandai', [QueueStationController::class, 'mark'])->can('mark', QueueTicket::class)->name('pos.tandai');
         Route::get('/layar', [QueueDisplayController::class, 'index'])->can('manage', QueueDisplay::class)->name('layar.index');
         Route::post('/layar', [QueueDisplayController::class, 'store'])->can('manage', QueueDisplay::class)->name('layar.store');
         Route::delete('/layar/{queueDisplay}', [QueueDisplayController::class, 'destroy'])

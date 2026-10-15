@@ -2,8 +2,9 @@
  * Lacak antrean (D-051): halaman yang dibuka dari QR pada tiket antrean,
  * /lacak/<kode>. Membaca GET /api/public/antrean/<kode> dan memperlihatkan
  * nomor, layanan, nomor polisi, tahap berkas sekarang beserta petunjuknya,
- * dan tahap-tahap layanan itu. Diperbarui setiap 30 detik selama halaman
- * terlihat, sampai tiketnya dibatalkan.
+ * banyaknya nomor di depan saat menunggu dipanggil, dan tahap-tahap layanan
+ * itu dengan jam selesainya. Diperbarui setiap 30 detik selama halaman
+ * terlihat, sampai berkasnya selesai atau dibatalkan.
  */
 import { useCallback, useEffect, useState } from "react"
 import { createRoot } from "react-dom/client"
@@ -18,10 +19,12 @@ interface Tiket {
   tanggal: string
   layanan: { kode: string; nama: string }
   nopol: string | null
-  status: "menunggu" | "batal"
+  status: "menunggu" | "dipanggil" | "ditunda" | "perubahan-data" | "selesai" | "batal"
   tahap: string | null
   petunjuk: string
-  tahapan: { kunci: string; nama: string; keadaan: Keadaan }[]
+  /** Nomor yang menunggu di depan pada loket pemanggil; null bila tidak sedang menunggu dipanggil */
+  posisi: number | null
+  tahapan: { kunci: string; nama: string; keadaan: Keadaan; selesai: string | null }[]
   dicetak: string | null
 }
 
@@ -73,8 +76,8 @@ function LacakAntrean() {
     return () => kendali.abort()
   }, [putaran])
 
-  // Diperbarui berkala selama halaman terlihat; tiket yang dibatalkan tidak berubah lagi
-  const selesai = tiket?.status === "batal"
+  // Diperbarui berkala selama halaman terlihat; tiket yang selesai atau dibatalkan tidak berubah lagi
+  const selesai = tiket?.status === "batal" || tiket?.status === "selesai"
   useEffect(() => {
     if (selesai) return
     const id = window.setInterval(() => {
@@ -123,10 +126,13 @@ function LacakAntrean() {
           </dl>
         </div>
         <div className={batal ? "tile lk-tiket__kini is-batal" : "tile lk-tiket__kini"}>
-          <p className="tile__label">{batal ? "Dibatalkan" : "Sekarang"}</p>
+          <p className="tile__label">{batal ? "Dibatalkan" : tiket.status === "selesai" ? "Selesai" : "Sekarang"}</p>
           <p className="lk-tiket__petunjuk" aria-live="polite">
             {tiket.petunjuk}
           </p>
+          {tiket.posisi !== null && (
+            <p className="lk-tiket__posisi">{tiket.posisi === 0 ? "Tidak ada nomor di depan Anda." : `${tiket.posisi} nomor menunggu di depan Anda.`}</p>
+          )}
         </div>
       </section>
 
@@ -145,7 +151,7 @@ function LacakAntrean() {
                 )}
               </span>
               <span className="lk-tahap__nama">{t.nama}</span>
-              <span className="lk-tahap__keadaan">{t.keadaan === "selesai" ? "Selesai" : t.keadaan === "sekarang" ? "Sekarang" : ""}</span>
+              <span className="lk-tahap__keadaan">{keadaanTahap(t, tiket.status)}</span>
             </li>
           ))}
         </ol>
@@ -154,13 +160,20 @@ function LacakAntrean() {
       <p className="micro muted lk-catatan">
         {galat ? `${galat} ` : ""}
         {diperbarui && `Diperbarui ${jamWita(diperbarui)}`}
-        {!batal && " · otomatis setiap 30 detik. "}
+        {!selesai && " · otomatis setiap 30 detik. "}
         <button type="button" className="link lk-perbarui" onClick={perbarui} disabled={memuat}>
           Perbarui sekarang
         </button>
       </p>
     </div>
   )
+}
+
+/** "Selesai 10.32 WITA", "Sekarang", atau "Perubahan data" untuk tahap berkas */
+function keadaanTahap(t: Tiket["tahapan"][number], status: Tiket["status"]): string {
+  if (t.keadaan === "selesai") return t.selesai ? `Selesai ${jamWita(new Date(t.selesai))}` : "Selesai"
+  if (t.keadaan === "sekarang") return status === "perubahan-data" ? "Perubahan data" : "Sekarang"
+  return ""
 }
 
 /** Ambil alih elemen [data-react="lacak-antrean"] */

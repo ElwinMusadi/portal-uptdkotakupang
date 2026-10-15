@@ -2,7 +2,6 @@
 
 namespace App\Actions;
 
-use App\Enums\QueueStage;
 use App\Enums\QueueTicketStatus;
 use App\Models\QueueCounter;
 use App\Models\QueueService;
@@ -21,6 +20,8 @@ use Illuminate\Validation\ValidationException;
  */
 class CallQueueNumbers
 {
+    public function __construct(private AdvanceQueueTicket $advance) {}
+
     /**
      * Call the earliest number waiting at the counter's stage among the
      * services it serves, whatever day it was printed. Null when none waits.
@@ -70,11 +71,7 @@ class CallQueueNumbers
 
             $this->ensureCallable($ticket, $counter);
             $this->putAsideCalledAt($counter, $user);
-            $stages = $ticket->stages();
-            $passed = array_search($counter->tahap, $stages, true) - array_search($ticket->tahap, $stages, true);
-            for ($stage = 0; $stage < $passed; $stage++) {
-                $this->finishStage($ticket, $user, $counter, automatic: true);
-            }
+            $this->advance->passStagesBefore($ticket, $counter->tahap, $user, $counter);
 
             return $this->markCalled($ticket, $counter, $user, 'dipanggil');
         });
@@ -120,7 +117,7 @@ class CallQueueNumbers
         $this->ensureCalled($ticket);
 
         return DB::transaction(function () use ($ticket, $user): QueueTicket {
-            $this->finishStage($ticket, $user, $ticket->counter, automatic: false);
+            $this->advance->finishStage($ticket, $user, $ticket->counter, automatic: false);
 
             return $ticket;
         });
@@ -131,21 +128,10 @@ class CallQueueNumbers
      */
     private function ensureCallable(QueueTicket $ticket, QueueCounter $counter): void
     {
-        $stages = $ticket->stages();
-        $target = array_search($counter->tahap, $stages, true);
-        $current = $ticket->tahap === null ? count($stages) : array_search($ticket->tahap, $stages, true);
+        $this->advance->ensureReachable($ticket, $counter->tahap);
 
-        $problem = match (true) {
-            $ticket->status === QueueTicketStatus::Batal => "Nomor {$ticket->nomor} sudah dibatalkan.",
-            $ticket->status === QueueTicketStatus::Selesai => "Nomor {$ticket->nomor} sudah selesai.",
-            $target === false => "Layanan nomor {$ticket->nomor} tidak melewati {$counter->tahap->label()}.",
-            $current > $target => "Nomor {$ticket->nomor} sudah melewati {$counter->tahap->label()}.",
-            $ticket->status === QueueTicketStatus::Dipanggil => "Nomor {$ticket->nomor} sedang dipanggil di {$ticket->counter?->nama}.",
-            default => null,
-        };
-
-        if ($problem !== null) {
-            throw ValidationException::withMessages(['tiket' => $problem]);
+        if ($ticket->status === QueueTicketStatus::Dipanggil) {
+            throw ValidationException::withMessages(['tiket' => "Nomor {$ticket->nomor} sedang dipanggil di {$ticket->counter?->nama}."]);
         }
     }
 
@@ -192,32 +178,5 @@ class CallQueueNumbers
         $ticket->events()->create(['aksi' => $action, 'tahap' => $ticket->tahap, 'queue_counter_id' => $counter->getKey(), 'user_id' => $user->getKey()]);
 
         return $ticket->setRelation('counter', $counter);
-    }
-
-    /**
-     * Mark the ticket's stage done and move it to the next stage of its
-     * service, or finish it after the last.
-     */
-    private function finishStage(QueueTicket $ticket, User $user, ?QueueCounter $counter, bool $automatic): void
-    {
-        $stages = $ticket->stages();
-        $next = $stages[array_search($ticket->tahap, $stages, true) + 1] ?? null;
-
-        $ticket->events()->create([
-            'aksi' => 'tahap selesai', 'tahap' => $ticket->tahap, 'queue_counter_id' => $counter?->getKey(), 'otomatis' => $automatic, 'user_id' => $user->getKey(),
-        ]);
-        $ticket->update([
-            'tahap' => $next,
-            'status' => $next instanceof QueueStage ? QueueTicketStatus::Menunggu : QueueTicketStatus::Selesai,
-            'queue_counter_id' => null,
-            'dipanggil_pada' => null,
-            'jumlah_panggil' => 0,
-            'masuk_tahap_pada' => now(),
-            'selesai_pada' => $next instanceof QueueStage ? null : now(),
-        ]);
-
-        if ($next === null) {
-            $ticket->events()->create(['aksi' => 'selesai', 'user_id' => $user->getKey()]);
-        }
     }
 }

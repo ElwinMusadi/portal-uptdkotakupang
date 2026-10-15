@@ -6,6 +6,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { mintaServer } from "@/lib/api/http"
+import { hariIniIso, tanggal, tanggalJam } from "@/lib/format"
 
 export type TahapAntrean = "pendaftaran" | "penetapan" | "kwitansi" | "pembayaran" | "cetak-skpd" | "cetak-stnk" | "penyerahan"
 
@@ -34,15 +35,27 @@ export interface LayananAntrean {
 /** Tahap yang nomornya dipanggil ke loket; tahap lain ditandai petugas */
 export const TAHAP_PANGGIL: TahapAntrean[] = ["pendaftaran", "kwitansi", "penyerahan"]
 
-export type StatusTiket = "menunggu" | "dipanggil" | "ditunda" | "selesai" | "batal"
+export type StatusTiket = "menunggu" | "dipanggil" | "ditunda" | "perubahan-data" | "selesai" | "batal"
 
 export const LABEL_STATUS: Record<StatusTiket, string> = {
   menunggu: "Menunggu",
   dipanggil: "Dipanggil",
   ditunda: "Ditunda",
+  "perubahan-data": "Menunggu perubahan data",
   selesai: "Selesai",
   batal: "Dibatalkan",
 }
+
+export type PosAntrean = "penetapan" | "server" | "pelunasan" | "cetak-skpd" | "cetak-stnk"
+
+/** Pos yang menandai tahap selesai (Irisan 3); Server mengubah data kendaraan atas permintaan Penetapan */
+export const POS: { kunci: PosAntrean; label: string; tahap: TahapAntrean }[] = [
+  { kunci: "penetapan", label: "Penetapan", tahap: "penetapan" },
+  { kunci: "server", label: "Server – Perubahan data", tahap: "penetapan" },
+  { kunci: "pelunasan", label: "Pelunasan", tahap: "pembayaran" },
+  { kunci: "cetak-skpd", label: "Cetak SKPD", tahap: "cetak-skpd" },
+  { kunci: "cetak-stnk", label: "Cetak STNK", tahap: "cetak-stnk" },
+]
 
 export interface TiketAntrean {
   id: string
@@ -93,6 +106,14 @@ export interface LayarAntrean {
   dibuat: string | null
   dibuatOleh: string | null
 }
+
+/** "A-001" atau "A-001 · 14 Okt" untuk nomor hari sebelumnya */
+export function nomorBertanggal(t: Pick<TiketAntrean, "nomor" | "tanggal">): string {
+  return t.tanggal === hariIniIso() ? t.nomor : `${t.nomor} · ${tanggal(t.tanggal)}`
+}
+
+/** Jam saja dari waktu ISO, mis. "10.32" */
+export const jamSaja = (iso: string | null) => (iso ? tanggalJam(iso).split(", ").pop() : "—")
 
 /** Tahap sesudah tahap ini pada tiket, atau null bila ini yang terakhir */
 export function tahapBerikutnya(t: Pick<TiketAntrean, "tahap" | "tahapLayanan">): TahapAntrean | null {
@@ -212,6 +233,44 @@ export function useTindakanPanggilan() {
 /** Nomor yang masih berjalan menurut QR, nomor antrean, atau nomor polisi */
 export function cariTiket(q: string): Promise<TiketAntrean[]> {
   return mintaServer<TiketAntrean[]>(`/api/antrean/cari?q=${encodeURIComponent(q)}`, "GET")
+}
+
+/* ---------- Pos proses (Irisan 3) ---------- */
+
+/** Nomor di tahap pos itu, paling lama menunggu lebih dulu; diperbarui setiap 3 detik */
+export function useDaftarPos(pos: PosAntrean | null) {
+  return useQuery({
+    queryKey: [...KUNCI, "pos", pos],
+    queryFn: () => mintaServer<TiketAntrean[]>(`/api/antrean/pos/${encodeURIComponent(pos!)}`, "GET"),
+    enabled: !!pos,
+    refetchInterval: 3_000,
+  })
+}
+
+export type TandaPos = "selesai" | "perubahan-data"
+
+/**
+ * Tandai nomor di pos: tahapnya selesai (di Server: perubahan data selesai),
+ * atau, di Penetapan, kirim berkas ke Server untuk perubahan data
+ */
+export function useTandaiPos() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ pos, tiket, tanda }: { pos: PosAntrean; tiket: string; tanda: TandaPos }) =>
+      tanda === "perubahan-data"
+        ? mintaServer<TiketAntrean>(`/api/antrean/tiket/${encodeURIComponent(tiket)}/perubahan-data`, "POST")
+        : mintaServer<TiketAntrean>(`/api/antrean/pos/${encodeURIComponent(pos)}/tandai`, "POST", { tiket }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: KUNCI }),
+  })
+}
+
+/** Urungkan tanda terakhir petugas pada nomor itu, selama nomornya belum berubah lagi */
+export function useUrungkanTanda() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => mintaServer<TiketAntrean>(`/api/antrean/tiket/${encodeURIComponent(id)}/urungkan`, "POST"),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: KUNCI }),
+  })
 }
 
 export function useLayarAntrean(aktif: boolean) {

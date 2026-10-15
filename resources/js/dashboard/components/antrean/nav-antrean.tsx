@@ -1,15 +1,16 @@
-import { IconDeviceDesktop, IconListNumbers, IconSettings } from "@tabler/icons-react"
+import { IconDeviceDesktop, IconListNumbers, IconScan, IconSettings } from "@tabler/icons-react"
 import { NavLink } from "react-router"
 
 import { sesi } from "@/lib/auth"
 import { cn } from "@/lib/utils"
 
-/** Pindah antarhalaman Antrean Online (D-051): Meja Informasi, Loket, dan Pengaturan (Administrator) */
+/** Pindah antarhalaman Antrean Online (D-051): Meja Informasi, Loket, Pos Proses, dan Pengaturan (Administrator) */
 export function NavAntrean() {
   const administrator = sesi().peran === "administrator"
   const tautan = [
     { ke: "/antrean", label: "Meja Informasi", ikon: IconListNumbers },
     { ke: "/antrean/loket", label: "Loket", ikon: IconDeviceDesktop },
+    { ke: "/antrean/pos", label: "Pos Proses", ikon: IconScan },
     ...(administrator ? [{ ke: "/antrean/pengaturan", label: "Pengaturan", ikon: IconSettings }] : []),
   ]
 

@@ -13,6 +13,8 @@ enum QueueTicketStatus: string
     case Dipanggil = 'dipanggil';
     /** Called but not at the counter; can be called again at any time. */
     case Ditunda = 'ditunda';
+    /** At Penetapan, waiting for the Server officer to change the vehicle's data. */
+    case PerubahanData = 'perubahan-data';
     /** Through every stage of its service. */
     case Selesai = 'selesai';
     /** Cancelled by staff; it goes no further. */

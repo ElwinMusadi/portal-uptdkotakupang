@@ -14,7 +14,9 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
   cariTiket,
+  jamSaja,
   LABEL_TAHAP,
+  nomorBertanggal,
   tahapBerikutnya,
   useLoketAntrean,
   useMejaLoket,
@@ -23,7 +25,6 @@ import {
   type LoketAntrean,
   type TiketAntrean,
 } from "@/lib/antrean"
-import { hariIniIso, tanggal, tanggalJam } from "@/lib/format"
 
 /*
  * Loket Antrean Online (D-051 Irisan 2): petugas memilih loketnya, lalu
@@ -50,13 +51,6 @@ function simpanLoket(id: string) {
     // penyimpanan tidak tersedia: pilihan berlaku sampai halaman ditutup
   }
 }
-
-/** "A-001" atau "A-001 · 14 Okt" untuk nomor hari sebelumnya */
-function nomorBertanggal(t: Pick<TiketAntrean, "nomor" | "tanggal">): string {
-  return t.tanggal === hariIniIso() ? t.nomor : `${t.nomor} · ${tanggal(t.tanggal)}`
-}
-
-const jamSaja = (iso: string | null) => (iso ? tanggalJam(iso).split(", ").pop() : "—")
 
 export default function HalamanLoket() {
   const loket = useLoketAntrean()
@@ -152,8 +146,8 @@ function MejaLoket({ loket }: { loket: LoketAntrean }) {
   const lanjut = t ? tahapBerikutnya(t) : null
 
   return (
-    <div className="grid gap-4">
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-4">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
         <Card>
           <CardHeader>
             <CardTitle className="text-base">{loket.nama}</CardTitle>
@@ -203,7 +197,7 @@ function MejaLoket({ loket }: { loket: LoketAntrean }) {
         </Card>
         <PanggilTertentu loket={loket} panggil={panggilNomor} sibuk={sibuk} />
       </div>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 xl:grid-cols-2">
         <DaftarNomor judul="Menunggu" deskripsi="Urut sejak masuk tahap ini; nomor hari sebelumnya lebih dulu." data={d.menunggu} waktu={(x) => x.masukTahap} panggil={panggilNomor} sibuk={sibuk} />
         <DaftarNomor judul="Ditunda" deskripsi="Sudah dipanggil tetapi wajib pajak belum datang. Panggil lagi kapan saja." data={d.ditunda} waktu={(x) => x.dipanggil} panggil={panggilNomor} sibuk={sibuk} />
       </div>

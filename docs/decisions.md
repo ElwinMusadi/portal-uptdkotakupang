@@ -693,7 +693,7 @@ Jadwal Pemutakhiran di dashboard masih bisa mencatat papan sebagai "Setiap hari 
 
 ## D-051 · 2026-10-15 · Antrean Online: rencana dan keputusan awal
 
-Pemilik meminta Sistem Antrean Online (Queue Management System) di bagian Layanan, berdasarkan flowchart pemilik: nomor antrean tercetak menggantikan nomor tulis tangan, satu nomor mengikuti berkas dari Meja Informasi sampai Loket 2 – Penyerahan, dan wajib pajak melacak tahap berkasnya lewat QR. Rencana lengkap: [`docs/rencana-antrean-online.md`](rencana-antrean-online.md), disetujui pemilik. **Irisan 1 dan 2 dibangun**: Meja Informasi, cetak dua lembar, halaman lacak, pengaturan layanan; loket pemanggil, layar TV dengan suara, dan pengaturan loket serta layar. Irisan berikutnya menyusul.
+Pemilik meminta Sistem Antrean Online (Queue Management System) di bagian Layanan, berdasarkan flowchart pemilik: nomor antrean tercetak menggantikan nomor tulis tangan, satu nomor mengikuti berkas dari Meja Informasi sampai Loket 2 – Penyerahan, dan wajib pajak melacak tahap berkasnya lewat QR. Rencana lengkap: [`docs/rencana-antrean-online.md`](rencana-antrean-online.md), disetujui pemilik. **Irisan 1–3 dibangun**: Meja Informasi, cetak dua lembar, halaman lacak, pengaturan layanan; loket pemanggil, layar TV dengan suara, dan pengaturan loket serta layar; pos proses (Penetapan, Server, Pelunasan, Cetak SKPD, Cetak STNK) dengan pindai QR, serta halaman lacak dengan jam setiap tahap dan posisi antrean. Irisan berikutnya menyusul.
 
 | Hal | Keputusan |
 |---|---|
@@ -712,5 +712,8 @@ Pemilik meminta Sistem Antrean Online (Queue Management System) di bagian Layana
 | Panggil berikutnya | **Nomor yang masih dipanggil otomatis ditunda** (pemilik) saat loketnya memanggil nomor lain. Nomor yang ditunda bisa dipanggil lagi kapan saja. |
 | Panggil nomor tertentu | Loket bisa memanggil nomor yang diketik, nomor polisi, atau QR berkas yang dipindai; tahap sebelum loket itu yang belum ditandai dianggap selesai dan dicatat otomatis (rencana §4.3). |
 | Layar TV | Dipasang Administrator dengan tautan sekali tampil (`/layar#k=…`); perangkat menyimpan tokennya, server hanya menyimpan hash-nya, dan layar bisa dicabut. |
+| Pindai di pos (Irisan 3) | **Langsung ditandai selesai** (pemilik): satu pindaian (pemindai USB, kamera, atau nomor yang diketik) langsung menandai tahap pos itu, lalu tampil konfirmasi singkat dengan tombol **Urungkan**. Urungkan hanya berlaku untuk tanda petugas itu sendiri dan selama nomornya belum berubah lagi; nomor kembali persis ke keadaan sebelumnya. |
+| Perubahan data | **Pos Server tersendiri** (pemilik): Penetapan menandai **Perlu perubahan data**, nomor masuk daftar pos Server, dan setelah Server menandai selesai berkas kembali ke daftar Penetapan di urutan lamanya. Selama menunggu perubahan data, nomor tidak bisa dipanggil atau ditandai di tahap sesudahnya. |
+| Halaman lacak (Irisan 3) | Menampilkan jam selesai setiap tahap dan banyaknya nomor yang menunggu di depan pada loket pemanggil (semua layanan dihitung bersama, sesuai satu loket per tahap); tetap tanpa nama petugas. |
 
 Belum diputuskan: akun petugas non-UPTD (D-007 mewajibkan NIP), antrean prioritas, penjelasan di Kebijakan Privasi, dan waktu deploy (rencana §9).

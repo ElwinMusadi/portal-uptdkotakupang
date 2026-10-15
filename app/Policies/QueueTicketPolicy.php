@@ -39,6 +39,15 @@ class QueueTicketPolicy
     }
 
     /**
+     * Determine whether the user can mark numbers at a station and undo
+     * their marking.
+     */
+    public function mark(User $user): Response
+    {
+        return $this->managesQueue($user);
+    }
+
+    /**
      * Determine whether the user can cancel queue numbers.
      */
     public function cancel(User $user): Response

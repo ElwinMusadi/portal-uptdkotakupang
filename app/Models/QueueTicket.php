@@ -133,6 +133,25 @@ class QueueTicket extends Model
     }
 
     /**
+     * The ticket's place in its stages, as a station's marking records it
+     * before and after so it can be undone.
+     *
+     * @return array{tahap: ?string, status: string, queue_counter_id: ?string, dipanggil_pada: ?string, jumlah_panggil: int, masuk_tahap_pada: ?string, selesai_pada: ?string}
+     */
+    public function snapshot(): array
+    {
+        return [
+            'tahap' => $this->tahap?->value,
+            'status' => $this->status->value,
+            'queue_counter_id' => $this->queue_counter_id,
+            'dipanggil_pada' => $this->dipanggil_pada?->format('Y-m-d H:i:s'),
+            'jumlah_panggil' => $this->jumlah_panggil,
+            'masuk_tahap_pada' => $this->masuk_tahap_pada?->format('Y-m-d H:i:s'),
+            'selesai_pada' => $this->selesai_pada?->format('Y-m-d H:i:s'),
+        ];
+    }
+
+    /**
      * The plate number as written on a plate, e.g. "DH 1234 AB"; null once
      * removed.
      */

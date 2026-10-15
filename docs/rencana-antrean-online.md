@@ -1,6 +1,6 @@
 # Rencana Implementasi — Antrean Online (Queue Management System)
 
-**Status:** disetujui pemilik; **Irisan 1 dan 2 selesai dibangun** (lihat §6), irisan berikutnya menyusul. Keputusan pemilik dicatat di [D-051](decisions.md#d-051--2026-10-15--antrean-online-rencana-dan-keputusan-awal).
+**Status:** disetujui pemilik; **Irisan 1–3 selesai dibangun** (lihat §6), irisan berikutnya menyusul. Keputusan pemilik dicatat di [D-051](decisions.md#d-051--2026-10-15--antrean-online-rencana-dan-keputusan-awal).
 **Sumber:** flowchart pemilik *Flowchart Queue Management System* (draw.io, 11 jalur) dan tanya jawab dengan pemilik pada 15 Oktober 2026.
 
 Dokumen ini memakai kata baku **antrean** (seperti di Papan Layanan: "Nomor antrean dilayani").
@@ -114,7 +114,7 @@ Cetak ─► Pendaftaran ─► Penetapan ─► Kwitansi ─► Pembayaran ─�
 ```
 
 - **Tahap dipanggil:** nomor masuk daftar *Menunggu* loket yang melayani layanannya. Petugas menekan **Panggil berikutnya** (urut waktu masuk tahap, jadi tiket hari sebelumnya lebih dulu) atau memanggil nomor tertentu. Setelah dipanggil petugas bisa **Panggil ulang**, **Tunda** (WP tidak datang; nomor pindah ke daftar *Ditunda* dan bisa dipanggil lagi kapan saja), atau **Selesai** (nomor pindah ke tahap berikutnya).
-- **Tahap ditandai:** petugas memindai QR berkas atau memilih nomor dari daftar tahapnya, lalu menekan **Selesai**. Petugas Penetapan juga bisa menandai **Perlu perubahan data** (jalur *Server* di flowchart), yang tampil bagi WP sebagai "Menunggu perubahan data".
+- **Tahap ditandai:** petugas memindai QR berkas, yang **langsung menandai** tahap posnya dengan konfirmasi singkat dan tombol **Urungkan** (keputusan pemilik), atau memilih nomor dari daftar tahapnya lalu menekan **Selesai**. Petugas Penetapan juga bisa menandai **Perlu perubahan data** (jalur *Server* di flowchart): nomor masuk daftar **pos Server** tersendiri (keputusan pemilik), dan setelah Server menandai selesai berkas kembali ke daftar Penetapan di urutan lamanya. WP membaca "Data kendaraan Anda sedang diubah petugas".
 - **Memindai tidak wajib:** bila pos sesudahnya menandai nomor yang tahap sebelumnya belum ditandai, tahap yang terlewat dianggap selesai dan dicatat `otomatis`. Dengan begitu satu pos yang lupa memindai tidak menghentikan antrean.
 - **Batal:** Meja Informasi atau Administrator membatalkan tiket dengan alasan (mis. berkas ditolak saat penetapan, WP pulang).
 - **Ganti layanan / cetak ulang:** bila salah memilih layanan sebelum dipanggil, tiket dibatalkan dan dicetak ulang; bila kertas rusak, **Cetak ulang** mencetak tiket yang sama (nomor dan QR tetap).
@@ -208,7 +208,7 @@ Setiap irisan dikerjakan, diuji, diperiksa di browser, dilaporkan, lalu di-commi
 | **0. Persiapan** | Persetujuan rencana ini; keputusan §9; pengadaan perangkat (§8) | — |
 | **1. Fondasi + Meja Informasi** ✓ | Tabel layanan, tiket, dan riwayat; isi awal A–D; pengaturan layanan (Administrator); penomoran A-001; halaman Meja Informasi (cetak, cetak ulang, batal, daftar per tanggal); cetak 2 lembar 80 mm dengan QR lewat iframe; halaman lacak dasar. Tabel dan pengaturan loket/pos dipindah ke Irisan 2, karena baru dipakai saat memanggil | Mencetak tiket dan melacaknya dari ponsel |
 | **2. Loket pemanggil + layar TV** ✓ | Tabel dan pengaturan loket/pos; Loket 1, Loket Kwitansi, Loket 2: panggil, panggil ulang, tunda, selesai; tiket lintas hari; layar TV dengan suara; pendaftaran layar | Memanggil nomor dan melihat/mendengarnya di layar |
-| **3. Pos proses + pindai** | Penetapan (dengan perubahan data), Pelunasan, Cetak SKPD, Cetak STNK; pindai USB/kamera; tahap terlewat otomatis; halaman lacak lengkap dengan riwayat dan posisi | Satu berkas berjalan penuh dari cetak sampai selesai |
+| **3. Pos proses + pindai** ✓ | Penetapan (dengan perubahan data lewat pos Server), Pelunasan, Cetak SKPD, Cetak STNK; pindai USB/kamera yang langsung menandai, dengan Urungkan; tahap terlewat otomatis; halaman lacak lengkap dengan jam setiap tahap dan posisi | Satu berkas berjalan penuh dari cetak sampai selesai |
 | **4. Arsip + ringkasan** | Pencarian nomor polisi/nomor/tanggal, detail riwayat, hapus nomor polisi, ringkasan harian dan CSV | Mencari berkas yang "tercecer" |
 | **Uji coba** | Deploy ke Laravel Cloud (langkah pemilik); 1–2 minggu paralel dengan nomor manual, dimulai dari satu layanan, lalu semua | Evaluasi bersama petugas loket |
 | **5. Papan Layanan otomatis** | Setelah antrean berjalan (keputusan pemilik): nomor dilayani dan waktu tunggu di beranda dari antrean; Statistik Layanan dari data antrean | — |

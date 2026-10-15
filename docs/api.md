@@ -60,6 +60,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET` | `/api/antrean/loket`, `/api/antrean/loket/{id}/antrean`, `/api/antrean/cari` | Administrator, pengelola Antrean Online | tersedia |
 | `POST`, `PUT`, `DELETE` | `/api/antrean/loket`, `/api/antrean/loket/{id}` | Administrator | tersedia |
 | `POST` | `/api/antrean/loket/{id}/panggil`, `/api/antrean/tiket/{id}/{panggil-ulang\|tunda\|selesai}` | Administrator, pengelola Antrean Online | tersedia |
+| `GET`, `POST` | `/api/antrean/pos/{pos}`, `/api/antrean/pos/{pos}/tandai`, `/api/antrean/tiket/{id}/{perubahan-data\|urungkan}` | Administrator, pengelola Antrean Online | tersedia |
 | `GET`, `POST`, `DELETE` | `/api/antrean/layar`, `/api/antrean/layar/{id}` | Administrator | tersedia |
 | `GET` | `/api/layar` | layar TV yang dipasang (bearer token) | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/kontak` | Administrator, pengelola Kontak & Kanal | tersedia |
@@ -431,7 +432,7 @@ Modul `antrean` ([D-051](decisions.md#d-051--2026-10-15--antrean-online-rencana-
 | `POST /api/antrean/tiket/{id}/cetak-ulang` | — | `200` tiket yang sama (nomor dan QR tetap), dicatat di riwayat. Tiket batal ditolak `422`. |
 | `POST /api/antrean/tiket/{id}/batal` | `{"alasan"}` (wajib, maks. 200) | `200` tiket berstatus `batal`; tahapnya tetap. Membatalkan dua kali ditolak `422` ("Nomor A-001 sudah dibatalkan."). |
 
-Bentuk tiket: `{id, nomor, tanggal, layanan: {kode, nama}, nopol ("DH 1234 AB" atau null), status ("menunggu"|"dipanggil"|"ditunda"|"selesai"|"batal"), tahap, tahapLayanan, urlLacak, loket (nama loket yang memanggil), dipanggil, jumlahPanggil, masukTahap, dicetak, dicetakOleh, dibatalkan, alasanBatal, selesai}`. `urlLacak` adalah alamat `/lacak/{kode}` yang tersimpan di QR tiket; kode lacak 22 huruf dan angka acak.
+Bentuk tiket: `{id, nomor, tanggal, layanan: {kode, nama}, nopol ("DH 1234 AB" atau null), status ("menunggu"|"dipanggil"|"ditunda"|"perubahan-data"|"selesai"|"batal"), tahap, tahapLayanan, urlLacak, loket (nama loket yang memanggil), dipanggil, jumlahPanggil, masukTahap, dicetak, dicetakOleh, dibatalkan, alasanBatal, selesai}`. `urlLacak` adalah alamat `/lacak/{kode}` yang tersimpan di QR tiket; kode lacak 22 huruf dan angka acak.
 
 ### Loket dan panggilan (Irisan 2)
 
@@ -447,7 +448,20 @@ Bentuk tiket: `{id, nomor, tanggal, layanan: {kode, nama}, nopol ("DH 1234 AB" a
 | `POST /api/antrean/tiket/{id}/selesai` | — | `200`: nomor menunggu di tahap berikutnya layanannya (`masukTahap` diperbarui), atau `selesai` setelah tahap terakhir. Tindakan ini hanya untuk nomor yang sedang dipanggil ("Nomor A-001 sedang tidak dipanggil."). |
 | `GET /api/antrean/cari?q=` | QR yang dipindai (alamat lacak atau kodenya), nomor (`A-001`, `a1`), atau nomor polisi | `200` nomor yang masih berjalan (bukan selesai atau batal), tanggal terbaru dulu, maks. 10. |
 
-Riwayat (`queue_events`) mencatat `dipanggil`, `dipanggil ulang`, `ditunda`, `tahap selesai`, dan `selesai`, dengan loket, pegawai, dan `otomatis` (tahap yang dilewati, atau nomor yang ditunda karena loketnya memanggil nomor lain).
+Riwayat (`queue_events`) mencatat `dipanggil`, `dipanggil ulang`, `ditunda`, `tahap selesai`, dan `selesai`, dengan loket, pegawai, dan `otomatis` (tahap yang dilewati, atau nomor yang ditunda karena loketnya memanggil nomor lain). Memanggil nomor yang menunggu perubahan data ditolak ("Nomor A-001 sedang menunggu perubahan data di Server.").
+
+### Pos proses (Irisan 3)
+
+Pos `penetapan`, `server` (perubahan data), `pelunasan` (tahap `pembayaran`), `cetak-skpd`, dan `cetak-stnk` menandai tahapnya selesai; pos lain `404`. Kebijakan: `QueueTicketPolicy::mark` (Administrator dan pengelola modul). Pindaian di halaman Pos Proses mencari nomornya lewat `GET /api/antrean/cari` lalu langsung menandainya (keputusan pemilik).
+
+| Permintaan | Isi | Hasil |
+|---|---|---|
+| `GET /api/antrean/pos/{pos}` | — | `200` nomor di tahap pos itu, paling lama menunggu dulu (urut `masukTahap`), maks. 200. Penetapan memuat juga nomor yang menunggu perubahan data (`status: "perubahan-data"`); Server hanya nomor itu. |
+| `POST /api/antrean/pos/{pos}/tandai` | `{"tiket": id}` | `200` tiket. Tahap pos selesai: nomor menunggu di tahap berikutnya layanannya, atau `selesai` setelah tahap terakhir. Tahap sebelumnya yang belum ditandai dicatat selesai `otomatis`, juga bila nomor sedang dipanggil atau ditunda di loket sebelumnya (panggilannya berakhir). Di pos `server`: perubahan data selesai, nomor kembali `menunggu` di Penetapan dengan `masukTahap` lamanya. Ditolak `422` bila nomor batal, selesai, layanannya tidak melewati tahap pos, sudah melewati tahap itu, atau menunggu perubahan data ("Nomor A-001 sedang menunggu perubahan data di Server."); di Server bila nomor tidak menunggu perubahan data. `tiket` wajib dan harus ada. |
+| `POST /api/antrean/tiket/{id}/perubahan-data` | — | `200` tiket di Penetapan dengan `status: "perubahan-data"`; tahap sebelum Penetapan dicatat selesai `otomatis`. Ditolak seperti menandai Penetapan. |
+| `POST /api/antrean/tiket/{id}/urungkan` | — | `200` tiket kembali persis ke keadaan sebelum tanda terakhir petugas itu di pos (tahap, status, loket, waktu panggil, jumlah panggil, waktu masuk tahap). Ditolak `422` bila tanda terakhirnya milik petugas lain, sudah diurungkan, atau tidak ada ("Tidak ada tanda Anda pada nomor A-001 yang bisa diurungkan."), atau nomornya sudah berubah sesudahnya ("Nomor A-001 sudah berubah sesudah Anda menandainya, jadi tidak bisa diurungkan."). Tanda di loket pemanggil tidak bisa diurungkan. |
+
+Riwayat mencatat juga `perlu perubahan data`, `perubahan data selesai`, dan `diurungkan` (`keterangan` = aksi yang diurungkan). Tanda di pos menyimpan keadaan nomor sebelum dan sesudahnya di kolom `keadaan` untuk Urungkan; keadaan dibandingkan tanpa memperhatikan urutan kunci, karena kolom JSON MySQL menyusun ulang kunci objek.
 
 ### Layar TV (Irisan 2)
 
@@ -1048,10 +1062,11 @@ Halaman lacak `/lacak/{kode}` yang dibuka dari QR tiket antrean ([D-051](decisio
   "nopol": "DH 1234 AB",
   "status": "menunggu", "tahap": "kwitansi",
   "petunjuk": "Tunggu nomor Anda dipanggil di Loket Kwitansi.",
+  "posisi": 3,
   "tahapan": [
-    { "kunci": "pendaftaran", "nama": "Loket 1 – Pendaftaran", "keadaan": "selesai" },
-    { "kunci": "kwitansi", "nama": "Loket Kwitansi", "keadaan": "sekarang" },
-    { "kunci": "penyerahan", "nama": "Loket 2 – Penyerahan", "keadaan": "nanti" }
+    { "kunci": "pendaftaran", "nama": "Loket 1 – Pendaftaran", "keadaan": "selesai", "selesai": "2026-10-15T01:20:00+00:00" },
+    { "kunci": "kwitansi", "nama": "Loket Kwitansi", "keadaan": "sekarang", "selesai": null },
+    { "kunci": "penyerahan", "nama": "Loket 2 – Penyerahan", "keadaan": "nanti", "selesai": null }
   ],
   "dicetak": "2026-10-15T01:00:00+00:00"
 }
@@ -1059,7 +1074,9 @@ Halaman lacak `/lacak/{kode}` yang dibuka dari QR tiket antrean ([D-051](decisio
 
 | Hal | Perilaku |
 |---|---|
-| Isi | Nomor polisi tampil apa adanya (keputusan pemilik). `tahapan` hanya tahap layanan tiket itu; tahap sebelum yang sekarang `selesai`. Tidak memuat ID, nama petugas, atau alasan pembatalan. |
+| Isi | Nomor polisi tampil apa adanya (keputusan pemilik). `tahapan` hanya tahap layanan tiket itu; tahap sebelum yang sekarang `selesai`, dengan jam tanda `tahap selesai` terakhirnya (`null` bila tidak tercatat). Tidak memuat ID, nama petugas, atau alasan pembatalan. |
+| Posisi | `posisi`: banyaknya nomor yang menunggu lebih dulu di tahap pemanggil yang sama (Pendaftaran, Kwitansi, Penyerahan), semua layanan dihitung bersama; `null` bila nomor tidak sedang menunggu dipanggil. |
+| Perubahan data | `status: "perubahan-data"`, `petunjuk` "Data kendaraan Anda sedang diubah petugas. Setelah itu berkas Anda kembali ditetapkan.", Penetapan tetap `sekarang`. |
 | Batal | `status: "batal"`, `petunjuk` "Nomor antrean ini dibatalkan petugas. Silakan tanyakan ke Meja Informasi.", tidak ada tahap `sekarang`. |
 | Dipanggil, ditunda, selesai | `dipanggil`: "Nomor Anda dipanggil. Silakan menuju <loket>."; `ditunda`: "Nomor Anda sudah dipanggil ke <tahap>, tetapi Anda belum datang. Silakan lapor ke petugas <tahap>."; `selesai`: "Berkas Anda sudah selesai diproses. Terima kasih.", semua tahap `selesai`. |
 | Galat | `404` "Nomor antrean tidak ditemukan. Periksa kembali QR pada tiket Anda." untuk kode yang tidak ada; `404` untuk alamat yang bukan 22 huruf/angka; `422` `query` untuk parameter kueri apa pun; `429` dari batas API publik. |

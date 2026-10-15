@@ -10,11 +10,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * One thing that happened to a queue ticket (D-051): printed, printed again,
  * cancelled, and later called or a stage finished, with the employee and the
- * stage.
+ * stage. A station's marking keeps the ticket's place before and after it,
+ * for undoing it.
  *
  * @property ?QueueStage $tahap
+ * @property ?array{sebelum: array<string, mixed>, sesudah: array<string, mixed>} $keadaan
  */
-#[Fillable(['aksi', 'tahap', 'keterangan', 'queue_counter_id', 'otomatis', 'user_id'])]
+#[Fillable(['aksi', 'tahap', 'keterangan', 'queue_counter_id', 'otomatis', 'keadaan', 'user_id'])]
 class QueueEvent extends Model
 {
     /**
@@ -32,6 +34,7 @@ class QueueEvent extends Model
         return [
             'tahap' => QueueStage::class,
             'otomatis' => 'boolean',
+            'keadaan' => 'array',
         ];
     }
 
