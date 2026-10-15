@@ -180,7 +180,7 @@ Papan Layanan menjadi modul keempat yang tersimpan di server (D-011, D-013, D-01
 | Penyimpanan | Nomor antrean yang dilayani, loket dan layanannya, perkiraan waktu tunggu, selisihnya dari kemarin, status tiap loket (Buka, Istirahat, Tutup; maks. 12 loket), dan catatan disimpan sebagai dokumen pengaturan `papan` (`/api/pengaturan/papan`). |
 | Waktu pembaruan | Server mengisi waktu *diperbarui* setiap kali isi papan berubah; waktu dari peramban diabaikan. Menyimpan isi yang sama tidak mengubah waktunya dan tidak dicatat. |
 | Akses | Administrator dan Pegawai UPTD yang mengelola Papan Layanan. Pegawai lain ditolak `403`; Ringkasan mereka memakai waktu simpan papan saja. |
-| Portal | `GET /api/public/papan` memberikan isi papan tanpa ID loket. Beranda menampilkan nomor antrean, waktu tunggu, selisih, dan status loket **hanya pada hari yang sama dengan pembaruannya** (WITA); papan yang belum diperbarui hari ini menampilkan "Belum diperbarui hari ini" dan waktu pembaruan terakhirnya, agar antrean kemarin tidak tampil sebagai antrean sekarang. Sebelum pertama kali disimpan, papan menyatakan belum tersedia. Label "Pratinjau · data contoh" diganti waktu pembaruan. |
+| Portal | `GET /api/public/papan` memberikan isi papan tanpa ID loket. Beranda menampilkan nomor antrean, waktu tunggu, selisih, dan status loket **hanya pada hari yang sama dengan pembaruannya** (WITA); papan yang belum diperbarui hari ini menampilkan "Belum diperbarui hari ini" dan waktu pembaruan terakhirnya, agar antrean kemarin tidak tampil sebagai antrean sekarang. Sebelum pertama kali disimpan, papan menyatakan belum tersedia. Label "Pratinjau · data contoh" diganti waktu pembaruan. Diganti D-050: isi terakhir tampil setiap hari. |
 | Data contoh | Isi papan contoh di peramban tidak dipindahkan ke server. |
 
 Satu kunjungan beranda kini memakai empat permintaan dari batas laju API publik (D-013).
@@ -677,3 +677,16 @@ Memperketat D-048 sebelum data penerimaan naik ke produksi. Pemeriksaan pada dat
 | API | `GET /api/public/penerimaan` hanya menerima `tanggal=YYYY-MM-DD` atau `bulan=YYYY-MM` (tidak keduanya); tanpa parameter, hari terakhir yang tampil. Parameter lain, termasuk `dari`, `sampai`, dan saringan D-048, ditolak `422`. Respons tidak lagi memuat `pilihan`; ada `periode` (`harian`/`bulanan`) dan `kendaraanBaru`. Halaman menulis `?tanggal=` atau `?bulan=` di alamatnya. |
 
 Yang masih diterima: komponen seluruh hari (mis. denda hari itu dari satu transaksi) dan kendaraan baru seluruh hari tetap tampil tanpa keterangan lain selain tanggal. Jumlah sebuah kelompok yang didominasi satu transaksi besar (mis. satu kendaraan baru di kelurahan kecil) tetap terlihat sebagai jumlah kelompok, tidak terpisah.
+
+## D-050 · 2026-10-15 · Papan Layanan berlaku setiap hari
+
+Isi papan layanan jarang berubah, jadi pemilik tidak ingin menyimpannya ulang setiap hari kerja. Ini mengganti aturan "hanya pada hari pembaruan" dari D-015.
+
+| Hal | Keputusan |
+|---|---|
+| Isi | **Semua isi** (keputusan pemilik): nomor antrean, layanannya, perkiraan waktu tunggu, selisih dari kemarin, status loket, dan catatan dari penyimpanan terakhir tampil di beranda setiap hari sampai diubah. |
+| Loket tutup | **Ikuti Jam Pelayanan** (keputusan pemilik): selama loket tutup menurut jam loket dan penyesuaiannya (di luar jam, hari tutup, atau penyesuaian tutup), semua loket tampil *Tutup* dan waktu tunggu serta selisihnya tidak ditampilkan. Bila jam loket belum diatur atau gagal dimuat, papan tampil apa adanya. Papan mengikuti buka-tutup dan pergantian hari selama halaman terbuka (diperiksa setiap 30 detik). |
+| Label waktu | **"Diperbarui hari ini"** (keputusan pemilik) pada hari selain hari penyimpanan, tanpa tanggal penyimpanan terakhir; pada hari penyimpanan tetap "Diperbarui HH.MM WITA". Tanggal penyimpanan terakhir tetap terlihat di dashboard. |
+| Server | Tidak berubah: `GET /api/public/papan` tetap memberikan `diperbarui` dari penyimpanan terakhir. |
+
+Jadwal Pemutakhiran di dashboard masih bisa mencatat papan sebagai "Setiap hari kerja"; frekuensinya diubah pengelola bila perlu.

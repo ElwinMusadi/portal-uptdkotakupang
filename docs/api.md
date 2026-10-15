@@ -908,11 +908,11 @@ Kode: `app/Http/Controllers/PublicOpeningHoursController.php`, `app/Actions/Show
 
 ## `GET /api/public/papan`
 
-Papan layanan untuk beranda portal ([D-015](decisions.md#d-015--2026-10-13--papan-layanan-tersimpan-di-server), `initPapan()` di `public/assets/js/main.js`). Bentuknya sama dengan dokumen dashboard, tanpa `id` loket; `diperbarui` `null` bila papan belum pernah disimpan.
+Papan layanan untuk beranda portal ([D-015](decisions.md#d-015--2026-10-13--papan-layanan-tersimpan-di-server), [D-050](decisions.md#d-050--2026-10-15--papan-layanan-berlaku-setiap-hari), `initPapan()` di `public/assets/js/main.js`). Bentuknya sama dengan dokumen dashboard, tanpa `id` loket; `diperbarui` `null` bila papan belum pernah disimpan.
 
 | Hal | Perilaku |
 |---|---|
-| Berhasil | `200`. Portal menampilkan nomor antrean, waktu tunggu, selisih, dan status loket hanya bila `diperbarui` jatuh pada hari ini (WITA); selain itu hanya waktu pembaruan terakhir. Teks wajib ditampilkan sebagai teks polos. |
+| Berhasil | `200`. Portal menampilkan isi terakhir setiap hari: "Diperbarui HH.MM WITA" bila `diperbarui` jatuh pada hari ini (WITA), selain itu "Diperbarui hari ini". Selama loket tutup menurut `GET /api/public/jam`, semua loket tampil Tutup dan waktu tunggu serta selisih tidak ditampilkan. Teks wajib ditampilkan sebagai teks polos. |
 | Galat | `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah batas laju yang sama dengan `GET /api/public/faq`; `503` bila data tidak bisa dibaca, tidak pernah papan kosong sebagai gantinya. |
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 

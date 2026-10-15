@@ -88,14 +88,14 @@ function PratinjauPapan({ p }: { p: PapanLayanan }) {
 export default function HalamanPapan() {
   return (
     <Halaman>
-      <PengantarHalaman deskripsi="Papan layanan di beranda portal: nomor antrean, waktu tunggu, dan status setiap loket. Perbarui setiap hari kerja sebelum loket buka, dan bila ada perubahan selama jam layanan." />
+      <PengantarHalaman deskripsi="Papan layanan di beranda portal: nomor antrean, waktu tunggu, dan status setiap loket. Isi terakhir tampil setiap hari, jadi perbarui hanya bila ada perubahan." />
       <Alert>
         <IconServer />
         <AlertTitle>Tersimpan di server</AlertTitle>
         <AlertDescription>
-          Papan ini dipakai bersama semua pengelola Papan Layanan dan langsung tampil di beranda portal. Nomor
-          antrean, waktu tunggu, dan status loket hanya ditampilkan pada hari yang sama dengan pembaruannya; papan
-          yang belum diperbarui hari ini menampilkan waktu pembaruan terakhirnya saja.
+          Papan ini dipakai bersama semua pengelola Papan Layanan dan langsung tampil di beranda portal. Isi terakhir
+          tampil setiap hari sampai diubah, dengan label “Diperbarui hari ini”. Selama loket tutup menurut Jam
+          Pelayanan, semua loket tampil Tutup dan waktu tunggu tidak ditampilkan.
         </AlertDescription>
       </Alert>
       <FormPengaturan

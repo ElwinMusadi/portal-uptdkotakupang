@@ -271,7 +271,7 @@ Halaman *Jam Pelayanan* (`#/jadwal/jam`, `pages/jadwal/jam.tsx`) tersimpan di se
 Halaman *Papan Layanan* (`#/papan`, `pages/papan.tsx`) tersimpan di server sejak [D-015](decisions.md#d-015--2026-10-13--papan-layanan-tersimpan-di-server) sebagai pengaturan `papan`.
 
 - Server mengisi waktu *diperbarui* saat isi papan berubah; menyimpan isi yang sama tidak mengubahnya.
-- Beranda menampilkan isi papan hanya pada hari yang sama dengan pembaruannya. Papan yang belum diperbarui hari ini menampilkan "Belum diperbarui hari ini" dan waktu pembaruan terakhirnya, jadi papan perlu disimpan ulang setiap hari kerja.
+- Beranda menampilkan isi terakhir setiap hari sampai diubah ([D-050](decisions.md#d-050--2026-10-15--papan-layanan-berlaku-setiap-hari)), dengan label "Diperbarui hari ini" pada hari selain hari penyimpanan. Selama loket tutup menurut Jam Pelayanan, semua loket tampil Tutup dan waktu tunggu tidak ditampilkan. Papan cukup disimpan bila ada perubahan.
 
 ## Tarif & Simulasi (dipensiunkan)
 

@@ -165,6 +165,13 @@
 
   /** Jam loket dari dashboard; null sampai dimuat */
   let JAM = null;
+  let janjiJam = null;
+
+  /** Jam loket dimuat sekali untuk status loket dan papan layanan */
+  function siapkanJam() {
+    if (!janjiJam) janjiJam = muatJam().then((data) => (JAM = data));
+    return janjiJam;
+  }
 
   async function muatJam() {
     const data = await ambilJson("/api/public/jam");
@@ -314,8 +321,7 @@
       if (tabel) tabel.innerHTML = '<tr><td colspan="3">Jam loket belum dapat dimuat. Muat ulang halaman untuk mencoba lagi.</td></tr>';
     };
 
-    muatJam().then((data) => {
-      JAM = data;
+    siapkanJam().then(() => {
       tampilkan();
       tick();
       setInterval(tick, 1000);
@@ -323,10 +329,10 @@
   }
 
   /* ---------- Papan layanan di beranda ----------
-     Dikelola di dashboard dan dibaca dari GET /api/public/papan. Nomor
-     antrean, waktu tunggu, dan status loket hanya ditampilkan pada hari yang
-     sama dengan pembaruannya (WITA); papan yang belum diperbarui hari ini
-     hanya menyebut waktu pembaruan terakhirnya. */
+     Dikelola di dashboard dan dibaca dari GET /api/public/papan. Isi terakhir
+     tampil setiap hari sampai diubah (D-050). Selama loket tutup menurut Jam
+     Pelayanan, semua loket tampil Tutup dan waktu tunggu tidak ditampilkan;
+     bila jam loket tidak tersedia, papan tampil apa adanya. */
   const STATUS_LOKET = { buka: ["Buka", "board__ok"], istirahat: ["Istirahat", "board__off"], tutup: ["Tutup", "board__off"] };
 
   function initPapan() {
@@ -356,17 +362,14 @@
       const w = nowWita(new Date(p.diperbarui));
       const t = nowWita();
       const hariIni = w.y === t.y && w.mo === t.mo && w.d === t.d;
-      const jam = `${pad(w.h)}.${pad(w.m)} WITA`;
-      waktu.textContent = hariIni ? `Diperbarui ${jam}` : `Diperbarui ${w.d} ${BULAN[w.mo - 1]} ${w.y} · ${jam}`;
+      waktu.textContent = hariIni ? `Diperbarui ${pad(w.h)}.${pad(w.m)} WITA` : "Diperbarui hari ini";
       if (catatan) catatan.textContent = typeof p.catatan === "string" ? p.catatan : "";
-      if (!hariIni) {
-        kosongkan("Belum diperbarui hari ini.");
-        return;
-      }
+      const st = JAM ? serviceStatus() : null;
+      const tutup = !!st && !st.none && !st.open;
       nomor.textContent = p.nomorAntrean || "—";
       layanan.textContent = typeof p.layananAntrean === "string" ? p.layananAntrean : "";
-      tunggu.textContent = Number.isInteger(p.waktuTunggu) ? String(p.waktuTunggu) : "—";
-      const beda = Number.isInteger(p.selisihKemarin) ? p.selisihKemarin : 0;
+      tunggu.textContent = !tutup && Number.isInteger(p.waktuTunggu) ? String(p.waktuTunggu) : "—";
+      const beda = !tutup && Number.isInteger(p.selisihKemarin) ? p.selisihKemarin : 0;
       selisih.hidden = beda === 0;
       if (beda !== 0) {
         const cepat = beda < 0;
@@ -378,12 +381,17 @@
         $("[data-papan-selisih-teks]", selisih).textContent = cepat ? "lebih cepat dari kemarin" : "lebih lama dari kemarin";
       }
       loket.innerHTML = (Array.isArray(p.loket) ? p.loket : []).map((l) => {
-        const [label, kelas] = STATUS_LOKET[l?.status] ?? ["—", "board__off"];
+        const [label, kelas] = STATUS_LOKET[tutup ? "tutup" : l?.status] ?? ["—", "board__off"];
         return `<li><span class="board__lnum mono">${esc(l.kode)}</span><span>${esc(l.nama)}</span><span class="${kelas}">${label}</span></li>`;
       }).join("");
     };
 
-    ambilJson("/api/public/papan").then(tampilkan, () => {
+    // Jam loket ditunggu agar papan tidak sempat menampilkan loket buka saat tutup
+    Promise.all([ambilJson("/api/public/papan"), siapkanJam().catch(() => null)]).then(([p]) => {
+      tampilkan(p);
+      // Mengikuti buka-tutup loket dan pergantian hari selama halaman terbuka
+      setInterval(() => tampilkan(p), 30000);
+    }, () => {
       kosongkan("Papan layanan belum dapat dimuat.");
       waktu.textContent = "Tidak tersedia";
     });

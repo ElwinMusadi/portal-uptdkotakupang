@@ -2,7 +2,7 @@
 
 > **Untuk agen AI dan pengembang berikutnya.** Satu berkas ini memuat seluruh konteks proyek PINTU sampai status terakhirnya: tujuan, arsitektur, aturan kerja dengan pemilik, keputusan, integrasi, cara menguji, jebakan lingkungan, dan pekerjaan yang tertunda. Baca berkas ini lebih dulu, lalu ikuti tautan ke dokumen rinci bila perlu.
 >
-> **Terakhir diperbarui:** 2026-10-15 · branch `laravel-development` · sampai commit Laporan Penerimaan portal sebagai tabel tetap (D-049, sesudah `db21e53`).
+> **Terakhir diperbarui:** 2026-10-15 · branch `laravel-development` · sampai commit Papan Layanan berlaku setiap hari (D-050, sesudah `5cab5d9`).
 >
 > **Wajib diperbarui setiap ada perubahan** (lihat [§19](#19-prosedur-memperbarui-dokumen-ini)). Jangan pernah menulis rahasia (kata sandi, NIP akun uji, token, isi `.env`) di berkas ini.
 
@@ -23,7 +23,7 @@
 13. [Pengujian dan verifikasi](#13-pengujian-dan-verifikasi)
 14. [Lingkungan pengembangan dan jebakannya](#14-lingkungan-pengembangan-dan-jebakannya)
 15. [Deploy dan checklist go-live](#15-deploy-dan-checklist-go-live)
-16. [Ringkasan keputusan D-001 sampai D-049](#16-ringkasan-keputusan-d-001-sampai-d-049)
+16. [Ringkasan keputusan D-001 sampai D-050](#16-ringkasan-keputusan-d-001-sampai-d-050)
 17. [Riwayat commit](#17-riwayat-commit)
 18. [Pekerjaan tertunda dan hal yang diketahui](#18-pekerjaan-tertunda-dan-hal-yang-diketahui)
 19. [Prosedur memperbarui dokumen ini](#19-prosedur-memperbarui-dokumen-ini)
@@ -76,11 +76,11 @@ Satu aplikasi Laravel berisi empat bagian:
 | Hal | Status |
 |---|---|
 | Branch kerja | `laravel-development` (`main` = situs statis lama yang masih dilayani Cloudflare Pages; jangan diubah) |
-| Commit terakhir di origin | `feat(pintu): publish the portal revenue report as fixed tables only` (D-049, Laporan Penerimaan portal sebagai tabel tetap), sesudah `db21e53` (porsi kecil "<0,1%"). Hash: `git log -3 --oneline` |
+| Commit terakhir di origin | `feat(pintu): keep the service board on the homepage every day until changed` (D-050, Papan Layanan berlaku setiap hari), sesudah `5cab5d9` (D-049, Laporan Penerimaan portal sebagai tabel tetap). Hash: `git log -3 --oneline` |
 | Working tree | Bersih |
 | Tes | `composer test`: **1098 tes lulus, 5020 assertion** (SQLite di memori; 19 tes laporan publik D-048 diganti 16 tes D-049). Uji mutasi: D-047 66 dari 67 mutan mati, D-048 36 dari 37 (sisanya setara), D-049 30 dari 30 |
-| Pemeriksaan frontend | `npm run typecheck`, `npm run lint`, build Vite: lulus. Dashboard Laporan Penerimaan diperiksa di browser (415 px dan 1280 px). Halaman portal `/penerimaan` diperiksa di browser (430 px dan 1280 px): keadaan belum diterbitkan dengan API sungguhan, lalu laporan berisi data dev yang sudah disamarkan server (dihitung dalam transaksi yang dibatalkan, tanpa mengubah tanda tampil) lewat `fetch` tiruan: periode, saringan, kartu kelompok, tabel, CSV. Setelah pemilik menyalakan Portal, diperiksa lagi dengan API sungguhan: harian, bulanan, rentang, batang per hari, penyamaran pada 8 kombinasi periode dan saringan, 430 px. D-049 diperiksa dengan API sungguhan: invarian penyamaran September dan Oktober (tanpa baris atau gabungan di bawah 3, kecamatan dikurangi kelurahan yang tampil 0 atau ≥3, bulan dikurangi hari yang tampil 0 atau ≥3, laporan harian sama dengan batang bulanan untuk setiap hari), parameter lama ditolak, CSV, 430 px |
-| Keputusan terakhir | D-049 (Laporan Penerimaan portal sebagai tabel tetap) |
+| Pemeriksaan frontend | `npm run typecheck`, `npm run lint`, build Vite: lulus. Dashboard Laporan Penerimaan diperiksa di browser (415 px dan 1280 px). Halaman portal `/penerimaan` diperiksa di browser (430 px dan 1280 px): keadaan belum diterbitkan dengan API sungguhan, lalu laporan berisi data dev yang sudah disamarkan server (dihitung dalam transaksi yang dibatalkan, tanpa mengubah tanda tampil) lewat `fetch` tiruan: periode, saringan, kartu kelompok, tabel, CSV. Setelah pemilik menyalakan Portal, diperiksa lagi dengan API sungguhan: harian, bulanan, rentang, batang per hari, penyamaran pada 8 kombinasi periode dan saringan, 430 px. D-049 diperiksa dengan API sungguhan: invarian penyamaran September dan Oktober (tanpa baris atau gabungan di bawah 3, kecamatan dikurangi kelurahan yang tampil 0 atau ≥3, bulan dikurangi hari yang tampil 0 atau ≥3, laporan harian sama dengan batang bulanan untuk setiap hari), parameter lama ditolak, CSV, 430 px. Papan Layanan D-050 diperiksa di beranda dengan jam peramban dimajukan: Kamis malam (tutup), Jumat 10.00 WITA (buka, isi terakhir), Sabtu (tutup) |
+| Keputusan terakhir | D-050 (Papan Layanan berlaku setiap hari) |
 | Deploy Laravel Cloud | **Belum.** Pemilik: "jangan deploy ke Laravel Cloud dulu" (D-035). Deploy adalah langkah pemilik |
 | Produksi | Masih Cloudflare Pages dari branch `main` (situs statis lama) |
 | API data kendaraan (NJKB) | Token PINTU terpasang di `.env` lokal dan lolos Cloudflare Access; Worker `njkb-api-ntt` sudah di-deploy pemilik dengan perbaikan 404 (commit `6a4c4f8`), terverifikasi 2026-10-15 07.04 WITA. **Uji dengan kendaraan sungguhan oleh pemilik belum dikonfirmasi** |
@@ -487,7 +487,7 @@ Checklist sebelum go-live (dari D-002, D-006, D-028, D-034, D-047):
 
 ---
 
-## 16. Ringkasan keputusan D-001 sampai D-049
+## 16. Ringkasan keputusan D-001 sampai D-050
 
 Rincian lengkap di [`docs/decisions.md`](docs/decisions.md). "Pemilik" = keputusan langsung pemilik.
 
@@ -507,7 +507,7 @@ Rincian lengkap di [`docs/decisions.md`](docs/decisions.md). "Pemilik" = keputus
 | D-012 | 10-13 | Beranda memuat FAQ dari API publik, teks polos, *Coba lagi* bila gagal |
 | D-013 | 10-13 | Samsat Keliling di server; laju API publik 300/menit/IP (model per hari diganti D-043) |
 | D-014 | 10-13 | Jam Pelayanan + penyesuaian per tanggal di server; status buka/tutup portal dari API |
-| D-015 | 10-13 | Papan Layanan di server; tampil di beranda hanya pada hari pembaruan (WITA) |
+| D-015 | 10-13 | Papan Layanan di server; tampil di beranda hanya pada hari pembaruan (WITA), diganti D-050 |
 | D-016 | 10-13 | Pesan & Pengaduan: formulir publik, kontak wajib, honeypot + 5/jam/IP, hapus hanya Admin |
 | D-017 | 10-13 | Tarif & Simulasi di server (**dipensiunkan D-041**) |
 | D-018 | 10-13 | Statistik Layanan: 4 kategori × 4 angka × 12 bulan; hanya status Terverifikasi yang terbit |
@@ -542,6 +542,7 @@ Rincian lengkap di [`docs/decisions.md`](docs/decisions.md). "Pemilik" = keputus
 | D-047 | 10-15 | Laporan Penerimaan dari berkas STS BPAD per loket (menu dan modul `penerimaan` terpisah, pemilik); identitas wajib pajak tidak disimpan, transaksi ganda dikenali sidik HMAC; data awal September dan 14 Oktober = Loket SAMSAT kantor (pemilik). Portal menyusul: per impor setelah diperiksa, sampai kelurahan dengan kelompok <3 transaksi disamarkan (pemilik) |
 | D-048 | 10-15 | Halaman portal `/penerimaan` (menu Informasi + tautan Transparansi beranda, pemilik); hanya impor yang dinyalakan Administrator (pemilik); saringan utama loket/jenis daftar/jenis kendaraan/kecamatan/kelurahan (pemilik); total + komponen + CSV (pemilik); penyamaran <3 transaksi di server dengan penggabungan kedua; API publik menerima parameter terdaftar (pengecualian D-004) |
 | D-049 | 10-15 | Laporan Penerimaan portal sebagai tabel tetap: per kelompok hanya transaksi dan jumlah, komponen hanya untuk seluruh periode (pemilik); Harian total saja, Bulanan dengan rincian, saringan dan rentang dihapus dari portal (pemilik); kelurahan disamarkan per kecamatan, hari disamarkan sama di laporan harian dan bulanan; API hanya `tanggal` atau `bulan` |
+| D-050 | 10-15 | Papan Layanan berlaku setiap hari: semua isi terakhir tampil sampai diubah (pemilik); selama loket tutup menurut Jam Pelayanan semua loket Tutup tanpa waktu tunggu (pemilik); label "Diperbarui hari ini" di hari selain hari penyimpanan (pemilik) |
 
 **Pola lintas keputusan:** teks HTML sebagai isi awal (D-023/024/026); data contoh peramban tidak dipindahkan, kecuali data awal lewat migrasi; hapus konten editorial hanya Administrator; pengelola Jadwal Pemutakhiran boleh membaca daftar modul lain; WITA sebagai acuan waktu; retensi pesan dan swafoto absensi belum diputuskan (menunggu unit hukum/kearsipan).
 
@@ -549,7 +550,7 @@ Rincian lengkap di [`docs/decisions.md`](docs/decisions.md). "Pemilik" = keputus
 
 ## 17. Riwayat commit
 
-82 commit di `laravel-development` (per commit tabel tetap Laporan Penerimaan, D-049). Tahapan besar:
+83 commit di `laravel-development` (per commit Papan Layanan berlaku setiap hari, D-050). Tahapan besar:
 
 | Rentang | Isi |
 |---|---|
@@ -569,7 +570,8 @@ Rincian lengkap di [`docs/decisions.md`](docs/decisions.md). "Pemilik" = keputus
 | `8d481be` | Laporan Penerimaan tahap 1: impor berkas STS per loket, laporan harian/bulanan di dashboard (D-047) |
 | `ba5aacf` | Laporan Penerimaan tahap 2: halaman portal `/penerimaan`, sakelar Portal khusus Administrator, API publik dengan penyamaran (D-048) |
 | `db21e53` | Porsi Laporan Penerimaan yang sangat kecil ditulis "<0,1%" di portal dan dashboard |
-| `feat(pintu): publish the portal revenue report as fixed tables only` | Laporan Penerimaan portal sebagai tabel tetap: per kelompok hanya transaksi dan jumlah, tanpa saringan dan rentang, kelurahan disamarkan per kecamatan (D-049) |
+| `5cab5d9` | Laporan Penerimaan portal sebagai tabel tetap: per kelompok hanya transaksi dan jumlah, tanpa saringan dan rentang, kelurahan disamarkan per kecamatan (D-049) |
+| `feat(pintu): keep the service board on the homepage every day until changed` | Papan Layanan berlaku setiap hari: isi terakhir tampil sampai diubah, semua loket Tutup selama loket tutup menurut Jam Pelayanan (D-050) |
 
 Repository terkait: `njkb-api-ntt` `main` — `f7a1ee5` (izin konsumen PINTU), `6a4c4f8` (404 untuk nomor polisi tidak terdaftar, sudah di-deploy).
 
@@ -579,6 +581,7 @@ Repository terkait: `njkb-api-ntt` `main` — `f7a1ee5` (izin konsumen PINTU), `
 
 **Menunggu pemilik:**
 
+- Jadwal Pemutakhiran masih mencatat papan "Setiap hari kerja, 07.45 WITA" (interval 1 hari); sejak D-050 papan cukup diubah bila ada perubahan, jadi frekuensinya bisa diubah pengelola.
 - Uji cek data kendaraan dengan kendaraan sungguhan (portal: nomor polisi + 5 karakter terakhir nomor rangka, sebelum 21.00 WITA) belum dikonfirmasi.
 - Deploy ke Laravel Cloud dan cutover domain (lihat §15).
 - Judul pembuka yang tersimpan tidak bertitik ("Semua informasi SAMSAT"); konfirmasi apakah disengaja.
@@ -634,6 +637,7 @@ Bila commit dibuat sebelum hash-nya diketahui, tulis status "belum di-commit" la
 
 | Tanggal | Perubahan |
 |---|---|
+| 2026-10-15 | Papan Layanan berlaku setiap hari (D-050): isi terakhir tampil di beranda setiap hari dengan label "Diperbarui hari ini"; selama loket tutup menurut Jam Pelayanan semua loket Tutup tanpa waktu tunggu. Jam loket dimuat sekali untuk status loket dan papan (`siapkanJam()` di `main.js`). Status, §16, §17 (hash `5cab5d9`), §18 diperbarui |
 | 2026-10-15 | Laporan Penerimaan portal sebagai tabel tetap (D-049): komponen per kelompok ternyata membuka satu transaksi (114 dari 175 baris kelurahan September), dan selisih dua permintaan juga; kini per kelompok hanya transaksi dan jumlah, Harian total saja, Bulanan dengan rincian, saringan dan rentang dihapus dari portal, kelurahan disamarkan per kecamatan, hari disamarkan sama di laporan harian dan bulanan, API hanya `tanggal` atau `bulan`. Status, §8.4, §10.4, §16, §17 (hash `db21e53`), §18 diperbarui |
 | 2026-10-15 | Pemilik menyalakan Portal untuk impor 14 Oktober dan September; `/penerimaan` diperiksa dengan data sungguhan. Porsi yang ada tetapi di bawah 0,05% kini ditulis "<0,1%" di portal dan dashboard (dulu "0%"/"0,0%"), atas persetujuan pemilik. Status, §8.4, §17 (hash `ba5aacf`), §18 diperbarui |
 | 2026-10-15 | Laporan Penerimaan tahap 2 (D-048): halaman portal `/penerimaan` (komponen React, menu Informasi, tautan beranda), sakelar Portal khusus Administrator, `GET /api/public/penerimaan` dengan penyamaran; modul bersama `periode.ts` dan `csv.ts`. Status, §8.1, §8.4, §10.3, §10.4, §16, §17, §18 diperbarui. Diperiksa di browser (430 px dan 1280 px; perbaikan: angka di kotak kecil terpotong) dan pada data dev tanpa mengubah tanda tampil |
