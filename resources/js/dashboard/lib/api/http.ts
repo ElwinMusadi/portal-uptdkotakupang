@@ -50,6 +50,7 @@ export async function mintaServer<T>(url: string, method: string, body?: unknown
       // respons bukan JSON
     }
     if (res.status === 401) pesan = "Sesi Anda berakhir. Silakan masuk kembali."
+    if (res.status === 413) pesan = "Berkas terlalu besar untuk diterima server."
     if (res.status === 419) pesan = "Halaman ini sudah terlalu lama dibuka. Muat ulang halaman lalu coba lagi."
     throw new ApiError(pesan, res.status, isian)
   }

@@ -4,6 +4,9 @@
 .env.production
 /auth.json
 
+# Berkas STS dari sistem BPAD: berisi nama pemilik, NOPOL, dan alamat wajib pajak (D-047)
+/docs/Data Penerimaan/
+
 # Dependensi (pasang ulang dengan `composer install` dan `npm install`)
 /vendor
 node_modules/

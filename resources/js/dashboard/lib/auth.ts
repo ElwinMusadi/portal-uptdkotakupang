@@ -18,6 +18,7 @@ export type Peran = "administrator" | "pegawai"
 export const SEMUA_MODUL = [
   "pesan",
   "statistik",
+  "penerimaan",
   "berita",
   "dokumentasi",
   "dokumen",

@@ -13,6 +13,8 @@ enum DashboardModule: string
 {
     case Pesan = 'pesan';
     case Statistik = 'statistik';
+    /** Laporan Penerimaan: revenue imported from BPAD's STS files (D-047). */
+    case Penerimaan = 'penerimaan';
     case Berita = 'berita';
     case Dokumentasi = 'dokumentasi';
     case Dokumen = 'dokumen';
@@ -39,6 +41,7 @@ enum DashboardModule: string
         return match ($this) {
             self::Pesan => 'Pesan & Pengaduan',
             self::Statistik => 'Statistik Layanan',
+            self::Penerimaan => 'Laporan Penerimaan',
             self::Berita => 'Berita & Pengumuman',
             self::Dokumentasi => 'Dokumentasi Kegiatan',
             self::Dokumen => 'Regulasi & Unduhan',

@@ -45,6 +45,11 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET`, `PUT` | `/api/pengaturan/jam` | Administrator, pengelola Jam Pelayanan | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/papan` | Administrator, pengelola Papan Layanan | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/statistik` | Administrator, pengelola Statistik Layanan | tersedia |
+| `GET` | `/api/penerimaan/laporan` | Administrator, pengelola Laporan Penerimaan | tersedia |
+| `GET` | `/api/penerimaan/loket` | Administrator, pengelola Laporan Penerimaan | tersedia |
+| `GET`, `POST` | `/api/penerimaan/impor` | Administrator, pengelola Laporan Penerimaan | tersedia |
+| `POST` | `/api/penerimaan/impor/pratinjau` | Administrator, pengelola Laporan Penerimaan | tersedia |
+| `POST` | `/api/penerimaan/impor/hapus` | Administrator, pengelola Laporan Penerimaan | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/kontak` | Administrator, pengelola Kontak & Kanal | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/visiMisi` | Administrator, pengelola Visi & Misi | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/profil` | Administrator, pengelola Tentang UPTD | tersedia |
@@ -142,15 +147,16 @@ Kunci modul untuk `modul` ([D-010](decisions.md#d-010--2026-10-13--penugasan-mod
 
 | Kunci | Modul | Kunci | Modul |
 |---|---|---|---|
-| `pesan` | Pesan & Pengaduan | `papan` | Papan Layanan |
-| `statistik` | Statistik Layanan | `tarif` | Tarif & Simulasi, dipensiunkan ([D-041](decisions.md#d-041--2026-10-14--kalkulator-pkb-dan-cek-biaya-pajak-memakai-mesin-kalkulator-pajak-tarif--simulasi-dipensiunkan)): tidak bisa ditugaskan dan tidak ikut di sesi |
+| `pesan` | Pesan & Pengaduan | `keliling` | Layanan Luar Kantor (dulu Samsat Keliling) |
+| `statistik` | Statistik Layanan | `papan` | Papan Layanan |
+| `penerimaan` | Laporan Penerimaan ([D-047](decisions.md#d-047--2026-10-15--laporan-penerimaan-dari-berkas-sts-per-loket)) | `tarif` | Tarif & Simulasi, dipensiunkan ([D-041](decisions.md#d-041--2026-10-14--kalkulator-pkb-dan-cek-biaya-pajak-memakai-mesin-kalkulator-pajak-tarif--simulasi-dipensiunkan)): tidak bisa ditugaskan dan tidak ikut di sesi |
 | `berita` | Berita & Pengumuman | `profil` | Tentang UPTD |
 | `dokumentasi` | Dokumentasi Kegiatan | `visiMisi` | Visi & Misi |
 | `dokumen` | Regulasi & Unduhan | `unit` | Struktur Organisasi |
 | `faq` | Tanya Jawab | `kontak` | Kontak & Kanal |
 | `layanan` | Persyaratan Layanan | `beranda` | Beranda |
 | `jam` | Jam Pelayanan (termasuk koleksi `penyesuaian`) | `halaman` | Halaman Statis |
-| `keliling` | Layanan Luar Kantor (dulu Samsat Keliling) | `pemutakhiran` | Jadwal Pemutakhiran |
+| | | `pemutakhiran` | Jadwal Pemutakhiran |
 
 Endpoint konten dashboard (`/api/koleksi/…`, `/api/pengaturan/…`) wajib menolak pegawai yang tidak mengelola modul koleksi atau pengaturan itu. `/api/koleksi/faq`, `/api/koleksi/keliling`, `/api/koleksi/penyesuaian`, `/api/koleksi/pesan`, `/api/koleksi/layanan`, `/api/koleksi/halaman`, `/api/koleksi/pemutakhiran`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/statistik`, `/api/pengaturan/kontak`, `/api/pengaturan/visiMisi`, `/api/pengaturan/profil`, dan `/api/pengaturan/beranda` sudah melakukannya; daftar Jadwal Pemutakhiran boleh dibaca semua pegawai, sebatas standar modul mereka, dan Pengaturan Situs, yang bukan milik modul mana pun, boleh dibaca semua pegawai tetapi hanya disimpan Administrator (`/api/pengaturan/situs`).
 
@@ -337,6 +343,67 @@ Dipakai halaman *Statistik Layanan* di dashboard ([D-018](decisions.md#d-018--20
 Penyimpanan tercatat di log aktivitas sebagai "memperbarui Statistik Layanan".
 
 Kode: `app/Http/Controllers/Dashboard/StatisticsController.php`, `app/Http/Requests/Dashboard/UpdateStatisticsRequest.php`, `app/Actions/SaveSetting.php`, `app/Models/Setting.php`. Tes: `tests/Feature/StatisticsControllerTest.php`.
+
+## Laporan Penerimaan di dashboard
+
+Dipakai halaman *Laporan Penerimaan* di dashboard ([D-047](decisions.md#d-047--2026-10-15--laporan-penerimaan-dari-berkas-sts-per-loket)). Tamu mendapat `401`; pegawai yang tidak mengelola modul `penerimaan` mendapat `403` `{"message": "Modul Laporan Penerimaan belum ditugaskan kepada Anda."}`. Datanya transaksi dari berkas STS sistem BPAD yang diimpor per loket, tanpa nama pemilik, nomor polisi, atau alamat di bawah kelurahan.
+
+### `GET /api/penerimaan/laporan`
+
+Parameter: `dari` dan `sampai` (`YYYY-MM-DD`, wajib, paling lama 366 hari); saringan opsional berupa daftar nilai yang dipertahankan, `loket[]`, `jenisDaftar[]`, `jenisKendaraan[]`, `kepemilikan[]`, `warnaPlat[]`, `merk[]`, `uptAsal[]`, `kecamatan[]`, dan `kelurahan[]` (maks. 500 nilai, masing-masing maks. 80 karakter); serta `tunggakan` `ada` atau `tidak`.
+
+```json
+{
+  "dari": "2026-10-14", "sampai": "2026-10-14",
+  "ringkasan": {
+    "transaksi": 2, "pkb": 600000, "bbn": 0, "dendaPkb": 0, "dendaBbn": 0, "tunggakan": 0, "dendaTunggakan": 0,
+    "opsenPkb": 396000, "opsenBbn": 0, "opsenDendaPkb": 0, "opsenDendaBbn": 0, "opsenTunggakan": 0, "opsenDendaTunggakan": 0,
+    "jumlah": 996000
+  },
+  "pembanding": { "dari": "2026-10-13", "sampai": "2026-10-13", "ringkasan": { "transaksi": 1, "…": 0, "jumlah": 498000 } },
+  "rincian": {
+    "loket": [{ "nilai": "kantor", "nama": "Loket SAMSAT", "transaksi": 2, "pkb": 600000, "…": 0, "jumlah": 996000 }],
+    "jenisDaftar": [{ "nilai": "Teliti Ulang / Pengesahan", "transaksi": 2, "…": 0, "jumlah": 996000 }],
+    "kelurahan": [{ "nilai": "Oebobo", "kecamatan": "OEBOBO", "transaksi": 2, "…": 0, "jumlah": 996000 }],
+    "tanggal": [{ "nilai": "2026-10-14", "transaksi": 2, "…": 0, "jumlah": 996000 }]
+  },
+  "pilihan": { "loket": [{ "nilai": "kantor", "nama": "Loket SAMSAT" }], "jenisDaftar": ["Teliti Ulang / Pengesahan"], "…": [] },
+  "loketBuka": [{ "kunci": "kantor", "nama": "Loket SAMSAT", "jenis": "kantor" }]
+}
+```
+
+| Bagian | Isi |
+|---|---|
+| `ringkasan` | Jumlah transaksi dan rupiah setiap komponen STS (PKB, BBNKB, denda PKB dan BBNKB, tunggakan dan dendanya, opsen atas masing-masing) beserta `jumlah`, untuk transaksi yang cocok dengan saringan. Periode tanpa transaksi berisi nol. |
+| `pembanding` | Periode pembanding dengan saringan yang sama: untuk satu hari, hari sebelumnya yang berisi transaksi (`null` bila tidak ada); untuk bulan penuh (tanggal 1 sampai akhir bulan, boleh beberapa bulan), bulan-bulan tepat sebelumnya sebanyak itu; untuk rentang lain, hari-hari tepat sebelumnya sebanyak itu. |
+| `rincian` | Satu daftar per saringan (`loket`, `jenisDaftar`, `jenisKendaraan`, `kepemilikan`, `warnaPlat`, `merk`, `uptAsal`, `kecamatan`, `kelurahan`) dengan isi seperti `ringkasan`, urut jumlah terbesar, lalu transaksi terbanyak, lalu nilai. `loket` membawa `nama` dari impor terakhir loket itu; `kelurahan` dikelompokkan bersama `kecamatan`-nya. `tanggal` urut tanggal. `kepemilikan` bernilai `pribadi`, `umum`, `pemerintah`, atau `lainnya`; kolom berkas yang kosong bernilai `-`. |
+| `pilihan` | Nilai setiap saringan yang ada dalam periode, tanpa memperhitungkan saringan lain, urut abjad; `loket` dengan namanya. |
+| `loketBuka` | Hanya untuk laporan satu hari: Loket SAMSAT dan setiap unit Samsat Keliling, gerai tetap, atau loket sementara yang aktif dan terjadwal melayani pada tanggal itu menurut Layanan Luar Kantor. Rentang lebih dari sehari: `[]`. |
+
+`422` per isian: `dari` ("Pilih tanggal awal laporan.", "Tanggal awal laporan tidak valid."), `sampai` ("Pilih tanggal akhir laporan.", "Tanggal akhir laporan tidak valid.", "Tanggal akhir tidak boleh sebelum tanggal awal.", "Rentang laporan paling lama satu tahun."), `tunggakan` ("Saringan tunggakan tidak dikenal."), dan saringan yang bukan daftar, berisi bukan teks, atau terlalu panjang ("Saringan asal UPT tidak valid.", "Saringan merek terlalu panjang.").
+
+### Impor berkas STS
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `GET /api/penerimaan/loket` | — | `200` `[{ "kunci": "kantor", "nama": "Loket SAMSAT", "jenis": "kantor" }, …]`: Loket SAMSAT, Samsat Keliling 01–03 (`keliling-01`…), lalu gerai tetap dan loket sementara di Layanan Luar Kantor menurut nama, sekali per nama dan termasuk yang nonaktif (`gerai:samsat-corner`, `sementara:pameran-pembangunan`). |
+| `GET /api/penerimaan/impor` | — | `200` semua impor, terbaru lebih dulu: `[{ "id", "loket", "namaLoket", "namaBerkas", "tanggalAwal", "tanggalAkhir", "jumlahTransaksi", "jumlahDilewati", "total", "tampil", "oleh", "dibuat" }]`. `jumlahTransaksi` dan `total` hanya transaksi yang ditambahkan impor itu; `tampil` selalu `false` sampai halaman portalnya dibuat. |
+| `POST /api/penerimaan/impor/pratinjau` | `multipart/form-data`: `berkas` (berkas STS .xls, .htm, atau .html, maks. 10 MB) dan `loket` (kunci dari daftar loket) | `200` `{ "loket": { "kunci", "nama", "jenis" }, "namaBerkas", "berkas": R, "baru": R, "dilewati": 2 }` dengan R = `{ "tanggalAwal", "tanggalAkhir", "transaksi", "jumlah", "jenisDaftar": [{ "nilai", "transaksi", "jumlah" }] }` untuk seluruh berkas dan untuk transaksi yang belum pernah diimpor (tanggal `null` bila tidak ada). Tidak menyimpan apa pun. |
+| `POST /api/penerimaan/impor` | sama dengan pratinjau | `201` impor seperti di daftar. Hanya transaksi yang belum pernah diimpor yang disimpan. `422` `berkas` "Semua transaksi di berkas ini sudah pernah diimpor." |
+| `POST /api/penerimaan/impor/hapus` | `{"ids": ["…"]}` | `204`; transaksi impor itu ikut terhapus. Impor yang sudah tidak ada dilewati. |
+
+`422` lain untuk pratinjau dan impor: `loket` ("Pilih loket asal berkas ini.", "Loket tidak dikenal.") dan `berkas` ("Pilih berkas STS yang akan diimpor.", "Berkas gagal diunggah. Ukurannya mungkin melebihi batas server.", "Ukuran berkas maksimal 10 MB.", "Pilih berkas STS berformat .xls hasil ekspor sistem BPAD.", "Berkas ini bukan laporan STS dari sistem BPAD: susunan kolomnya tidak dikenali.", "Berkas tidak berisi transaksi.", serta pesan per baris seperti "Baris 4: jumlah tidak sama dengan rinciannya.", "Baris 4: nilai pkb \"12.5\" bukan angka rupiah bulat.", "Baris 4: tanggal validasi \"14-10-2026\" tidak dikenali.", dan "Baris 3: ada 35 kolom, seharusnya 36."). Nomor baris dihitung dari awal tabel, termasuk dua baris judul; baris tanpa isi dilewati, dan kolom teks yang kosong disimpan sebagai `-`. Berkas yang bukan UTF-8 dibaca sebagai Windows-1252. Pratinjau dan impor berbagi batas 30 unggahan per menit per pegawai (`429` "Terlalu banyak unggahan. Coba lagi sebentar lagi."). Batas unggah PHP server (`upload_max_filesize`, `post_max_size`) harus sedikitnya 10 MB agar berkas bulanan diterima; bila lebih kecil, berkas besar ditolak sebelum sampai ke aplikasi.
+
+Transaksi yang sama dikenali dari sidik HMAC-SHA256 (dengan `APP_KEY`) atas nomor polisi, tanggal validasi, jenis daftar, dan jumlah; nomor polisinya sendiri tidak disimpan. Impor tercatat di log aktivitas sebagai "mengimpor STS Loket SAMSAT 2026-10-14 · 320 transaksi" dan penghapusan sebagai "menghapus STS Loket SAMSAT 2026-10-14".
+
+### Tabel
+
+| Tabel | Kolom |
+|---|---|
+| `revenue_imports` | `id` (ULID), `loket`, `nama_loket`, `nama_berkas`, `tanggal_awal`, `tanggal_akhir`, `jumlah_transaksi`, `jumlah_dilewati`, `total`, `tampil` (bawaan `false`), `user_id` (dikosongkan bila akun dihapus), waktu dibuat dan diubah |
+| `revenue_transactions` | `id`, `revenue_import_id` (terhapus bersama impornya), `loket`, `tanggal`, `jenis_daftar`, `jenis_kendaraan`, `kepemilikan`, `merk`, `warna_plat`, `upt_asal`, `kecamatan`, `kelurahan`, `tahun_tunggakan`, dua belas komponen rupiah dan `jumlah` (bilangan bulat), `sidik` (unik); indeks `tanggal, loket` |
+
+Kode: `app/Actions/ReadStsFile.php`, `app/Actions/ImportRevenue.php`, `app/Actions/BuildRevenueReport.php`, `app/Actions/ListRevenueCounters.php`, `app/Http/Controllers/Dashboard/Revenue*`, `app/Http/Requests/Dashboard/*Revenue*`, `app/Http/Resources/RevenueImportResource.php`, `app/Models/RevenueImport.php`, `app/Models/RevenueTransaction.php`, `app/Policies/RevenueImportPolicy.php`. Tes: `tests/Feature/RevenueImportControllerTest.php`, `tests/Feature/RevenueReportControllerTest.php`, dengan berkas STS buatan dari `tests/Support/StsReport.php`.
 
 ## Kontak & Kanal di dashboard
 

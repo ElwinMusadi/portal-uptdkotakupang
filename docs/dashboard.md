@@ -4,7 +4,7 @@ Dashboard pengelolaan konten portal **PINTU** (UPTD Pendapatan Daerah Wilayah Ko
 
 Tata letaknya mengikuti template [shadcn/ui *dashboard-01*](https://ui.shadcn.com/blocks#dashboard-01): sidebar, kartu KPI, grafik area interaktif, dan tabel data. Warna dan tipografinya disesuaikan dengan design system portal.
 
-> **Status.** Login sudah diperiksa server (lihat [Sesi login](#sesi-login)) dan Tanya Jawab, Layanan Luar Kantor, Pesan & Pengaduan, Persyaratan Layanan, Jam Pelayanan, Papan Layanan, Statistik Layanan, Kontak & Kanal, Visi & Misi, Tentang UPTD, Beranda, Halaman Statis, Jadwal Pemutakhiran, Pengaturan Situs, serta profil akun sudah tersimpan di server (lihat [Penyimpanan data](#penyimpanan-data)). Konten lain masih tersimpan di peramban (IndexedDB) sampai gilirannya pindah ke server; kontraknya ada di bagian [Menyambungkan ke server](#menyambungkan-ke-server-rest-api).
+> **Status.** Login sudah diperiksa server (lihat [Sesi login](#sesi-login)) dan Tanya Jawab, Layanan Luar Kantor, Pesan & Pengaduan, Persyaratan Layanan, Jam Pelayanan, Papan Layanan, Statistik Layanan, Laporan Penerimaan, Kontak & Kanal, Visi & Misi, Tentang UPTD, Beranda, Halaman Statis, Jadwal Pemutakhiran, Pengaturan Situs, serta profil akun sudah tersimpan di server (lihat [Penyimpanan data](#penyimpanan-data)). Konten lain masih tersimpan di peramban (IndexedDB) sampai gilirannya pindah ke server; kontraknya ada di bagian [Menyambungkan ke server](#menyambungkan-ke-server-rest-api).
 
 ## Menjalankan
 
@@ -81,6 +81,7 @@ resources/js/dashboard/
 | Alur Publikasi | `#/alur` | semua konten beralur | — |
 | Pesan & Pengaduan | `#/pesan` | koleksi `pesan` | `kontak.html#masukan` |
 | Statistik Layanan | `#/statistik` | pengaturan `statistik` | `index.html#transparansi` |
+| Laporan Penerimaan | `#/penerimaan` | server (`/api/penerimaan/…`) dari berkas STS | — (belum; tahap portal menyusul) |
 | Berita & Pengumuman | `#/berita` | koleksi `berita` | `informasi.html`, `berita-detail.html` |
 | Dokumentasi Kegiatan | `#/dokumentasi` | koleksi `dokumentasi` | `dokumentasi.html` |
 | Regulasi & Unduhan | `#/unduhan` | koleksi `dokumen` | `unduhan.html` |
@@ -236,7 +237,7 @@ Pegawai UPTD hanya melihat modul yang ditugaskan Administrator ([D-010](decision
 - `app/nav.ts` adalah satu-satunya sumber: setiap item menu konten punya `modul`, item khusus Administrator punya `khusus`. `navUntuk()` menyaring menu samping, pencarian, dan "Buat konten"; `GRUP_MODUL` menyusun centang modul di panel akun dengan judul dan kelompok yang sama dengan menu.
 - `Layout` mencocokkan alamat yang dibuka dengan item menu. Bila item itu tidak boleh dilihat, halaman diganti pesan "Modul ini belum ditugaskan kepada Anda" atau "Khusus Administrator".
 - `useItemAlur()` dan `usePemutakhiran()` di `lib/hitung.ts` menyaring konten dan jadwal per modul, sehingga Ringkasan dan Alur Publikasi ikut terbatas. Daftar Jadwal Pemutakhiran juga sudah disaring server ([D-025](decisions.md#d-025--2026-10-14--jadwal-pemutakhiran-tersimpan-di-server)). Kartu dan grafik pesan hanya tampil bagi pengelola Pesan & Pengaduan.
-- Untuk Tanya Jawab, Layanan Luar Kantor, Pesan & Pengaduan, Persyaratan Layanan, Jam Pelayanan, Papan Layanan, Statistik Layanan, Kontak & Kanal, Visi & Misi, Tentang UPTD, Beranda, Halaman Statis, dan Jadwal Pemutakhiran, server ikut menegakkannya (`FaqPolicy`, `MobileServiceStopPolicy`, `MessagePolicy`, `ServicePolicy`, `SettingPolicy`, `ScheduleAdjustmentPolicy`, `StaticPagePolicy`, `UpdateStandardPolicy`): pegawai tanpa modul itu mendapat `403`. Pengaturan Situs bukan milik modul mana pun: semua pegawai membacanya, hanya Administrator yang menyimpannya, dan formulirnya hanya-baca bagi pegawai lain. Karena itu Ringkasan hanya memuat jadwal Samsat Keliling bagi pengelolanya dan pengelola Jadwal Pemutakhiran (`useKoleksi(…, { aktif })`), isi Papan Layanan hanya bagi pengelolanya (`usePengaturan(…, { aktif })`), dan pesan (lencana menu, kartu, grafik, antrean kerja, jumlah di *Pengaturan › Data*) hanya bagi pengelola Pesan & Pengaduan; yang lain memakai waktu simpannya. Untuk konten yang masih di IndexedDB, pembatasan ini baru mengatur tampilan; endpoint konten berikutnya wajib memeriksa modul yang sama.
+- Untuk Tanya Jawab, Layanan Luar Kantor, Pesan & Pengaduan, Persyaratan Layanan, Jam Pelayanan, Papan Layanan, Statistik Layanan, Laporan Penerimaan, Kontak & Kanal, Visi & Misi, Tentang UPTD, Beranda, Halaman Statis, dan Jadwal Pemutakhiran, server ikut menegakkannya (`FaqPolicy`, `MobileServiceStopPolicy`, `MessagePolicy`, `ServicePolicy`, `SettingPolicy`, `RevenueImportPolicy`, `ScheduleAdjustmentPolicy`, `StaticPagePolicy`, `UpdateStandardPolicy`): pegawai tanpa modul itu mendapat `403`. Pengaturan Situs bukan milik modul mana pun: semua pegawai membacanya, hanya Administrator yang menyimpannya, dan formulirnya hanya-baca bagi pegawai lain. Karena itu Ringkasan hanya memuat jadwal Samsat Keliling bagi pengelolanya dan pengelola Jadwal Pemutakhiran (`useKoleksi(…, { aktif })`), isi Papan Layanan hanya bagi pengelolanya (`usePengaturan(…, { aktif })`), dan pesan (lencana menu, kartu, grafik, antrean kerja, jumlah di *Pengaturan › Data*) hanya bagi pengelola Pesan & Pengaduan; yang lain memakai waktu simpannya. Untuk konten yang masih di IndexedDB, pembatasan ini baru mengatur tampilan; endpoint konten berikutnya wajib memeriksa modul yang sama.
 
 ## Tanya Jawab
 
@@ -282,6 +283,16 @@ Halaman *Statistik Layanan* (`#/statistik`, `pages/statistik.tsx`) tersimpan di 
 
 - Hanya statistik berstatus *Terverifikasi pimpinan* yang tampil di dasbor transparansi beranda (`GET /api/public/statistik`). Selama berstatus *Ilustrasi*, angkanya tidak keluar dari server dan beranda menyatakan statistik layanan belum diterbitkan.
 - Keempat kategori, empat angka utama per kategori, dan 12 nilai bulanan (Januari–Desember) tetap; server menolak dokumen dengan susunan lain. Angka contoh dari penyimpanan peramban tidak dipindahkan.
+
+## Laporan Penerimaan
+
+Halaman *Laporan Penerimaan* (`#/penerimaan`, `pages/penerimaan.tsx`, modul `penerimaan`, [D-047](decisions.md#d-047--2026-10-15--laporan-penerimaan-dari-berkas-sts-per-loket)) mengolah berkas STS sistem BPAD menjadi laporan penerimaan per loket. Datanya selalu dibaca dari server (`lib/penerimaan.ts`, [docs/api.md](api.md#laporan-penerimaan-di-dashboard)); tidak ada salinannya di IndexedDB.
+
+- **Impor berkas STS** membuka panel samping: pilih loket asal (berkas tidak mencantumkannya) dan berkas .xls, lalu **Periksa berkas** menampilkan pratinjau dari server (transaksi di berkas, yang akan disimpan, yang dilewati karena sudah pernah diimpor, dan rincian per jenis daftar) sebelum **Simpan**. Setelah tersimpan, laporan pindah ke periode berkas itu.
+- Periode **Harian**, **Bulanan**, atau **Rentang** (maks. satu tahun), dengan tombol hari/bulan sebelumnya dan berikutnya. Sebelum dipilih, laporan menampilkan tanggal terakhir yang sudah diimpor. Saringan berupa daftar pilihan bercentang yang bisa dicari (loket, jenis daftar, jenis kendaraan, kepemilikan, warna plat, merek, asal UPT, kecamatan, kelurahan) dan pilihan tunggakan; isinya nilai yang ada dalam periode itu.
+- Isi laporan: bento ringkasan (total penerimaan dengan susunan komponen dan perubahan terhadap periode pembanding, transaksi, kendaraan baru dari jenis daftar Baru, pajak provinsi, opsen kabupaten/kota; lencana angka turun ke bawah angka bila tempatnya tidak cukup), kartu per loket (loket yang terjadwal melayani tetapi belum diimpor ditandai "Belum ada data" pada laporan harian tanpa saringan), grafik per hari (untuk lebih dari sehari; batang membuka laporan harian), grafik bertumpuk per jenis daftar, jenis kendaraan, kecamatan, dan asal UPT (delapan terbesar, sisanya digabung), dan tabel rincian bertab per saringan dan per tanggal. Nama di kolom pertama tabel menyaring laporan dengannya; **Ekspor CSV** mengunduh tab yang dibuka (pemisah titik koma dengan BOM, untuk Excel berbahasa Indonesia).
+- **Riwayat impor** mendaftar setiap impor (periode, berkas, loket, transaksi baru dan yang dilewati, total, pengimpor). Membuka impor menampilkan laporannya; menghapusnya menghapus transaksinya dari laporan.
+- Tampil di portal per impor menyusul di tahap berikutnya; `tampil` sudah ada di data dan selalu mati.
 
 ## Kontak & Kanal
 

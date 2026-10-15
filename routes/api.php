@@ -31,6 +31,11 @@ use App\Http\Controllers\Dashboard\OrganizationUnitDeletionController;
 use App\Http\Controllers\Dashboard\OrganizationUnitOrderController;
 use App\Http\Controllers\Dashboard\OwnAccountController;
 use App\Http\Controllers\Dashboard\ProfileController;
+use App\Http\Controllers\Dashboard\RevenueCounterController;
+use App\Http\Controllers\Dashboard\RevenueImportController;
+use App\Http\Controllers\Dashboard\RevenueImportDeletionController;
+use App\Http\Controllers\Dashboard\RevenueImportPreviewController;
+use App\Http\Controllers\Dashboard\RevenueReportController;
 use App\Http\Controllers\Dashboard\ScheduleAdjustmentController;
 use App\Http\Controllers\Dashboard\ScheduleAdjustmentDeletionController;
 use App\Http\Controllers\Dashboard\ServiceBoardController;
@@ -76,6 +81,7 @@ use App\Models\FieldActivity;
 use App\Models\Message;
 use App\Models\MobileServiceStop;
 use App\Models\OrganizationUnit;
+use App\Models\RevenueImport;
 use App\Models\ScheduleAdjustment;
 use App\Models\Service;
 use App\Models\ServiceLocation;
@@ -385,6 +391,26 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->can('clockIn', 'activity')
         ->middleware('throttle:uploads')
         ->name('absen.store');
+
+    /*
+     * Laporan Penerimaan (D-047): STS files exported by BPAD's system are
+     * imported per counter, without the taxpayers' identities, and summed
+     * into daily and monthly reports (RevenueImportPolicy).
+     */
+    Route::prefix('penerimaan')->name('penerimaan.')->group(function (): void {
+        Route::get('/laporan', RevenueReportController::class)->can('viewAny', RevenueImport::class)->name('laporan');
+        Route::get('/loket', RevenueCounterController::class)->can('viewAny', RevenueImport::class)->name('loket');
+        Route::get('/impor', [RevenueImportController::class, 'index'])->can('viewAny', RevenueImport::class)->name('impor.index');
+        Route::post('/impor/pratinjau', RevenueImportPreviewController::class)
+            ->can('create', RevenueImport::class)
+            ->middleware('throttle:uploads')
+            ->name('impor.pratinjau');
+        Route::post('/impor', [RevenueImportController::class, 'store'])
+            ->can('create', RevenueImport::class)
+            ->middleware('throttle:uploads')
+            ->name('impor.store');
+        Route::post('/impor/hapus', [RevenueImportDeletionController::class, 'store'])->can('deleteAny', RevenueImport::class)->name('impor.hapus');
+    });
 
     // Vehicle data for the Kalkulator PKB from the private NJKB API (D-041)
     Route::get('/kendaraan/{nopol}', VehicleController::class)->middleware('throttle:kendaraan')->name('kendaraan.show');

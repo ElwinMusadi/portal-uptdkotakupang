@@ -2,7 +2,7 @@
 
 > **Untuk agen AI dan pengembang berikutnya.** Satu berkas ini memuat seluruh konteks proyek PINTU sampai status terakhirnya: tujuan, arsitektur, aturan kerja dengan pemilik, keputusan, integrasi, cara menguji, jebakan lingkungan, dan pekerjaan yang tertunda. Baca berkas ini lebih dulu, lalu ikuti tautan ke dokumen rinci bila perlu.
 >
-> **Terakhir diperbarui:** 2026-10-15 · branch `laravel-development` · sampai commit perbaikan foto avatar Struktur (sesudah `8699e8d`, D-046).
+> **Terakhir diperbarui:** 2026-10-15 · branch `laravel-development` · sampai commit Laporan Penerimaan tahap 1 (D-047, sesudah `e0eb24d`).
 >
 > **Wajib diperbarui setiap ada perubahan** (lihat [§19](#19-prosedur-memperbarui-dokumen-ini)). Jangan pernah menulis rahasia (kata sandi, NIP akun uji, token, isi `.env`) di berkas ini.
 
@@ -23,7 +23,7 @@
 13. [Pengujian dan verifikasi](#13-pengujian-dan-verifikasi)
 14. [Lingkungan pengembangan dan jebakannya](#14-lingkungan-pengembangan-dan-jebakannya)
 15. [Deploy dan checklist go-live](#15-deploy-dan-checklist-go-live)
-16. [Ringkasan keputusan D-001 sampai D-046](#16-ringkasan-keputusan-d-001-sampai-d-046)
+16. [Ringkasan keputusan D-001 sampai D-047](#16-ringkasan-keputusan-d-001-sampai-d-047)
 17. [Riwayat commit](#17-riwayat-commit)
 18. [Pekerjaan tertunda dan hal yang diketahui](#18-pekerjaan-tertunda-dan-hal-yang-diketahui)
 19. [Prosedur memperbarui dokumen ini](#19-prosedur-memperbarui-dokumen-ini)
@@ -76,15 +76,15 @@ Satu aplikasi Laravel berisi empat bagian:
 | Hal | Status |
 |---|---|
 | Branch kerja | `laravel-development` (`main` = situs statis lama yang masih dilayani Cloudflare Pages; jangan diubah) |
-| Commit terakhir di origin | `fix(pintu): keep the officials' photos inside their circles` (foto avatar Struktur), sesudah `docs(pintu): add the single-file project context for AI agents` dan `8699e8d` (D-046). Hash: `git log -3 --oneline` |
+| Commit terakhir di origin | `feat(pintu): report daily and monthly revenue per counter from BPAD's STS files` (D-047, Laporan Penerimaan tahap 1), sesudah `e0eb24d` (foto avatar Struktur). Hash: `git log -3 --oneline` |
 | Working tree | Bersih |
-| Tes | `composer test`: **991 tes lulus, 4517 assertion** (SQLite di memori) |
-| Pemeriksaan frontend | `npm run typecheck`, `npm run lint`, build Vite: lulus |
-| Keputusan terakhir | D-046 (logo Ditlantas dan Jasa Raharja di pembuka beranda) |
+| Tes | `composer test`: **1058 tes lulus, 4806 assertion** (SQLite di memori). Uji mutasi D-047: 66 dari 67 mutan mati (sisanya setara di SQLite) |
+| Pemeriksaan frontend | `npm run typecheck`, `npm run lint`, build Vite: lulus. Halaman Laporan Penerimaan diperiksa di browser (lebar 415 px dan 1280 px, laporan harian 14 Oktober dan bulanan September dengan data nyata; saringan, tab rincian, klik nama untuk menyaring, riwayat impor, pratinjau impor berkas buatan tanpa menyimpan, isi CSV) |
+| Keputusan terakhir | D-047 (Laporan Penerimaan dari berkas STS per loket) |
 | Deploy Laravel Cloud | **Belum.** Pemilik: "jangan deploy ke Laravel Cloud dulu" (D-035). Deploy adalah langkah pemilik |
 | Produksi | Masih Cloudflare Pages dari branch `main` (situs statis lama) |
 | API data kendaraan (NJKB) | Token PINTU terpasang di `.env` lokal dan lolos Cloudflare Access; Worker `njkb-api-ntt` sudah di-deploy pemilik dengan perbaikan 404 (commit `6a4c4f8`), terverifikasi 2026-10-15 07.04 WITA. **Uji dengan kendaraan sungguhan oleh pemilik belum dikonfirmasi** |
-| Data lokal | Database dev `pintu` berisi **data milik pemilik** (lihat [§12](#12-database-data-dan-migrasi)) |
+| Data lokal | Database dev `pintu` berisi **data milik pemilik** (lihat [§12](#12-database-data-dan-migrasi)). Tabel `revenue_imports` dan `revenue_transactions` sudah dimigrasi; berkas STS harian 14 Oktober 2026 (320 transaksi, Rp563.444.182) dan bulanan September 2026 (7.318 transaksi baru + 1 ganda dilewati, Rp12.847.135.065) diimpor sebagai Loket SAMSAT lewat endpoint impor (berkas bulanan lewat `php artisan serve` sementara karena batas unggah Herd 2 MB, lihat §14) |
 
 **Isi terakhir yang disimpan pemilik di dashboard lokal** (penting saat menguji tampilan): judul pembuka beranda "Semua informasi SAMSAT" (**tanpa titik**, disimpan pemilik 07.55 WITA 2026-10-15) dengan kata bergilir Pajak, STNK, Mutasi, **BBNKB**, SAMSAT.
 
@@ -258,7 +258,7 @@ Berkas alat: `AGENTS.md`, `boost.json`, `kilo.json` (skill di `.agents/skills/`,
   - `KOLEKSI_SERVER` (12): faq, keliling, lokasi, penyesuaian, pesan, layanan, halaman, pemutakhiran, dokumen, berita, dokumentasi, unit.
   - `PENGATURAN_SERVER` (9): jam, papan, statistik, kontak, visiMisi, profil, beranda, situs, akun.
   - `UNGGAHAN_SERVER`: visiMisi, profil, beranda, dokumen, berita, dokumentasi, unit.
-  - Akun (`lib/akun.ts`) dan Absensi (`lib/absensi.ts`) selalu dari server.
+  - Akun (`lib/akun.ts`), Absensi (`lib/absensi.ts`), dan Laporan Penerimaan (`lib/penerimaan.ts`) selalu dari server.
 - Formulir: React Hook Form + Zod dengan batas yang sama dengan server; panel sunting di URL (`?baru=1`, `?ubah=<id>`); perubahan belum disimpan dijaga; `Ctrl K` untuk pencarian cepat.
 - Komponen formulir bersama di `components/form/` (mis. `FieldTeks`, `FieldArea`, `FieldJudul2Nada`, `FieldDaftarTeks`, `DaftarObjek`, `IsianLogo`, `FormPengaturan`).
 
@@ -270,6 +270,7 @@ Berkas alat: `AGENTS.md`, `boost.json`, `kilo.json` (skill di `.agents/skills/`,
 | Alur Publikasi | `#/alur` | konten beralur | (disaring) |
 | Pesan & Pengaduan | `#/pesan` | koleksi `pesan` | `pesan` |
 | Statistik Layanan | `#/statistik` | pengaturan `statistik` | `statistik` |
+| Laporan Penerimaan | `#/penerimaan` | `/api/penerimaan/…` (impor berkas STS, laporan) | `penerimaan` |
 | Berita & Pengumuman | `#/berita` | koleksi `berita` | `berita` |
 | Dokumentasi Kegiatan | `#/dokumentasi` | koleksi `dokumentasi` | `dokumentasi` |
 | Regulasi & Unduhan | `#/unduhan` | koleksi `dokumen` | `dokumen` |
@@ -340,6 +341,7 @@ Kontrak lengkap ada di [`docs/api.md`](docs/api.md). Ringkasan:
 - **Koleksi `/api/koleksi/{nama}`** (index, store, show, `PATCH`): `faq` (+`urutan`, `hapus`), `keliling` (+`hapus`, `salin-minggu`, `salin-hari`), `lokasi` (+`hapus`), `penyesuaian` (+`hapus`), `pesan` (+`hapus`), `layanan` (+`urutan`, `hapus`), `dokumen` (+`hapus`), `berita` (+`hapus`), `dokumentasi` (+`hapus`), `unit` (+`urutan`, `hapus`), `halaman` (hanya baca/sunting), `pemutakhiran` (+`urutan`, `hapus`).
 - **Pengaturan:** `GET /api/pengaturan` (waktu simpan), `GET|PUT /api/pengaturan/{jam|papan|statistik|kontak|visiMisi|profil|beranda|situs}` (gate `SettingPolicy`; `situs` disimpan hanya Administrator).
 - **Lain-lain:** `POST /api/unggah`, `GET /api/berkas/{id}` (berkas privat), `GET /api/aktivitas?limit=`, `GET /api/kendaraan/{nopol}`, `/api/absensi/kegiatan` (Administrator), `GET /api/absen`, `POST /api/absen/{id}` (clock-in).
+- **Laporan Penerimaan (D-047, `RevenueImportPolicy`, modul `penerimaan`):** `GET /api/penerimaan/laporan?dari&sampai&<saringan>[]&tunggakan`, `GET /api/penerimaan/loket`, `GET|POST /api/penerimaan/impor`, `POST /api/penerimaan/impor/pratinjau` (multipart `berkas` + `loket`, tanpa menyimpan), `POST /api/penerimaan/impor/hapus`. Pratinjau dan impor memakai batas `uploads`.
 - **Publik `/api/public/*`:** `faq`, `keliling`, `jam`, `papan`, `statistik`, `kontak`, `visi-misi`, `profil`, `layanan`, `dokumen`, `dokumentasi`, `struktur`, `berita`, `berita/{slug}`, `beranda`, `situs`, `halaman/{slug}` (GET); `POST pesan` (formulir kontak, honeypot `kode_tambahan`); `POST kendaraan` (cek biaya pajak).
 
 ### 10.5 Model dan tabel
@@ -364,6 +366,8 @@ Semua model ULID kecuali `Setting`. Kolom berbahasa Indonesia.
 | UpdateStandard | `update_standards` | standar pemutakhiran |
 | Upload | `uploads` | catatan unggahan, `Prunable` (tak terpakai >1 hari) |
 | FieldActivity, FieldAttendance | `field_activities` (+pivot `field_activity_user`), `field_attendances` | absensi lapangan |
+| RevenueImport | `revenue_imports` | satu berkas STS yang diimpor: `loket` (kunci), `nama_loket` (saat impor), `nama_berkas`, tanggal awal/akhir, `jumlah_transaksi`, `jumlah_dilewati`, `total`, `tampil` (bawaan mati; untuk portal), `user_id` |
+| RevenueTransaction | `revenue_transactions` | id bigint, tanpa timestamps, `tanggal` disimpan `Y-m-d` (`$dateFormat`); dimensi laporan, 12 komponen rupiah + `jumlah`, `sidik` unik (HMAC); terhapus bersama impornya. **Tanpa** nama pemilik, nomor polisi, alamat |
 | Setting | `settings` | kunci `name`, `value` TEXT dengan cast array (bukan kolom json: MySQL json mengubah urutan kunci) |
 
 **Kunci `settings`:** `jam`, `papan`, `statistik`, `kontak`, `visiMisi`, `profil`, `situs`, `beranda` (`tarif` lama dibiarkan di DB). Default sebelum pertama disimpan: `Setting::INITIAL_*`/`UNSAVED_*`. `Setting::upgradeHomepage()` membaca dokumen Beranda lama ke bentuk terbaru (logo mitra, tautan kanal, video, kata bergilir).
@@ -408,6 +412,7 @@ Semua model ULID kecuali `Setting`. Kolom berbahasa Indonesia.
 - **Database lokal `pintu`** (MySQL, kredensial di `.env`) adalah database pengembangan dan sekaligus `DB_TEST_DATABASE`. Isinya kini **data milik pemilik** (dokumen Beranda yang sudah disimpan, jadwal Layanan Luar Kantor, daftar lokasi, unggahan, aktivitas). **Jangan reset atau seed ulang.**
 - `composer test` aman (SQLite di memori). **`composer test:mysql` mereset `pintu`**; bila memang harus dijalankan: cadangkan dulu (`mysqldump --defaults-extra-file=<berkas opsi sementara> --single-transaction --routines --triggers --default-character-set=utf8mb4 --set-gtid-purged=OFF pintu`), catat `CHECKSUM TABLE` dan jumlah baris, jalankan tes, pulihkan (`mysql … pintu < dump`), bandingkan checksum, lalu hapus berkas opsi dan dump. Jangan mencetak kredensial. Minta izin pemilik dulu.
 - Sebelum migrasi data di database pemilik, buat cadangan tabel terkait.
+- **Berkas STS dari pemilik** (`docs/Data Penerimaan/`, diabaikan git) berisi nama pemilik, nomor polisi, dan alamat wajib pajak: jangan di-commit, jangan mencetak barisnya ke percakapan atau log (ringkasan angka saja). Impor hanya menyimpan kolom laporan (D-047).
 - **Migrasi data awal** (bukan seeder): `insert_initial_services` (6 layanan terbit), `insert_initial_static_pages`, `insert_initial_update_standards` (8 standar), `insert_initial_documents` (9 draf tanpa berkas), `insert_initial_articles` (artikel peluncuran, draf), `insert_initial_documentations` (9 draf tanpa foto), `insert_initial_organization_units` (7 unit), `create_service_locations_table` (lokasi dari jadwal yang ada), `widen_mobile_service_stops_to_out_of_office_services` (jadwal lama → Samsat Keliling 01, nonaktif). Data contoh dashboard di peramban **tidak** dipindahkan ke server.
 - **Seeder:** `LocalAccountSeeder` membuat admin lokal (NIP dan kata sandinya ada di berkas seeder; jangan disalin ke dokumen atau percakapan). Hanya berjalan di env `local`.
 
@@ -443,7 +448,8 @@ Kebiasaan verifikasi proyek:
 - **Mesin pemilik:** Windows 11, Laravel Herd (`portal-uptdkotakupang.test`), PowerShell dan Git Bash, Node 24, PHP 8.3. Klien MySQL dari Laragon ada di PATH.
 - **Memori commit Windows sering hampir habis.** `vite build` bisa gagal ("os error 1450" atau "memory allocation failed"). Tutup tab panel browser agen, lalu build dengan:
   `RAYON_NUM_THREADS=1 TOKIO_WORKER_THREADS=1 NODE_OPTIONS=--max-old-space-size=768 node node_modules/vite/bin/vite.js build`.
-  Jangan menutup aplikasi pemilik (mis. aplikasi node lain yang sedang berjalan).
+  Jangan menutup aplikasi pemilik (mis. aplikasi node lain yang sedang berjalan). Pesan "Committing semi space failed" dari Node juga tanda memori commit habis, bukan heap terlalu kecil; periksa dengan `Get-Counter '\Memory\Committed Bytes','\Memory\Commit Limit'`.
+- **Batas PHP Herd lokal:** `upload_max_filesize = 2M`, `post_max_size = 8M`, `memory_limit = 128M` (`%USERPROFILE%\.config\herd\bin\php84\php.ini`, juga php81). Berkas STS harian (±200 KB) lolos, tetapi berkas bulanan (4,3 MB) ditolak sebelum sampai ke aplikasi sampai batas unggah dinaikkan (pengaturan PHP di Herd). Di Laravel Cloud batasnya perlu sedikitnya 10 MB (D-047).
 - **Akhir baris campuran:** repository menyimpan LF (`core.autocrlf=true`). Di working tree, berkas PHP dan `vite.config.ts` LF, sedangkan Blade portal, `main.js`, CSS portal, dan berkas TS dashboard CRLF. Alat Edit menjaga akhir baris berkas.
   - `grep`/`sed`/`cat -A` di Git Bash **menyembunyikan CR** dan `grep -c $'\r'` memberi hasil salah. Hitung akhir baris dengan Node (`/\r\n/g`).
   - `sed -i` di Git Bash diam-diam mengubah CRLF menjadi LF (diff seluruh berkas). Hindari, atau pulihkan CRLF dengan Node.
@@ -451,6 +457,8 @@ Kebiasaan verifikasi proyek:
 - **Jebakan skrip penyambung:** `String.replace(a, "teks")` di JavaScript menafsirkan `$$`, `$&`, `` $` ``, `$'` di teks pengganti (pernah merusak `$$(` di `main.js`). Pakai `s.split(a).join(b)` atau `s.replace(a, () => b)`. Garis miring terbalik di `node -e` lewat shell bisa hilang (namespace PHP rusak); pakai alat Edit atau berkas skrip.
 - **Tes:** `getJson`/`postJson` Laravel tidak mengirim cookie kecuali `withCredentials()`. `JsonResource::response()` sudah menjawab 201 untuk model baru. ULID berurutan menurut waktu pembuatan, jadi buat baris uji tidak urut nama agar mutan urutan tidak lolos kebetulan.
 - **Sesi agen lain** bisa mengubah berkas yang sama bersamaan (lihat §4).
+- **Panel browser bawaan** pernah menolak membuka situs lokal (navigasi macet lalu "denied or failed"); pulih setelah pemilik me-restart Claude Desktop.
+- **Tata letak dashboard:** `TabsList` shadcn memakai `group-data-[orientation=horizontal]/tabs:h-9`, yang mengalahkan `h-auto`, jadi deretan tab yang dilipat (`flex-wrap`) keluar dari latarnya; geser ke samping dalam pembungkus `overflow-x-auto` (Laporan Penerimaan). Tabel lebar di dalam `grid` melebarkan kolom grid dan halaman; pakai `flex flex-col` atau `min-w-0` pada pembungkusnya.
 
 ---
 
@@ -462,11 +470,12 @@ Belum pernah di-deploy ke Laravel Cloud; pemilik yang memutuskan dan menjalankan
 - Laravel MySQL; env `APP_URL` https, `SESSION_DRIVER=database`, `SESSION_SECURE_COOKIE=true`, `SESSION_LIFETIME=480`, `SESSION_EXPIRE_ON_CLOSE=true`, `CACHE_STORE=database`, token NJKB.
 - Administrator pertama: `php artisan pintu:create-admin <nip> "<nama>" --no-interaction` di tab *Commands*; kirim tautan aktivasi hanya ke pemilik akun.
 
-Checklist sebelum go-live (dari D-002, D-006, D-028, D-034):
+Checklist sebelum go-live (dari D-002, D-006, D-028, D-034, D-047):
 
 - [ ] Aktifkan rate limiting di edge Laravel Cloud (di Cloud, Laravel memercayai semua proxy sehingga IP bisa dipalsukan).
 - [ ] Buat dua bucket Object Storage produksi (privat + publik) dan nyalakan *Scheduler* (`model:prune`).
-- [ ] Pastikan `upload_max_filesize` dan `post_max_size` ≥ 10 MB.
+- [ ] Pastikan `upload_max_filesize` dan `post_max_size` ≥ 10 MB (unggahan D-028 dan berkas STS bulanan D-047).
+- [ ] `APP_KEY` produksi tidak diganti setelah berkas STS diimpor (sidik transaksi ganda memakainya, D-047).
 - [ ] Konfirmasi lokasi data ke unit hukum/Diskominfo (PP 71/2019; R2 dan database tanpa wilayah Indonesia).
 - [ ] Tentukan cadangan bucket dan database.
 - [ ] Uji Absensi (kamera dan GPS butuh HTTPS) di Laravel Cloud.
@@ -475,7 +484,7 @@ Checklist sebelum go-live (dari D-002, D-006, D-028, D-034):
 
 ---
 
-## 16. Ringkasan keputusan D-001 sampai D-046
+## 16. Ringkasan keputusan D-001 sampai D-047
 
 Rincian lengkap di [`docs/decisions.md`](docs/decisions.md). "Pemilik" = keputusan langsung pemilik.
 
@@ -527,6 +536,7 @@ Rincian lengkap di [`docs/decisions.md`](docs/decisions.md). "Pemilik" = keputus
 | D-044 | 10-15 | Daftar lokasi (lokasi baru otomatis masuk) dan salin jadwal per hari (≤14 hari, status mengikuti asal) |
 | D-045 | 10-15 | Portal ke React bertahap di atas Blade; kata bergilir di judul pembuka (gulir vertikal, berulang dengan jeda 10 detik) |
 | D-046 | 10-15 | Logo Ditlantas (kiri) dan Jasa Raharja (kanan) keluar dari balik lambang NTT; klik lambang untuk menyembunyikan/memunculkan |
+| D-047 | 10-15 | Laporan Penerimaan dari berkas STS BPAD per loket (menu dan modul `penerimaan` terpisah, pemilik); identitas wajib pajak tidak disimpan, transaksi ganda dikenali sidik HMAC; data awal September dan 14 Oktober = Loket SAMSAT kantor (pemilik). Portal menyusul: per impor setelah diperiksa, sampai kelurahan dengan kelompok <3 transaksi disamarkan (pemilik) |
 
 **Pola lintas keputusan:** teks HTML sebagai isi awal (D-023/024/026); data contoh peramban tidak dipindahkan, kecuali data awal lewat migrasi; hapus konten editorial hanya Administrator; pengelola Jadwal Pemutakhiran boleh membaca daftar modul lain; WITA sebagai acuan waktu; retensi pesan dan swafoto absensi belum diputuskan (menunggu unit hukum/kearsipan).
 
@@ -534,7 +544,7 @@ Rincian lengkap di [`docs/decisions.md`](docs/decisions.md). "Pemilik" = keputus
 
 ## 17. Riwayat commit
 
-78 commit di `laravel-development` (per commit perbaikan foto avatar). Tahapan besar:
+79 commit di `laravel-development` (per commit Laporan Penerimaan tahap 1). Tahapan besar:
 
 | Rentang | Isi |
 |---|---|
@@ -550,7 +560,8 @@ Rincian lengkap di [`docs/decisions.md`](docs/decisions.md). "Pemilik" = keputus
 | `a7d3e36`, `078f4b9` | React portal pertama: kata bergilir di judul pembuka, lalu berulang dengan jeda 10 detik (D-045) |
 | `8699e8d` | Logo Ditlantas dan Jasa Raharja di pembuka (D-046) |
 | `docs(pintu): add the single-file project context for AI agents` | Berkas ini, aturan baca-dan-perbarui di `AGENTS.md`, rujukan di README |
-| `fix(pintu): keep the officials' photos inside their circles` | Foto pejabat di bagan Struktur terpotong bulat, dipangkas dari atas |
+| `e0eb24d` | Foto pejabat di bagan Struktur terpotong bulat, dipangkas dari atas |
+| `feat(pintu): report daily and monthly revenue per counter from BPAD's STS files` | Laporan Penerimaan tahap 1: impor berkas STS per loket, laporan harian/bulanan di dashboard (D-047) |
 
 Repository terkait: `njkb-api-ntt` `main` — `f7a1ee5` (izin konsumen PINTU), `6a4c4f8` (404 untuk nomor polisi tidak terdaftar, sudah di-deploy).
 
@@ -573,6 +584,7 @@ Repository terkait: `njkb-api-ntt` `main` — `f7a1ee5` (izin konsumen PINTU), `
 
 **Fitur yang belum dibuat (dicatat di keputusan):**
 
+- **Laporan Penerimaan tahap 2 (D-047):** halaman portal `/penerimaan` (komponen React), sakelar tampil per impor di dashboard, dan API publik dengan saringan terdaftar serta penyamaran kelompok <3 transaksi di server. Berkas STS loket selain Loket SAMSAT belum diterima pemilik.
 - Bagian portal lain masih di `main.js` dan cek pajak belum React (D-045).
 - Ganti/lupa kata sandi sendiri, kirim tautan aktivasi via surel, MFA, waktu login terakhir (D-007, D-008).
 - Peran alur per langkah di server (D-010, D-022); versi draf untuk layanan terbit.
@@ -588,6 +600,7 @@ Repository terkait: `njkb-api-ntt` `main` — `f7a1ee5` (izin konsumen PINTU), `
 - `.gitignore` menyebut `scripts/stage-frontend.mjs` dan `/_site/` yang sudah tidak ada; komentar di `dashboard-pegawai.blade.php` menyebut folder `dashboard-app/` lama.
 - Batas login 30/menit per IP mungkin perlu dinaikkan bila semua pegawai berbagi satu IP kantor.
 - CSS portal tidak berversi (lihat §8.2).
+- Tab bertingkat `TabsList className="… h-auto flex-wrap"` di Statistik Layanan dan Layanan Luar Kantor bisa keluar dari latarnya bila dilipat di layar sempit (lihat §14); belum diperbaiki.
 
 ---
 
@@ -612,5 +625,6 @@ Bila commit dibuat sebelum hash-nya diketahui, tulis status "belum di-commit" la
 
 | Tanggal | Perubahan |
 |---|---|
+| 2026-10-15 | Laporan Penerimaan tahap 1 (D-047): menu dan modul `penerimaan`, impor berkas STS dengan pratinjau, laporan harian/bulanan/rentang dengan saringan, bento, grafik, tabel, dan CSV; status, §9.1–9.2, §10.4–10.5, §12, §14 (batas PHP Herd, memori commit), §15, §16, §18 diperbarui. Diperiksa di browser setelah pemilik me-restart Claude Desktop (perbaikan: halaman melebar karena tabel riwayat impor dan deretan tab, lencana angka miliaran) |
 | 2026-10-15 | Foto pejabat di bagan Struktur Organisasi tidak lagi menjuntai keluar lingkaran: foto mengisi avatar dan dipangkas dari atas (§8.2) |
 | 2026-10-15 | Berkas dibuat: konteks lengkap proyek sampai D-046 (`8699e8d`), atas permintaan pemilik untuk agen AI berikutnya. `AGENTS.md` kini mewajibkan agen membaca dan memperbarui berkas ini |
