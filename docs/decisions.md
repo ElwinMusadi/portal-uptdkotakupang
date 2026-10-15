@@ -690,3 +690,21 @@ Isi papan layanan jarang berubah, jadi pemilik tidak ingin menyimpannya ulang se
 | Server | Tidak berubah: `GET /api/public/papan` tetap memberikan `diperbarui` dari penyimpanan terakhir. |
 
 Jadwal Pemutakhiran di dashboard masih bisa mencatat papan sebagai "Setiap hari kerja"; frekuensinya diubah pengelola bila perlu.
+
+## D-051 · 2026-10-15 · Antrean Online: rencana dan keputusan awal
+
+Pemilik meminta Sistem Antrean Online (Queue Management System) di bagian Layanan, berdasarkan flowchart pemilik: nomor antrean tercetak menggantikan nomor tulis tangan, satu nomor mengikuti berkas dari Meja Informasi sampai Loket 2 – Penyerahan, dan wajib pajak melacak tahap berkasnya lewat QR. Rencana lengkap: [`docs/rencana-antrean-online.md`](rencana-antrean-online.md). **Belum dibangun**; Irisan 1 dikerjakan setelah rencana disetujui.
+
+| Hal | Keputusan |
+|---|---|
+| Kode layanan | Sesuai flowchart (keputusan pemilik): **A** Registrasi Ulang/Perpanjangan STNK 5 Tahun dan Duplikat STNK, **B** Pengesahan/Pajak Tahunan, **C** BBN/Mutasi, ditambah **D** Pembayaran Online. Urutan tahap per layanan bisa diatur Administrator; isi awal: A dan B melewati semua tahap, C tanpa Cetak STNK, D tanpa Cetak SKPD. |
+| Nomor | **A-001** (pemilik): huruf layanan, tanda hubung, tiga digit; mulai dari 001 setiap hari (WITA). Dicetak **hanya di Meja Informasi** setelah berkas lengkap (pemilik), dua lembar di **printer thermal 80 mm** (pemilik): untuk WP dan untuk berkas, keduanya ber-QR. |
+| Status tahap | **Pindai QR dulu, API Samsat Online menyusul** (pemilik). Setiap pos menandai tahapnya, tetapi memindai **tidak wajib** (pemilik): bisa juga dipilih dari daftar, dan tahap yang terlewat selesai otomatis saat pos berikutnya menandai. |
+| Pemanggilan | **Layar TV + suara** (pemilik) di ruang tunggu, hanya di perangkat yang didaftarkan Administrator. |
+| Akun | **Akun pribadi** per petugas (pemilik), modul dashboard `antrean`. |
+| Nomor polisi | Disimpan **tanpa batas waktu** untuk mencari berkas atau nomor yang tercecer; hanya Administrator yang menghapusnya. Tampil **apa adanya** di halaman lacak dan layar TV (pemilik). Halaman lacak hanya bisa dibuka dengan kode acak dari QR, tanpa pencarian publik. |
+| Lintas hari | Tiket yang belum selesai **tetap aktif dengan nomor lamanya**, ditandai tanggalnya (pemilik). |
+| Papan Layanan | **Tetap manual** (D-050) sampai antrean benar-benar berjalan, lalu diambil dari antrean (pemilik). |
+| Mulai pakai | **Uji coba paralel** dengan nomor manual (pemilik), setelah PINTU di-deploy ke Laravel Cloud. |
+
+Belum diputuskan: pustaka pembuat QR (dependensi baru), akun petugas non-UPTD (D-007 mewajibkan NIP), daftar loket fisik, antrean prioritas, kalimat suara, penjelasan di Kebijakan Privasi, dan waktu deploy (rencana §9).
