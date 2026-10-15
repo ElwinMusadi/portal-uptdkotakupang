@@ -21,6 +21,7 @@ import { useKonfirmasi } from "@/components/data/confirm"
 import { DataTable, HeaderUrut, pembantuKolom } from "@/components/data/data-table"
 import { Halaman, PengantarHalaman } from "@/components/data/page"
 import { MenuBaris } from "@/components/data/row-actions"
+import { NadaBadge } from "@/components/data/status-badge"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -44,10 +45,12 @@ import {
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
+import { Switch } from "@/components/ui/switch"
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { angka, hariIniIso, rupiah, selisihHari, tanggal, tanggalJam, ukuranBerkas } from "@/lib/format"
+import { sesi } from "@/lib/auth"
+import { angka, hariIniIso, rupiah, tanggal, tanggalJam, ukuranBerkas } from "@/lib/format"
 import {
   bagianOpsen,
   bagianProvinsi,
@@ -57,11 +60,11 @@ import {
   LABEL_DIMENSI,
   labelNilai,
   MAKS_BERKAS,
-  MAKS_HARI,
   perubahan,
   unduhTeks,
   useDaftarImpor,
   useHapusImpor,
+  useTampilImpor,
   useLaporanPenerimaan,
   useLoketPenerimaan,
   usePratinjauImpor,
@@ -77,77 +80,17 @@ import {
 } from "@/lib/penerimaan"
 import { cn } from "@/lib/utils"
 
-/* ---------- Periode ---------- */
-
-type Mode = "harian" | "bulanan" | "rentang"
-
-interface Periode {
-  mode: Mode
-  dari: string
-  sampai: string
-}
-
-const TANGGAL_ISO = /^\d{4}-\d{2}-\d{2}$/
-const iso = (d: Date) => d.toISOString().slice(0, 10)
-
-function geserHari(t: string, n: number): string {
-  const [y, m, d] = t.split("-").map(Number)
-  return iso(new Date(Date.UTC(y, m - 1, d + n)))
-}
-
-/** Hari terakhir bulan "YYYY-MM" */
-function akhirBulan(bulan: string): string {
-  const [y, m] = bulan.split("-").map(Number)
-  return iso(new Date(Date.UTC(y, m, 0)))
-}
-
-function geserBulan(bulan: string, n: number): string {
-  const [y, m] = bulan.split("-").map(Number)
-  return iso(new Date(Date.UTC(y, m - 1 + n, 1))).slice(0, 7)
-}
-
-const bulanPenuh = (dari: string, sampai: string) => dari.endsWith("-01") && sampai === akhirBulan(dari.slice(0, 7))
-
-function periodeBulan(bulan: string): Periode {
-  return { mode: "bulanan", dari: `${bulan}-01`, sampai: akhirBulan(bulan) }
-}
-
-/** Periode yang paling cocok untuk rentang tanggal, mis. dari sebuah impor */
-function periodeDari(dari: string, sampai: string): Periode {
-  if (dari === sampai) return { mode: "harian", dari, sampai }
-  if (bulanPenuh(dari, sampai)) return { mode: "bulanan", dari, sampai }
-  return { mode: "rentang", dari, sampai }
-}
-
-function gantiMode(p: Periode, mode: Mode, hariIni: string): Periode {
-  if (mode === "harian") {
-    const hari = p.sampai > hariIni ? hariIni : p.sampai
-    return { mode, dari: hari, sampai: hari }
-  }
-  if (mode === "bulanan") return periodeBulan(p.sampai.slice(0, 7))
-  return p.dari === p.sampai ? { mode, dari: geserHari(p.sampai, -6), sampai: p.sampai } : { ...p, mode }
-}
-
-function geserPeriode(p: Periode, n: number): Periode {
-  if (p.mode === "bulanan") return periodeBulan(geserBulan(p.dari.slice(0, 7), n))
-  const hari = geserHari(p.dari, n)
-  return { mode: "harian", dari: hari, sampai: hari }
-}
-
-const fmtBulan = new Intl.DateTimeFormat("id-ID", { month: "long", year: "numeric", timeZone: "UTC" })
-
-function labelPeriode(dari: string, sampai: string): string {
-  if (dari === sampai) return tanggal(dari, "lengkap")
-  if (bulanPenuh(dari, sampai)) return fmtBulan.format(new Date(`${dari}T00:00:00Z`))
-  return `${tanggal(dari)} – ${tanggal(sampai)}`
-}
-
-function galatPeriode(p: Periode): string | null {
-  if (!TANGGAL_ISO.test(p.dari) || !TANGGAL_ISO.test(p.sampai)) return "Pilih tanggal laporan."
-  if (p.sampai < p.dari) return "Tanggal akhir tidak boleh sebelum tanggal awal."
-  if (selisihHari(p.dari, p.sampai) + 1 > MAKS_HARI) return "Rentang laporan paling lama satu tahun."
-  return null
-}
+import {
+  galatPeriode,
+  gantiMode,
+  geserPeriode,
+  labelPeriode,
+  periodeBulan,
+  periodeDari,
+  TANGGAL_ISO,
+  type Mode,
+  type Periode,
+} from "../../portal/penerimaan/periode"
 
 /* ---------- Angka ---------- */
 
@@ -1097,7 +1040,28 @@ function RiwayatImpor({
   lihat: (i: ImporPenerimaan) => void
 }) {
   const hapus = useHapusImpor()
+  const tampil = useTampilImpor()
   const konfirmasi = useKonfirmasi()
+  // Hanya Administrator yang menampilkan impor di portal (D-048); server juga menolaknya
+  const administrator = sesi().peran === "administrator"
+
+  const ubahTampil = async (impor: ImporPenerimaan, nyala: boolean) => {
+    if (nyala) {
+      const ya = await konfirmasi({
+        judul: `Tampilkan ${judulImpor(impor)} di portal?`,
+        deskripsi:
+          "Penerimaannya tampil untuk umum di halaman Laporan Penerimaan portal, tanpa identitas wajib pajak. Kelompok dengan kurang dari 3 transaksi disamarkan. Pastikan berkasnya sudah diperiksa.",
+        label: "Tampilkan",
+      })
+      if (!ya) return
+    }
+    try {
+      await tampil.mutateAsync({ id: impor.id, tampil: nyala })
+      toast.success(nyala ? "Impor tampil di portal" : "Impor disembunyikan dari portal")
+    } catch (e) {
+      toast.error("Tampilan di portal gagal diubah", { description: (e as Error).message })
+    }
+  }
 
   const hapusImpor = async (daftar: ImporPenerimaan[]) => {
     const ya = await konfirmasi({
@@ -1151,6 +1115,20 @@ function RiwayatImpor({
       header: ({ column }) => <HeaderUrut column={column} judul="Total" kanan />,
       cell: ({ row }) => <div className="text-right tabular-nums">{rupiah(row.original.total)}</div>,
     }),
+    ki.accessor("tampil", {
+      header: "Portal",
+      cell: ({ row }) =>
+        administrator ? (
+          <Switch
+            checked={row.original.tampil}
+            disabled={tampil.isPending}
+            onCheckedChange={(nyala) => void ubahTampil(row.original, nyala)}
+            aria-label={`Tampilkan ${judulImpor(row.original)} di portal`}
+          />
+        ) : (
+          <NadaBadge nada={row.original.tampil ? "sukses" : "netral"}>{row.original.tampil ? "Tampil" : "Belum tampil"}</NadaBadge>
+        ),
+    }),
     ki.accessor("dibuat", {
       header: ({ column }) => <HeaderUrut column={column} judul="Diimpor" />,
       cell: ({ row }) => (
@@ -1181,7 +1159,8 @@ function RiwayatImpor({
         </h2>
         <p className="max-w-2xl text-sm text-muted-foreground">
           Transaksi yang sudah pernah diimpor dilewati, jadi berkas bulanan aman diimpor setelah berkas hariannya. Menghapus
-          impor menghapus transaksinya dari laporan.
+          impor menghapus transaksinya dari laporan. Impor baru tampil di portal setelah Administrator menyalakan kolom
+          Portal.
         </p>
       </div>
       <DataTable

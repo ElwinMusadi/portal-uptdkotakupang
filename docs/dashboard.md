@@ -81,7 +81,7 @@ resources/js/dashboard/
 | Alur Publikasi | `#/alur` | semua konten beralur | — |
 | Pesan & Pengaduan | `#/pesan` | koleksi `pesan` | `kontak.html#masukan` |
 | Statistik Layanan | `#/statistik` | pengaturan `statistik` | `index.html#transparansi` |
-| Laporan Penerimaan | `#/penerimaan` | server (`/api/penerimaan/…`) dari berkas STS | — (belum; tahap portal menyusul) |
+| Laporan Penerimaan | `#/penerimaan` | server (`/api/penerimaan/…`) dari berkas STS | `penerimaan.html` (impor yang dinyalakan Administrator) |
 | Berita & Pengumuman | `#/berita` | koleksi `berita` | `informasi.html`, `berita-detail.html` |
 | Dokumentasi Kegiatan | `#/dokumentasi` | koleksi `dokumentasi` | `dokumentasi.html` |
 | Regulasi & Unduhan | `#/unduhan` | koleksi `dokumen` | `unduhan.html` |
@@ -292,7 +292,7 @@ Halaman *Laporan Penerimaan* (`#/penerimaan`, `pages/penerimaan.tsx`, modul `pen
 - Periode **Harian**, **Bulanan**, atau **Rentang** (maks. satu tahun), dengan tombol hari/bulan sebelumnya dan berikutnya. Sebelum dipilih, laporan menampilkan tanggal terakhir yang sudah diimpor. Saringan berupa daftar pilihan bercentang yang bisa dicari (loket, jenis daftar, jenis kendaraan, kepemilikan, warna plat, merek, asal UPT, kecamatan, kelurahan) dan pilihan tunggakan; isinya nilai yang ada dalam periode itu.
 - Isi laporan: bento ringkasan (total penerimaan dengan susunan komponen dan perubahan terhadap periode pembanding, transaksi, kendaraan baru dari jenis daftar Baru, pajak provinsi, opsen kabupaten/kota; lencana angka turun ke bawah angka bila tempatnya tidak cukup), kartu per loket (loket yang terjadwal melayani tetapi belum diimpor ditandai "Belum ada data" pada laporan harian tanpa saringan), grafik per hari (untuk lebih dari sehari; batang membuka laporan harian), grafik bertumpuk per jenis daftar, jenis kendaraan, kecamatan, dan asal UPT (delapan terbesar, sisanya digabung), dan tabel rincian bertab per saringan dan per tanggal. Nama di kolom pertama tabel menyaring laporan dengannya; **Ekspor CSV** mengunduh tab yang dibuka (pemisah titik koma dengan BOM, untuk Excel berbahasa Indonesia).
 - **Riwayat impor** mendaftar setiap impor (periode, berkas, loket, transaksi baru dan yang dilewati, total, pengimpor). Membuka impor menampilkan laporannya; menghapusnya menghapus transaksinya dari laporan.
-- Tampil di portal per impor menyusul di tahap berikutnya; `tampil` sudah ada di data dan selalu mati.
+- Kolom **Portal** di Riwayat impor ([D-048](decisions.md#d-048--2026-10-15--halaman-portal-laporan-penerimaan)): Administrator menyalakan impor yang sudah diperiksa, setelah konfirmasi, agar penerimaannya tampil di halaman Laporan Penerimaan portal (`/penerimaan`), dan bisa mematikannya lagi. Pegawai lain melihat statusnya (Tampil atau Belum tampil). Kepala halaman punya tautan **Lihat di portal**.
 
 ## Kontak & Kanal
 

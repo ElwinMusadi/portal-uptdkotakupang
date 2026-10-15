@@ -2,7 +2,7 @@
 
 > **Untuk agen AI dan pengembang berikutnya.** Satu berkas ini memuat seluruh konteks proyek PINTU sampai status terakhirnya: tujuan, arsitektur, aturan kerja dengan pemilik, keputusan, integrasi, cara menguji, jebakan lingkungan, dan pekerjaan yang tertunda. Baca berkas ini lebih dulu, lalu ikuti tautan ke dokumen rinci bila perlu.
 >
-> **Terakhir diperbarui:** 2026-10-15 · branch `laravel-development` · sampai commit Laporan Penerimaan tahap 1 (D-047, sesudah `e0eb24d`).
+> **Terakhir diperbarui:** 2026-10-15 · branch `laravel-development` · sampai commit Laporan Penerimaan tahap 2 (D-048, halaman portal, sesudah `8d481be`).
 >
 > **Wajib diperbarui setiap ada perubahan** (lihat [§19](#19-prosedur-memperbarui-dokumen-ini)). Jangan pernah menulis rahasia (kata sandi, NIP akun uji, token, isi `.env`) di berkas ini.
 
@@ -23,7 +23,7 @@
 13. [Pengujian dan verifikasi](#13-pengujian-dan-verifikasi)
 14. [Lingkungan pengembangan dan jebakannya](#14-lingkungan-pengembangan-dan-jebakannya)
 15. [Deploy dan checklist go-live](#15-deploy-dan-checklist-go-live)
-16. [Ringkasan keputusan D-001 sampai D-047](#16-ringkasan-keputusan-d-001-sampai-d-047)
+16. [Ringkasan keputusan D-001 sampai D-048](#16-ringkasan-keputusan-d-001-sampai-d-048)
 17. [Riwayat commit](#17-riwayat-commit)
 18. [Pekerjaan tertunda dan hal yang diketahui](#18-pekerjaan-tertunda-dan-hal-yang-diketahui)
 19. [Prosedur memperbarui dokumen ini](#19-prosedur-memperbarui-dokumen-ini)
@@ -76,11 +76,11 @@ Satu aplikasi Laravel berisi empat bagian:
 | Hal | Status |
 |---|---|
 | Branch kerja | `laravel-development` (`main` = situs statis lama yang masih dilayani Cloudflare Pages; jangan diubah) |
-| Commit terakhir di origin | `feat(pintu): report daily and monthly revenue per counter from BPAD's STS files` (D-047, Laporan Penerimaan tahap 1), sesudah `e0eb24d` (foto avatar Struktur). Hash: `git log -3 --oneline` |
+| Commit terakhir di origin | `feat(pintu): publish the revenue report on the portal with small groups masked` (D-048, Laporan Penerimaan tahap 2), sesudah `8d481be` (D-047, Laporan Penerimaan tahap 1). Hash: `git log -3 --oneline` |
 | Working tree | Bersih |
-| Tes | `composer test`: **1058 tes lulus, 4806 assertion** (SQLite di memori). Uji mutasi D-047: 66 dari 67 mutan mati (sisanya setara di SQLite) |
-| Pemeriksaan frontend | `npm run typecheck`, `npm run lint`, build Vite: lulus. Halaman Laporan Penerimaan diperiksa di browser (lebar 415 px dan 1280 px, laporan harian 14 Oktober dan bulanan September dengan data nyata; saringan, tab rincian, klik nama untuk menyaring, riwayat impor, pratinjau impor berkas buatan tanpa menyimpan, isi CSV) |
-| Keputusan terakhir | D-047 (Laporan Penerimaan dari berkas STS per loket) |
+| Tes | `composer test`: **1101 tes lulus, 5041 assertion** (SQLite di memori). Uji mutasi: D-047 66 dari 67 mutan mati, D-048 36 dari 37 (sisanya setara) |
+| Pemeriksaan frontend | `npm run typecheck`, `npm run lint`, build Vite: lulus. Dashboard Laporan Penerimaan diperiksa di browser (415 px dan 1280 px). Halaman portal `/penerimaan` diperiksa di browser (430 px dan 1280 px): keadaan belum diterbitkan dengan API sungguhan, lalu laporan berisi data dev yang sudah disamarkan server (dihitung dalam transaksi yang dibatalkan, tanpa mengubah tanda tampil) lewat `fetch` tiruan: periode, saringan, kartu kelompok, tabel, CSV |
+| Keputusan terakhir | D-048 (halaman portal Laporan Penerimaan) |
 | Deploy Laravel Cloud | **Belum.** Pemilik: "jangan deploy ke Laravel Cloud dulu" (D-035). Deploy adalah langkah pemilik |
 | Produksi | Masih Cloudflare Pages dari branch `main` (situs statis lama) |
 | API data kendaraan (NJKB) | Token PINTU terpasang di `.env` lokal dan lolos Cloudflare Access; Worker `njkb-api-ntt` sudah di-deploy pemilik dengan perbaikan 404 (commit `6a4c4f8`), terverifikasi 2026-10-15 07.04 WITA. **Uji dengan kendaraan sungguhan oleh pemilik belum dikonfirmasi** |
@@ -206,7 +206,7 @@ Berkas alat: `AGENTS.md`, `boost.json`, `kilo.json` (skill di `.agents/skills/`,
 
 ### 8.1 Halaman
 
-`index` (Beranda), `profil` (Tentang UPTD), `visi-misi`, `struktur-organisasi`, `layanan` (Persyaratan Layanan), `jadwal` (Jam Pelayanan dan Layanan Luar Kantor), `informasi` (Berita & Pengumuman), `dokumentasi`, `unduhan` (Regulasi & Unduhan), `kontak` (Kontak & Pengaduan), `login` (Login Pegawai), `dashboard-pegawai` (stub pengalihan ke `/dashboard`), `design-system`, `kebijakan-privasi`, `syarat-ketentuan`, `berita-detail` (templat untuk `/berita/{slug}`).
+`index` (Beranda), `profil` (Tentang UPTD), `visi-misi`, `struktur-organisasi`, `layanan` (Persyaratan Layanan), `jadwal` (Jam Pelayanan dan Layanan Luar Kantor), `informasi` (Berita & Pengumuman), `dokumentasi`, `unduhan` (Regulasi & Unduhan), `penerimaan` (Laporan Penerimaan, D-048), `kontak` (Kontak & Pengaduan), `login` (Login Pegawai), `dashboard-pegawai` (stub pengalihan ke `/dashboard`), `design-system`, `kebijakan-privasi`, `syarat-ketentuan`, `berita-detail` (templat untuk `/berita/{slug}`).
 
 - Alamat lama `*.html` dialihkan 301 ke alamat bersih dengan query string tetap. `/berita-detail(.html)` → 301 `/informasi`.
 - Rute portal tanpa sesi, tanpa CSRF, tanpa cookie.
@@ -239,6 +239,8 @@ Berkas alat: `AGENTS.md`, `boost.json`, `kilo.json` (skill di `.agents/skills/`,
 |---|---|---|
 | `beranda/judul-pembuka.tsx` + `.css` | `<h1 data-react="judul-pembuka">` | Judul pembuka dari `GET /api/public/beranda`. Kata judul yang sama dengan salah satu *kata bergilir* bergulir vertikal ke kata lain (1,2 detik setelah tampil, 1,6 detik per kata), kembali ke kata judul, diam 10 detik, lalu berulang. Berhenti saat tab tidak dilihat; "kurangi gerak" = judul diam; pembaca layar membaca judul utuh. Bila lebar kata mengubah letak baris, kata diberi baris sendiri agar judul tidak melompat |
 | `beranda/lambang-pembuka.tsx` + `.css` | `<div class="hero__lambang" data-react="lambang-pembuka">` | Lambang NTT di tengah; logo Ditlantas (kiri) dan Jasa Raharja (kanan) disimpan di `<template data-lambang-mitra>`. ±2,5 detik setelah halaman dibuka keduanya keluar dari balik lambang (hanya otomatis sekali per muat). Lambang NTT menjadi tombol (`aria-expanded`) untuk menyembunyikan/memunculkan |
+| `penerimaan/laporan-penerimaan.tsx` + `.css` | `<div class="penerimaan" data-react="laporan-penerimaan">` di `/penerimaan` | Laporan Penerimaan publik (D-048) dari `GET /api/public/penerimaan`: periode harian/bulanan/rentang dalam tanggal yang tersedia, saringan bercentang (loket, jenis daftar, jenis kendaraan, kecamatan, kelurahan) dari `<details>`, panel gelap ringkasan (gaya dasbor transparansi beranda), batang per hari, kartu per kelompok dengan baris "Lainnya (disamarkan)" bergaris, tabel rincian bertab, unduh CSV. Periode dan saringan ditulis ke alamat halaman (`?dari=&sampai=&kecamatan=…`). Tanpa Recharts (±6 KB gzip) |
+| `penerimaan/periode.ts`, `penerimaan/csv.ts` | (modul bersama) | Periode laporan (geser hari/bulan, label tanggal Indonesia) dan berkas CSV (titik koma, BOM); dipakai juga halaman dashboard Laporan Penerimaan |
 | `kata-bergilir.ts` | (modul bersama) | `kataDalamJudul()` dan `pisahJudul()`: pencocokan kata utuh tanpa membedakan huruf besar-kecil. Server memakai aturan yang sama (`Setting::rotatingWordIn`); dashboard mengimpornya untuk validasi |
 
 **Menambah komponen React portal baru:** buat `resources/js/portal/<bagian>/<nama>.tsx` yang mengekspor `pasang(el)`, impor CSS-nya dari komponen itu, daftarkan di peta `KOMPONEN` di `main.tsx`, tandai elemen di Blade dengan `data-react="<nama>"` (isi HTML tetap sebagai isi awal), pastikan halaman memuat `skrip/portal`, lalu pindahkan kode `main.js` terkait.
@@ -334,6 +336,7 @@ Kontrak lengkap ada di [`docs/api.md`](docs/api.md). Ringkasan:
 | `kendaraan` | 30/menit per pegawai |
 | `public-kendaraan` | 5/menit dan 20/jam per IP, plus 30/menit untuk seluruh portal |
 | `uploads` | 30/menit per pegawai (juga clock-in) |
+| `public-penerimaan` | 60/menit/IP untuk laporan penerimaan publik (D-048), selain `public-api` |
 
 ### 10.4 Endpoint (ringkas)
 
@@ -341,8 +344,8 @@ Kontrak lengkap ada di [`docs/api.md`](docs/api.md). Ringkasan:
 - **Koleksi `/api/koleksi/{nama}`** (index, store, show, `PATCH`): `faq` (+`urutan`, `hapus`), `keliling` (+`hapus`, `salin-minggu`, `salin-hari`), `lokasi` (+`hapus`), `penyesuaian` (+`hapus`), `pesan` (+`hapus`), `layanan` (+`urutan`, `hapus`), `dokumen` (+`hapus`), `berita` (+`hapus`), `dokumentasi` (+`hapus`), `unit` (+`urutan`, `hapus`), `halaman` (hanya baca/sunting), `pemutakhiran` (+`urutan`, `hapus`).
 - **Pengaturan:** `GET /api/pengaturan` (waktu simpan), `GET|PUT /api/pengaturan/{jam|papan|statistik|kontak|visiMisi|profil|beranda|situs}` (gate `SettingPolicy`; `situs` disimpan hanya Administrator).
 - **Lain-lain:** `POST /api/unggah`, `GET /api/berkas/{id}` (berkas privat), `GET /api/aktivitas?limit=`, `GET /api/kendaraan/{nopol}`, `/api/absensi/kegiatan` (Administrator), `GET /api/absen`, `POST /api/absen/{id}` (clock-in).
-- **Laporan Penerimaan (D-047, `RevenueImportPolicy`, modul `penerimaan`):** `GET /api/penerimaan/laporan?dari&sampai&<saringan>[]&tunggakan`, `GET /api/penerimaan/loket`, `GET|POST /api/penerimaan/impor`, `POST /api/penerimaan/impor/pratinjau` (multipart `berkas` + `loket`, tanpa menyimpan), `POST /api/penerimaan/impor/hapus`. Pratinjau dan impor memakai batas `uploads`.
-- **Publik `/api/public/*`:** `faq`, `keliling`, `jam`, `papan`, `statistik`, `kontak`, `visi-misi`, `profil`, `layanan`, `dokumen`, `dokumentasi`, `struktur`, `berita`, `berita/{slug}`, `beranda`, `situs`, `halaman/{slug}` (GET); `POST pesan` (formulir kontak, honeypot `kode_tambahan`); `POST kendaraan` (cek biaya pajak).
+- **Laporan Penerimaan (D-047, `RevenueImportPolicy`, modul `penerimaan`):** `GET /api/penerimaan/laporan?dari&sampai&<saringan>[]&tunggakan`, `GET /api/penerimaan/loket`, `GET|POST /api/penerimaan/impor`, `POST /api/penerimaan/impor/pratinjau` (multipart `berkas` + `loket`, tanpa menyimpan), `POST /api/penerimaan/impor/hapus`, `PATCH /api/penerimaan/impor/{id}` `{tampil}` (khusus Administrator, D-048). Pratinjau dan impor memakai batas `uploads`.
+- **Publik `/api/public/*`:** `faq`, `keliling`, `jam`, `papan`, `statistik`, `kontak`, `visi-misi`, `profil`, `layanan`, `dokumen`, `dokumentasi`, `struktur`, `berita`, `berita/{slug}`, `beranda`, `situs`, `halaman/{slug}`, `penerimaan` (GET; satu-satunya yang menerima parameter: `dari`, `sampai`, dan saringan terdaftar, D-048); `POST pesan` (formulir kontak, honeypot `kode_tambahan`); `POST kendaraan` (cek biaya pajak).
 
 ### 10.5 Model dan tabel
 
@@ -484,7 +487,7 @@ Checklist sebelum go-live (dari D-002, D-006, D-028, D-034, D-047):
 
 ---
 
-## 16. Ringkasan keputusan D-001 sampai D-047
+## 16. Ringkasan keputusan D-001 sampai D-048
 
 Rincian lengkap di [`docs/decisions.md`](docs/decisions.md). "Pemilik" = keputusan langsung pemilik.
 
@@ -537,6 +540,7 @@ Rincian lengkap di [`docs/decisions.md`](docs/decisions.md). "Pemilik" = keputus
 | D-045 | 10-15 | Portal ke React bertahap di atas Blade; kata bergilir di judul pembuka (gulir vertikal, berulang dengan jeda 10 detik) |
 | D-046 | 10-15 | Logo Ditlantas (kiri) dan Jasa Raharja (kanan) keluar dari balik lambang NTT; klik lambang untuk menyembunyikan/memunculkan |
 | D-047 | 10-15 | Laporan Penerimaan dari berkas STS BPAD per loket (menu dan modul `penerimaan` terpisah, pemilik); identitas wajib pajak tidak disimpan, transaksi ganda dikenali sidik HMAC; data awal September dan 14 Oktober = Loket SAMSAT kantor (pemilik). Portal menyusul: per impor setelah diperiksa, sampai kelurahan dengan kelompok <3 transaksi disamarkan (pemilik) |
+| D-048 | 10-15 | Halaman portal `/penerimaan` (menu Informasi + tautan Transparansi beranda, pemilik); hanya impor yang dinyalakan Administrator (pemilik); saringan utama loket/jenis daftar/jenis kendaraan/kecamatan/kelurahan (pemilik); total + komponen + CSV (pemilik); penyamaran <3 transaksi di server dengan penggabungan kedua; API publik menerima parameter terdaftar (pengecualian D-004) |
 
 **Pola lintas keputusan:** teks HTML sebagai isi awal (D-023/024/026); data contoh peramban tidak dipindahkan, kecuali data awal lewat migrasi; hapus konten editorial hanya Administrator; pengelola Jadwal Pemutakhiran boleh membaca daftar modul lain; WITA sebagai acuan waktu; retensi pesan dan swafoto absensi belum diputuskan (menunggu unit hukum/kearsipan).
 
@@ -544,7 +548,7 @@ Rincian lengkap di [`docs/decisions.md`](docs/decisions.md). "Pemilik" = keputus
 
 ## 17. Riwayat commit
 
-79 commit di `laravel-development` (per commit Laporan Penerimaan tahap 1). Tahapan besar:
+80 commit di `laravel-development` (per commit Laporan Penerimaan tahap 2). Tahapan besar:
 
 | Rentang | Isi |
 |---|---|
@@ -561,7 +565,8 @@ Rincian lengkap di [`docs/decisions.md`](docs/decisions.md). "Pemilik" = keputus
 | `8699e8d` | Logo Ditlantas dan Jasa Raharja di pembuka (D-046) |
 | `docs(pintu): add the single-file project context for AI agents` | Berkas ini, aturan baca-dan-perbarui di `AGENTS.md`, rujukan di README |
 | `e0eb24d` | Foto pejabat di bagan Struktur terpotong bulat, dipangkas dari atas |
-| `feat(pintu): report daily and monthly revenue per counter from BPAD's STS files` | Laporan Penerimaan tahap 1: impor berkas STS per loket, laporan harian/bulanan di dashboard (D-047) |
+| `8d481be` | Laporan Penerimaan tahap 1: impor berkas STS per loket, laporan harian/bulanan di dashboard (D-047) |
+| `feat(pintu): publish the revenue report on the portal with small groups masked` | Laporan Penerimaan tahap 2: halaman portal `/penerimaan`, sakelar Portal khusus Administrator, API publik dengan penyamaran (D-048) |
 
 Repository terkait: `njkb-api-ntt` `main` — `f7a1ee5` (izin konsumen PINTU), `6a4c4f8` (404 untuk nomor polisi tidak terdaftar, sudah di-deploy).
 
@@ -570,6 +575,8 @@ Repository terkait: `njkb-api-ntt` `main` — `f7a1ee5` (izin konsumen PINTU), `
 ## 18. Pekerjaan tertunda dan hal yang diketahui
 
 **Menunggu pemilik:**
+
+- Menyalakan kolom **Portal** untuk impor yang sudah diperiksa (Administrator, Dashboard › Laporan Penerimaan › Riwayat impor). Sampai itu, `/penerimaan` di portal menyatakan laporan belum diterbitkan.
 
 - Uji cek data kendaraan dengan kendaraan sungguhan (portal: nomor polisi + 5 karakter terakhir nomor rangka, sebelum 21.00 WITA) belum dikonfirmasi.
 - Deploy ke Laravel Cloud dan cutover domain (lihat §15).
@@ -584,7 +591,8 @@ Repository terkait: `njkb-api-ntt` `main` — `f7a1ee5` (izin konsumen PINTU), `
 
 **Fitur yang belum dibuat (dicatat di keputusan):**
 
-- **Laporan Penerimaan tahap 2 (D-047):** halaman portal `/penerimaan` (komponen React), sakelar tampil per impor di dashboard, dan API publik dengan saringan terdaftar serta penyamaran kelompok <3 transaksi di server. Berkas STS loket selain Loket SAMSAT belum diterima pemilik.
+- Berkas STS loket selain Loket SAMSAT belum diterima pemilik (D-047).
+- Penyamaran Laporan Penerimaan publik (D-048) belum mencegah selisih dua hasil saringan yang hanya berbeda satu transaksi; pilihan perbaikan: batasi kombinasi saringan atau bulatkan angka.
 - Bagian portal lain masih di `main.js` dan cek pajak belum React (D-045).
 - Ganti/lupa kata sandi sendiri, kirim tautan aktivasi via surel, MFA, waktu login terakhir (D-007, D-008).
 - Peran alur per langkah di server (D-010, D-022); versi draf untuk layanan terbit.
@@ -625,6 +633,7 @@ Bila commit dibuat sebelum hash-nya diketahui, tulis status "belum di-commit" la
 
 | Tanggal | Perubahan |
 |---|---|
+| 2026-10-15 | Laporan Penerimaan tahap 2 (D-048): halaman portal `/penerimaan` (komponen React, menu Informasi, tautan beranda), sakelar Portal khusus Administrator, `GET /api/public/penerimaan` dengan penyamaran; modul bersama `periode.ts` dan `csv.ts`. Status, §8.1, §8.4, §10.3, §10.4, §16, §17, §18 diperbarui. Diperiksa di browser (430 px dan 1280 px; perbaikan: angka di kotak kecil terpotong) dan pada data dev tanpa mengubah tanda tampil |
 | 2026-10-15 | Laporan Penerimaan tahap 1 (D-047): menu dan modul `penerimaan`, impor berkas STS dengan pratinjau, laporan harian/bulanan/rentang dengan saringan, bento, grafik, tabel, dan CSV; status, §9.1–9.2, §10.4–10.5, §12, §14 (batas PHP Herd, memori commit), §15, §16, §18 diperbarui. Diperiksa di browser setelah pemilik me-restart Claude Desktop (perbaikan: halaman melebar karena tabel riwayat impor dan deretan tab, lencana angka miliaran) |
 | 2026-10-15 | Foto pejabat di bagan Struktur Organisasi tidak lagi menjuntai keluar lingkaran: foto mengisi avatar dan dipangkas dari atas (§8.2) |
 | 2026-10-15 | Berkas dibuat: konteks lengkap proyek sampai D-046 (`8699e8d`), atas permintaan pemilik untuk agen AI berikutnya. `AGENTS.md` kini mewajibkan agen membaca dan memperbarui berkas ini |

@@ -28,6 +28,7 @@ class PortalPagesTest extends TestCase
             'berita' => ['/berita/pintu-resmi-diluncurkan', 'berita-detail'],
             'dokumentasi' => ['/dokumentasi', 'dokumentasi'],
             'unduhan' => ['/unduhan', 'unduhan'],
+            'penerimaan' => ['/penerimaan', 'penerimaan'],
             'kontak' => ['/kontak', 'kontak'],
             'login' => ['/login', 'login'],
             'dashboard pegawai' => ['/dashboard-pegawai', 'dashboard-pegawai'],
@@ -46,6 +47,20 @@ class PortalPagesTest extends TestCase
     public static function pagesAsWritten(): array
     {
         return array_filter(self::pages(), fn (array $page): bool => $page[1] !== 'berita-detail');
+    }
+
+    /**
+     * The portal pages served as written that carry the shared header (all
+     * but the sign-in and the former dashboard pages).
+     *
+     * @return array<string, array{string, string}>
+     */
+    public static function pagesWithHeader(): array
+    {
+        return array_filter(
+            self::pagesAsWritten(),
+            fn (array $page): bool => str_contains((string) file_get_contents(dirname(__DIR__, 2)."/resources/views/portal/{$page[1]}.blade.php"), '<!-- @header -->'),
+        );
     }
 
     #[DataProvider('pagesAsWritten')]
@@ -265,6 +280,35 @@ class PortalPagesTest extends TestCase
         $this->assertStringContainsString('<ul class="docs" id="docs" role="list" data-reveal data-dokumen-daftar></ul>', $html);
         $this->assertStringContainsString('<p class="center muted" role="status" data-dokumen-status style="padding:48px 0">Memuat dokumen…</p>', $html);
         $this->assertStringContainsString('<div class="toolbar" style="margin-bottom:28px" data-reveal data-dokumen-saringan hidden>', $html);
+    }
+
+    public function test_leaves_the_revenue_report_to_its_component_and_the_public_api(): void
+    {
+        $html = $this->get('/penerimaan')->assertOk()->getContent();
+
+        $this->assertStringContainsString('<div class="penerimaan" data-react="laporan-penerimaan">', $html);
+        $this->assertStringContainsString('<p class="center muted" role="status" style="padding:48px 0">Memuat laporan penerimaan…</p>', $html);
+        $this->assertStringContainsString('<script type="module" src="skrip/portal"></script>', $html);
+        // The masking rule is stated on the page, whatever the component shows (D-048)
+        $this->assertStringContainsString('Kelompok dengan kurang dari 3 transaksi digabung menjadi “Lainnya (disamarkan)”', $html);
+    }
+
+    #[DataProvider('pagesWithHeader')]
+    public function test_links_the_revenue_report_from_the_information_menu(string $uri, string $view): void
+    {
+        $html = $this->get($uri)->assertOk()->getContent();
+
+        $current = $view === 'penerimaan' ? ' aria-current="page"' : '';
+        $this->assertStringContainsString("<a class=\"nav__menu-link\" data-nav=\"penerimaan\"{$current} href=\"penerimaan.html\">", $html);
+        $this->assertStringContainsString("<a data-nav=\"penerimaan\"{$current} href=\"penerimaan.html\">Laporan Penerimaan</a>", $html);
+    }
+
+    public function test_links_the_revenue_report_from_the_homepage_transparency_section(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+
+        $this->assertSame(1, preg_match('/<section[^>]*\bid="transparansi"[^>]*>.*?<\/section>/s', $html, $section));
+        $this->assertMatchesRegularExpression('#<a class="link-arrow" href="penerimaan\.html"\s*>Lihat laporan penerimaan<svg#', $section[0]);
     }
 
     public function test_leaves_the_news_to_the_public_api(): void

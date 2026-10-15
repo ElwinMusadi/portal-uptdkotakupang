@@ -70,7 +70,7 @@ export const NAV_UTAMA: ItemNav[] = [
   { judul: "Alur Publikasi", url: "/alur", ikon: IconLayoutBoard, keterangan: "Draf → diperiksa → persetujuan → terbit", modul: MODUL_ALUR },
   { judul: "Pesan & Pengaduan", url: "/pesan", ikon: IconInbox, portal: "kontak.html#masukan", keterangan: "Pertanyaan, masukan, dan pengaduan warga", modul: ["pesan"] },
   { judul: "Statistik Layanan", url: "/statistik", ikon: IconChartBar, portal: "index.html#transparansi", keterangan: "Dasbor transparansi di beranda", modul: ["statistik"] },
-  { judul: "Laporan Penerimaan", url: "/penerimaan", ikon: IconReportMoney, keterangan: "Penerimaan harian dan bulanan per loket dari berkas STS", modul: ["penerimaan"] },
+  { judul: "Laporan Penerimaan", url: "/penerimaan", ikon: IconReportMoney, portal: "penerimaan.html", keterangan: "Penerimaan harian dan bulanan per loket dari berkas STS", modul: ["penerimaan"] },
 ]
 
 export const NAV_GRUP: GrupNav[] = [

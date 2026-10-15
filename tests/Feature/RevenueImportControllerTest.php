@@ -375,6 +375,63 @@ class RevenueImportControllerTest extends TestCase
         $this->assertDatabaseHas('activities', ['user_id' => $employee->id, 'module' => 'penerimaan', 'action' => 'menghapus', 'target' => 'STS Loket SAMSAT 2026-10-14']);
     }
 
+    public function test_lets_only_administrators_show_an_import_on_the_portal(): void
+    {
+        $import = RevenueImport::factory()->create();
+
+        $this->patchJson("/api/penerimaan/impor/{$import->id}", ['tampil' => true])->assertUnauthorized();
+        $this->actingAs($this->revenueEmployee())
+            ->patchJson("/api/penerimaan/impor/{$import->id}", ['tampil' => true])
+            ->assertForbidden()
+            ->assertExactJson(['message' => 'Hanya Administrator yang dapat menampilkan laporan penerimaan di portal.']);
+        $this->assertFalse($import->fresh()->tampil);
+    }
+
+    public function test_shows_an_import_on_the_portal_and_takes_it_off(): void
+    {
+        $administrator = User::factory()->administrator()->create();
+        $import = RevenueImport::factory()->create();
+        $address = "/api/penerimaan/impor/{$import->id}";
+
+        $this->actingAs($administrator)->patchJson($address, ['tampil' => true])
+            ->assertOk()
+            ->assertJsonPath('id', $import->id)
+            ->assertJsonPath('tampil', true);
+        $this->assertTrue($import->fresh()->tampil);
+        $this->assertDatabaseHas('activities', [
+            'user_id' => $administrator->id, 'module' => 'penerimaan', 'action' => 'menampilkan', 'target' => 'STS Loket SAMSAT 2026-10-14 di portal',
+        ]);
+
+        $this->actingAs($administrator)->patchJson($address, ['tampil' => true])->assertOk();
+        $this->assertDatabaseCount('activities', 1);
+
+        $this->actingAs($administrator)->patchJson($address, ['tampil' => false])->assertOk()->assertJsonPath('tampil', false);
+        $this->assertFalse($import->fresh()->tampil);
+        $this->assertDatabaseHas('activities', ['action' => 'menyembunyikan', 'target' => 'STS Loket SAMSAT 2026-10-14 dari portal']);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    #[TestWith([[]])]
+    #[TestWith([['tampil' => 'ya']])]
+    public function test_asks_whether_the_import_shows_on_the_portal(array $data): void
+    {
+        $import = RevenueImport::factory()->create();
+
+        $this->actingAs(User::factory()->administrator()->create())
+            ->patchJson("/api/penerimaan/impor/{$import->id}", $data)
+            ->assertUnprocessable()
+            ->assertOnlyJsonValidationErrors(['tampil' => 'Pilih apakah impor ini tampil di portal.']);
+    }
+
+    public function test_answers_404_for_an_import_that_does_not_exist(): void
+    {
+        $this->actingAs(User::factory()->administrator()->create())
+            ->patchJson('/api/penerimaan/impor/01m4z24mbwh6zsh2g2y5t3nfpr', ['tampil' => true])
+            ->assertNotFound();
+    }
+
     private function revenueEmployee(): User
     {
         return User::factory()->withModules(DashboardModule::Penerimaan)->create();

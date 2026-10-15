@@ -11,6 +11,8 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 
 import { mintaServer } from "@/lib/api/http"
 
+import { KOLOM_CSV, teksCsv, unduhTeks } from "../../portal/penerimaan/csv"
+
 export type JenisLoket = "kantor" | "keliling" | "gerai" | "sementara"
 
 export interface LoketPenerimaan {
@@ -135,9 +137,6 @@ export interface PratinjauImpor {
 /** Ukuran berkas STS yang diterima server */
 export const MAKS_BERKAS = 10 * 1024 * 1024
 
-/** Rentang laporan terpanjang yang diterima server, dalam hari */
-export const MAKS_HARI = 366
-
 const KUNCI = ["penerimaan"] as const
 
 function kueri(s: Saringan): string {
@@ -194,6 +193,16 @@ export function useSimpanImpor() {
   })
 }
 
+/** Tampilkan impor di halaman Laporan Penerimaan portal atau sembunyikan; khusus Administrator (D-048) */
+export function useTampilImpor() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, tampil }: { id: string; tampil: boolean }) =>
+      mintaServer<ImporPenerimaan>(`/api/penerimaan/impor/${encodeURIComponent(id)}`, "PATCH", { tampil }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: KUNCI }),
+  })
+}
+
 export function useHapusImpor() {
   const qc = useQueryClient()
   return useMutation({
@@ -236,30 +245,6 @@ export function labelNilai(dimensi: Dimensi | "tanggal", baris: Pick<BarisRincia
   return baris.nilai
 }
 
-const KOLOM_CSV: [string, keyof Jumlah][] = [
-  ["Transaksi", "transaksi"],
-  ["PKB", "pkb"],
-  ["BBNKB", "bbn"],
-  ["Denda PKB", "dendaPkb"],
-  ["Denda BBNKB", "dendaBbn"],
-  ["Tunggakan", "tunggakan"],
-  ["Denda Tunggakan", "dendaTunggakan"],
-  ["Opsen PKB", "opsenPkb"],
-  ["Opsen BBNKB", "opsenBbn"],
-  ["Opsen Denda PKB", "opsenDendaPkb"],
-  ["Opsen Denda BBNKB", "opsenDendaBbn"],
-  ["Opsen Tunggakan", "opsenTunggakan"],
-  ["Opsen Denda Tunggakan", "opsenDendaTunggakan"],
-  ["Jumlah", "jumlah"],
-]
-
-function selCsv(teks: string | number): string {
-  const s = String(teks)
-  // Teks yang diawali =, +, -, atau @ dibaca Excel sebagai rumus
-  const aman = typeof teks === "string" && s.length > 1 && /^[=+\-@\t\r]/.test(s) ? `'${s}` : s
-  return /[";\n\r]/.test(aman) ? `"${aman.replace(/"/g, '""')}"` : aman
-}
-
 /**
  * Rincian sebagai CSV berpemisah titik koma (pengaturan Excel berbahasa
  * Indonesia), dengan BOM agar Excel membacanya sebagai UTF-8.
@@ -273,17 +258,7 @@ export function csvRincian(dimensi: Dimensi | "tanggal", baris: BarisRincian[], 
     ...KOLOM_CSV.map(([, kunci]) => b[kunci]),
   ])
   const jumlah = ["Jumlah", ...(dimensi === "kelurahan" ? [""] : []), ...KOLOM_CSV.map(([, kunci]) => total[kunci])]
-  return "﻿" + [kepala, ...isi, jumlah].map((r) => r.map(selCsv).join(";")).join("\r\n") + "\r\n"
+  return teksCsv([kepala, ...isi, jumlah])
 }
 
-/** Unduh teks sebagai berkas dari peramban */
-export function unduhTeks(teks: string, nama: string, jenis = "text/csv;charset=utf-8") {
-  const url = URL.createObjectURL(new Blob([teks], { type: jenis }))
-  const a = document.createElement("a")
-  a.href = url
-  a.download = nama
-  document.body.append(a)
-  a.click()
-  a.remove()
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
-}
+export { unduhTeks }

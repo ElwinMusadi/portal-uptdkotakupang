@@ -37,6 +37,17 @@ class RevenueImportPolicy
         return $this->managesRevenue($user);
     }
 
+    /**
+     * Determine whether the user can show imports on the portal or take them
+     * off: Administrators only, once the import is checked (D-048).
+     */
+    public function publish(User $user): Response
+    {
+        return $user->isAdministrator()
+            ? Response::allow()
+            : Response::deny('Hanya Administrator yang dapat menampilkan laporan penerimaan di portal.');
+    }
+
     private function managesRevenue(User $user): Response
     {
         return in_array(DashboardModule::Penerimaan->value, $user->managedModules(), true)

@@ -65,6 +65,7 @@ use App\Http\Controllers\PublicMobileServiceStopController;
 use App\Http\Controllers\PublicOpeningHoursController;
 use App\Http\Controllers\PublicOrganizationController;
 use App\Http\Controllers\PublicProfileController;
+use App\Http\Controllers\PublicRevenueReportController;
 use App\Http\Controllers\PublicServiceBoardController;
 use App\Http\Controllers\PublicServiceController;
 use App\Http\Controllers\PublicSiteController;
@@ -409,6 +410,10 @@ Route::middleware('auth:sanctum')->group(function (): void {
             ->can('create', RevenueImport::class)
             ->middleware('throttle:uploads')
             ->name('impor.store');
+        // Shown on the portal only once an Administrator has checked it (D-048)
+        Route::patch('/impor/{revenueImport}', [RevenueImportController::class, 'update'])
+            ->can('publish', RevenueImport::class)
+            ->name('impor.update');
         Route::post('/impor/hapus', [RevenueImportDeletionController::class, 'store'])->can('deleteAny', RevenueImport::class)->name('impor.hapus');
     });
 
@@ -448,6 +453,8 @@ Route::prefix('public')
         Route::get('/halaman/{slug}', PublicStaticPageController::class)
             ->whereIn('slug', array_keys(StaticPage::PAGES))
             ->name('halaman.show');
+        // Laporan Penerimaan: the imports shown on the portal, small groups masked (D-048)
+        Route::get('/penerimaan', PublicRevenueReportController::class)->middleware('throttle:public-penerimaan')->name('penerimaan.show');
         // The contact form; also limited to 5 messages per hour per address (D-016).
         Route::post('/pesan', PublicMessageController::class)->middleware('throttle:public-messages')->name('pesan.store');
         // The portal's tax check: plate number and the last five chassis characters (D-041)

@@ -10,6 +10,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET` | `/api/public/jam` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/papan` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/statistik` | anonim, hanya baca | tersedia |
+| `GET` | `/api/public/penerimaan` | anonim, hanya baca, parameter saringan terdaftar | tersedia |
 | `GET` | `/api/public/kontak` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/visi-misi` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/profil` | anonim, hanya baca | tersedia |
@@ -49,6 +50,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET` | `/api/penerimaan/loket` | Administrator, pengelola Laporan Penerimaan | tersedia |
 | `GET`, `POST` | `/api/penerimaan/impor` | Administrator, pengelola Laporan Penerimaan | tersedia |
 | `POST` | `/api/penerimaan/impor/pratinjau` | Administrator, pengelola Laporan Penerimaan | tersedia |
+| `PATCH` | `/api/penerimaan/impor/{id}` | Administrator | tersedia |
 | `POST` | `/api/penerimaan/impor/hapus` | Administrator, pengelola Laporan Penerimaan | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/kontak` | Administrator, pengelola Kontak & Kanal | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/visiMisi` | Administrator, pengelola Visi & Misi | tersedia |
@@ -387,9 +389,10 @@ Parameter: `dari` dan `sampai` (`YYYY-MM-DD`, wajib, paling lama 366 hari); sari
 | Alamat | Permintaan | Respons |
 |---|---|---|
 | `GET /api/penerimaan/loket` | — | `200` `[{ "kunci": "kantor", "nama": "Loket SAMSAT", "jenis": "kantor" }, …]`: Loket SAMSAT, Samsat Keliling 01–03 (`keliling-01`…), lalu gerai tetap dan loket sementara di Layanan Luar Kantor menurut nama, sekali per nama dan termasuk yang nonaktif (`gerai:samsat-corner`, `sementara:pameran-pembangunan`). |
-| `GET /api/penerimaan/impor` | — | `200` semua impor, terbaru lebih dulu: `[{ "id", "loket", "namaLoket", "namaBerkas", "tanggalAwal", "tanggalAkhir", "jumlahTransaksi", "jumlahDilewati", "total", "tampil", "oleh", "dibuat" }]`. `jumlahTransaksi` dan `total` hanya transaksi yang ditambahkan impor itu; `tampil` selalu `false` sampai halaman portalnya dibuat. |
+| `GET /api/penerimaan/impor` | — | `200` semua impor, terbaru lebih dulu: `[{ "id", "loket", "namaLoket", "namaBerkas", "tanggalAwal", "tanggalAkhir", "jumlahTransaksi", "jumlahDilewati", "total", "tampil", "oleh", "dibuat" }]`. `jumlahTransaksi` dan `total` hanya transaksi yang ditambahkan impor itu; `tampil` menyatakan impor ini masuk halaman Laporan Penerimaan portal. |
 | `POST /api/penerimaan/impor/pratinjau` | `multipart/form-data`: `berkas` (berkas STS .xls, .htm, atau .html, maks. 10 MB) dan `loket` (kunci dari daftar loket) | `200` `{ "loket": { "kunci", "nama", "jenis" }, "namaBerkas", "berkas": R, "baru": R, "dilewati": 2 }` dengan R = `{ "tanggalAwal", "tanggalAkhir", "transaksi", "jumlah", "jenisDaftar": [{ "nilai", "transaksi", "jumlah" }] }` untuk seluruh berkas dan untuk transaksi yang belum pernah diimpor (tanggal `null` bila tidak ada). Tidak menyimpan apa pun. |
 | `POST /api/penerimaan/impor` | sama dengan pratinjau | `201` impor seperti di daftar. Hanya transaksi yang belum pernah diimpor yang disimpan. `422` `berkas` "Semua transaksi di berkas ini sudah pernah diimpor." |
+| `PATCH /api/penerimaan/impor/{id}` | `{"tampil": true}` atau `false` | `200` impor seperti di daftar ([D-048](decisions.md#d-048--2026-10-15--halaman-portal-laporan-penerimaan)). Hanya Administrator: pegawai lain mendapat `403` `{"message": "Hanya Administrator yang dapat menampilkan laporan penerimaan di portal."}`. Tercatat di log aktivitas sebagai "menampilkan STS Loket SAMSAT 2026-10-14 di portal" atau "menyembunyikan … dari portal"; mengirim nilai yang sama tidak mengubah dan tidak mencatat apa pun. `422` `tampil` "Pilih apakah impor ini tampil di portal." bila kosong atau bukan boolean; `404` bila impor tidak ada. |
 | `POST /api/penerimaan/impor/hapus` | `{"ids": ["…"]}` | `204`; transaksi impor itu ikut terhapus. Impor yang sudah tidak ada dilewati. |
 
 `422` lain untuk pratinjau dan impor: `loket` ("Pilih loket asal berkas ini.", "Loket tidak dikenal.") dan `berkas` ("Pilih berkas STS yang akan diimpor.", "Berkas gagal diunggah. Ukurannya mungkin melebihi batas server.", "Ukuran berkas maksimal 10 MB.", "Pilih berkas STS berformat .xls hasil ekspor sistem BPAD.", "Berkas ini bukan laporan STS dari sistem BPAD: susunan kolomnya tidak dikenali.", "Berkas tidak berisi transaksi.", serta pesan per baris seperti "Baris 4: jumlah tidak sama dengan rinciannya.", "Baris 4: nilai pkb \"12.5\" bukan angka rupiah bulat.", "Baris 4: tanggal validasi \"14-10-2026\" tidak dikenali.", dan "Baris 3: ada 35 kolom, seharusnya 36."). Nomor baris dihitung dari awal tabel, termasuk dua baris judul; baris tanpa isi dilewati, dan kolom teks yang kosong disimpan sebagai `-`. Berkas yang bukan UTF-8 dibaca sebagai Windows-1252. Pratinjau dan impor berbagi batas 30 unggahan per menit per pegawai (`429` "Terlalu banyak unggahan. Coba lagi sebentar lagi."). Batas unggah PHP server (`upload_max_filesize`, `post_max_size`) harus sedikitnya 10 MB agar berkas bulanan diterima; bila lebih kecil, berkas besar ditolak sebelum sampai ke aplikasi.
@@ -939,6 +942,42 @@ Dasbor transparansi di beranda ([D-018](decisions.md#d-018--2026-10-13--statisti
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 
 Kode: `app/Http/Controllers/PublicStatisticsController.php`, `app/Actions/ShowPublicStatistics.php`. Tes: `tests/Feature/PublicStatisticsControllerTest.php`.
+
+## `GET /api/public/penerimaan`
+
+Halaman *Laporan Penerimaan* portal (`/penerimaan`, `resources/js/portal/penerimaan/laporan-penerimaan.tsx`, [D-048](decisions.md#d-048--2026-10-15--halaman-portal-laporan-penerimaan)). Hanya transaksi dari impor yang dinyalakan Administrator (`tampil`), dengan saringan utama dan angka kecil disamarkan di server.
+
+Parameter, semuanya opsional: `dari` dan `sampai` (`YYYY-MM-DD`, keduanya atau tidak sama sekali, paling lama 366 hari; tanpa keduanya, hari terakhir yang sudah tampil), serta `loket[]`, `jenisDaftar[]`, `jenisKendaraan[]`, `kecamatan[]`, dan `kelurahan[]` (maks. 100 nilai, masing-masing maks. 80 karakter). Parameter lain ditolak, pengecualian dari D-004.
+
+```json
+{
+  "tersedia": { "awal": "2026-09-01", "akhir": "2026-10-14" },
+  "dari": "2026-10-14", "sampai": "2026-10-14",
+  "ringkasan": { "transaksi": 320, "pkb": 94695419, "…": 0, "jumlah": 563444182 },
+  "disamarkan": false,
+  "pembanding": { "dari": "2026-09-30", "sampai": "2026-09-30", "ringkasan": { "transaksi": 328, "…": 0 } },
+  "rincian": {
+    "kecamatan": [
+      { "nilai": "ALAK", "transaksi": 50, "…": 0, "jumlah": 121221671 },
+      { "nilai": "Lainnya (disamarkan)", "transaksi": 26, "…": 0, "jumlah": 42913000, "disamarkan": true, "kelompok": 21 }
+    ],
+    "kelurahan": [{ "nilai": "Oebobo", "kecamatan": "OEBOBO", "transaksi": 15, "…": 0 }],
+    "tanggal": [{ "nilai": "2026-10-01", "disamarkan": true }, { "nilai": "2026-10-02", "transaksi": 12, "…": 0 }]
+  },
+  "pilihan": { "loket": [{ "nilai": "kantor", "nama": "Loket SAMSAT" }], "jenisDaftar": ["BARU"], "…": [] },
+  "minimum": 3
+}
+```
+
+| Hal | Perilaku |
+|---|---|
+| Isi | Seperti `GET /api/penerimaan/laporan`, tetapi hanya rincian `loket`, `jenisDaftar`, `jenisKendaraan`, `kecamatan`, `kelurahan`, dan `tanggal`, tanpa `loketBuka`. `tersedia` adalah tanggal pertama dan terakhir yang sudah tampil. `pilihan` hanya memuat nilai dengan sedikitnya `minimum` transaksi dalam periode, tanpa memperhitungkan saringan lain. |
+| Penyamaran | Kelompok dengan kurang dari 3 transaksi digabung menjadi baris terakhir `"Lainnya (disamarkan)"` (`disamarkan: true`, `kelompok`: banyaknya kelompok yang digabung; `kecamatan` `null` pada rincian kelurahan, `nama` sama pada rincian loket). Bila gabungannya masih kurang dari 3 transaksi, kelompok tampil dengan transaksi paling sedikit ikut digabung. Hari dengan kurang dari 3 transaksi hanya berisi `nilai` dan `disamarkan: true`, dengan aturan gabungan yang sama. Bila seluruh hasil berisi 1–2 transaksi: `ringkasan` dan `pembanding` `null`, `disamarkan: true`, `rincian` `[]`. `pembanding.ringkasan` juga `null` bila berisi 1–2 transaksi. Hasil 0 transaksi berisi nol. |
+| Belum ada yang tampil | `200` `{"tersedia": null, "dari": null, "sampai": null, "ringkasan": null, "disamarkan": false, "pembanding": null, "rincian": [], "pilihan": {"loket": [], …}, "minimum": 3}`. |
+| Galat | `422` `query` "Parameter kueri tidak didukung." untuk parameter lain, atau per isian seperti laporan dashboard ("Pilih tanggal akhir laporan.", "Rentang laporan paling lama satu tahun.", "Saringan kelurahan tidak valid.", "Saringan jenis kendaraan terlalu panjang."); `429` "Terlalu banyak permintaan. Silakan coba lagi sebentar lagi." setelah 60 permintaan per menit dari satu alamat (selain batas API publik). |
+| Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
+
+Kode: `app/Http/Controllers/PublicRevenueReportController.php`, `app/Http/Requests/ShowPublicRevenueReportRequest.php`, `app/Actions/BuildPublicRevenueReport.php`, `app/Actions/BuildRevenueReport.php` (`published()`). Tes: `tests/Feature/PublicRevenueReportTest.php`.
 
 ## `GET /api/public/kontak`
 

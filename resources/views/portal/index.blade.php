@@ -162,6 +162,7 @@
           <a class="nav__menu-link" data-nav="informasi" href="informasi.html"><span class="nav__menu-icon"><svg class="i i--sm" aria-hidden="true"><use href="#i-news"/></svg></span><strong>Berita &amp; Pengumuman</strong><span>Kabar resmi dari UPTD.</span></a>
           <a class="nav__menu-link" data-nav="dokumentasi" href="dokumentasi.html"><span class="nav__menu-icon"><svg class="i i--sm" aria-hidden="true"><use href="#i-image"/></svg></span><strong>Dokumentasi Kegiatan</strong><span>Galeri foto kegiatan lapangan.</span></a>
           <a class="nav__menu-link" data-nav="unduhan" href="unduhan.html"><span class="nav__menu-icon"><svg class="i i--sm" aria-hidden="true"><use href="#i-file"/></svg></span><strong>Regulasi &amp; Unduhan</strong><span>Dasar hukum, SOP, dan formulir.</span></a>
+          <a class="nav__menu-link" data-nav="penerimaan" href="penerimaan.html"><span class="nav__menu-icon"><svg class="i i--sm" aria-hidden="true"><use href="#i-trend-up"/></svg></span><strong>Laporan Penerimaan</strong><span>Penerimaan pajak per hari dan bulan.</span></a>
         </div>
       </li>
       <li class="nav__item" data-group="kontak">
@@ -192,6 +193,7 @@
       <a data-nav="informasi" href="informasi.html">Berita &amp; Pengumuman</a>
       <a data-nav="dokumentasi" href="dokumentasi.html">Dokumentasi Kegiatan</a>
       <a data-nav="unduhan" href="unduhan.html">Regulasi &amp; Unduhan</a>
+      <a data-nav="penerimaan" href="penerimaan.html">Laporan Penerimaan</a>
       <a data-nav="kontak" href="kontak.html">Kontak &amp; Pengaduan</a>
     </div>
     <div class="mobile-menu__cta">
@@ -479,6 +481,12 @@
             <p class="body" style="margin-top: 20px">
               Capaian pelayanan kami tampilkan berkala, agar masyarakat ikut
               mengawasi.
+            </p>
+            <p style="margin-top: 16px">
+              <a class="link-arrow" href="penerimaan.html"
+                >Lihat laporan penerimaan<svg class="i" aria-hidden="true">
+                  <use href="#i-arrow-right" /></svg
+              ></a>
             </p>
             <div
               class="catlist"

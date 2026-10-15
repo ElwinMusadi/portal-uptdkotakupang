@@ -53,6 +53,15 @@ class AppServiceProvider extends ServiceProvider
                 ], 429, $headers));
         });
 
+        // The portal's revenue report (D-048) sums the transactions for every request: 60 per minute from one address.
+        RateLimiter::for('public-penerimaan', function (Request $request): Limit {
+            return Limit::perMinute(60)
+                ->by($request->ip())
+                ->response(fn (Request $request, array $headers): JsonResponse => response()->json([
+                    'message' => 'Terlalu banyak permintaan. Silakan coba lagi sebentar lagi.',
+                ], 429, $headers));
+        });
+
         // The portal's contact form (D-016): at most 5 messages per hour from one address.
         RateLimiter::for('public-messages', function (Request $request): Limit {
             return Limit::perHour(5)

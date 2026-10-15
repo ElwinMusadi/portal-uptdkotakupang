@@ -27,6 +27,7 @@ $portalPages = [
     'informasi',
     'dokumentasi',
     'unduhan',
+    'penerimaan',
     'kontak',
     'login',
     'dashboard-pegawai',
