@@ -64,6 +64,8 @@ Route::withoutMiddleware([
 
     // The taxpayer's tracking page behind a queue ticket's QR (Antrean Online, D-051)
     Route::get('/lacak/{kode}', QueueTrackingPageController::class)->where('kode', QueueTicket::TRACKING_CODE_PATTERN)->name('portal.lacak');
+    // The waiting-room TV display; it reads GET /api/layar with the token of its setup link (D-051)
+    Route::view('/layar', 'layar')->name('layar');
 
     // Portal scripts that Vite builds, loaded by the pages as written from fixed addresses: the tax check on Beranda and
     // Layanan (D-041) and the React components that take over [data-react] elements (D-045).

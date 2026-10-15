@@ -34,6 +34,15 @@ enum QueueStage: string
     }
 
     /**
+     * Whether counters call numbers to the stage, rather than staff marking
+     * it done (D-051).
+     */
+    public function isCalled(): bool
+    {
+        return in_array($this, [self::Pendaftaran, self::Kwitansi, self::Penyerahan], true);
+    }
+
+    /**
      * What the taxpayer reads while the ticket is at the stage.
      */
     public function instruction(): string

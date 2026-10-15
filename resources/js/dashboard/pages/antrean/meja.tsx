@@ -1,8 +1,8 @@
 import * as React from "react"
-import { IconBan, IconPrinter, IconSettings } from "@tabler/icons-react"
-import { Link } from "react-router"
+import { IconBan, IconCircleCheck, IconPrinter } from "@tabler/icons-react"
 import { toast } from "sonner"
 
+import { NavAntrean } from "@/components/antrean/nav-antrean"
 import { DataTable, HeaderUrut, pembantuKolom } from "@/components/data/data-table"
 import { Halaman, PengantarHalaman } from "@/components/data/page"
 import { MenuBaris } from "@/components/data/row-actions"
@@ -18,6 +18,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
 import {
+  LABEL_STATUS,
   LABEL_TAHAP,
   nopolPlat,
   nopolRingkas,
@@ -29,7 +30,6 @@ import {
   useTiketAntrean,
   type TiketAntrean,
 } from "@/lib/antrean"
-import { sesi } from "@/lib/auth"
 import { cetakTiket, svgQr, waktuTiket } from "@/lib/cetak-tiket"
 import { hariIniIso, tanggal, tanggalJam } from "@/lib/format"
 import { cn } from "@/lib/utils"
@@ -43,20 +43,11 @@ export default function HalamanMejaInformasi() {
   const [hari, setHari] = React.useState(hariIniIso)
   const tiket = useTiketAntrean(hari)
   const [terakhir, setTerakhir] = React.useState<TiketAntrean | null>(null)
-  const administrator = sesi().peran === "administrator"
 
   return (
     <Halaman>
-      <PengantarHalaman deskripsi="Cetak nomor antrean setelah berkas wajib pajak dinyatakan lengkap. Tiket dua lembar: lembar 1 untuk wajib pajak, lembar 2 ditempel pada berkas. Keduanya ber-QR untuk melacak berkas.">
-        {administrator && (
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/antrean/pengaturan">
-              <IconSettings />
-              Pengaturan layanan
-            </Link>
-          </Button>
-        )}
-      </PengantarHalaman>
+      <NavAntrean />
+      <PengantarHalaman deskripsi="Cetak nomor antrean setelah berkas wajib pajak dinyatakan lengkap. Tiket dua lembar: lembar 1 untuk wajib pajak, lembar 2 ditempel pada berkas. Keduanya ber-QR untuk melacak berkas." />
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
         <FormCetak setelahCetak={setTerakhir} />
         <TiketTerakhir tiket={terakhir} />
@@ -242,14 +233,29 @@ function DaftarTiket({
     ki.accessor((t) => t.layanan.nama, { id: "layanan", header: "Layanan" }),
     ki.accessor("status", {
       header: "Tahap",
-      cell: ({ row }) =>
-        row.original.status === "batal" ? (
-          <NadaBadge nada="bahaya" ikon={IconBan}>
-            Dibatalkan
-          </NadaBadge>
-        ) : (
-          <Badge variant="outline">{row.original.tahap ? LABEL_TAHAP[row.original.tahap] : "—"}</Badge>
-        ),
+      cell: ({ row }) => {
+        const t = row.original
+        if (t.status === "batal")
+          return (
+            <NadaBadge nada="bahaya" ikon={IconBan}>
+              Dibatalkan
+            </NadaBadge>
+          )
+        if (t.status === "selesai")
+          return (
+            <NadaBadge nada="sukses" ikon={IconCircleCheck}>
+              Selesai
+            </NadaBadge>
+          )
+        return (
+          <span className="grid gap-0.5">
+            <Badge variant="outline">{t.tahap ? LABEL_TAHAP[t.tahap] : "—"}</Badge>
+            {t.status !== "menunggu" && (
+              <span className="text-xs text-muted-foreground">{t.status === "dipanggil" ? `Dipanggil di ${t.loket ?? "loket"}` : LABEL_STATUS[t.status]}</span>
+            )}
+          </span>
+        )
+      },
     }),
     ki.accessor("dicetak", {
       header: ({ column }) => <HeaderUrut column={column} judul="Dicetak" />,
@@ -263,7 +269,7 @@ function DaftarTiket({
     ki.display({
       id: "aksi",
       cell: ({ row }) =>
-        row.original.status === "batal" ? null : (
+        row.original.status === "batal" || row.original.status === "selesai" ? null : (
           <MenuBaris label={`nomor ${row.original.nomor}`}>
             <DropdownMenuItem onSelect={() => void cetakUlang(row.original)}>
               <IconPrinter />

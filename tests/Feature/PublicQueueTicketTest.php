@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\QueueStage;
+use App\Models\QueueCounter;
 use App\Models\QueueService;
 use App\Models\QueueTicket;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -67,6 +68,25 @@ class PublicQueueTicketTest extends TestCase
             ->assertJsonPath('petunjuk', 'Nomor antrean ini dibatalkan petugas. Silakan tanyakan ke Meja Informasi.')
             ->assertJsonPath('tahapan.*.keadaan', ['selesai', 'nanti', 'nanti', 'nanti', 'nanti', 'nanti', 'nanti']);
         $this->assertStringNotContainsString('Berkas belum lengkap', $response->getContent());
+    }
+
+    public function test_tells_where_a_called_put_aside_or_finished_number_goes(): void
+    {
+        $receipt = QueueCounter::query()->where('tahap', 'kwitansi')->sole();
+        $called = QueueTicket::factory()->calledTo($receipt)->create();
+        $aside = QueueTicket::factory()->create(['tahap' => QueueStage::Kwitansi, 'status' => 'ditunda']);
+        $done = QueueTicket::factory()->create(['tahap' => null, 'status' => 'selesai']);
+
+        $this->track($called->kode_lacak)
+            ->assertJsonPath('status', 'dipanggil')
+            ->assertJsonPath('petunjuk', 'Nomor Anda dipanggil. Silakan menuju Loket Kwitansi.')
+            ->assertJsonPath('tahapan.2.keadaan', 'sekarang');
+        $this->track($aside->kode_lacak)
+            ->assertJsonPath('petunjuk', 'Nomor Anda sudah dipanggil ke Loket Kwitansi, tetapi Anda belum datang. Silakan lapor ke petugas Loket Kwitansi.');
+        $this->track($done->kode_lacak)
+            ->assertJsonPath('status', 'selesai')
+            ->assertJsonPath('petunjuk', 'Berkas Anda sudah selesai diproses. Terima kasih.')
+            ->assertJsonPath('tahapan.*.keadaan', array_fill(0, 7, 'selesai'));
     }
 
     public function test_answers_404_for_an_unknown_code_and_422_for_query_parameters(): void

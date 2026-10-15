@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @property ?QueueStage $tahap
  */
-#[Fillable(['aksi', 'tahap', 'keterangan', 'user_id'])]
+#[Fillable(['aksi', 'tahap', 'keterangan', 'queue_counter_id', 'otomatis', 'user_id'])]
 class QueueEvent extends Model
 {
     /**
@@ -31,7 +31,18 @@ class QueueEvent extends Model
     {
         return [
             'tahap' => QueueStage::class,
+            'otomatis' => 'boolean',
         ];
+    }
+
+    /**
+     * The counter of a call.
+     *
+     * @return BelongsTo<QueueCounter, $this>
+     */
+    public function counter(): BelongsTo
+    {
+        return $this->belongsTo(QueueCounter::class, 'queue_counter_id');
     }
 
     /**

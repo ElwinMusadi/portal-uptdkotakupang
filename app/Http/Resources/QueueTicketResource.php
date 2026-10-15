@@ -17,7 +17,7 @@ class QueueTicketResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @return array{id: string, nomor: string, tanggal: string, layanan: array{kode: string, nama: string}, nopol: ?string, status: string, tahap: ?string, tahapLayanan: list<string>, urlLacak: string, dicetak: ?string, dicetakOleh: ?string, dibatalkan: ?string, alasanBatal: ?string}
+     * @return array{id: string, nomor: string, tanggal: string, layanan: array{kode: string, nama: string}, nopol: ?string, status: string, tahap: ?string, tahapLayanan: list<string>, urlLacak: string, loket: ?string, dipanggil: ?string, jumlahPanggil: int, masukTahap: ?string, dicetak: ?string, dicetakOleh: ?string, dibatalkan: ?string, alasanBatal: ?string, selesai: ?string}
      */
     public function toArray(Request $request): array
     {
@@ -31,10 +31,15 @@ class QueueTicketResource extends JsonResource
             'tahap' => $this->tahap?->value,
             'tahapLayanan' => $this->tahap_layanan,
             'urlLacak' => $this->trackingUrl(),
+            'loket' => $this->counter?->nama,
+            'dipanggil' => $this->dipanggil_pada?->toIso8601String(),
+            'jumlahPanggil' => $this->jumlah_panggil,
+            'masukTahap' => $this->masuk_tahap_pada?->toIso8601String(),
             'dicetak' => $this->created_at?->toIso8601String(),
             'dicetakOleh' => $this->printedBy?->name,
             'dibatalkan' => $this->dibatalkan_pada?->toIso8601String(),
             'alasanBatal' => $this->alasan_batal,
+            'selesai' => $this->selesai_pada?->toIso8601String(),
         ];
     }
 }

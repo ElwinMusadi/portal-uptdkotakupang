@@ -693,7 +693,7 @@ Jadwal Pemutakhiran di dashboard masih bisa mencatat papan sebagai "Setiap hari 
 
 ## D-051 · 2026-10-15 · Antrean Online: rencana dan keputusan awal
 
-Pemilik meminta Sistem Antrean Online (Queue Management System) di bagian Layanan, berdasarkan flowchart pemilik: nomor antrean tercetak menggantikan nomor tulis tangan, satu nomor mengikuti berkas dari Meja Informasi sampai Loket 2 – Penyerahan, dan wajib pajak melacak tahap berkasnya lewat QR. Rencana lengkap: [`docs/rencana-antrean-online.md`](rencana-antrean-online.md), disetujui pemilik. **Irisan 1 dibangun** (Meja Informasi, cetak dua lembar, halaman lacak, pengaturan layanan); irisan berikutnya menyusul.
+Pemilik meminta Sistem Antrean Online (Queue Management System) di bagian Layanan, berdasarkan flowchart pemilik: nomor antrean tercetak menggantikan nomor tulis tangan, satu nomor mengikuti berkas dari Meja Informasi sampai Loket 2 – Penyerahan, dan wajib pajak melacak tahap berkasnya lewat QR. Rencana lengkap: [`docs/rencana-antrean-online.md`](rencana-antrean-online.md), disetujui pemilik. **Irisan 1 dan 2 dibangun**: Meja Informasi, cetak dua lembar, halaman lacak, pengaturan layanan; loket pemanggil, layar TV dengan suara, dan pengaturan loket serta layar. Irisan berikutnya menyusul.
 
 | Hal | Keputusan |
 |---|---|
@@ -707,5 +707,10 @@ Pemilik meminta Sistem Antrean Online (Queue Management System) di bagian Layana
 | Papan Layanan | **Tetap manual** (D-050) sampai antrean benar-benar berjalan, lalu diambil dari antrean (pemilik). |
 | Mulai pakai | **Uji coba paralel** dengan nomor manual (pemilik), setelah PINTU di-deploy ke Laravel Cloud. |
 | Pustaka QR | **uqr** 0.1.3 (keputusan pemilik): tanpa dependensi, menghasilkan SVG di peramban, hanya dimuat halaman Meja Informasi. |
+| Loket awal (Irisan 2) | **Satu loket per tahap** (pemilik): Loket 1 – Pendaftaran, Loket Kwitansi, Loket 2 – Penyerahan, masing-masing semua layanan; diatur Administrator di Pengaturan Antrean. |
+| Suara panggilan | **Tanpa nomor polisi** (pemilik): bunyi tanda lalu "Nomor antrean A, nol nol satu. Silakan ke Loket kwitansi.", dengan nama loket yang dibacakan sesuai pengaturannya. Nomor polisi tetap tampil di layar. |
+| Panggil berikutnya | **Nomor yang masih dipanggil otomatis ditunda** (pemilik) saat loketnya memanggil nomor lain. Nomor yang ditunda bisa dipanggil lagi kapan saja. |
+| Panggil nomor tertentu | Loket bisa memanggil nomor yang diketik, nomor polisi, atau QR berkas yang dipindai; tahap sebelum loket itu yang belum ditandai dianggap selesai dan dicatat otomatis (rencana §4.3). |
+| Layar TV | Dipasang Administrator dengan tautan sekali tampil (`/layar#k=…`); perangkat menyimpan tokennya, server hanya menyimpan hash-nya, dan layar bisa dicabut. |
 
-Belum diputuskan: akun petugas non-UPTD (D-007 mewajibkan NIP), daftar loket fisik, antrean prioritas, kalimat suara, penjelasan di Kebijakan Privasi, dan waktu deploy (rencana §9).
+Belum diputuskan: akun petugas non-UPTD (D-007 mewajibkan NIP), antrean prioritas, penjelasan di Kebijakan Privasi, dan waktu deploy (rencana §9).

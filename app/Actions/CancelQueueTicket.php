@@ -16,12 +16,14 @@ use Illuminate\Validation\ValidationException;
 class CancelQueueTicket
 {
     /**
-     * @throws ValidationException when the ticket is already cancelled
+     * @throws ValidationException when the ticket is already cancelled or done
      */
     public function handle(QueueTicket $ticket, string $reason, User $user): QueueTicket
     {
-        if ($ticket->status === QueueTicketStatus::Batal) {
-            throw ValidationException::withMessages(['tiket' => "Nomor {$ticket->nomor} sudah dibatalkan."]);
+        if ($ticket->status->isClosed()) {
+            throw ValidationException::withMessages([
+                'tiket' => $ticket->status === QueueTicketStatus::Batal ? "Nomor {$ticket->nomor} sudah dibatalkan." : "Nomor {$ticket->nomor} sudah selesai.",
+            ]);
         }
 
         return DB::transaction(function () use ($ticket, $reason, $user): QueueTicket {
@@ -29,6 +31,7 @@ class CancelQueueTicket
                 'status' => QueueTicketStatus::Batal,
                 'alasan_batal' => $reason,
                 'dibatalkan_pada' => now(),
+                'queue_counter_id' => null,
             ]);
             $ticket->events()->create([
                 'aksi' => 'dibatalkan',

@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Enums\QueueStage;
 use App\Enums\QueueTicketStatus;
+use App\Models\QueueCounter;
 use App\Models\QueueService;
 use App\Models\QueueTicket;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -33,7 +34,42 @@ class QueueTicketFactory extends Factory
             'tahap_layanan' => array_map(fn (QueueStage $stage): string => $stage->value, QueueStage::cases()),
             'tahap' => QueueStage::Pendaftaran,
             'status' => QueueTicketStatus::Menunggu,
+            'masuk_tahap_pada' => '2026-10-15 01:00:00',
         ];
+    }
+
+    /**
+     * A ticket of the service with this code, with its stages.
+     */
+    public function of(string $serviceCode): static
+    {
+        return $this->state(function () use ($serviceCode): array {
+            $service = QueueService::query()->where('kode', $serviceCode)->sole();
+
+            return ['queue_service_id' => $service->id, 'tahap_layanan' => $service->tahap, 'nomor' => sprintf('%s-%03d', $serviceCode, fake()->unique()->numberBetween(1, 999))];
+        });
+    }
+
+    /**
+     * A ticket waiting at the stage since the given time (UTC).
+     */
+    public function waitingAt(QueueStage $stage, string $since = '2026-10-15 01:00:00'): static
+    {
+        return $this->state(['tahap' => $stage, 'status' => QueueTicketStatus::Menunggu, 'masuk_tahap_pada' => $since]);
+    }
+
+    /**
+     * A ticket called to the counter, at the counter's stage.
+     */
+    public function calledTo(QueueCounter $counter, int $times = 1): static
+    {
+        return $this->state([
+            'tahap' => $counter->tahap,
+            'status' => QueueTicketStatus::Dipanggil,
+            'queue_counter_id' => $counter->id,
+            'dipanggil_pada' => '2026-10-15 02:00:00',
+            'jumlah_panggil' => $times,
+        ]);
     }
 
     /**

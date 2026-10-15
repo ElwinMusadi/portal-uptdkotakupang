@@ -31,6 +31,19 @@ export interface LayananAntrean {
   aktif: boolean
 }
 
+/** Tahap yang nomornya dipanggil ke loket; tahap lain ditandai petugas */
+export const TAHAP_PANGGIL: TahapAntrean[] = ["pendaftaran", "kwitansi", "penyerahan"]
+
+export type StatusTiket = "menunggu" | "dipanggil" | "ditunda" | "selesai" | "batal"
+
+export const LABEL_STATUS: Record<StatusTiket, string> = {
+  menunggu: "Menunggu",
+  dipanggil: "Dipanggil",
+  ditunda: "Ditunda",
+  selesai: "Selesai",
+  batal: "Dibatalkan",
+}
+
 export interface TiketAntrean {
   id: string
   nomor: string
@@ -39,15 +52,53 @@ export interface TiketAntrean {
   layanan: { kode: string; nama: string }
   /** Seperti di plat, mis. "DH 1234 AB"; null bila dihapus Administrator */
   nopol: string | null
-  status: "menunggu" | "batal"
+  status: StatusTiket
   tahap: TahapAntrean | null
   tahapLayanan: TahapAntrean[]
   /** Alamat halaman lacak yang tersimpan di QR tiket */
   urlLacak: string
+  /** Loket yang sedang memanggilnya */
+  loket: string | null
+  dipanggil: string | null
+  jumlahPanggil: number
+  masukTahap: string | null
   dicetak: string | null
   dicetakOleh: string | null
   dibatalkan: string | null
   alasanBatal: string | null
+  selesai: string | null
+}
+
+export interface LoketAntrean {
+  id: string
+  nama: string
+  tahap: TahapAntrean
+  /** Kode layanan yang diambil "Panggil berikutnya"; kosong = semua */
+  layanan: string[]
+  namaSuara: string
+  aktif: boolean
+}
+
+export interface MejaLoket {
+  loket: LoketAntrean
+  dipanggil: TiketAntrean | null
+  menunggu: TiketAntrean[]
+  ditunda: TiketAntrean[]
+}
+
+export interface LayarAntrean {
+  id: string
+  nama: string
+  terakhirTerlihat: string | null
+  dibuat: string | null
+  dibuatOleh: string | null
+}
+
+/** Tahap sesudah tahap ini pada tiket, atau null bila ini yang terakhir */
+export function tahapBerikutnya(t: Pick<TiketAntrean, "tahap" | "tahapLayanan">): TahapAntrean | null {
+  const urutan = TAHAP.map((x) => x.kunci).filter((k) => t.tahapLayanan.includes(k))
+  const i = t.tahap ? urutan.indexOf(t.tahap) : -1
+  return i >= 0 ? (urutan[i + 1] ?? null) : null
 }
 
 const KUNCI = ["antrean"] as const
@@ -98,6 +149,93 @@ export function useBatalkanTiket() {
     mutationFn: ({ id, alasan }: { id: string; alasan: string }) =>
       mintaServer<TiketAntrean>(`/api/antrean/tiket/${encodeURIComponent(id)}/batal`, "POST", { alasan }),
     onSuccess: () => void qc.invalidateQueries({ queryKey: [...KUNCI, "tiket"] }),
+  })
+}
+
+/* ---------- Loket dan panggilan (Irisan 2) ---------- */
+
+export function useLoketAntrean() {
+  return useQuery({
+    queryKey: [...KUNCI, "loket"],
+    queryFn: () => mintaServer<LoketAntrean[]>("/api/antrean/loket", "GET"),
+  })
+}
+
+/** Tambah (tanpa id) atau ubah loket; khusus Administrator */
+export function useSimpanLoket() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...isi }: Omit<LoketAntrean, "id"> & { id?: string }) =>
+      id ? mintaServer<LoketAntrean>(`/api/antrean/loket/${encodeURIComponent(id)}`, "PUT", isi) : mintaServer<LoketAntrean>("/api/antrean/loket", "POST", isi),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: [...KUNCI, "loket"] }),
+  })
+}
+
+export function useHapusLoket() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => mintaServer<void>(`/api/antrean/loket/${encodeURIComponent(id)}`, "DELETE"),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: [...KUNCI, "loket"] }),
+  })
+}
+
+/** Meja satu loket: nomor yang dipanggil, menunggu, dan ditunda; diperbarui setiap 3 detik */
+export function useMejaLoket(id: string | null) {
+  return useQuery({
+    queryKey: [...KUNCI, "meja", id],
+    queryFn: () => mintaServer<MejaLoket>(`/api/antrean/loket/${encodeURIComponent(id!)}/antrean`, "GET"),
+    enabled: !!id,
+    refetchInterval: 3_000,
+  })
+}
+
+/** Panggil nomor berikutnya, atau nomor tertentu, ke loket */
+export function usePanggil() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ loket, tiket }: { loket: string; tiket?: string }) =>
+      mintaServer<TiketAntrean>(`/api/antrean/loket/${encodeURIComponent(loket)}/panggil`, "POST", tiket ? { tiket } : {}),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: KUNCI }),
+  })
+}
+
+/** Panggil ulang, tunda, atau selesaikan tahap nomor yang sedang dipanggil */
+export function useTindakanPanggilan() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, tindakan }: { id: string; tindakan: "panggil-ulang" | "tunda" | "selesai" }) =>
+      mintaServer<TiketAntrean>(`/api/antrean/tiket/${encodeURIComponent(id)}/${tindakan}`, "POST"),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: KUNCI }),
+  })
+}
+
+/** Nomor yang masih berjalan menurut QR, nomor antrean, atau nomor polisi */
+export function cariTiket(q: string): Promise<TiketAntrean[]> {
+  return mintaServer<TiketAntrean[]>(`/api/antrean/cari?q=${encodeURIComponent(q)}`, "GET")
+}
+
+export function useLayarAntrean(aktif: boolean) {
+  return useQuery({
+    queryKey: [...KUNCI, "layar"],
+    queryFn: () => mintaServer<LayarAntrean[]>("/api/antrean/layar", "GET"),
+    enabled: aktif,
+  })
+}
+
+/** Pasang layar baru: tautan pemasangan hanya dikembalikan sekali */
+export function useTambahLayar() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (nama: string) => mintaServer<{ layar: LayarAntrean; tautan: string }>("/api/antrean/layar", "POST", { nama }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: [...KUNCI, "layar"] }),
+  })
+}
+
+export function useCabutLayar() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => mintaServer<void>(`/api/antrean/layar/${encodeURIComponent(id)}`, "DELETE"),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: [...KUNCI, "layar"] }),
   })
 }
 

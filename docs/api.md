@@ -57,6 +57,11 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `PUT` | `/api/antrean/layanan/{id}` | Administrator | tersedia |
 | `GET`, `POST` | `/api/antrean/tiket` | Administrator, pengelola Antrean Online | tersedia |
 | `POST` | `/api/antrean/tiket/{id}/cetak-ulang`, `/api/antrean/tiket/{id}/batal` | Administrator, pengelola Antrean Online | tersedia |
+| `GET` | `/api/antrean/loket`, `/api/antrean/loket/{id}/antrean`, `/api/antrean/cari` | Administrator, pengelola Antrean Online | tersedia |
+| `POST`, `PUT`, `DELETE` | `/api/antrean/loket`, `/api/antrean/loket/{id}` | Administrator | tersedia |
+| `POST` | `/api/antrean/loket/{id}/panggil`, `/api/antrean/tiket/{id}/{panggil-ulang\|tunda\|selesai}` | Administrator, pengelola Antrean Online | tersedia |
+| `GET`, `POST`, `DELETE` | `/api/antrean/layar`, `/api/antrean/layar/{id}` | Administrator | tersedia |
+| `GET` | `/api/layar` | layar TV yang dipasang (bearer token) | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/kontak` | Administrator, pengelola Kontak & Kanal | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/visiMisi` | Administrator, pengelola Visi & Misi | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/profil` | Administrator, pengelola Tentang UPTD | tersedia |
@@ -426,11 +431,38 @@ Modul `antrean` ([D-051](decisions.md#d-051--2026-10-15--antrean-online-rencana-
 | `POST /api/antrean/tiket/{id}/cetak-ulang` | — | `200` tiket yang sama (nomor dan QR tetap), dicatat di riwayat. Tiket batal ditolak `422`. |
 | `POST /api/antrean/tiket/{id}/batal` | `{"alasan"}` (wajib, maks. 200) | `200` tiket berstatus `batal`; tahapnya tetap. Membatalkan dua kali ditolak `422` ("Nomor A-001 sudah dibatalkan."). |
 
-Bentuk tiket: `{id, nomor, tanggal, layanan: {kode, nama}, nopol ("DH 1234 AB" atau null), status ("menunggu"|"batal"), tahap, tahapLayanan, urlLacak, dicetak, dicetakOleh, dibatalkan, alasanBatal}`. `urlLacak` adalah alamat `/lacak/{kode}` yang tersimpan di QR tiket; kode lacak 22 huruf dan angka acak.
+Bentuk tiket: `{id, nomor, tanggal, layanan: {kode, nama}, nopol ("DH 1234 AB" atau null), status ("menunggu"|"dipanggil"|"ditunda"|"selesai"|"batal"), tahap, tahapLayanan, urlLacak, loket (nama loket yang memanggil), dipanggil, jumlahPanggil, masukTahap, dicetak, dicetakOleh, dibatalkan, alasanBatal, selesai}`. `urlLacak` adalah alamat `/lacak/{kode}` yang tersimpan di QR tiket; kode lacak 22 huruf dan angka acak.
 
-Tabel: `queue_services` (kode unik, `tahap` json), `queue_tickets` (kode lacak unik, tanggal WITA, `urut` unik per layanan dan tanggal, `nopol` diindeks dan disimpan sampai dihapus Administrator, `tahap_layanan` json salinan tahap saat dicetak), `queue_events` (riwayat: `dicetak`, `dicetak ulang`, `dibatalkan`, dengan tahap, keterangan, dan pegawai).
+### Loket dan panggilan (Irisan 2)
 
-Kode: `app/Http/Controllers/Dashboard/QueueTicketController.php`, `QueueServiceController.php`, `app/Actions/PrintQueueTicket.php`, `CancelQueueTicket.php`. Tes: `tests/Feature/QueueTicketControllerTest.php`, `QueueServiceControllerTest.php`.
+| Permintaan | Isi | Hasil |
+|---|---|---|
+| `GET /api/antrean/loket` | — | `200` loket: `{id, nama, tahap, layanan, namaSuara, aktif}`. Isi awal dari migrasi: Loket 1 – Pendaftaran, Loket Kwitansi, Loket 2 – Penyerahan, semua layanan (`layanan: []`). |
+| `POST /api/antrean/loket`, `PUT /api/antrean/loket/{id}` | `{"nama", "tahap", "layanan": [...], "namaSuara", "aktif"}` | `201`/`200` loket. `tahap` hanya `pendaftaran`, `kwitansi`, atau `penyerahan`; `layanan` kode yang ada (kosong = semua). Khusus Administrator ("Hanya Administrator yang dapat mengatur loket antrean."), tercatat di log aktivitas. |
+| `DELETE /api/antrean/loket/{id}` | — | `204`. Nomor yang sedang dipanggil di loket itu pindah ke Ditunda. |
+| `GET /api/antrean/loket/{id}/antrean` | — | `200` `{loket, dipanggil, menunggu, ditunda}`: nomor yang dipanggil di loket itu, nomor yang menunggu di tahapnya untuk layanannya (urut waktu masuk tahap, jadi nomor hari sebelumnya lebih dulu), dan nomor yang ditunda di tahapnya; maks. 200 per daftar. |
+| `POST /api/antrean/loket/{id}/panggil` | kosong, atau `{"tiket": id}` | `200` tiket yang dipanggil. Tanpa `tiket`: nomor menunggu paling awal di tahap loket untuk layanannya ("Tidak ada nomor yang menunggu di …" bila kosong). Dengan `tiket`: nomor itu, termasuk yang ditunda; bila nomor masih di tahap sebelumnya, tahap di antaranya dicatat selesai `otomatis`. Ditolak `422` bila nomor batal, selesai, layanannya tidak melewati tahap loket, sudah melewati tahap itu, atau sedang dipanggil di loket lain. Nomor yang masih dipanggil di loket ini otomatis ditunda; memanggil nomor yang sama berarti panggil ulang. Loket yang tidak dipakai ditolak. |
+| `POST /api/antrean/tiket/{id}/panggil-ulang` | — | `200`; `jumlahPanggil` bertambah, layar membacakannya lagi. |
+| `POST /api/antrean/tiket/{id}/tunda` | — | `200` status `ditunda`. |
+| `POST /api/antrean/tiket/{id}/selesai` | — | `200`: nomor menunggu di tahap berikutnya layanannya (`masukTahap` diperbarui), atau `selesai` setelah tahap terakhir. Tindakan ini hanya untuk nomor yang sedang dipanggil ("Nomor A-001 sedang tidak dipanggil."). |
+| `GET /api/antrean/cari?q=` | QR yang dipindai (alamat lacak atau kodenya), nomor (`A-001`, `a1`), atau nomor polisi | `200` nomor yang masih berjalan (bukan selesai atau batal), tanggal terbaru dulu, maks. 10. |
+
+Riwayat (`queue_events`) mencatat `dipanggil`, `dipanggil ulang`, `ditunda`, `tahap selesai`, dan `selesai`, dengan loket, pegawai, dan `otomatis` (tahap yang dilewati, atau nomor yang ditunda karena loketnya memanggil nomor lain).
+
+### Layar TV (Irisan 2)
+
+| Permintaan | Isi | Hasil |
+|---|---|---|
+| `GET /api/antrean/layar` | — | `200` layar: `{id, nama, terakhirTerlihat, dibuat, dibuatOleh}`, tanpa token. |
+| `POST /api/antrean/layar` | `{"nama"}` | `201` `{layar, tautan}`: `tautan` = `/layar#k=<token 48 karakter>`, hanya dikembalikan sekali; server menyimpan hash SHA-256-nya saja. |
+| `DELETE /api/antrean/layar/{id}` | — | `204`; layar langsung ditolak (aksi log "mencabut"). |
+| `GET /api/layar` | `Authorization: Bearer <token>` | `200` `{waktu, panggilan, loket, menunggu}`: 8 panggilan terbaru hari ini (WITA), terbaru dulu, `{id, nomor, tanggal, hariIni, nopol, layanan, loket: {nama, suara}, waktu}`; loket yang dipakai dengan nomor yang sedang dipanggil; jumlah nomor menunggu di tiap tahap pemanggil. `401` "Layar ini belum dipasang atau sudah dicabut." tanpa token yang sah. Tanpa sesi dan cookie; batas laju API publik. `terakhirTerlihat` diperbarui paling sering sekali per menit. |
+
+Halaman `/layar` (`resources/views/layar.blade.php`, komponen `resources/js/portal/antrean/layar-antrean.tsx`, `noindex`) menyimpan token dari `#k=` di perangkat, meminta `GET /api/layar` setiap 2 detik, dan membacakan panggilan baru setelah *Aktifkan suara* diklik.
+
+Tabel: `queue_services` (kode unik, `tahap` json), `queue_counters` (loket: `tahap`, `layanan` json, `nama_suara`, `aktif`, `urutan`), `queue_displays` (layar: `token_hash` unik, `terakhir_terlihat`), `queue_tickets` (kode lacak unik, tanggal WITA, `urut` unik per layanan dan tanggal, `nopol` diindeks dan disimpan sampai dihapus Administrator, `tahap_layanan` json salinan tahap saat dicetak), `queue_events` (riwayat: `dicetak`, `dicetak ulang`, `dibatalkan`, dengan tahap, keterangan, dan pegawai).
+
+Kode: `app/Http/Controllers/Dashboard/QueueTicketController.php`, `QueueServiceController.php`, `QueueCounterController.php`, `QueueCounterDeskController.php`, `QueueTicketCallController.php`, `QueueDisplayController.php`, `app/Http/Controllers/QueueDisplayDataController.php`, `app/Actions/PrintQueueTicket.php`, `CancelQueueTicket.php`, `CallQueueNumbers.php`, `ShowQueueDisplay.php`. Tes: `tests/Feature/QueueTicketControllerTest.php`, `QueueServiceControllerTest.php`, `QueueCallTest.php`, `QueueCounterControllerTest.php`, `QueueDisplayTest.php`.
 
 ## Kontak & Kanal di dashboard
 
@@ -1029,6 +1061,7 @@ Halaman lacak `/lacak/{kode}` yang dibuka dari QR tiket antrean ([D-051](decisio
 |---|---|
 | Isi | Nomor polisi tampil apa adanya (keputusan pemilik). `tahapan` hanya tahap layanan tiket itu; tahap sebelum yang sekarang `selesai`. Tidak memuat ID, nama petugas, atau alasan pembatalan. |
 | Batal | `status: "batal"`, `petunjuk` "Nomor antrean ini dibatalkan petugas. Silakan tanyakan ke Meja Informasi.", tidak ada tahap `sekarang`. |
+| Dipanggil, ditunda, selesai | `dipanggil`: "Nomor Anda dipanggil. Silakan menuju <loket>."; `ditunda`: "Nomor Anda sudah dipanggil ke <tahap>, tetapi Anda belum datang. Silakan lapor ke petugas <tahap>."; `selesai`: "Berkas Anda sudah selesai diproses. Terima kasih.", semua tahap `selesai`. |
 | Galat | `404` "Nomor antrean tidak ditemukan. Periksa kembali QR pada tiket Anda." untuk kode yang tidak ada; `404` untuk alamat yang bukan 22 huruf/angka; `422` `query` untuk parameter kueri apa pun; `429` dari batas API publik. |
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. Halaman `/lacak/{kode}` bertanda `noindex, nofollow`. |
 

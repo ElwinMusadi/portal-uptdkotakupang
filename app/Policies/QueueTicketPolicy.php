@@ -30,6 +30,15 @@ class QueueTicketPolicy
     }
 
     /**
+     * Determine whether the user can call numbers at a counter and finish
+     * their stage.
+     */
+    public function call(User $user): Response
+    {
+        return $this->managesQueue($user);
+    }
+
+    /**
      * Determine whether the user can cancel queue numbers.
      */
     public function cancel(User $user): Response

@@ -25,8 +25,14 @@ use Illuminate\Support\Carbon;
  * @property ?QueueStage $tahap
  * @property QueueTicketStatus $status
  * @property ?Carbon $dibatalkan_pada
+ * @property ?Carbon $dipanggil_pada
+ * @property ?Carbon $masuk_tahap_pada
+ * @property ?Carbon $selesai_pada
  */
-#[Fillable(['kode_lacak', 'queue_service_id', 'tanggal', 'urut', 'nomor', 'nopol', 'tahap_layanan', 'tahap', 'status', 'alasan_batal', 'dicetak_oleh', 'dibatalkan_pada'])]
+#[Fillable([
+    'kode_lacak', 'queue_service_id', 'tanggal', 'urut', 'nomor', 'nopol', 'tahap_layanan', 'tahap', 'status', 'alasan_batal', 'dicetak_oleh',
+    'dibatalkan_pada', 'queue_counter_id', 'dipanggil_pada', 'jumlah_panggil', 'masuk_tahap_pada', 'selesai_pada',
+])]
 class QueueTicket extends Model
 {
     /** @use HasFactory<QueueTicketFactory> */
@@ -48,6 +54,15 @@ class QueueTicket extends Model
     public const string TIME_ZONE = 'Asia/Makassar';
 
     /**
+     * A new ticket has not been called, as in the table.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'jumlah_panggil' => 0,
+    ];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -60,6 +75,10 @@ class QueueTicket extends Model
             'tahap' => QueueStage::class,
             'status' => QueueTicketStatus::class,
             'dibatalkan_pada' => 'datetime',
+            'dipanggil_pada' => 'datetime',
+            'jumlah_panggil' => 'integer',
+            'masuk_tahap_pada' => 'datetime',
+            'selesai_pada' => 'datetime',
         ];
     }
 
@@ -71,6 +90,16 @@ class QueueTicket extends Model
     public function service(): BelongsTo
     {
         return $this->belongsTo(QueueService::class, 'queue_service_id');
+    }
+
+    /**
+     * The counter that called the number last at its stage, while called.
+     *
+     * @return BelongsTo<QueueCounter, $this>
+     */
+    public function counter(): BelongsTo
+    {
+        return $this->belongsTo(QueueCounter::class, 'queue_counter_id');
     }
 
     /**

@@ -2,7 +2,7 @@
 
 > **Untuk agen AI dan pengembang berikutnya.** Satu berkas ini memuat seluruh konteks proyek PINTU sampai status terakhirnya: tujuan, arsitektur, aturan kerja dengan pemilik, keputusan, integrasi, cara menguji, jebakan lingkungan, dan pekerjaan yang tertunda. Baca berkas ini lebih dulu, lalu ikuti tautan ke dokumen rinci bila perlu.
 >
-> **Terakhir diperbarui:** 2026-10-15 · branch `laravel-development` · sampai commit Antrean Online Irisan 1 (D-051, sesudah `0fce13c`).
+> **Terakhir diperbarui:** 2026-10-16 · branch `laravel-development` · sampai commit Antrean Online Irisan 2 (D-051, sesudah `ca695bc`).
 >
 > **Wajib diperbarui setiap ada perubahan** (lihat [§19](#19-prosedur-memperbarui-dokumen-ini)). Jangan pernah menulis rahasia (kata sandi, NIP akun uji, token, isi `.env`) di berkas ini.
 
@@ -71,16 +71,16 @@ Satu aplikasi Laravel berisi empat bagian:
 
 ## 3. Status terakhir
 
-**Per 2026-10-15** (perbarui bagian ini setiap ada perubahan):
+**Per 2026-10-16** (perbarui bagian ini setiap ada perubahan):
 
 | Hal | Status |
 |---|---|
 | Branch kerja | `laravel-development` (`main` = situs statis lama yang masih dilayani Cloudflare Pages; jangan diubah) |
-| Commit terakhir di origin | `feat(pintu): print queue tickets with a tracking QR at the information desk` (D-051, Antrean Online Irisan 1), sesudah `0fce13c` (rencana Antrean Online). Hash: `git log -3 --oneline` |
+| Commit terakhir di origin | `feat(pintu): call queue numbers to counters and announce them on a TV display` (D-051, Antrean Online Irisan 2), sesudah `ca695bc` (Irisan 1). Hash: `git log -3 --oneline` |
 | Working tree | Bersih |
-| Tes | `composer test`: **1137 tes lulus, 5207 assertion** (SQLite di memori). Uji mutasi: D-047 66 dari 67 mutan mati, D-048 36 dari 37 (sisanya setara), D-049 30 dari 30, Antrean Online Irisan 1 28 dari 28 |
-| Pemeriksaan frontend | `npm run typecheck`, `npm run lint`, build Vite: lulus. Dashboard Laporan Penerimaan diperiksa di browser (415 px dan 1280 px). Halaman portal `/penerimaan` diperiksa di browser (430 px dan 1280 px): keadaan belum diterbitkan dengan API sungguhan, lalu laporan berisi data dev yang sudah disamarkan server (dihitung dalam transaksi yang dibatalkan, tanpa mengubah tanda tampil) lewat `fetch` tiruan: periode, saringan, kartu kelompok, tabel, CSV. Setelah pemilik menyalakan Portal, diperiksa lagi dengan API sungguhan: harian, bulanan, rentang, batang per hari, penyamaran pada 8 kombinasi periode dan saringan, 430 px. D-049 diperiksa dengan API sungguhan: invarian penyamaran September dan Oktober (tanpa baris atau gabungan di bawah 3, kecamatan dikurangi kelurahan yang tampil 0 atau ≥3, bulan dikurangi hari yang tampil 0 atau ≥3, laporan harian sama dengan batang bulanan untuk setiap hari), parameter lama ditolak, CSV, 430 px. Papan Layanan D-050 diperiksa di beranda dengan jam peramban dimajukan: Kamis malam (tutup), Jumat 10.00 WITA (buka, isi terakhir), Sabtu (tutup). Antrean Online Irisan 1 diperiksa di browser (415 px) dengan akun admin lokal: cetak tiket uji (dokumen cetak dicegat, dua lembar 80 mm ditampilkan), cetak ulang, batal dengan alasan, halaman lacak (menunggu, batal, kode tak dikenal), Pengaturan Antrean; tiket uji dihapus lagi. QR belum dipindai dengan ponsel |
-| Keputusan terakhir | D-051 (Antrean Online: rencana disetujui, Irisan 1 dibangun, pustaka QR `uqr`) |
+| Tes | `composer test`: **1167 tes lulus, 5408 assertion** (SQLite di memori). Uji mutasi: D-047 66 dari 67 mutan mati, D-048 36 dari 37 (sisanya setara), D-049 30 dari 30, Antrean Online Irisan 1 28 dari 28, Irisan 2 46 dari 47 (1 setara) |
+| Pemeriksaan frontend | `npm run typecheck`, `npm run lint`, build Vite: lulus. Dashboard Laporan Penerimaan diperiksa di browser (415 px dan 1280 px). Halaman portal `/penerimaan` diperiksa di browser (430 px dan 1280 px): keadaan belum diterbitkan dengan API sungguhan, lalu laporan berisi data dev yang sudah disamarkan server (dihitung dalam transaksi yang dibatalkan, tanpa mengubah tanda tampil) lewat `fetch` tiruan: periode, saringan, kartu kelompok, tabel, CSV. Setelah pemilik menyalakan Portal, diperiksa lagi dengan API sungguhan: harian, bulanan, rentang, batang per hari, penyamaran pada 8 kombinasi periode dan saringan, 430 px. D-049 diperiksa dengan API sungguhan: invarian penyamaran September dan Oktober (tanpa baris atau gabungan di bawah 3, kecamatan dikurangi kelurahan yang tampil 0 atau ≥3, bulan dikurangi hari yang tampil 0 atau ≥3, laporan harian sama dengan batang bulanan untuk setiap hari), parameter lama ditolak, CSV, 430 px. Papan Layanan D-050 diperiksa di beranda dengan jam peramban dimajukan: Kamis malam (tutup), Jumat 10.00 WITA (buka, isi terakhir), Sabtu (tutup). Antrean Online Irisan 1 diperiksa di browser (415 px) dengan akun admin lokal: cetak tiket uji (dokumen cetak dicegat, dua lembar 80 mm ditampilkan), cetak ulang, batal dengan alasan, halaman lacak (menunggu, batal, kode tak dikenal), Pengaturan Antrean; tiket uji dihapus lagi. QR belum dipindai dengan ponsel. Irisan 2 diperiksa di browser dengan akun admin lokal: Loket (panggil berikutnya, nomor tertentu lewat ketik, panggil ulang, tunda, selesai), Pengaturan (loket, layar dengan tautan sekali tampil), layar `/layar` (pemasangan, panggilan tampil, cabut); suara pembaca tidak bisa didengar di panel browser; data uji dihapus lagi |
+| Keputusan terakhir | D-051 (Antrean Online: Irisan 1 dan 2 dibangun; satu loket per tahap, suara tanpa nopol, panggil berikutnya menunda otomatis) |
 | Deploy Laravel Cloud | **Belum.** Pemilik: "jangan deploy ke Laravel Cloud dulu" (D-035). Deploy adalah langkah pemilik |
 | Produksi | Masih Cloudflare Pages dari branch `main` (situs statis lama) |
 | API data kendaraan (NJKB) | Token PINTU terpasang di `.env` lokal dan lolos Cloudflare Access; Worker `njkb-api-ntt` sudah di-deploy pemilik dengan perbaikan 404 (commit `6a4c4f8`), terverifikasi 2026-10-15 07.04 WITA. **Uji dengan kendaraan sungguhan oleh pemilik belum dikonfirmasi** |
@@ -241,6 +241,7 @@ Berkas alat: `AGENTS.md`, `boost.json`, `kilo.json` (skill di `.agents/skills/`,
 | `beranda/lambang-pembuka.tsx` + `.css` | `<div class="hero__lambang" data-react="lambang-pembuka">` | Lambang NTT di tengah; logo Ditlantas (kiri) dan Jasa Raharja (kanan) disimpan di `<template data-lambang-mitra>`. ±2,5 detik setelah halaman dibuka keduanya keluar dari balik lambang (hanya otomatis sekali per muat). Lambang NTT menjadi tombol (`aria-expanded`) untuk menyembunyikan/memunculkan |
 | `penerimaan/laporan-penerimaan.tsx` + `.css` | `<div class="penerimaan" data-react="laporan-penerimaan">` di `/penerimaan` | Laporan Penerimaan publik (D-048, D-049) dari `GET /api/public/penerimaan`, sebagai tabel tetap: *Harian* hanya panel gelap ringkasan (total, susunan komponen, transaksi, kendaraan baru, pajak provinsi, opsen) dengan tombol ke laporan bulanannya; *Bulanan* juga batang per hari, kartu per loket/jenis daftar/jenis kendaraan/kecamatan dengan baris "Lainnya (disamarkan)" bergaris, dan tabel rincian bertab (transaksi, jumlah, porsi) dengan unduh CSV. Tanpa saringan dan rentang. Porsi yang ada tetapi di bawah 0,05% ditulis "<0,1%" (sama di dashboard). Periode ditulis ke alamat halaman (`?tanggal=` atau `?bulan=`). Tanpa Recharts (±6 KB gzip) |
 | `antrean/lacak-antrean.tsx` + `.css` | `<div class="lacak" data-react="lacak-antrean">` di `/lacak/{kode}` | Halaman lacak Antrean Online (D-051) dari `GET /api/public/antrean/{kode}`: panel gelap tiket (nomor, layanan, nomor polisi, tanggal) dan petunjuk tahap sekarang, daftar tahap layanan (selesai/sekarang/nanti), diperbarui setiap 30 detik selama halaman terlihat (berhenti bila batal), tombol *Perbarui sekarang* |
+| `antrean/layar-antrean.tsx` + `.css` | `<div data-react="layar-antrean">` di `/layar` (`resources/views/layar.blade.php`, bukan halaman portal) | Layar TV ruang tunggu Antrean Online (D-051 Irisan 2): token dari tautan pemasangan `#k=` disimpan di perangkat, `GET /api/layar` setiap 2 detik dengan bearer token; panggilan terbesar dengan nomor polisi dan loket, panggilan sebelumnya, nomor di setiap loket, jumlah menunggu; panggilan baru: bunyi tanda (Web Audio) lalu suara bahasa Indonesia peramban (Web Speech) tanpa nomor polisi, setelah *Aktifkan suara* diklik |
 | `penerimaan/periode.ts`, `penerimaan/csv.ts` | (modul bersama) | Periode laporan (geser hari/bulan, label tanggal Indonesia) dan berkas CSV (titik koma, BOM); dipakai juga halaman dashboard Laporan Penerimaan |
 | `kata-bergilir.ts` | (modul bersama) | `kataDalamJudul()` dan `pisahJudul()`: pencocokan kata utuh tanpa membedakan huruf besar-kecil. Server memakai aturan yang sama (`Setting::rotatingWordIn`); dashboard mengimpornya untuk validasi |
 
@@ -282,7 +283,7 @@ Berkas alat: `AGENTS.md`, `boost.json`, `kilo.json` (skill di `.agents/skills/`,
 | Jam Pelayanan | `#/jadwal/jam` | pengaturan `jam`, koleksi `penyesuaian` | `jam` |
 | Layanan Luar Kantor | `#/jadwal/keliling` (`?jenis=keliling|gerai|sementara|lokasi`) | koleksi `keliling`, `lokasi` | `keliling` |
 | Papan Layanan | `#/papan` | pengaturan `papan` | `papan` |
-| Antrean Online | `#/antrean` (Meja Informasi), `#/antrean/pengaturan` (layanan, khusus Administrator) | `/api/antrean/…` (tiket, layanan) | `antrean` |
+| Antrean Online | `#/antrean` (Meja Informasi), `#/antrean/loket` (Loket), `#/antrean/pengaturan` (layanan, loket, layar; khusus Administrator) | `/api/antrean/…` (tiket, layanan, loket, layar) | `antrean` |
 | Tentang UPTD | `#/profil` | pengaturan `profil` | `profil` |
 | Visi & Misi | `#/visi-misi` | pengaturan `visiMisi` | `visiMisi` |
 | Struktur Organisasi | `#/struktur` | koleksi `unit` | `unit` |
@@ -347,7 +348,7 @@ Kontrak lengkap ada di [`docs/api.md`](docs/api.md). Ringkasan:
 - **Pengaturan:** `GET /api/pengaturan` (waktu simpan), `GET|PUT /api/pengaturan/{jam|papan|statistik|kontak|visiMisi|profil|beranda|situs}` (gate `SettingPolicy`; `situs` disimpan hanya Administrator).
 - **Lain-lain:** `POST /api/unggah`, `GET /api/berkas/{id}` (berkas privat), `GET /api/aktivitas?limit=`, `GET /api/kendaraan/{nopol}`, `/api/absensi/kegiatan` (Administrator), `GET /api/absen`, `POST /api/absen/{id}` (clock-in).
 - **Laporan Penerimaan (D-047, `RevenueImportPolicy`, modul `penerimaan`):** `GET /api/penerimaan/laporan?dari&sampai&<saringan>[]&tunggakan`, `GET /api/penerimaan/loket`, `GET|POST /api/penerimaan/impor`, `POST /api/penerimaan/impor/pratinjau` (multipart `berkas` + `loket`, tanpa menyimpan), `POST /api/penerimaan/impor/hapus`, `PATCH /api/penerimaan/impor/{id}` `{tampil}` (khusus Administrator, D-048). Pratinjau dan impor memakai batas `uploads`.
-- **Antrean Online (D-051, `QueueTicketPolicy`/`QueueServicePolicy`, modul `antrean`):** `GET /api/antrean/layanan`, `PUT /api/antrean/layanan/{id}` (Administrator), `GET|POST /api/antrean/tiket` (`?tanggal=`), `POST /api/antrean/tiket/{id}/cetak-ulang`, `POST /api/antrean/tiket/{id}/batal`.
+- **Antrean Online (D-051, `QueueTicketPolicy`/`QueueServicePolicy`, modul `antrean`):** `GET /api/antrean/layanan`, `PUT /api/antrean/layanan/{id}` (Administrator), `GET|POST /api/antrean/tiket` (`?tanggal=`), `POST /api/antrean/tiket/{id}/cetak-ulang`, `POST /api/antrean/tiket/{id}/batal`; Irisan 2: `GET|POST /api/antrean/loket`, `PUT|DELETE /api/antrean/loket/{id}` (Administrator), `GET /api/antrean/loket/{id}/antrean`, `POST /api/antrean/loket/{id}/panggil` (`{tiket?}`), `POST /api/antrean/tiket/{id}/{panggil-ulang|tunda|selesai}`, `GET /api/antrean/cari?q=`, `GET|POST /api/antrean/layar`, `DELETE /api/antrean/layar/{id}` (Administrator), dan `GET /api/layar` untuk layar TV (bearer token dari tautan pemasangan, tanpa sesi).
 - **Publik `/api/public/*`:** `faq`, `keliling`, `jam`, `papan`, `statistik`, `kontak`, `visi-misi`, `profil`, `layanan`, `dokumen`, `dokumentasi`, `struktur`, `berita`, `berita/{slug}`, `beranda`, `situs`, `halaman/{slug}`, `antrean/{kode}` (halaman lacak dari QR tiket, D-051), `penerimaan` (GET; satu-satunya yang menerima parameter: `tanggal` atau `bulan`, D-048, D-049); `POST pesan` (formulir kontak, honeypot `kode_tambahan`); `POST kendaraan` (cek biaya pajak).
 
 ### 10.5 Model dan tabel
@@ -375,8 +376,10 @@ Semua model ULID kecuali `Setting`. Kolom berbahasa Indonesia.
 | RevenueImport | `revenue_imports` | satu berkas STS yang diimpor: `loket` (kunci), `nama_loket` (saat impor), `nama_berkas`, tanggal awal/akhir, `jumlah_transaksi`, `jumlah_dilewati`, `total`, `tampil` (bawaan mati; untuk portal), `user_id` |
 | RevenueTransaction | `revenue_transactions` | id bigint, tanpa timestamps, `tanggal` disimpan `Y-m-d` (`$dateFormat`); dimensi laporan, 12 komponen rupiah + `jumlah`, `sidik` unik (HMAC); terhapus bersama impornya. **Tanpa** nama pemilik, nomor polisi, alamat |
 | QueueService | `queue_services` | layanan antrean (D-051): `kode` A–D unik, `nama`, `cakupan`, `tahap` (json, urut alur), `aktif`, `urutan`; isi awal dari migrasi |
-| QueueTicket | `queue_tickets` | nomor antrean: `kode_lacak` acak 22 karakter unik (QR), `tanggal` WITA disimpan string `Y-m-d` (tanpa cast date), `urut` unik per layanan dan tanggal, `nomor` (A-001), `nopol` ringkas (DH1234AB, diindeks, disimpan sampai dihapus Administrator), `tahap_layanan` (json salinan saat dicetak), `tahap`, `status` (`menunggu`/`batal`), `alasan_batal`, `dicetak_oleh` |
-| QueueEvent | `queue_events` | riwayat tiket tanpa `updated_at`: `aksi` (dicetak, dicetak ulang, dibatalkan), `tahap`, `keterangan`, `user_id` |
+| QueueTicket | `queue_tickets` | nomor antrean: `kode_lacak` acak 22 karakter unik (QR), `tanggal` WITA disimpan string `Y-m-d` (tanpa cast date), `urut` unik per layanan dan tanggal, `nomor` (A-001), `nopol` ringkas (DH1234AB, diindeks, disimpan sampai dihapus Administrator), `tahap_layanan` (json salinan saat dicetak), `tahap`, `status` (`menunggu`/`dipanggil`/`ditunda`/`selesai`/`batal`), `queue_counter_id` (loket yang memanggil), `dipanggil_pada`, `jumlah_panggil`, `masuk_tahap_pada` (urutan panggil), `selesai_pada`, `alasan_batal`, `dicetak_oleh` |
+| QueueEvent | `queue_events` | riwayat tiket tanpa `updated_at`: `aksi` (dicetak, dicetak ulang, dibatalkan, dipanggil, dipanggil ulang, ditunda, tahap selesai, selesai), `tahap`, `keterangan`, `queue_counter_id`, `otomatis`, `user_id` |
+| QueueCounter | `queue_counters` | loket pemanggil (Irisan 2): `nama`, `tahap` (pendaftaran/kwitansi/penyerahan), `layanan` (json kode, kosong = semua), `nama_suara`, `aktif`, `urutan`; tiga loket awal dari migrasi |
+| QueueDisplay | `queue_displays` | layar TV (Irisan 2): `nama`, `token_hash` (SHA-256, token hanya ditampilkan sekali), `terakhir_terlihat`, `dibuat_oleh` |
 | Setting | `settings` | kunci `name`, `value` TEXT dengan cast array (bukan kolom json: MySQL json mengubah urutan kunci) |
 
 **Kunci `settings`:** `jam`, `papan`, `statistik`, `kontak`, `visiMisi`, `profil`, `situs`, `beranda` (`tarif` lama dibiarkan di DB). Default sebelum pertama disimpan: `Setting::INITIAL_*`/`UNSAVED_*`. `Setting::upgradeHomepage()` membaca dokumen Beranda lama ke bentuk terbaru (logo mitra, tautan kanal, video, kata bergilir).
@@ -423,7 +426,7 @@ Semua model ULID kecuali `Setting`. Kolom berbahasa Indonesia.
 - Sebelum migrasi data di database pemilik, buat cadangan tabel terkait.
 - **Berkas STS dari pemilik** (`docs/Data Penerimaan/`, diabaikan git) berisi nama pemilik, nomor polisi, dan alamat wajib pajak: jangan di-commit, jangan mencetak barisnya ke percakapan atau log (ringkasan angka saja). Impor hanya menyimpan kolom laporan (D-047).
 - **Migrasi data awal** (bukan seeder): `insert_initial_services` (6 layanan terbit), `insert_initial_static_pages`, `insert_initial_update_standards` (8 standar), `insert_initial_documents` (9 draf tanpa berkas), `insert_initial_articles` (artikel peluncuran, draf), `insert_initial_documentations` (9 draf tanpa foto), `insert_initial_organization_units` (7 unit), `create_service_locations_table` (lokasi dari jadwal yang ada), `widen_mobile_service_stops_to_out_of_office_services` (jadwal lama → Samsat Keliling 01, nonaktif). Data contoh dashboard di peramban **tidak** dipindahkan ke server.
-- **Antrean Online:** tabel `queue_services`, `queue_tickets`, `queue_events` sudah dimigrasi di `pintu` (2026-10-15); `queue_services` berisi A–D dari migrasi, tabel tiket dan riwayat kosong (tiket uji pemeriksaan browser sudah dihapus).
+- **Antrean Online:** tabel `queue_services`, `queue_tickets`, `queue_events`, `queue_counters`, `queue_displays` sudah dimigrasi di `pintu` (2026-10-15); `queue_services` berisi A–D dan `queue_counters` tiga loket dari migrasi; tiket, riwayat, dan layar kosong (data uji pemeriksaan browser sudah dihapus).
 - **Seeder:** `LocalAccountSeeder` membuat admin lokal (NIP dan kata sandinya ada di berkas seeder; jangan disalin ke dokumen atau percakapan). Hanya berjalan di env `local`.
 
 ---
@@ -550,7 +553,7 @@ Rincian lengkap di [`docs/decisions.md`](docs/decisions.md). "Pemilik" = keputus
 | D-048 | 10-15 | Halaman portal `/penerimaan` (menu Informasi + tautan Transparansi beranda, pemilik); hanya impor yang dinyalakan Administrator (pemilik); saringan utama loket/jenis daftar/jenis kendaraan/kecamatan/kelurahan (pemilik); total + komponen + CSV (pemilik); penyamaran <3 transaksi di server dengan penggabungan kedua; API publik menerima parameter terdaftar (pengecualian D-004) |
 | D-049 | 10-15 | Laporan Penerimaan portal sebagai tabel tetap: per kelompok hanya transaksi dan jumlah, komponen hanya untuk seluruh periode (pemilik); Harian total saja, Bulanan dengan rincian, saringan dan rentang dihapus dari portal (pemilik); kelurahan disamarkan per kecamatan, hari disamarkan sama di laporan harian dan bulanan; API hanya `tanggal` atau `bulan` |
 | D-050 | 10-15 | Papan Layanan berlaku setiap hari: semua isi terakhir tampil sampai diubah (pemilik); selama loket tutup menurut Jam Pelayanan semua loket Tutup tanpa waktu tunggu (pemilik); label "Diperbarui hari ini" di hari selain hari penyimpanan (pemilik) |
-| D-051 | 10-15 | Antrean Online (rencana disetujui; Irisan 1 dibangun): kode A RU/Duplikat, B Pengesahan, C BBN/Mutasi, D Pembayaran Online, nomor A-001 harian, cetak 2 lembar thermal 80 mm hanya di Meja Informasi, status per pos lewat pindai QR (tidak wajib) lalu API Samsat Online, layar TV + suara, akun pribadi, nopol disimpan tanpa batas dan tampil apa adanya, tiket lintas hari, Papan tetap manual, uji coba paralel, pustaka QR `uqr` (semua pemilik) |
+| D-051 | 10-15 | Antrean Online (rencana disetujui; Irisan 1–2 dibangun): kode A RU/Duplikat, B Pengesahan, C BBN/Mutasi, D Pembayaran Online, nomor A-001 harian, cetak 2 lembar thermal 80 mm hanya di Meja Informasi, status per pos lewat pindai QR (tidak wajib) lalu API Samsat Online, layar TV + suara tanpa nopol, satu loket per tahap, panggil berikutnya menunda otomatis, akun pribadi, nopol disimpan tanpa batas dan tampil apa adanya, tiket lintas hari, Papan tetap manual, uji coba paralel, pustaka QR `uqr` (semua pemilik) |
 
 **Pola lintas keputusan:** teks HTML sebagai isi awal (D-023/024/026); data contoh peramban tidak dipindahkan, kecuali data awal lewat migrasi; hapus konten editorial hanya Administrator; pengelola Jadwal Pemutakhiran boleh membaca daftar modul lain; WITA sebagai acuan waktu; retensi pesan dan swafoto absensi belum diputuskan (menunggu unit hukum/kearsipan).
 
@@ -558,7 +561,7 @@ Rincian lengkap di [`docs/decisions.md`](docs/decisions.md). "Pemilik" = keputus
 
 ## 17. Riwayat commit
 
-85 commit di `laravel-development` (per commit Antrean Online Irisan 1, D-051). Tahapan besar:
+86 commit di `laravel-development` (per commit Antrean Online Irisan 2, D-051). Tahapan besar:
 
 | Rentang | Isi |
 |---|---|
@@ -581,7 +584,8 @@ Rincian lengkap di [`docs/decisions.md`](docs/decisions.md). "Pemilik" = keputus
 | `5cab5d9` | Laporan Penerimaan portal sebagai tabel tetap: per kelompok hanya transaksi dan jumlah, tanpa saringan dan rentang, kelurahan disamarkan per kecamatan (D-049) |
 | `7f9c648` | Papan Layanan berlaku setiap hari: isi terakhir tampil sampai diubah, semua loket Tutup selama loket tutup menurut Jam Pelayanan (D-050) |
 | `0fce13c` | Rencana Antrean Online (`docs/rencana-antrean-online.md`), belum ada kode (D-051) |
-| `feat(pintu): print queue tickets with a tracking QR at the information desk` | Antrean Online Irisan 1: Meja Informasi, tiket dua lembar 80 mm ber-QR, Pengaturan Antrean, halaman lacak (D-051) |
+| `ca695bc` | Antrean Online Irisan 1: Meja Informasi, tiket dua lembar 80 mm ber-QR, Pengaturan Antrean, halaman lacak (D-051) |
+| `feat(pintu): call queue numbers to counters and announce them on a TV display` | Antrean Online Irisan 2: loket pemanggil, layar TV dengan suara, pengaturan loket dan layar (D-051) |
 
 Repository terkait: `njkb-api-ntt` `main` — `f7a1ee5` (izin konsumen PINTU), `6a4c4f8` (404 untuk nomor polisi tidak terdaftar, sudah di-deploy).
 
@@ -591,7 +595,7 @@ Repository terkait: `njkb-api-ntt` `main` — `f7a1ee5` (izin konsumen PINTU), `
 
 **Menunggu pemilik:**
 
-- Antrean Online (D-051): keputusan rencana §9 yang tersisa (akun non-UPTD, daftar loket fisik untuk Irisan 2, antrean prioritas, kalimat suara, Kebijakan Privasi, waktu deploy), pengadaan perangkat (§8: printer thermal 80 mm, pemindai 2D, layar TV), dan uji pindai QR tiket dengan ponsel. Irisan 2 (loket pemanggil + layar TV) menunggu persetujuan.
+- Antrean Online (D-051): keputusan rencana §9 yang tersisa (akun non-UPTD, antrean prioritas, Kebijakan Privasi, waktu deploy), pengadaan perangkat (§8: printer thermal 80 mm, pemindai 2D, layar TV dengan peramban Chrome/Edge dan pengeras suara), uji pindai QR tiket dengan ponsel, dan uji suara layar di perangkat TV (suara bahasa Indonesia peramban). Irisan 3 (pos proses + pindai) menunggu persetujuan.
 - Jadwal Pemutakhiran masih mencatat papan "Setiap hari kerja, 07.45 WITA" (interval 1 hari); sejak D-050 papan cukup diubah bila ada perubahan, jadi frekuensinya bisa diubah pengelola.
 - Uji cek data kendaraan dengan kendaraan sungguhan (portal: nomor polisi + 5 karakter terakhir nomor rangka, sebelum 21.00 WITA) belum dikonfirmasi.
 - Deploy ke Laravel Cloud dan cutover domain (lihat §15).
@@ -648,6 +652,7 @@ Bila commit dibuat sebelum hash-nya diketahui, tulis status "belum di-commit" la
 
 | Tanggal | Perubahan |
 |---|---|
+| 2026-10-16 | Antrean Online Irisan 2 (D-051): loket pemanggil (tiga loket awal: satu per tahap, pemilik), Loket di dashboard (panggil berikutnya dengan penundaan otomatis nomor yang masih dipanggil, panggil nomor tertentu lewat ketik/nopol/QR dengan tahap terlewat dicatat otomatis, panggil ulang, tunda, selesai), pengaturan loket dan layar, layar TV `/layar` (tautan pemasangan sekali tampil, hash token, suara tanpa nopol, pemilik), halaman lacak untuk dipanggil/ditunda/selesai. Tabel antrean baru dimigrasi di `pintu`. Status, §8.4, §9.2, §10.4, §10.5, §12, §16, §17 (hash `ca695bc`), §18 diperbarui |
 | 2026-10-15 | Antrean Online Irisan 1 (D-051): modul `antrean`, tabel layanan/tiket/riwayat (A–D dari migrasi), Meja Informasi (cetak dua lembar 80 mm ber-QR lewat iframe, cetak ulang, batal), Pengaturan Antrean (Administrator), halaman lacak `/lacak/{kode}` dengan `GET /api/public/antrean/{kode}`, pustaka `uqr` (pemilik). Tabel antrean dimigrasi di `pintu`. Status, §6, §8.1, §8.4, §9.2, §10.4, §10.5, §12, §16, §17 (hash `0fce13c`), §18 diperbarui |
 | 2026-10-15 | Rencana Antrean Online dari flowchart pemilik dan tanya jawab (D-051): `docs/rencana-antrean-online.md` dengan alur 8 tahap, layanan A–D, data, penomoran, siklus tiket, cetak 80 mm, pindai QR, layar TV, halaman lacak, arsip, API, irisan 0–6, uji coba paralel, perangkat, hal terbuka, dan risiko. Belum ada kode. Status, §1 (dokumen rinci), §7, §16, §17 (hash `7f9c648`), §18 diperbarui |
 | 2026-10-15 | Papan Layanan berlaku setiap hari (D-050): isi terakhir tampil di beranda setiap hari dengan label "Diperbarui hari ini"; selama loket tutup menurut Jam Pelayanan semua loket Tutup tanpa waktu tunggu. Jam loket dimuat sekali untuk status loket dan papan (`siapkanJam()` di `main.js`). Status, §16, §17 (hash `5cab5d9`), §18 diperbarui |

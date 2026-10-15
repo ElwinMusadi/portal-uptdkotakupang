@@ -22,7 +22,7 @@ class ShowPublicQueueTicket
      */
     public function handle(string $code): array
     {
-        $ticket = QueueTicket::query()->with('service')->where('kode_lacak', $code)->firstOrFail();
+        $ticket = QueueTicket::query()->with(['service', 'counter'])->where('kode_lacak', $code)->firstOrFail();
         $cancelled = $ticket->status === QueueTicketStatus::Batal;
         $stages = $ticket->stages();
         $current = $ticket->tahap === null ? count($stages) : array_search($ticket->tahap, $stages, true);
@@ -34,7 +34,7 @@ class ShowPublicQueueTicket
             'nopol' => $ticket->plate(),
             'status' => $ticket->status->value,
             'tahap' => $ticket->tahap?->value,
-            'petunjuk' => $cancelled ? 'Nomor antrean ini dibatalkan petugas. Silakan tanyakan ke Meja Informasi.' : ($ticket->tahap?->instruction() ?? ''),
+            'petunjuk' => $this->instruction($ticket),
             'tahapan' => array_map(fn (QueueStage $stage, int $index): array => [
                 'kunci' => $stage->value,
                 'nama' => $stage->label(),
@@ -46,5 +46,21 @@ class ShowPublicQueueTicket
             ], $stages, array_keys($stages)),
             'dicetak' => $ticket->created_at?->toIso8601String(),
         ];
+    }
+
+    /**
+     * What the taxpayer should do now.
+     */
+    private function instruction(QueueTicket $ticket): string
+    {
+        $stage = $ticket->tahap?->label();
+
+        return match ($ticket->status) {
+            QueueTicketStatus::Batal => 'Nomor antrean ini dibatalkan petugas. Silakan tanyakan ke Meja Informasi.',
+            QueueTicketStatus::Selesai => 'Berkas Anda sudah selesai diproses. Terima kasih.',
+            QueueTicketStatus::Dipanggil => 'Nomor Anda dipanggil. Silakan menuju '.($ticket->counter->nama ?? $stage).'.',
+            QueueTicketStatus::Ditunda => "Nomor Anda sudah dipanggil ke {$stage}, tetapi Anda belum datang. Silakan lapor ke petugas {$stage}.",
+            QueueTicketStatus::Menunggu => $ticket->tahap?->instruction() ?? '',
+        };
     }
 }

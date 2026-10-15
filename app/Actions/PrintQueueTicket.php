@@ -37,6 +37,7 @@ class PrintQueueTicket
                 'tahap_layanan' => $service->tahap,
                 'tahap' => $service->stages()[0],
                 'status' => QueueTicketStatus::Menunggu,
+                'masuk_tahap_pada' => now(),
                 'dicetak_oleh' => $user->getKey(),
             ]);
             $ticket->events()->create(['aksi' => 'dicetak', 'user_id' => $user->getKey()]);

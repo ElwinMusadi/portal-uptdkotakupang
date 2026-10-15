@@ -31,7 +31,11 @@ use App\Http\Controllers\Dashboard\OrganizationUnitDeletionController;
 use App\Http\Controllers\Dashboard\OrganizationUnitOrderController;
 use App\Http\Controllers\Dashboard\OwnAccountController;
 use App\Http\Controllers\Dashboard\ProfileController;
+use App\Http\Controllers\Dashboard\QueueCounterController;
+use App\Http\Controllers\Dashboard\QueueCounterDeskController;
+use App\Http\Controllers\Dashboard\QueueDisplayController;
 use App\Http\Controllers\Dashboard\QueueServiceController;
+use App\Http\Controllers\Dashboard\QueueTicketCallController;
 use App\Http\Controllers\Dashboard\QueueTicketController;
 use App\Http\Controllers\Dashboard\RevenueCounterController;
 use App\Http\Controllers\Dashboard\RevenueImportController;
@@ -76,6 +80,7 @@ use App\Http\Controllers\PublicStaticPageController;
 use App\Http\Controllers\PublicStatisticsController;
 use App\Http\Controllers\PublicVehicleController;
 use App\Http\Controllers\PublicVisionMissionController;
+use App\Http\Controllers\QueueDisplayDataController;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Models\Article;
 use App\Models\Document;
@@ -85,6 +90,8 @@ use App\Models\FieldActivity;
 use App\Models\Message;
 use App\Models\MobileServiceStop;
 use App\Models\OrganizationUnit;
+use App\Models\QueueCounter;
+use App\Models\QueueDisplay;
 use App\Models\QueueService;
 use App\Models\QueueTicket;
 use App\Models\RevenueImport;
@@ -443,6 +450,28 @@ Route::middleware('auth:sanctum')->group(function (): void {
             ->can('cancel', QueueTicket::class)
             ->whereUlid('queueTicket')
             ->name('tiket.batal');
+        Route::get('/cari', [QueueTicketController::class, 'search'])->can('call', QueueTicket::class)->name('cari');
+
+        // Slice 2: counters calling numbers, and the waiting-room TV displays (administrators)
+        Route::get('/loket', [QueueCounterController::class, 'index'])->can('viewAny', QueueCounter::class)->name('loket.index');
+        Route::post('/loket', [QueueCounterController::class, 'store'])->can('manage', QueueCounter::class)->name('loket.store');
+        Route::whereUlid('queueCounter')->group(function (): void {
+            Route::put('/loket/{queueCounter}', [QueueCounterController::class, 'update'])->can('manage', QueueCounter::class)->name('loket.update');
+            Route::delete('/loket/{queueCounter}', [QueueCounterController::class, 'destroy'])->can('manage', QueueCounter::class)->name('loket.destroy');
+            Route::get('/loket/{queueCounter}/antrean', [QueueCounterDeskController::class, 'show'])->can('call', QueueTicket::class)->name('loket.antrean');
+            Route::post('/loket/{queueCounter}/panggil', [QueueCounterDeskController::class, 'call'])->can('call', QueueTicket::class)->name('loket.panggil');
+        });
+        Route::whereUlid('queueTicket')->group(function (): void {
+            Route::post('/tiket/{queueTicket}/panggil-ulang', [QueueTicketCallController::class, 'recall'])->can('call', QueueTicket::class)->name('tiket.panggil-ulang');
+            Route::post('/tiket/{queueTicket}/tunda', [QueueTicketCallController::class, 'postpone'])->can('call', QueueTicket::class)->name('tiket.tunda');
+            Route::post('/tiket/{queueTicket}/selesai', [QueueTicketCallController::class, 'finish'])->can('call', QueueTicket::class)->name('tiket.selesai');
+        });
+        Route::get('/layar', [QueueDisplayController::class, 'index'])->can('manage', QueueDisplay::class)->name('layar.index');
+        Route::post('/layar', [QueueDisplayController::class, 'store'])->can('manage', QueueDisplay::class)->name('layar.store');
+        Route::delete('/layar/{queueDisplay}', [QueueDisplayController::class, 'destroy'])
+            ->can('manage', QueueDisplay::class)
+            ->whereUlid('queueDisplay')
+            ->name('layar.destroy');
     });
 
     // Vehicle data for the Kalkulator PKB from the private NJKB API (D-041)
@@ -490,3 +519,13 @@ Route::prefix('public')
         // The portal's tax check: plate number and the last five chassis characters (D-041)
         Route::post('/kendaraan', PublicVehicleController::class)->middleware('throttle:public-kendaraan')->name('kendaraan.check');
     });
+
+/*
+ * Antrean Online (D-051): the waiting-room TV display, for a display set up
+ * by an administrator. Its setup token is the bearer token; there is no
+ * session or cookie.
+ */
+Route::get('/layar', QueueDisplayDataController::class)
+    ->middleware('throttle:public-api')
+    ->withoutMiddleware([EnsureFrontendRequestsAreStateful::class, EnsureAccountIsActive::class])
+    ->name('layar.data');

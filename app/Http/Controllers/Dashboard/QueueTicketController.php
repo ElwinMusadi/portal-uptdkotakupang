@@ -8,6 +8,7 @@ use App\Enums\QueueTicketStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dashboard\CancelQueueTicketRequest;
 use App\Http\Requests\Dashboard\ListQueueTicketsRequest;
+use App\Http\Requests\Dashboard\SearchQueueTicketsRequest;
 use App\Http\Requests\Dashboard\StoreQueueTicketRequest;
 use App\Http\Resources\QueueTicketResource;
 use App\Models\QueueTicket;
@@ -28,8 +29,34 @@ class QueueTicketController extends Controller
     public function index(ListQueueTicketsRequest $request): AnonymousResourceCollection
     {
         return QueueTicketResource::collection(
-            QueueTicket::query()->with(['service', 'printedBy'])->where('tanggal', $request->day())->latest()->orderByDesc('id')->get()
+            QueueTicket::query()->with(['service', 'printedBy', 'counter'])->where('tanggal', $request->day())->latest()->orderByDesc('id')->get()
         );
+    }
+
+    /**
+     * The open numbers matching what a counter typed or scanned: the
+     * ticket's QR, its number, or the plate number; today's first, at most
+     * ten.
+     */
+    public function search(SearchQueueTicketsRequest $request): AnonymousResourceCollection
+    {
+        $code = $request->trackingCode();
+        $number = $request->number();
+
+        $tickets = QueueTicket::query()
+            ->with(['service', 'printedBy', 'counter'])
+            ->whereNotIn('status', [QueueTicketStatus::Selesai, QueueTicketStatus::Batal])
+            ->where(fn ($query) => match (true) {
+                $code !== null => $query->where('kode_lacak', $code),
+                $number !== null => $query->where('nomor', $number),
+                default => $query->where('nopol', $request->plate()),
+            })
+            ->orderByDesc('tanggal')
+            ->orderByDesc('created_at')
+            ->limit(10)
+            ->get();
+
+        return QueueTicketResource::collection($tickets);
     }
 
     /**
@@ -39,7 +66,7 @@ class QueueTicketController extends Controller
     {
         $ticket = $printTicket->handle($request->service(), $request->validated('nopol'), $request->user());
 
-        return QueueTicketResource::make($ticket->load(['service', 'printedBy']))->response()->setStatusCode(201);
+        return QueueTicketResource::make($ticket->load(['service', 'printedBy', 'counter']))->response()->setStatusCode(201);
     }
 
     /**
@@ -53,7 +80,7 @@ class QueueTicketController extends Controller
 
         $queueTicket->events()->create(['aksi' => 'dicetak ulang', 'tahap' => $queueTicket->tahap, 'user_id' => $request->user()->getKey()]);
 
-        return QueueTicketResource::make($queueTicket->load(['service', 'printedBy']));
+        return QueueTicketResource::make($queueTicket->load(['service', 'printedBy', 'counter']));
     }
 
     /**
@@ -63,6 +90,6 @@ class QueueTicketController extends Controller
     {
         $ticket = $cancelTicket->handle($queueTicket, $request->validated('alasan'), $request->user());
 
-        return QueueTicketResource::make($ticket->load(['service', 'printedBy']));
+        return QueueTicketResource::make($ticket->load(['service', 'printedBy', 'counter']));
     }
 }
