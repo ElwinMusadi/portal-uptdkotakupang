@@ -294,7 +294,7 @@
 .quote { font-family: var(--font-display); font-weight: var(--fw-display); font-size: clamp(24px, 2.8vw, 34px); line-height: 1.22; letter-spacing: -0.02em; overflow-wrap: break-word; color: var(--ink); text-wrap: balance; }
 .quote .tone { color: var(--gray); }
 .person { display: flex; align-items: center; gap: 14px; margin-top: 28px; }
-.avatar { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: var(--paper-2); border: var(--hairline); font-size: 14px; font-weight: 600; color: var(--ink-2); flex: none; }
+.avatar { position: relative; overflow: hidden; width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: var(--paper-2); border: var(--hairline); font-size: 14px; font-weight: 600; color: var(--ink-2); flex: none; }
 .avatar--lg { width: 64px; height: 64px; font-size: 18px; }
 .person strong { display: block; font-size: 15px; }
 .person span { display: block; font-size: 13px; color: var(--text-2); }

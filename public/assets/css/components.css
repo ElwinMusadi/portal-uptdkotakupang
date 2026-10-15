@@ -416,7 +416,9 @@
 .org .org__row { grid-template-columns: repeat(var(--org-kolom, 3), minmax(0, 1fr)); }
 .org .org__row::before { left: calc(50% / var(--org-kolom, 3)); right: calc(50% / var(--org-kolom, 3)); }
 @media (max-width: 860px) { .org .org__row { grid-template-columns: 1fr; } }
-.avatar > img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+/* Foto mengisi lingkaran avatar. Avatar adalah sel grid bertinggi otomatis, jadi height: 100% tidak berlaku pada fotonya;
+   foto ditempatkan absolut dan dipangkas dari atas agar kepala pada potret tegak tetap utuh. */
+.avatar > img { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; object-position: 50% 0; }
 .ph__label { position: relative; z-index: 1; margin: 14px; padding: 4px 10px; border-radius: var(--r-pill); background: rgba(255,255,255,.7); font-size: 11.5px; font-weight: 500; color: var(--ink-2); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .ph--blue { --ph-a: #CBD6EE; --ph-b: #9FB1D8; }
 .ph--sand { --ph-a: #E3D9C3; --ph-b: #C8B48D; }

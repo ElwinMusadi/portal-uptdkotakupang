@@ -2,7 +2,7 @@
 
 > **Untuk agen AI dan pengembang berikutnya.** Satu berkas ini memuat seluruh konteks proyek PINTU sampai status terakhirnya: tujuan, arsitektur, aturan kerja dengan pemilik, keputusan, integrasi, cara menguji, jebakan lingkungan, dan pekerjaan yang tertunda. Baca berkas ini lebih dulu, lalu ikuti tautan ke dokumen rinci bila perlu.
 >
-> **Terakhir diperbarui:** 2026-10-15 · branch `laravel-development` · commit terakhir di origin `8699e8d` (D-046).
+> **Terakhir diperbarui:** 2026-10-15 · branch `laravel-development` · sampai commit perbaikan foto avatar Struktur (sesudah `8699e8d`, D-046).
 >
 > **Wajib diperbarui setiap ada perubahan** (lihat [§19](#19-prosedur-memperbarui-dokumen-ini)). Jangan pernah menulis rahasia (kata sandi, NIP akun uji, token, isi `.env`) di berkas ini.
 
@@ -76,7 +76,7 @@ Satu aplikasi Laravel berisi empat bagian:
 | Hal | Status |
 |---|---|
 | Branch kerja | `laravel-development` (`main` = situs statis lama yang masih dilayani Cloudflare Pages; jangan diubah) |
-| Commit terakhir di origin | `8699e8d` feat(pintu): bring the Ditlantas and Jasa Raharja logos out from behind the hero emblem (D-046); berkas ini ditambahkan di commit dokumentasi sesudahnya |
+| Commit terakhir di origin | `fix(pintu): keep the officials' photos inside their circles` (foto avatar Struktur), sesudah `docs(pintu): add the single-file project context for AI agents` dan `8699e8d` (D-046). Hash: `git log -3 --oneline` |
 | Working tree | Bersih |
 | Tes | `composer test`: **991 tes lulus, 4517 assertion** (SQLite di memori) |
 | Pemeriksaan frontend | `npm run typecheck`, `npm run lint`, build Vite: lulus |
@@ -219,6 +219,7 @@ Berkas alat: `AGENTS.md`, `boost.json`, `kilo.json` (skill di `.agents/skills/`,
 - Header, footer, dan ikon disalin dari `resources/views/portal/partials/` dengan `node scripts/sync-partials.mjs` (cek dulu dengan `--check`). Penanda `<!-- @header -->…<!-- /@header -->`, `@footer`, `@icons` harus berpasangan.
 - **CSS portal tidak berversi** (`public/assets/css/*.css`): peramban bisa memakai salinan lama setelah deploy. Gaya untuk komponen React baru diletakkan di berkas CSS yang diimpor komponennya (dibangun Vite dengan nama ber-hash).
 - **`base.css` berisi `img, svg, video { display: block }`, yang mengalahkan atribut `hidden`.** Elemen gambar yang harus tersembunyi butuh aturan kelas (`.x[hidden] { display: none }`) atau disimpan di `<template>` (pola D-046).
+- **Foto di avatar bulat** (`.avatar > img`: bagan Struktur, sambutan Profil) ditempatkan absolut mengisi lingkaran (`.avatar` `position: relative; overflow: hidden`) dan dipangkas dari atas (`object-position: 50% 0`), karena `height: 100%` tidak berlaku pada anak sel grid bertinggi otomatis dan foto pejabat berupa potret tegak dengan kepala di bagian atas.
 - Hook data memakai atribut `data-*` (mis. `data-beranda-teks="hero.deskripsi"`, `data-keliling-week`, `data-faq-list`). Isi dari API selalu dipasang sebagai **teks polos** (`textContent`); tautan hanya bila lolos `tautanAman()`.
 
 ### 8.3 Pola isi dari API
@@ -533,7 +534,7 @@ Rincian lengkap di [`docs/decisions.md`](docs/decisions.md). "Pemilik" = keputus
 
 ## 17. Riwayat commit
 
-77 commit di `laravel-development` (per commit dokumentasi ini). Tahapan besar:
+78 commit di `laravel-development` (per commit perbaikan foto avatar). Tahapan besar:
 
 | Rentang | Isi |
 |---|---|
@@ -549,6 +550,7 @@ Rincian lengkap di [`docs/decisions.md`](docs/decisions.md). "Pemilik" = keputus
 | `a7d3e36`, `078f4b9` | React portal pertama: kata bergilir di judul pembuka, lalu berulang dengan jeda 10 detik (D-045) |
 | `8699e8d` | Logo Ditlantas dan Jasa Raharja di pembuka (D-046) |
 | `docs(pintu): add the single-file project context for AI agents` | Berkas ini, aturan baca-dan-perbarui di `AGENTS.md`, rujukan di README |
+| `fix(pintu): keep the officials' photos inside their circles` | Foto pejabat di bagan Struktur terpotong bulat, dipangkas dari atas |
 
 Repository terkait: `njkb-api-ntt` `main` — `f7a1ee5` (izin konsumen PINTU), `6a4c4f8` (404 untuk nomor polisi tidak terdaftar, sudah di-deploy).
 
@@ -610,4 +612,5 @@ Bila commit dibuat sebelum hash-nya diketahui, tulis status "belum di-commit" la
 
 | Tanggal | Perubahan |
 |---|---|
+| 2026-10-15 | Foto pejabat di bagan Struktur Organisasi tidak lagi menjuntai keluar lingkaran: foto mengisi avatar dan dipangkas dari atas (§8.2) |
 | 2026-10-15 | Berkas dibuat: konteks lengkap proyek sampai D-046 (`8699e8d`), atas permintaan pemilik untuk agen AI berikutnya. `AGENTS.md` kini mewajibkan agen membaca dan memperbarui berkas ini |
