@@ -1,0 +1,613 @@
+# PINTU — Konteks Proyek Lengkap
+
+> **Untuk agen AI dan pengembang berikutnya.** Satu berkas ini memuat seluruh konteks proyek PINTU sampai status terakhirnya: tujuan, arsitektur, aturan kerja dengan pemilik, keputusan, integrasi, cara menguji, jebakan lingkungan, dan pekerjaan yang tertunda. Baca berkas ini lebih dulu, lalu ikuti tautan ke dokumen rinci bila perlu.
+>
+> **Terakhir diperbarui:** 2026-10-15 · branch `laravel-development` · commit terakhir di origin `8699e8d` (D-046).
+>
+> **Wajib diperbarui setiap ada perubahan** (lihat [§19](#19-prosedur-memperbarui-dokumen-ini)). Jangan pernah menulis rahasia (kata sandi, NIP akun uji, token, isi `.env`) di berkas ini.
+
+## Daftar isi
+
+1. [Cara memakai dokumen ini](#1-cara-memakai-dokumen-ini)
+2. [Ringkasan proyek](#2-ringkasan-proyek)
+3. [Status terakhir](#3-status-terakhir)
+4. [Cara bekerja dengan pemilik](#4-cara-bekerja-dengan-pemilik)
+5. [Aturan dan batasan teknis](#5-aturan-dan-batasan-teknis)
+6. [Arsitektur dan stack](#6-arsitektur-dan-stack)
+7. [Struktur repository](#7-struktur-repository)
+8. [Portal publik](#8-portal-publik)
+9. [Dashboard](#9-dashboard)
+10. [API dan backend](#10-api-dan-backend)
+11. [Integrasi eksternal](#11-integrasi-eksternal)
+12. [Database, data, dan migrasi](#12-database-data-dan-migrasi)
+13. [Pengujian dan verifikasi](#13-pengujian-dan-verifikasi)
+14. [Lingkungan pengembangan dan jebakannya](#14-lingkungan-pengembangan-dan-jebakannya)
+15. [Deploy dan checklist go-live](#15-deploy-dan-checklist-go-live)
+16. [Ringkasan keputusan D-001 sampai D-046](#16-ringkasan-keputusan-d-001-sampai-d-046)
+17. [Riwayat commit](#17-riwayat-commit)
+18. [Pekerjaan tertunda dan hal yang diketahui](#18-pekerjaan-tertunda-dan-hal-yang-diketahui)
+19. [Prosedur memperbarui dokumen ini](#19-prosedur-memperbarui-dokumen-ini)
+20. [Log perubahan dokumen](#20-log-perubahan-dokumen)
+
+---
+
+## 1. Cara memakai dokumen ini
+
+**Urutan kewenangan** bila ada yang bertentangan:
+
+1. Instruksi pemilik di percakapan saat ini.
+2. [`AGENTS.md`](AGENTS.md): batasan alat AI dan aturan Laravel Boost.
+3. [`docs/decisions.md`](docs/decisions.md): keputusan pemilik yang berlaku (D-001 dst.). Hanya dokumen ini yang mencatat keputusan yang disetujui.
+4. Berkas ini (`KONTEKS-PROYEK.md`): ringkasan dan status.
+5. Dokumen rinci: [`docs/api.md`](docs/api.md) (kontrak API), [`docs/dashboard.md`](docs/dashboard.md) (dashboard), [`docs/RANCANGAN-UIUX.md`](docs/RANCANGAN-UIUX.md) (analisa, sitemap, design system, tata kelola konten), [`README.md`](README.md) (menyiapkan, menjalankan, deploy).
+
+**Arsip, bukan acuan:**
+
+- [`HANDOVER-CHATGPT.md`](HANDOVER-CHATGPT.md): audit 11 Oktober 2026, sebelum proyek menjadi satu aplikasi Laravel. Path di dalamnya sudah usang.
+- [`docs/phases/`](docs/phases/): rekam jejak Phase 1–2.19 (keamanan, tata kelola, rancangan API). Rekomendasinya **belum tentu disetujui**; `PHASE-2-ARCHITECTURE-AND-API-DESIGN.md` secara eksplisit tidak disetujui.
+
+---
+
+## 2. Ringkasan proyek
+
+**PINTU (Portal Informasi dan Pelayanan)** adalah portal resmi informasi dan pelayanan pajak kendaraan milik **UPTD Pendapatan Daerah Wilayah Kota Kupang (Samsat Kota Kupang)**, di bawah BPAD Provinsi Nusa Tenggara Timur. Proyek ini lahir dari *Rancangan Aktualisasi* "Penyediaan Website Profil dan Pelayanan Informasi melalui PINTU".
+
+- **Pengguna:** warga wajib pajak (portal publik) dan pegawai UPTD (dashboard, aplikasi absensi).
+- **Bahasa produk:** Bahasa Indonesia. Semua teks antarmuka, pesan galat, dan dokumentasi proyek berbahasa Indonesia; kode, nama kelas, dan pesan commit berbahasa Inggris.
+- **Zona waktu acuan:** WITA (`Asia/Makassar`).
+- **Domain rencana produksi:** `pintu.uptdpenda-kupang.web.id` (belum dialihkan; produksi saat ini masih situs statis lama di Cloudflare Pages dari branch `main`).
+- **Samsat** adalah layanan satu atap Pemprov NTT (pajak daerah), Ditlantas Polda NTT (registrasi kendaraan), dan PT Jasa Raharja (SWDKLLJ). Ketiganya tampil di pembuka beranda (D-046).
+
+Satu aplikasi Laravel berisi empat bagian:
+
+| Bagian | Alamat | Teknologi |
+|---|---|---|
+| Portal publik (16 halaman) | `/`, `/profil`, `/layanan`, `/jadwal`, … | Blade berisi HTML statis + `public/assets/js/main.js`, dipindahkan ke React secara bertahap (D-045) |
+| Dashboard pengelolaan konten | `/dashboard` (rute hash `#/…`) | React 19 + TypeScript + Vite + Tailwind 4 + shadcn/ui |
+| Aplikasi Absensi PINTU (PWA) | `/absen` | React, akun dan sesi yang sama dengan dashboard |
+| API JSON | `/api/…` | Laravel 13, Sanctum (sesi cookie SPA) |
+
+---
+
+## 3. Status terakhir
+
+**Per 2026-10-15** (perbarui bagian ini setiap ada perubahan):
+
+| Hal | Status |
+|---|---|
+| Branch kerja | `laravel-development` (`main` = situs statis lama yang masih dilayani Cloudflare Pages; jangan diubah) |
+| Commit terakhir di origin | `8699e8d` feat(pintu): bring the Ditlantas and Jasa Raharja logos out from behind the hero emblem (D-046); berkas ini ditambahkan di commit dokumentasi sesudahnya |
+| Working tree | Bersih |
+| Tes | `composer test`: **991 tes lulus, 4517 assertion** (SQLite di memori) |
+| Pemeriksaan frontend | `npm run typecheck`, `npm run lint`, build Vite: lulus |
+| Keputusan terakhir | D-046 (logo Ditlantas dan Jasa Raharja di pembuka beranda) |
+| Deploy Laravel Cloud | **Belum.** Pemilik: "jangan deploy ke Laravel Cloud dulu" (D-035). Deploy adalah langkah pemilik |
+| Produksi | Masih Cloudflare Pages dari branch `main` (situs statis lama) |
+| API data kendaraan (NJKB) | Token PINTU terpasang di `.env` lokal dan lolos Cloudflare Access; Worker `njkb-api-ntt` sudah di-deploy pemilik dengan perbaikan 404 (commit `6a4c4f8`), terverifikasi 2026-10-15 07.04 WITA. **Uji dengan kendaraan sungguhan oleh pemilik belum dikonfirmasi** |
+| Data lokal | Database dev `pintu` berisi **data milik pemilik** (lihat [§12](#12-database-data-dan-migrasi)) |
+
+**Isi terakhir yang disimpan pemilik di dashboard lokal** (penting saat menguji tampilan): judul pembuka beranda "Semua informasi SAMSAT" (**tanpa titik**, disimpan pemilik 07.55 WITA 2026-10-15) dengan kata bergilir Pajak, STNK, Mutasi, **BBNKB**, SAMSAT.
+
+---
+
+## 4. Cara bekerja dengan pemilik
+
+Pemilik (Owner produk, pegawai UPTD) berkomunikasi dalam **Bahasa Indonesia**. Pola kerja yang sudah mapan:
+
+1. **Pahami permintaan dan periksa kode** sebelum mengubah apa pun.
+2. **Tanyakan keputusan penting** dengan pilihan ganda (pilihan yang disarankan ditulis pertama dengan label "(Recommended)"). Jangan menanyakan hal yang bisa diputuskan dari kode atau kebiasaan proyek; sebutkan saja pilihan yang diambil di laporan.
+3. **Implementasikan** satu irisan (slice) utuh: server, dashboard, portal, tes, dokumentasi.
+4. **Verifikasi**: tes PHP, uji mutasi untuk logika baru, typecheck, lint, build, dan pemeriksaan di browser pada situs lokal Herd.
+5. **Laporkan dalam Bahasa Indonesia**: apa yang berubah, hasil pemeriksaan, catatan penting. Tutup dengan pertanyaan **"Commit dan Push?"**.
+6. **Commit dan push hanya setelah pemilik menjawab "Commit dan Push."** Persetujuan berlaku untuk satu kali itu saja.
+7. **Catat keputusan pemilik** sebagai entri D-0xx baru di `docs/decisions.md` (format: tabel Hal | Keputusan, tandai "(keputusan pemilik)").
+8. **Perbarui berkas ini** di commit yang sama (lihat [§19](#19-prosedur-memperbarui-dokumen-ini)).
+
+Larangan dan kebiasaan penting:
+
+- **Jangan deploy** (Laravel Cloud maupun Worker `njkb-api-ntt`). Pemilik yang menjalankan deploy.
+- **Jangan menulis ke data pemilik di dashboard lokal** saat menguji (mis. jangan menekan *Simpan* di Beranda). Batalkan perubahan uji dengan *Batalkan*.
+- **Jangan menampilkan rahasia** di percakapan atau berkas (token, kata sandi, NIP akun uji). Minta pemilik mengisi sendiri nilai rahasia ke `.env`.
+- **Sesi lain bisa bekerja bersamaan di checkout yang sama.** Selalu cek `git log -3` dan `git diff` per berkas tepat sebelum staging; jangan pernah men-stage hunk milik sesi lain. Bila perlu mendorong satu commit saja: `git push origin <sha>:laravel-development`.
+- Pesan commit: Conventional Commits berbahasa Inggris, imperatif, mis. `feat(pintu): …` / `fix(pintu): …`, badan menjelaskan keputusan, diakhiri trailer `Co-Authored-By` sesuai instruksi lingkungan agen.
+
+---
+
+## 5. Aturan dan batasan teknis
+
+Ringkasan dari [`AGENTS.md`](AGENTS.md) (baca berkas aslinya):
+
+- Pertahankan branch dan semua perubahan yang sudah ada di working tree. **Tidak boleh** commit, push, deploy, reset, stash, atau membuang perubahan tanpa izin eksplisit.
+- Pertahankan copy berbahasa Indonesia, markup halaman portal, UI dashboard, gaya, dan aset.
+- Stack tetap: React 19 + JSON API (**tanpa Livewire, tanpa Inertia**), TypeScript, Vite, Tailwind CSS v4, komponen shadcn/Radix, Laravel 13, MySQL, Laravel Cloud. **Jangan memperkenalkan** Next.js, Inertia, Livewire, Pest, PostgreSQL, Workers, atau penyedia database baru.
+- Pertahankan respons **JSON polos** (tanpa amplop `data`), ULID huruf kecil, tanpa paginasi kecuali disetujui.
+- Database lokal `pintu` adalah database pengembangan **dan** database uji MySQL (`DB_TEST_DATABASE`): `composer test:mysql` mereset isinya. `composer test` memakai SQLite di memori dan `tests/TestCase.php` menolak target lain. Jangan menjalankan SQL atau migrasi ke database yang tidak ditunjuk pemilik.
+- Formatter hanya untuk berkas yang diubah: `vendor/bin/pint --format agent <path>` (bukan `--dirty` saat tree berisi perubahan orang lain).
+- Laravel Boost (MCP) hanya alat lokal; **minta izin** sebelum memakai alat Boost.
+- Otomasi browser hanya ke server lokal yang terkendali, kecuali diizinkan.
+- Tinjau keamanan kode yang terautentikasi juga, bukan hanya rute anonim.
+
+Konvensi kode (dari pedoman Laravel Boost dan kebiasaan proyek):
+
+- PHP: kurung kurawal selalu, constructor property promotion, tipe kembalian eksplisit, PHPDoc dengan array shape, komentar inline hanya untuk logika rumit. Enum TitleCase.
+- Buat berkas Laravel dengan `php artisan make:… --no-interaction`.
+- Model baru disertai factory; tes fitur dengan PHPUnit 12 (`php artisan make:test --phpunit`).
+- Validasi di FormRequest, otorisasi lewat Policy, logika bisnis di `app/Actions`.
+- Nama kolom database dan nama properti JSON berbahasa Indonesia (`judul`, `tanggalMulai`, `aktif`), nama kelas berbahasa Inggris (`MobileServiceStop`).
+- Frontend: nama fungsi dan variabel berbahasa Indonesia (`muatJudul`, `pisahJudul`), TypeScript ketat, Zod untuk validasi formulir dengan aturan yang sama dengan server.
+
+---
+
+## 6. Arsitektur dan stack
+
+**Versi terpasang** (2026-10-15):
+
+| Lapisan | Paket |
+|---|---|
+| PHP | PHP 8.3, Laravel 13.35, Sanctum 4.3, Tinker 3, league/flysystem-aws-s3-v3 3.35 |
+| PHP dev | PHPUnit 12.5, Pint 1.32, Laravel Boost 2.10, Pail, Collision, Mockery, Faker |
+| JS | React 19.3, react-router 8.4 (hash), TanStack Query 5 + Table 9, Zod 4.6, React Hook Form 7, radix-ui 1.7, Tiptap 3, dnd-kit, Recharts 3, sonner, cmdk, react-day-picker 10, idb-keyval |
+| JS dev | Vite 8.3, TypeScript 6.0, Tailwind CSS 4.3 (`@tailwindcss/vite`), `@vitejs/plugin-react` 6.1, `laravel-vite-plugin` 3.2, oxlint 1.87 |
+| Database | MySQL 8 (lokal: database `pintu`), SQLite di memori untuk tes |
+| Hosting rencana | Laravel Cloud + Laravel Cloud Object Storage (R2) |
+
+**Prinsip arsitektur:**
+
+- **Satu origin** (D-002): portal, dashboard, dan API di satu aplikasi Laravel. Tanpa CORS, sesi cookie Sanctum.
+- **Portal = HTML lengkap dari server** yang diisi data dari API publik oleh skrip. Teks di HTML menjadi isi awal yang terbaca mesin pencari (pola D-023).
+- **Portal beralih ke React bertahap di atas Blade** (D-045): elemen `[data-react="nama"]` diambil alih komponen React; bagian lain masih `main.js`. SPA penuh dan SSR (Inertia/Next.js) tidak dipakai.
+- **Dashboard = SPA React** dengan rute hash, berbicara dengan API JSON. Mode "campuran" (`HybridApi`) mengirim koleksi dan pengaturan yang sudah di server ke `/api`, sisanya ke IndexedDB (kini praktis semuanya sudah di server).
+- **API publik tanpa sesi dan tanpa cookie**, `Cache-Control: no-store`, menolak query parameter, batas laju bersama 300/menit/IP.
+
+---
+
+## 7. Struktur repository
+
+```
+app/Actions/                 logika bisnis (30 kelas: ClockIn, CopyMobileServiceStops, LookUpVehicle, SaveSetting,
+                             StoreUpload, SyncUploads, UpdateWorkflowEntry, ListPublic*, ShowPublic*, …)
+app/Console/Commands/        pintu:create-admin, pintu:activation-link
+app/Enums/                   DashboardModule, WorkflowStatus, UploadTarget, ServicePointKind, AccountStatus, UserRole, FaqStatus
+app/Http/Controllers/        Public*Controller (API publik), ArticlePageController (/berita/{slug})
+app/Http/Controllers/Dashboard/   45 controller dashboard (koleksi, pengaturan, unggahan, absensi, kendaraan)
+app/Http/Controllers/Admin/  akun pegawai; Auth/: login, aktivasi
+app/Http/Requests/           FormRequest (Dashboard/, Admin/, Auth/, publik); Dashboard/Concerns/TakesWorkflowStep
+app/Http/Resources/          16 JsonResource (withoutWrapping)
+app/Http/PortalPage.php      merender halaman portal dengan alamat root-relative (/berita/{slug}, 404)
+app/Http/Middleware/         EnsureAccountIsActive, PreventResponseCaching
+app/Models/                  model ULID + Setting (kunci string); Concerns/HasPublicationWorkflow
+app/Policies/                16 policy
+app/Rules/                   PlainText, RichText, PortalLink, ContactAddress, StrongPassword, UploadUrl, YoutubeUrl
+config/pintu.php             batas API publik, batas FAQ, pengaman tes MySQL
+config/services.php          blok `njkb` (API data kendaraan)
+database/migrations/         31 migrasi (tabel, data awal, perubahan)
+database/seeders/            LocalAccountSeeder (admin lokal, hanya env local)
+resources/views/portal/      16 halaman portal (Blade berisi HTML statis) + partials/{header,footer,icons}.html
+resources/views/errors/404.blade.php, auth/aktivasi.blade.php, dashboard.blade.php, absen.blade.php
+resources/js/dashboard/      SPA dashboard (alias `@`)
+resources/js/absen/          PWA absensi
+resources/js/portal/         main.tsx (pemuat komponen React portal), beranda/*.tsx|.css, kata-bergilir.ts, cek-pajak.ts
+resources/js/pkb/            mesin pajak (salinan persis kalkulator-pajak) + penetapan.ts milik PINTU
+public/assets/css/           tokens.css, base.css, components.css, pages.css (CSS portal, tidak berversi)
+public/assets/js/main.js     JavaScript portal tanpa dependensi (±2.300 baris, 30 fungsi init*)
+public/assets/img/           lambang NTT, logo PINTU, logo Ditlantas & Jasa Raharja, foto kantor, ikon
+public/absen-sw.js, public/absen.webmanifest
+public/build/                hasil build Vite (tidak di-commit)
+scripts/sync-partials.mjs    menyalin header/footer/ikon ke semua halaman portal
+tests/Feature/ (66 berkas), tests/Unit/, tests/Support/EnforcedCsrfToken.php
+docs/                        decisions.md, api.md, dashboard.md, RANCANGAN-UIUX.md, phases/, preview/
+```
+
+Berkas alat: `AGENTS.md`, `boost.json`, `kilo.json` (skill di `.agents/skills/`, MCP Boost), `.codex/`, `.claude/`.
+
+---
+
+## 8. Portal publik
+
+### 8.1 Halaman
+
+`index` (Beranda), `profil` (Tentang UPTD), `visi-misi`, `struktur-organisasi`, `layanan` (Persyaratan Layanan), `jadwal` (Jam Pelayanan dan Layanan Luar Kantor), `informasi` (Berita & Pengumuman), `dokumentasi`, `unduhan` (Regulasi & Unduhan), `kontak` (Kontak & Pengaduan), `login` (Login Pegawai), `dashboard-pegawai` (stub pengalihan ke `/dashboard`), `design-system`, `kebijakan-privasi`, `syarat-ketentuan`, `berita-detail` (templat untuk `/berita/{slug}`).
+
+- Alamat lama `*.html` dialihkan 301 ke alamat bersih dengan query string tetap. `/berita-detail(.html)` → 301 `/informasi`.
+- Rute portal tanpa sesi, tanpa CSRF, tanpa cookie.
+- 404 HTML memakai `errors/404.blade.php` lewat `PortalPage::render` (alamat dijadikan root-relative agar bergaya di path bertingkat). API dan permintaan JSON tetap mendapat 404 JSON.
+
+### 8.2 Aturan markup (penting)
+
+- **Halaman portal dilayani byte demi byte seperti tertulis** (`PortalPagesTest::test_serves_each_portal_page_byte_for_byte_as_written`). Jangan menaruh direktif Blade (`@vite` dsb.) di halaman portal.
+- Aset memakai **alamat relatif** (`assets/css/…`, `skrip/portal`). Halaman di path bertingkat (`/berita/{slug}`, 404) ditulis ulang ke root-relative oleh `PortalPage::fromSiteRoot`. Jangan memakai `<base>` (merusak `<use href="#…">` SVG).
+- Header, footer, dan ikon disalin dari `resources/views/portal/partials/` dengan `node scripts/sync-partials.mjs` (cek dulu dengan `--check`). Penanda `<!-- @header -->…<!-- /@header -->`, `@footer`, `@icons` harus berpasangan.
+- **CSS portal tidak berversi** (`public/assets/css/*.css`): peramban bisa memakai salinan lama setelah deploy. Gaya untuk komponen React baru diletakkan di berkas CSS yang diimpor komponennya (dibangun Vite dengan nama ber-hash).
+- **`base.css` berisi `img, svg, video { display: block }`, yang mengalahkan atribut `hidden`.** Elemen gambar yang harus tersembunyi butuh aturan kelas (`.x[hidden] { display: none }`) atau disimpan di `<template>` (pola D-046).
+- Hook data memakai atribut `data-*` (mis. `data-beranda-teks="hero.deskripsi"`, `data-keliling-week`, `data-faq-list`). Isi dari API selalu dipasang sebagai **teks polos** (`textContent`); tautan hanya bila lolos `tautanAman()`.
+
+### 8.3 Pola isi dari API
+
+- **Teks HTML tetap sebagai isi awal** (D-023, D-024, D-026): teks yang tertulis di HTML sama dengan isi awal di server (`Setting::INITIAL_*`). Skrip menggantinya hanya bila dokumen sudah pernah disimpan (`diperbarui` tidak `null`). Bila API gagal, teks HTML tetap tampil. Tes memastikan teks awal masih ada di markup.
+- Untuk daftar (FAQ, jadwal, berita, …): bila API gagal tampil pesan + tombol *Coba lagi*, tanpa data cadangan atau tebakan. Bagian tanpa isi disembunyikan.
+- `public/assets/js/main.js` berisi fungsi `init*`: `initNav`, `initReveal`, `initTabs`, `initChecklists`, `initStatus` (jam buka), `initPapan`, `initKeliling`, `initKontak`, `initVisiMisi`, `initProfil`, `initLayanan`, `initDokumen`, `initInformasi`, `initBerita`, `initPengumumanBeranda`, `initDokumentasi`, `initGallery`, `initStruktur`, `initBeranda`, `initHalaman`, `initSitus`, `initFaq`, `initDash` (statistik), `initPesanForm`, `initFilters`, `initForms`, `initDialogs`, `initAuthFit`, `initUtilities`, `initGag`.
+
+### 8.4 Komponen React portal (D-045, D-046)
+
+- Halaman memuat `<script type="module" src="skrip/portal"></script>`. Rute `/skrip/portal` (nama `portal.skrip`) mengalihkan 302 ke `Vite::asset('resources/js/portal/main.tsx')`, sehingga halaman tetap byte demi byte.
+- `resources/js/portal/main.tsx` mencari setiap `[data-react="nama"]` dan memuat komponen bernama sama secara lazy (peta `KOMPONEN`). Setiap modul komponen mengekspor `pasang(el)`.
+- `vite.config.ts`: `react({ exclude: [/\/node_modules\//, /\/resources\/js\/portal\//] })`, sehingga berkas portal tidak memakai Fast Refresh (halaman portal tidak punya preamble) dan dimuat ulang penuh saat pengembangan.
+- React portal dibagi dengan dashboard dalam chunk terpisah. Beranda memuat sekitar 65 KB (gzip) tambahan.
+
+| Komponen | Elemen | Isi |
+|---|---|---|
+| `beranda/judul-pembuka.tsx` + `.css` | `<h1 data-react="judul-pembuka">` | Judul pembuka dari `GET /api/public/beranda`. Kata judul yang sama dengan salah satu *kata bergilir* bergulir vertikal ke kata lain (1,2 detik setelah tampil, 1,6 detik per kata), kembali ke kata judul, diam 10 detik, lalu berulang. Berhenti saat tab tidak dilihat; "kurangi gerak" = judul diam; pembaca layar membaca judul utuh. Bila lebar kata mengubah letak baris, kata diberi baris sendiri agar judul tidak melompat |
+| `beranda/lambang-pembuka.tsx` + `.css` | `<div class="hero__lambang" data-react="lambang-pembuka">` | Lambang NTT di tengah; logo Ditlantas (kiri) dan Jasa Raharja (kanan) disimpan di `<template data-lambang-mitra>`. ±2,5 detik setelah halaman dibuka keduanya keluar dari balik lambang (hanya otomatis sekali per muat). Lambang NTT menjadi tombol (`aria-expanded`) untuk menyembunyikan/memunculkan |
+| `kata-bergilir.ts` | (modul bersama) | `kataDalamJudul()` dan `pisahJudul()`: pencocokan kata utuh tanpa membedakan huruf besar-kecil. Server memakai aturan yang sama (`Setting::rotatingWordIn`); dashboard mengimpornya untuk validasi |
+
+**Menambah komponen React portal baru:** buat `resources/js/portal/<bagian>/<nama>.tsx` yang mengekspor `pasang(el)`, impor CSS-nya dari komponen itu, daftarkan di peta `KOMPONEN` di `main.tsx`, tandai elemen di Blade dengan `data-react="<nama>"` (isi HTML tetap sebagai isi awal), pastikan halaman memuat `skrip/portal`, lalu pindahkan kode `main.js` terkait.
+
+### 8.5 Cek biaya pajak di portal (D-041)
+
+`resources/js/portal/cek-pajak.ts` dimuat lewat `/skrip/cek-pajak` di beranda dan Layanan. Pengunjung mengisi nomor polisi + **5 karakter terakhir nomor rangka**; `POST /api/public/kendaraan` memberi data kendaraan hanya bila keduanya cocok (jawaban 404 seragam untuk semua ketidakcocokan, nomor rangka dan mesin tidak pernah dikirim ke peramban). Rincian pajak dihitung di peramban dengan mesin `resources/js/pkb`.
+
+---
+
+## 9. Dashboard
+
+### 9.1 Teknis
+
+- Entri `resources/js/dashboard/main.tsx` (memeriksa sesi lalu memasang ThemeProvider, QueryClient, Router hash). Dimuat oleh `resources/views/dashboard.blade.php` (`@viteReactRefresh` + `@vite`). Tema bawaan Terang (D-035), disimpan di `localStorage` `pintu.tema`.
+- `lib/api/`: `client`, `http`, `hybrid` (bawaan: `HybridApi(HttpApi("/api"), LocalApi())`), `local` (IndexedDB `pintu-dashboard`), `seed` (data contoh lokal), `types`.
+  - `KOLEKSI_SERVER` (12): faq, keliling, lokasi, penyesuaian, pesan, layanan, halaman, pemutakhiran, dokumen, berita, dokumentasi, unit.
+  - `PENGATURAN_SERVER` (9): jam, papan, statistik, kontak, visiMisi, profil, beranda, situs, akun.
+  - `UNGGAHAN_SERVER`: visiMisi, profil, beranda, dokumen, berita, dokumentasi, unit.
+  - Akun (`lib/akun.ts`) dan Absensi (`lib/absensi.ts`) selalu dari server.
+- Formulir: React Hook Form + Zod dengan batas yang sama dengan server; panel sunting di URL (`?baru=1`, `?ubah=<id>`); perubahan belum disimpan dijaga; `Ctrl K` untuk pencarian cepat.
+- Komponen formulir bersama di `components/form/` (mis. `FieldTeks`, `FieldArea`, `FieldJudul2Nada`, `FieldDaftarTeks`, `DaftarObjek`, `IsianLogo`, `FormPengaturan`).
+
+### 9.2 Menu dan modul
+
+| Menu | Rute hash | Data server | Modul |
+|---|---|---|---|
+| Ringkasan | `#/` | KPI, aktivitas | (disaring per modul) |
+| Alur Publikasi | `#/alur` | konten beralur | (disaring) |
+| Pesan & Pengaduan | `#/pesan` | koleksi `pesan` | `pesan` |
+| Statistik Layanan | `#/statistik` | pengaturan `statistik` | `statistik` |
+| Berita & Pengumuman | `#/berita` | koleksi `berita` | `berita` |
+| Dokumentasi Kegiatan | `#/dokumentasi` | koleksi `dokumentasi` | `dokumentasi` |
+| Regulasi & Unduhan | `#/unduhan` | koleksi `dokumen` | `dokumen` |
+| Tanya Jawab | `#/faq` | koleksi `faq` | `faq` |
+| Persyaratan Layanan | `#/layanan` | koleksi `layanan` | `layanan` |
+| Jam Pelayanan | `#/jadwal/jam` | pengaturan `jam`, koleksi `penyesuaian` | `jam` |
+| Layanan Luar Kantor | `#/jadwal/keliling` (`?jenis=keliling|gerai|sementara|lokasi`) | koleksi `keliling`, `lokasi` | `keliling` |
+| Papan Layanan | `#/papan` | pengaturan `papan` | `papan` |
+| Tentang UPTD | `#/profil` | pengaturan `profil` | `profil` |
+| Visi & Misi | `#/visi-misi` | pengaturan `visiMisi` | `visiMisi` |
+| Struktur Organisasi | `#/struktur` | koleksi `unit` | `unit` |
+| Kontak & Kanal | `#/kontak` | pengaturan `kontak` | `kontak` |
+| Beranda | `#/beranda` | pengaturan `beranda` | `beranda` |
+| Halaman Statis | `#/halaman` | koleksi `halaman` | `halaman` |
+| Jadwal Pemutakhiran | `#/pemutakhiran` | koleksi `pemutakhiran` | `pemutakhiran` |
+| Absensi Lapangan | `#/absensi` | `/api/absensi/kegiatan` | Administrator mengelola; pegawai lain diarahkan ke `/absen` |
+| Kalkulator PKB | `#/kalkulator` | `/api/kendaraan/{nopol}` | semua pegawai |
+| Pengaturan | `#/pengaturan` (tab Situs, Akun, Data) | `situs`, `akun`, cadangan | Situs: baca semua, simpan Admin |
+| Akun Pegawai | `#/akun` | `/api/akun` | khusus Administrator |
+| Panduan | `#/panduan` | — | — |
+
+`#/tarif` dialihkan ke Kalkulator PKB (Tarif & Simulasi dipensiunkan, D-041).
+
+### 9.3 Peran dan alur
+
+- **Peran akses:** `administrator` (mengelola semua modul) atau `pegawai` (Pegawai UPTD, hanya modul yang dicentang Administrator; D-010). 17 modul dapat ditugaskan (`DashboardModule`, `tarif` dipensiunkan).
+- **Hapus konten editorial hanya Administrator** (FAQ, pesan, layanan, dokumen, berita, dokumentasi). Pengelola boleh menghapus data operasional (jadwal luar kantor, penyesuaian jam, standar pemutakhiran, unit struktur, lokasi).
+- **Alur publikasi** (`WorkflowStatus`): `draf → diperiksa → persetujuan → terbit → arsip`, plus `dikembalikan` (wajib catatan revisi). Layanan dan Dokumen: hanya Administrator yang menyetujui, menerbitkan, menarik, dan mengubah entri yang menunggu persetujuan atau terbit. Berita dan Dokumentasi: pengelola menerbitkan sendiri. FAQ punya status sendiri (`draft`/`published`/`unpublished` + *Untuk warga* + *Tampilkan di portal*). Struktur tanpa alur.
+- **Peran informasi** (Penyedia, Pemeriksa, Penyetuju, Pengelola publikasi) di profil akun hanya keterangan, tidak memengaruhi akses (D-027).
+
+---
+
+## 10. API dan backend
+
+Kontrak lengkap ada di [`docs/api.md`](docs/api.md). Ringkasan:
+
+### 10.1 Konvensi
+
+- JSON polos tanpa amplop. Galat `{"message": "…"}`; validasi `422` `{"message", "errors": {isian: [...]}}` dengan kunci bertingkat (`hari.1.selesai`).
+- ID ULID huruf kecil; waktu ISO 8601; tanggal `YYYY-MM-DD`; jam `HH:MM` WITA. Server mengisi `id`, `dibuat`, `diperbarui`, `urutan`.
+- Semua rute API `Cache-Control: no-store`. API publik menolak query parameter (`422`) dan metode tulis (`405`), tanpa sesi dan cookie.
+- `503` di API publik bila data tidak bisa dibaca (tidak pernah diganti daftar kosong).
+- Log aktivitas: tabel `activities` (`user_id`, `module`, `action`, `target` ≤120), ditulis dalam transaksi yang sama dengan perubahan; tanpa perubahan tidak dicatat. Tidak dicatat: Pengaturan Situs, profil akun, kegiatan Absensi, pencarian kendaraan. Perubahan akun masuk log aplikasi (`account.*`, `auth.*`).
+- Data pribadi tidak masuk log: pesan hanya nomor tiket; pencarian kendaraan tidak menyimpan nomor polisi, nama, atau nomor rangka.
+
+### 10.2 Autentikasi (D-007, D-008)
+
+- Laravel Sanctum mode SPA: `GET /sanctum/csrf-cookie` → `POST /api/masuk` `{nip, sandi, ingat}` dengan header `X-XSRF-TOKEN` → `GET /api/sesi` → `POST /api/keluar`. Token bearer diabaikan.
+- Sesi berakhir 8 jam tanpa aktivitas atau saat peramban ditutup; "Ingat perangkat ini" 7 hari.
+- Batas: 5 percobaan per NIP+IP per menit, 20 per NIP per 15 menit, 30 login per IP per menit.
+- Kata sandi minimal 12 karakter berisi huruf dan angka. Status akun `pending → active → suspended/deactivated`. Akun baru dibuat Administrator, pemilik akun memilih sandi lewat **tautan aktivasi** (60 menit, sekali pakai). Tidak ada endpoint ganti/lupa sandi; atur ulang = tautan aktivasi baru.
+- Perintah: `php artisan pintu:create-admin <nip> "<nama>"` (dengan `--no-interaction` mencetak tautan aktivasi), `php artisan pintu:activation-link <nip> [--reset]`.
+
+### 10.3 Batas laju (`AppServiceProvider`)
+
+| Limiter | Batas |
+|---|---|
+| `public-api` | 300/menit/IP (`PINTU_PUBLIC_API_REQUESTS_PER_MINUTE`), dipakai bersama semua API publik |
+| `public-messages` | 5 pesan/jam/IP |
+| `login` | 30/menit/IP (+ batas per NIP di `LoginRequest`) |
+| `kendaraan` | 30/menit per pegawai |
+| `public-kendaraan` | 5/menit dan 20/jam per IP, plus 30/menit untuk seluruh portal |
+| `uploads` | 30/menit per pegawai (juga clock-in) |
+
+### 10.4 Endpoint (ringkas)
+
+- **Sistem/akun:** `GET /api/health`, `POST /api/masuk`, `GET /api/sesi`, `POST /api/keluar`, `/api/akun` (index, store, `PATCH /{id}`, `PUT /{id}/status`, `POST /{id}/tautan-aktivasi`; khusus Administrator), `GET|PUT /api/pengaturan/akun` (profil sendiri), halaman web `GET|POST /aktivasi/{user}`.
+- **Koleksi `/api/koleksi/{nama}`** (index, store, show, `PATCH`): `faq` (+`urutan`, `hapus`), `keliling` (+`hapus`, `salin-minggu`, `salin-hari`), `lokasi` (+`hapus`), `penyesuaian` (+`hapus`), `pesan` (+`hapus`), `layanan` (+`urutan`, `hapus`), `dokumen` (+`hapus`), `berita` (+`hapus`), `dokumentasi` (+`hapus`), `unit` (+`urutan`, `hapus`), `halaman` (hanya baca/sunting), `pemutakhiran` (+`urutan`, `hapus`).
+- **Pengaturan:** `GET /api/pengaturan` (waktu simpan), `GET|PUT /api/pengaturan/{jam|papan|statistik|kontak|visiMisi|profil|beranda|situs}` (gate `SettingPolicy`; `situs` disimpan hanya Administrator).
+- **Lain-lain:** `POST /api/unggah`, `GET /api/berkas/{id}` (berkas privat), `GET /api/aktivitas?limit=`, `GET /api/kendaraan/{nopol}`, `/api/absensi/kegiatan` (Administrator), `GET /api/absen`, `POST /api/absen/{id}` (clock-in).
+- **Publik `/api/public/*`:** `faq`, `keliling`, `jam`, `papan`, `statistik`, `kontak`, `visi-misi`, `profil`, `layanan`, `dokumen`, `dokumentasi`, `struktur`, `berita`, `berita/{slug}`, `beranda`, `situs`, `halaman/{slug}` (GET); `POST pesan` (formulir kontak, honeypot `kode_tambahan`); `POST kendaraan` (cek biaya pajak).
+
+### 10.5 Model dan tabel
+
+Semua model ULID kecuali `Setting`. Kolom berbahasa Indonesia.
+
+| Model | Tabel | Catatan |
+|---|---|---|
+| User | `users` | `nip` char(18) unik, `role`, `status`, `modules` (json), `jabatan`, `unit`, `peran_informasi` |
+| Activity | `activities` | log aktivitas per modul |
+| Faq | `faqs` | `FaqStatus`, `publik`, `tampil`, `urutan` |
+| MobileServiceStop | `mobile_service_stops` | `jenis` (`ServicePointKind`: keliling/gerai/sementara), `unit` 01–03, `nama`, `tanggal_mulai`, `tanggal_selesai`, `hari` (json, 0=Minggu), jam, lokasi, `aktif` |
+| ServiceLocation | `service_locations` | daftar lokasi (nama unik tanpa beda huruf) |
+| ScheduleAdjustment | `schedule_adjustments` | penyesuaian jam per tanggal (`tutup`/`jam-khusus`) |
+| Message, MessageResponse | `messages`, `message_responses` | pesan publik dan tanggapan (append-only) |
+| Service | `services` | persyaratan layanan, beralur |
+| Document | `documents` | regulasi dan unduhan, beralur |
+| Article | `articles` | berita dan pengumuman, beralur, `slug` |
+| Documentation | `documentations` | dokumentasi kegiatan, beralur, foto ≤30 |
+| OrganizationUnit | `organization_units` | struktur organisasi (`induk` tanpa FK) |
+| StaticPage | `static_pages` | kebijakan-privasi, syarat-ketentuan |
+| UpdateStandard | `update_standards` | standar pemutakhiran |
+| Upload | `uploads` | catatan unggahan, `Prunable` (tak terpakai >1 hari) |
+| FieldActivity, FieldAttendance | `field_activities` (+pivot `field_activity_user`), `field_attendances` | absensi lapangan |
+| Setting | `settings` | kunci `name`, `value` TEXT dengan cast array (bukan kolom json: MySQL json mengubah urutan kunci) |
+
+**Kunci `settings`:** `jam`, `papan`, `statistik`, `kontak`, `visiMisi`, `profil`, `situs`, `beranda` (`tarif` lama dibiarkan di DB). Default sebelum pertama disimpan: `Setting::INITIAL_*`/`UNSAVED_*`. `Setting::upgradeHomepage()` membaca dokumen Beranda lama ke bentuk terbaru (logo mitra, tautan kanal, video, kata bergilir).
+
+### 10.6 Unggahan (D-028)
+
+- `POST /api/unggah` (multipart `modul` + `berkas`). Tujuan (`UploadTarget`): `berita`, `dokumentasi`, `dokumen`, `unit`, `visiMisi`, `profil`, `beranda` (publik) dan `absensi` (privat).
+- Tipe dibaca dari **isi** berkas (finfo). Gambar JPG/PNG/WebP ≤5 MB/25 MP, disimpan ulang tanpa metadata, maks. 1600 px. Dokumen PDF/DOCX/XLSX ≤10 MB; maklumat hanya PDF.
+- Satu unggahan untuk satu entri; berkas yang diganti/dikosongkan/entrinya dihapus ikut terhapus (`SyncUploads`). Unggahan tak terpakai dihapus setelah sehari (`model:prune` harian di `routes/console.php`).
+- Lokal memakai disk lokal; produksi Laravel Cloud Object Storage (bucket privat + publik).
+
+---
+
+## 11. Integrasi eksternal
+
+### 11.1 API NJKB BPAD NTT (data kendaraan)
+
+- Repository terpisah **`D:\Herd\njkb-api-ntt`** (Cloudflare Worker, branch `main`). API privat `GET {NJKB_API_BASE_URL}/api/v1/vehicle/{nopol}` (`https://api.uptdpenda-kupang.web.id`), dilindungi **Cloudflare Access service token**.
+- PINTU memakai **token miliknya sendiri** (principal `njkb-api-pintu`, scope `vehicle:read registration:read owner:read tax:read njkb:read`), terdaftar di `wrangler.jsonc` produksi Worker. **Jangan memakai token aplikasi lain.** Nilai token hanya di `.env` (`NJKB_ACCESS_CLIENT_ID`, `NJKB_ACCESS_CLIENT_SECRET`), diisi pemilik.
+- `app/Actions/LookUpVehicle.php`: timeout 8 detik (koneksi 3), tidak mengikuti pengalihan, ulang sekali hanya untuk koneksi terputus atau 502/503/504, mematuhi `Retry-After` setelah 429 (cache `njkb:tunggu-sampai`, maks. 1 jam). Kegagalan hanya mencatat ID permintaan, status, dan kode galat.
+- **Jam layanan BPAD** (D-042): API hulu hanya aktif sampai **21.00 WITA** (aktif lagi sekitar 00.01 WITA). Di luar jam PINTU menolak tanpa memanggil API (`NJKB_SERVICE_CLOSES_AT=21:00`, `NJKB_SERVICE_OPENS_AT` kosong = hanya 21.00–24.00 dianggap tutup). Teks jam di portal dan Kalkulator ditulis tetap; sunting manual bila jam berubah.
+- **Nomor polisi tidak terdaftar:** BPAD menjawab HTTP 200 `{kode: "0", status: "failed", pesan: "Nomor polisi … tidak ditemukan"}`. Sejak Worker commit `6a4c4f8` (sudah di-deploy pemilik), API privat menjawab **404 `vehicle_not_found`**; PINTU dan kalkulator-pajak membaca 404 sebagai "tidak ditemukan". Endpoint publik lama Worker `/api/njkb/{nopol}` tetap 502.
+- **Cara uji yang aman privasi** (cetak kode status saja, jangan pernah mencetak token atau field kendaraan): `GET …/api/v1/vehicle/DH1A?probe=1` ditolak Worker setelah Access+izin dan sebelum BPAD (harapkan `400 unsupported_query_parameter`; `401` = token/Access, `403` = izin/scope); `GET …/api/v1/vehicle/DH0ZZZ` (nomor 0 mustahil ada) menanyai BPAD tanpa kendaraan nyata (harapkan `404`). Uji kendaraan sungguhan dilakukan pemilik dengan kendaraannya sendiri.
+- Deploy Worker adalah langkah pemilik: `npx wrangler deploy --env production` di `D:\Herd\njkb-api-ntt`.
+
+### 11.2 Mesin pajak kalkulator-pajak (D-041)
+
+- Repository terpisah **`D:\Herd\kalkulator-pajak`**. `src/lib/tax-calculator.ts` dan `src/types/tax.ts` dari commit `7e90d89` **disalin persis** ke `resources/js/pkb/lib/` dan `resources/js/pkb/types/`. Jangan menyunting salinan itu di PINTU; perbarui dengan menyalin ulang dan catat commit sumber di `resources/js/pkb/index.ts`.
+- `resources/js/pkb/penetapan.ts` milik PINTU (label, ringkasan, penjaga untuk jatuh tempo di tahun sesudah tanggal bayar karena mesin sumber menghitung salah untuk kasus itu).
+- Dasar hukum mesin: Pergub NTT 54/2026. Tembak RU dinonaktifkan; plat kuning tetap dihitung di loket.
+- **Jangan membaca berkas rahasia** kalkulator-pajak (`.env.local`, `.dev.vars`).
+
+### 11.3 Lain-lain
+
+- **Laravel Cloud Object Storage** (R2 yang dikelola Laravel Cloud, bukan akun Cloudflare pemilik) untuk unggahan produksi.
+- **YouTube** (D-040): video alur pelayanan diputar lewat `youtube-nocookie.com`, iframe dibuat saat dialog dibuka dan dilepas saat ditutup; API publik hanya memberi ID video.
+
+---
+
+## 12. Database, data, dan migrasi
+
+- **Database lokal `pintu`** (MySQL, kredensial di `.env`) adalah database pengembangan dan sekaligus `DB_TEST_DATABASE`. Isinya kini **data milik pemilik** (dokumen Beranda yang sudah disimpan, jadwal Layanan Luar Kantor, daftar lokasi, unggahan, aktivitas). **Jangan reset atau seed ulang.**
+- `composer test` aman (SQLite di memori). **`composer test:mysql` mereset `pintu`**; bila memang harus dijalankan: cadangkan dulu (`mysqldump --defaults-extra-file=<berkas opsi sementara> --single-transaction --routines --triggers --default-character-set=utf8mb4 --set-gtid-purged=OFF pintu`), catat `CHECKSUM TABLE` dan jumlah baris, jalankan tes, pulihkan (`mysql … pintu < dump`), bandingkan checksum, lalu hapus berkas opsi dan dump. Jangan mencetak kredensial. Minta izin pemilik dulu.
+- Sebelum migrasi data di database pemilik, buat cadangan tabel terkait.
+- **Migrasi data awal** (bukan seeder): `insert_initial_services` (6 layanan terbit), `insert_initial_static_pages`, `insert_initial_update_standards` (8 standar), `insert_initial_documents` (9 draf tanpa berkas), `insert_initial_articles` (artikel peluncuran, draf), `insert_initial_documentations` (9 draf tanpa foto), `insert_initial_organization_units` (7 unit), `create_service_locations_table` (lokasi dari jadwal yang ada), `widen_mobile_service_stops_to_out_of_office_services` (jadwal lama → Samsat Keliling 01, nonaktif). Data contoh dashboard di peramban **tidak** dipindahkan ke server.
+- **Seeder:** `LocalAccountSeeder` membuat admin lokal (NIP dan kata sandinya ada di berkas seeder; jangan disalin ke dokumen atau percakapan). Hanya berjalan di env `local`.
+
+---
+
+## 13. Pengujian dan verifikasi
+
+| Perintah | Isi |
+|---|---|
+| `composer test` | Semua tes PHPUnit di SQLite di memori (±35 detik) |
+| `php artisan test --compact <berkas> [--filter=…]` | Tes tertentu |
+| `composer test:mysql` | Tes yang sama di MySQL `DB_TEST_DATABASE` (**mereset database**, lihat §12) |
+| `npm run typecheck` | `tsc -b` |
+| `npm run lint` | `oxlint resources/js` |
+| `npm run build` | `tsc -b && vite build` (lihat catatan memori di §14) |
+| `vendor/bin/pint --format agent <berkas>` | Format PHP berkas yang diubah saja |
+| `node scripts/sync-partials.mjs --check` | Cek header/footer portal |
+
+Kebiasaan verifikasi proyek:
+
+- **Tes untuk setiap perilaku baru**, termasuk mode gagal. Tes portal memeriksa markup (`PortalPagesTest`), termasuk bahwa halaman dilayani byte demi byte.
+- **Uji mutasi** untuk logika baru: ubah satu syarat di kode, jalankan tes terkait, pastikan gagal, lalu pulihkan berkas (periksa keluaran "RESTORE FAILED"). Mutan yang bertahan berarti tes kurang, atau kodenya mubazir (hapus bila setara).
+- **Pemeriksaan di browser** pada situs lokal Herd `https://portal-uptdkotakupang.test` (Herd mengalihkan http ke https; `curl` perlu `-k`):
+  - Login dashboard tanpa mengetik di layar: dari halaman situs jalankan `fetch('/sanctum/csrf-cookie')` lalu `POST /api/masuk` `{nip, sandi}` dengan header `X-XSRF-TOKEN` memakai akun `LocalAccountSeeder`. Keluar dengan `POST /api/keluar` setelah selesai.
+  - Panel browser bawaan kadang tersembunyi (viewport 0×0): animasi dan `requestAnimationFrame` tidak jalan, `ResizeObserver` tidak terpicu, gambar `loading="lazy"` tidak dimuat. Ukur posisi lewat JavaScript (mis. `getBoundingClientRect`), set ukuran dengan `resize_window`, dan bekukan animasi (`getAnimations()` → `pause()`) bila perlu tangkapan layar di tengah gerak.
+  - CSS/JS portal di `public/assets` tidak berversi: muat ulang dengan `fetch(url, { cache: 'reload' })` lalu `location.reload()` sebelum menilai tampilan.
+  - Untuk memeriksa portal tanpa menulis data: timpa `window.fetch` di halaman, suntik ulang `main.js`, lalu kirim `DOMContentLoaded`.
+
+---
+
+## 14. Lingkungan pengembangan dan jebakannya
+
+- **Mesin pemilik:** Windows 11, Laravel Herd (`portal-uptdkotakupang.test`), PowerShell dan Git Bash, Node 24, PHP 8.3. Klien MySQL dari Laragon ada di PATH.
+- **Memori commit Windows sering hampir habis.** `vite build` bisa gagal ("os error 1450" atau "memory allocation failed"). Tutup tab panel browser agen, lalu build dengan:
+  `RAYON_NUM_THREADS=1 TOKIO_WORKER_THREADS=1 NODE_OPTIONS=--max-old-space-size=768 node node_modules/vite/bin/vite.js build`.
+  Jangan menutup aplikasi pemilik (mis. aplikasi node lain yang sedang berjalan).
+- **Akhir baris campuran:** repository menyimpan LF (`core.autocrlf=true`). Di working tree, berkas PHP dan `vite.config.ts` LF, sedangkan Blade portal, `main.js`, CSS portal, dan berkas TS dashboard CRLF. Alat Edit menjaga akhir baris berkas.
+  - `grep`/`sed`/`cat -A` di Git Bash **menyembunyikan CR** dan `grep -c $'\r'` memberi hasil salah. Hitung akhir baris dengan Node (`/\r\n/g`).
+  - `sed -i` di Git Bash diam-diam mengubah CRLF menjadi LF (diff seluruh berkas). Hindari, atau pulihkan CRLF dengan Node.
+  - Selalu jalankan `git diff --check` dan `git diff --stat` sebelum commit.
+- **Jebakan skrip penyambung:** `String.replace(a, "teks")` di JavaScript menafsirkan `$$`, `$&`, `` $` ``, `$'` di teks pengganti (pernah merusak `$$(` di `main.js`). Pakai `s.split(a).join(b)` atau `s.replace(a, () => b)`. Garis miring terbalik di `node -e` lewat shell bisa hilang (namespace PHP rusak); pakai alat Edit atau berkas skrip.
+- **Tes:** `getJson`/`postJson` Laravel tidak mengirim cookie kecuali `withCredentials()`. `JsonResource::response()` sudah menjawab 201 untuk model baru. ULID berurutan menurut waktu pembuatan, jadi buat baris uji tidak urut nama agar mutan urutan tidak lolos kebetulan.
+- **Sesi agen lain** bisa mengubah berkas yang sama bersamaan (lihat §4).
+
+---
+
+## 15. Deploy dan checklist go-live
+
+Belum pernah di-deploy ke Laravel Cloud; pemilik yang memutuskan dan menjalankannya. Panduan ada di [README › Deploy ke Laravel Cloud](README.md#deploy-ke-laravel-cloud):
+
+- Root directory = root repository. Build: `composer install --no-dev && npm ci && npm run build && php artisan optimize`. Deploy: `php artisan migrate --force`.
+- Laravel MySQL; env `APP_URL` https, `SESSION_DRIVER=database`, `SESSION_SECURE_COOKIE=true`, `SESSION_LIFETIME=480`, `SESSION_EXPIRE_ON_CLOSE=true`, `CACHE_STORE=database`, token NJKB.
+- Administrator pertama: `php artisan pintu:create-admin <nip> "<nama>" --no-interaction` di tab *Commands*; kirim tautan aktivasi hanya ke pemilik akun.
+
+Checklist sebelum go-live (dari D-002, D-006, D-028, D-034):
+
+- [ ] Aktifkan rate limiting di edge Laravel Cloud (di Cloud, Laravel memercayai semua proxy sehingga IP bisa dipalsukan).
+- [ ] Buat dua bucket Object Storage produksi (privat + publik) dan nyalakan *Scheduler* (`model:prune`).
+- [ ] Pastikan `upload_max_filesize` dan `post_max_size` ≥ 10 MB.
+- [ ] Konfirmasi lokasi data ke unit hukum/Diskominfo (PP 71/2019; R2 dan database tanpa wilayah Indonesia).
+- [ ] Tentukan cadangan bucket dan database.
+- [ ] Uji Absensi (kamera dan GPS butuh HTTPS) di Laravel Cloud.
+- [ ] Arahkan `pintu.uptdpenda-kupang.web.id` ke Laravel Cloud, lalu matikan deploy otomatis Cloudflare Pages.
+- [ ] Isi konten yang masih contoh/draf (lihat §18).
+
+---
+
+## 16. Ringkasan keputusan D-001 sampai D-046
+
+Rincian lengkap di [`docs/decisions.md`](docs/decisions.md). "Pemilik" = keputusan langsung pemilik.
+
+| ID | Tanggal | Keputusan |
+|---|---|---|
+| D-001 | 10-13 | Dashboard React 19 + JSON API; tanpa Livewire/Inertia |
+| D-002 | 10-13 | Satu aplikasi Laravel di root; portal Blade berisi HTML lama; `*.html` → 301; produksi tetap Cloudflare Pages sampai cutover |
+| D-003 | 10-13 | FAQ publik diurutkan menurut `urutan` dashboard, lalu ID |
+| D-004 | 10-13 | Nilai teknis FAQ: ULID, pertanyaan ≤200, jawaban ≤800, ≤100 entri (lebih → 503), `no-store`, query ditolak (laju 60 diganti 300 di D-013) |
+| D-005 | 10-13 | `composer test` SQLite; `test:mysql` mereset database lokal |
+| D-006 | 10-13 | Hosting Laravel Cloud; rate limiting edge wajib sebelum go-live |
+| D-007 | 10-13 | Login pegawai Sanctum SPA, NIP 18 digit, status akun, batas percobaan, sandi ≥12, `pintu:create-admin` |
+| D-008 | 10-13 | Akun Pegawai dikelola Administrator; tautan aktivasi 60 menit; tangguhkan/nonaktifkan; Admin tidak bisa mengubah dirinya |
+| D-009 | 10-13 | Halaman login dan aktivasi tepat setinggi layar |
+| D-010 | 10-13 | Penugasan modul untuk Pegawai UPTD (kini 17 modul); Administrator semua modul |
+| D-011 | 10-13 | Tanya Jawab modul server pertama (mode campuran); hapus hanya Admin; log `activities` |
+| D-012 | 10-13 | Beranda memuat FAQ dari API publik, teks polos, *Coba lagi* bila gagal |
+| D-013 | 10-13 | Samsat Keliling di server; laju API publik 300/menit/IP (model per hari diganti D-043) |
+| D-014 | 10-13 | Jam Pelayanan + penyesuaian per tanggal di server; status buka/tutup portal dari API |
+| D-015 | 10-13 | Papan Layanan di server; tampil di beranda hanya pada hari pembaruan (WITA) |
+| D-016 | 10-13 | Pesan & Pengaduan: formulir publik, kontak wajib, honeypot + 5/jam/IP, hapus hanya Admin |
+| D-017 | 10-13 | Tarif & Simulasi di server (**dipensiunkan D-041**) |
+| D-018 | 10-13 | Statistik Layanan: 4 kategori × 4 angka × 12 bulan; hanya status Terverifikasi yang terbit |
+| D-019 | 10-13 | Kontak & Kanal di server; aturan tautan `PortalLink` |
+| D-020 | 10-13 | Visi & Misi di server, teks resmi menjadi isi awal (unggahan maklumat ditunda → D-029) |
+| D-021 | 10-14 | Tentang UPTD di server (unggahan foto ditunda → D-029) |
+| D-022 | 10-14 | Persyaratan Layanan dengan alur publikasi; Administrator menerbitkan; 6 layanan awal Terbit |
+| D-023 | 10-14 | Teks Beranda di server; teks HTML tetap sebagai isi awal (pola inti portal) |
+| D-024 | 10-14 | Halaman Statis (2 halaman) di server; validasi `RichText` ketat |
+| D-025 | 10-14 | Jadwal Pemutakhiran (internal), 8 standar awal |
+| D-026 | 10-14 | Pengaturan Situs: hanya Administrator menyimpan; portal membaca bilah pengumuman dan footer |
+| D-027 | 10-14 | Profil akun: nama/surel mengikuti akun; jabatan, unit, peran informasi di `users` |
+| D-028 | 10-14 | Unggahan di Laravel Cloud Object Storage (bucket privat + publik), tipe dari isi berkas |
+| D-029 | 10-14 | Foto Tentang UPTD dan maklumat diunggah; profil dari Renstra BPAD 2025–2029 dan RPJMD NTT 2025–2029; nama unit Renstra |
+| D-030 | 10-14 | Regulasi & Unduhan beralur (Administrator menerbitkan); terbit wajib berkas/tautan; 9 draf awal |
+| D-031 | 10-14 | Berita & Pengumuman; pengelola menerbitkan sendiri; halaman `/berita/{slug}` |
+| D-032 | 10-14 | Dokumentasi Kegiatan; terbit wajib ≥1 foto; galeri per bulan |
+| D-033 | 10-14 | Struktur Organisasi tanpa alur; NIP pejabat tidak pernah ke API publik |
+| D-034 | 10-14 | Absensi Lapangan: PWA `/absen`, clock-in petugas yang ditugaskan, swafoto + GPS dalam radius |
+| D-035 | 10-14 | Navbar portal berbentuk notch; tema dashboard bawaan Terang; **jangan deploy dulu** |
+| D-036 | 10-14 | Ukuran notch mengikuti referensi Kage (62 px, sudut 22 px) |
+| D-037 | 10-14 | Mitra satu atap memakai logo unggahan; inisial sebagai cadangan |
+| D-038 | 10-14 | Isi kanal layanan beranda bisa diberi tautan (situs luar di tab baru) |
+| D-039 | 10-14 | Teks alur publikasi di portal dan Login mengikuti alur yang berlaku |
+| D-040 | 10-14 | Video alur pelayanan (YouTube nocookie) diatur dari Dashboard › Beranda |
+| D-041 | 10-14 | Kalkulator PKB dan cek biaya pajak portal memakai mesin kalkulator-pajak + API NJKB; Tarif & Simulasi dipensiunkan |
+| D-042 | 10-14 | Jam layanan data kendaraan BPAD sampai 21.00 WITA; di luar jam ditolak tanpa memanggil API |
+| D-043 | 10-15 | Layanan Luar Kantor: Samsat Keliling 01–03 per tanggal, gerai tetap, loket sementara; salin minggu (nonaktif) |
+| D-044 | 10-15 | Daftar lokasi (lokasi baru otomatis masuk) dan salin jadwal per hari (≤14 hari, status mengikuti asal) |
+| D-045 | 10-15 | Portal ke React bertahap di atas Blade; kata bergilir di judul pembuka (gulir vertikal, berulang dengan jeda 10 detik) |
+| D-046 | 10-15 | Logo Ditlantas (kiri) dan Jasa Raharja (kanan) keluar dari balik lambang NTT; klik lambang untuk menyembunyikan/memunculkan |
+
+**Pola lintas keputusan:** teks HTML sebagai isi awal (D-023/024/026); data contoh peramban tidak dipindahkan, kecuali data awal lewat migrasi; hapus konten editorial hanya Administrator; pengelola Jadwal Pemutakhiran boleh membaca daftar modul lain; WITA sebagai acuan waktu; retensi pesan dan swafoto absensi belum diputuskan (menunggu unit hukum/kearsipan).
+
+---
+
+## 17. Riwayat commit
+
+77 commit di `laravel-development` (per commit dokumentasi ini). Tahapan besar:
+
+| Rentang | Isi |
+|---|---|
+| 2026-10-12 s.d. `46cc53a` (10-13) | Dokumen tata kelola dan rancangan Phase 1–2.19 (`docs/phases/`) |
+| `44b3c8a` (10-13) | Restrukturisasi menjadi satu aplikasi Laravel + API FAQ publik |
+| `0fc0cde` … `b462f48` | Login Sanctum, akun, penugasan modul, Tanya Jawab (D-007–D-012) |
+| `4e71c0c` … `cfb06a7` | Modul ke server satu per satu: Keliling, Jam, Papan, Pesan, Tarif, Statistik, Kontak, Visi & Misi, Tentang UPTD, Layanan, Beranda, Halaman Statis, Pemutakhiran (D-013–D-025) |
+| `3839347` … `697be56` (10-14) | Situs, profil akun, unggahan, foto & Renstra, logo PINTU, Regulasi, Berita, Dokumentasi, Struktur, Absensi (D-026–D-034) |
+| `62f0a0c` … `7935f70` | Navbar notch, logo mitra, kanal bertautan, perbaikan teks alur, nilai Visi & Misi, sinkron partial, 404 bertingkat (D-035–D-039) |
+| `12e30da` … `4005cab` | Video alur, Kalkulator PKB + cek biaya pajak, jam layanan BPAD (D-040–D-042) |
+| `d41d2f4` (10-15) | Layanan Luar Kantor + daftar lokasi + salin per hari (D-043, D-044) |
+| `31cd078` | Teks kecil di atas judul pembuka lebih besar di layar ≥1280 px |
+| `a7d3e36`, `078f4b9` | React portal pertama: kata bergilir di judul pembuka, lalu berulang dengan jeda 10 detik (D-045) |
+| `8699e8d` | Logo Ditlantas dan Jasa Raharja di pembuka (D-046) |
+| `docs(pintu): add the single-file project context for AI agents` | Berkas ini, aturan baca-dan-perbarui di `AGENTS.md`, rujukan di README |
+
+Repository terkait: `njkb-api-ntt` `main` — `f7a1ee5` (izin konsumen PINTU), `6a4c4f8` (404 untuk nomor polisi tidak terdaftar, sudah di-deploy).
+
+---
+
+## 18. Pekerjaan tertunda dan hal yang diketahui
+
+**Menunggu pemilik:**
+
+- Uji cek data kendaraan dengan kendaraan sungguhan (portal: nomor polisi + 5 karakter terakhir nomor rangka, sebelum 21.00 WITA) belum dikonfirmasi.
+- Deploy ke Laravel Cloud dan cutover domain (lihat §15).
+- Judul pembuka yang tersimpan tidak bertitik ("Semua informasi SAMSAT"); konfirmasi apakah disengaja.
+- Jam mulai layanan BPAD (`NJKB_SERVICE_OPENS_AT`) belum pasti; teramati aktif lagi sekitar 00.01 WITA.
+
+**Konten yang belum lengkap (diisi dari dashboard):**
+
+- 9 dokumen Regulasi & Unduhan masih draf tanpa berkas; 9 kegiatan Dokumentasi draf tanpa foto; artikel peluncuran draf (paragraf "empat peran" perlu disesuaikan).
+- Statistik masih status Ilustrasi sampai diverifikasi pimpinan; Jam, Kontak, Papan kosong/tutup sampai disimpan pertama kali.
+- Foto Kepala UPTD belum ada; nama pejabat selain Kepala UPTD kosong; pengantar halaman statis masih "berlaku sejak [tanggal terbit]".
+
+**Fitur yang belum dibuat (dicatat di keputusan):**
+
+- Bagian portal lain masih di `main.js` dan cek pajak belum React (D-045).
+- Ganti/lupa kata sandi sendiri, kirim tautan aktivasi via surel, MFA, waktu login terakhir (D-007, D-008).
+- Peran alur per langkah di server (D-010, D-022); versi draf untuk layanan terbit.
+- Notifikasi pesan ke petugas, cek status tiket oleh warga, masa simpan pesan (D-016).
+- Statistik per rentang waktu dan tahun sebelumnya (D-018).
+- Nomor polisi/petugas per unit Samsat Keliling, penanda jadwal bentrok (D-043).
+- Plat kuning dan pembayaran lebih awal untuk jatuh tempo tahun berikutnya di kalkulator (D-041).
+- Endpoint `GET /ekspor`, `POST /impor`, `POST /reset` untuk mode REST penuh dashboard.
+
+**Utang dokumentasi dan teknis kecil:**
+
+- Beberapa kalimat lama di `docs/dashboard.md` masih menyebut modul "di IndexedDB" padahal sudah di server (blok Status baris awal, catatan profil akun, daftar policy, cadangan). `docs/api.md` daftar penegakan modul belum menyebut `berita`, `dokumentasi`, `dokumen`, `unit`, `lokasi`.
+- `.gitignore` menyebut `scripts/stage-frontend.mjs` dan `/_site/` yang sudah tidak ada; komentar di `dashboard-pegawai.blade.php` menyebut folder `dashboard-app/` lama.
+- Batas login 30/menit per IP mungkin perlu dinaikkan bila semua pegawai berbagi satu IP kantor.
+- CSS portal tidak berversi (lihat §8.2).
+
+---
+
+## 19. Prosedur memperbarui dokumen ini
+
+**Atas permintaan pemilik (2026-10-15), berkas ini wajib diperbarui setiap ada perubahan**, di commit yang sama dengan perubahannya:
+
+1. **§3 Status terakhir:** commit terakhir di origin (isi setelah push), status working tree, jumlah tes, keputusan terakhir, dan status deploy/integrasi bila berubah.
+2. **Bagian yang terdampak:** mis. endpoint baru di §10, komponen React baru di §8.4, modul baru di §9, jebakan baru di §14.
+3. **§16:** tambahkan baris untuk setiap keputusan D-0xx baru (dan ubah baris yang digantikan).
+4. **§17:** tambahkan commit penting setelah di-push.
+5. **§18:** hapus pekerjaan yang selesai, tambahkan yang baru tertunda atau ditemukan.
+6. **§20 Log perubahan dokumen:** tambahkan satu baris di paling atas (tanggal, ringkasan, keputusan/commit terkait).
+7. Perbarui tanggal dan commit di kepala berkas.
+8. Jangan menulis rahasia; ringkas, faktual, dan berbahasa Indonesia.
+
+Bila commit dibuat sebelum hash-nya diketahui, tulis status "belum di-commit" lalu perbaiki hash di commit berikutnya.
+
+---
+
+## 20. Log perubahan dokumen
+
+| Tanggal | Perubahan |
+|---|---|
+| 2026-10-15 | Berkas dibuat: konteks lengkap proyek sampai D-046 (`8699e8d`), atas permintaan pemilik untuk agen AI berikutnya. `AGENTS.md` kini mewajibkan agen membaca dan memperbarui berkas ini |

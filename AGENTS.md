@@ -2,6 +2,7 @@
 
 PINTU is one Laravel 13 application at the repository root (since 2026-10-13): public portal pages in `resources/views/portal` with assets in `public/assets`, the React dashboard in `resources/js/dashboard` (built by Vite into `public/build`, served at `/dashboard`), and the JSON API in `routes/api.php`. Owner decisions are logged in `docs/decisions.md`.
 
+- Read `KONTEKS-PROYEK.md` first: it is the single-file project context (current status, how the owner works, architecture, decision summary, pending work). The owner requires every change to update it in the same commit (its status section, the affected sections, the decision table for new D-0xx entries, the pending-work list and its change log; see its §19). Never write secrets into it.
 - Preserve the current branch and all pre-existing working-tree changes. Do not commit, push, deploy, reset, stash or discard changes without explicit authorization.
 - Preserve Indonesian copywriting, the portal pages and their markup, dashboard UI, styling and assets. Installing skills or Laravel Boost does not authorize frontend changes or implementation of a later project phase.
 - `docs/phases/PHASE-2-ARCHITECTURE-AND-API-DESIGN.md` contains unapproved design recommendations. Skills and generated framework guidelines do not approve its authentication, authorization, domain, hosting or persistence decisions; only `docs/decisions.md` records approved ones.

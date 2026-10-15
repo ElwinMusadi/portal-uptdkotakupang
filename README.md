@@ -157,6 +157,7 @@ Situs memakai **SF Pro Display** (headline dan angka besar) dan **SF Pro Text** 
 
 ## Dokumen lain
 
+- [`KONTEKS-PROYEK.md`](KONTEKS-PROYEK.md): konteks lengkap dan status terakhir proyek dalam satu berkas, untuk agen AI dan pengembang berikutnya. Diperbarui setiap ada perubahan.
 - [`docs/phases/`](docs/phases/): rekam jejak keamanan, tata kelola, dan rancangan API (Phase 1.1–2.19). Rekomendasi di dalamnya belum tentu disetujui; keputusan yang berlaku ada di `docs/decisions.md`.
 - [`HANDOVER-CHATGPT.md`](HANDOVER-CHATGPT.md): audit 11 Oktober 2026, sebelum struktur satu aplikasi Laravel.
 
