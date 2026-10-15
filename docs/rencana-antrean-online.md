@@ -1,6 +1,6 @@
 # Rencana Implementasi — Antrean Online (Queue Management System)
 
-**Status:** disetujui pemilik; **Irisan 1–3 selesai dibangun** (lihat §6), irisan berikutnya menyusul. Keputusan pemilik dicatat di [D-051](decisions.md#d-051--2026-10-15--antrean-online-rencana-dan-keputusan-awal).
+**Status:** disetujui pemilik; **Irisan 1–4 selesai dibangun** (lihat §6); berikutnya uji coba paralel di loket. Keputusan pemilik dicatat di [D-051](decisions.md#d-051--2026-10-15--antrean-online-rencana-dan-keputusan-awal).
 **Sumber:** flowchart pemilik *Flowchart Queue Management System* (draw.io, 11 jalur) dan tanya jawab dengan pemilik pada 15 Oktober 2026.
 
 Dokumen ini memakai kata baku **antrean** (seperti di Papan Layanan: "Nomor antrean dilayani").
@@ -156,9 +156,9 @@ Cetak ─► Pendaftaran ─► Penetapan ─► Kwitansi ─► Pembayaran ─�
 
 ### 4.9 Arsip dan pencarian
 
-- Halaman **Arsip Antrean** di dashboard: cari menurut nomor polisi, nomor antrean, tanggal, layanan, atau tahap; detail tiket menampilkan riwayat lengkap beserta petugas dan loketnya.
-- Nomor polisi disimpan tanpa batas waktu (keputusan pemilik). Administrator bisa menghapus nomor polisi sebuah tiket; penghapusan tercatat di riwayat.
-- Ringkasan harian: jumlah tiket per layanan, waktu tunggu dan proses rata-rata per tahap, nomor yang ditunda atau batal, dengan unduhan CSV.
+- Halaman **Arsip** di dashboard (semua petugas Antrean, keputusan pemilik): cari menurut nomor antrean, sebagian nomor polisi, QR, tanggal, layanan, status, atau tahap; detail tiket menampilkan riwayat lengkap beserta petugas dan loketnya.
+- Nomor polisi disimpan tanpa batas waktu (keputusan pemilik). Administrator bisa **menghapus tiket seluruhnya** beserta riwayatnya (keputusan pemilik), untuk tiket yang sudah selesai atau dibatalkan dan dicetak sebelum hari ini; penghapusan tercatat di log aktivitas tanpa nomor polisi.
+- Halaman **Ringkasan**: satu hari, satu bulan, atau rentang sampai 31 hari (keputusan pemilik): jumlah tiket per layanan dan per hari, dan per tahap jumlah yang selesai, dilewati otomatis, dan ditunda, serta nilai tengah waktu tunggu dan lama di tahap. Unduhan CSV berisi ringkasan dan daftar tiket dengan nomor polisi (keputusan pemilik).
 
 ### 4.10 Pembaruan langsung
 
@@ -179,7 +179,7 @@ Mengikuti pola API yang ada (JSON polos, pesan galat berbahasa Indonesia, `422` 
 | `POST /api/antrean/loket/{id}/panggil` | Panggil berikutnya di loket itu |
 | `POST /api/antrean/pindai` | Mencari tiket dari hasil pindai atau ketikan |
 | `GET /api/antrean/pos/{id}` | Daftar menunggu, dipanggil, dan ditunda untuk satu pos (diminta berkala) |
-| `DELETE /api/antrean/tiket/{id}/nopol` | Administrator menghapus nomor polisi |
+| `DELETE /api/antrean/tiket/{id}` | Administrator menghapus tiket beserta riwayatnya (keputusan Irisan 4) |
 | `POST /api/layar/pasang`, `GET /api/layar/panggilan` | Memasang layar dengan kode sekali pakai; data layar (token perangkat) |
 | `GET /api/public/antrean/{kode}` | Halaman lacak (publik, tanpa sesi) |
 
@@ -192,7 +192,7 @@ Mengikuti pola API yang ada (JSON polos, pesan galat berbahasa Indonesia, `422` 
 | Dashboard › Antrean | **Meja Informasi** | Ketik nomor polisi, pilih layanan, cetak 2 lembar; daftar tiket hari ini; cetak ulang, batal |
 | Dashboard › Antrean | **Loket** | Pilih loket; tombol besar Panggil berikutnya, Panggil ulang, Tunda, Selesai; daftar menunggu dan ditunda; kotak pindai |
 | Dashboard › Antrean | **Pos Proses** | Penetapan, Pelunasan, Cetak SKPD, Cetak STNK: kotak pindai, daftar tahap, Selesai, Perlu perubahan data |
-| Dashboard › Antrean | **Arsip** | Pencarian, detail, ringkasan harian, CSV, hapus nomor polisi (Administrator) |
+| Dashboard › Antrean | **Arsip**, **Ringkasan** | Pencarian, detail riwayat, hapus tiket (Administrator); ringkasan harian atau rentang, CSV |
 | Dashboard › Antrean | **Pengaturan Antrean** | Layanan dan urutan tahap, loket/pos, layar, kalimat suara (Administrator) |
 | Portal | `/lacak/<kode>` | Halaman lacak WP |
 | Perangkat layar | `/layar` | Layar TV ruang tunggu |
@@ -209,7 +209,7 @@ Setiap irisan dikerjakan, diuji, diperiksa di browser, dilaporkan, lalu di-commi
 | **1. Fondasi + Meja Informasi** ✓ | Tabel layanan, tiket, dan riwayat; isi awal A–D; pengaturan layanan (Administrator); penomoran A-001; halaman Meja Informasi (cetak, cetak ulang, batal, daftar per tanggal); cetak 2 lembar 80 mm dengan QR lewat iframe; halaman lacak dasar. Tabel dan pengaturan loket/pos dipindah ke Irisan 2, karena baru dipakai saat memanggil | Mencetak tiket dan melacaknya dari ponsel |
 | **2. Loket pemanggil + layar TV** ✓ | Tabel dan pengaturan loket/pos; Loket 1, Loket Kwitansi, Loket 2: panggil, panggil ulang, tunda, selesai; tiket lintas hari; layar TV dengan suara; pendaftaran layar | Memanggil nomor dan melihat/mendengarnya di layar |
 | **3. Pos proses + pindai** ✓ | Penetapan (dengan perubahan data lewat pos Server), Pelunasan, Cetak SKPD, Cetak STNK; pindai USB/kamera yang langsung menandai, dengan Urungkan; tahap terlewat otomatis; halaman lacak lengkap dengan jam setiap tahap dan posisi | Satu berkas berjalan penuh dari cetak sampai selesai |
-| **4. Arsip + ringkasan** | Pencarian nomor polisi/nomor/tanggal, detail riwayat, hapus nomor polisi, ringkasan harian dan CSV | Mencari berkas yang "tercecer" |
+| **4. Arsip + ringkasan** ✓ | Pencarian nomor polisi/nomor/tanggal/layanan/status/tahap, detail riwayat, hapus tiket seluruhnya (Administrator), ringkasan harian atau rentang sampai 31 hari, CSV dengan daftar tiket | Mencari berkas yang "tercecer" |
 | **Uji coba** | Deploy ke Laravel Cloud (langkah pemilik); 1–2 minggu paralel dengan nomor manual, dimulai dari satu layanan, lalu semua | Evaluasi bersama petugas loket |
 | **5. Papan Layanan otomatis** | Setelah antrean berjalan (keputusan pemilik): nomor dilayani dan waktu tunggu di beranda dari antrean; Statistik Layanan dari data antrean | — |
 | **6. API Samsat Online** | Bila BPAD memberi akses: status Penetapan, Pembayaran, dan Cetak Notice diambil otomatis per nomor polisi; pindai menjadi cadangan | — |

@@ -40,17 +40,9 @@ class QueueTicketController extends Controller
      */
     public function search(SearchQueueTicketsRequest $request): AnonymousResourceCollection
     {
-        $code = $request->trackingCode();
-        $number = $request->number();
-
-        $tickets = QueueTicket::query()
+        $tickets = $request->whereTyped(QueueTicket::query())
             ->with(['service', 'printedBy', 'counter'])
             ->whereNotIn('status', [QueueTicketStatus::Selesai, QueueTicketStatus::Batal])
-            ->where(fn ($query) => match (true) {
-                $code !== null => $query->where('kode_lacak', $code),
-                $number !== null => $query->where('nomor', $number),
-                default => $query->where('nopol', $request->plate()),
-            })
             ->orderByDesc('tanggal')
             ->orderByDesc('created_at')
             ->limit(10)

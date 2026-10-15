@@ -8,7 +8,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * A queue number as the dashboard lists and prints it (D-051), with the
- * address its QR holds.
+ * address its QR holds; in the archive also its history.
  *
  * @mixin QueueTicket
  */
@@ -17,7 +17,7 @@ class QueueTicketResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @return array{id: string, nomor: string, tanggal: string, layanan: array{kode: string, nama: string}, nopol: ?string, status: string, tahap: ?string, tahapLayanan: list<string>, urlLacak: string, loket: ?string, dipanggil: ?string, jumlahPanggil: int, masukTahap: ?string, dicetak: ?string, dicetakOleh: ?string, dibatalkan: ?string, alasanBatal: ?string, selesai: ?string}
+     * @return array{id: string, nomor: string, tanggal: string, layanan: array{kode: string, nama: string}, nopol: ?string, status: string, tahap: ?string, tahapLayanan: list<string>, urlLacak: string, loket: ?string, dipanggil: ?string, jumlahPanggil: int, masukTahap: ?string, dicetak: ?string, dicetakOleh: ?string, dibatalkan: ?string, alasanBatal: ?string, selesai: ?string, riwayat?: mixed}
      */
     public function toArray(Request $request): array
     {
@@ -40,6 +40,7 @@ class QueueTicketResource extends JsonResource
             'dibatalkan' => $this->dibatalkan_pada?->toIso8601String(),
             'alasanBatal' => $this->alasan_batal,
             'selesai' => $this->selesai_pada?->toIso8601String(),
+            'riwayat' => QueueEventResource::collection($this->whenLoaded('events')),
         ];
     }
 }

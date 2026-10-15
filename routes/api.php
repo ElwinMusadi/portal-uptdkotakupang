@@ -31,11 +31,13 @@ use App\Http\Controllers\Dashboard\OrganizationUnitDeletionController;
 use App\Http\Controllers\Dashboard\OrganizationUnitOrderController;
 use App\Http\Controllers\Dashboard\OwnAccountController;
 use App\Http\Controllers\Dashboard\ProfileController;
+use App\Http\Controllers\Dashboard\QueueArchiveController;
 use App\Http\Controllers\Dashboard\QueueCounterController;
 use App\Http\Controllers\Dashboard\QueueCounterDeskController;
 use App\Http\Controllers\Dashboard\QueueDisplayController;
 use App\Http\Controllers\Dashboard\QueueServiceController;
 use App\Http\Controllers\Dashboard\QueueStationController;
+use App\Http\Controllers\Dashboard\QueueSummaryController;
 use App\Http\Controllers\Dashboard\QueueTicketCallController;
 use App\Http\Controllers\Dashboard\QueueTicketController;
 use App\Http\Controllers\Dashboard\RevenueCounterController;
@@ -473,6 +475,14 @@ Route::middleware('auth:sanctum')->group(function (): void {
         // Slice 3: the stations that mark stages done (Penetapan, Server, Pelunasan, Cetak SKPD, Cetak STNK)
         Route::get('/pos/{pos}', [QueueStationController::class, 'show'])->can('mark', QueueTicket::class)->name('pos.show');
         Route::post('/pos/{pos}/tandai', [QueueStationController::class, 'mark'])->can('mark', QueueTicket::class)->name('pos.tandai');
+        // Slice 4: the archive, a ticket's history, deleting finished tickets (administrators), and the summary
+        Route::get('/arsip', [QueueArchiveController::class, 'index'])->can('viewAny', QueueTicket::class)->name('arsip');
+        Route::whereUlid('queueTicket')->group(function (): void {
+            Route::get('/tiket/{queueTicket}', [QueueArchiveController::class, 'show'])->can('viewAny', QueueTicket::class)->name('tiket.show');
+            Route::delete('/tiket/{queueTicket}', [QueueArchiveController::class, 'destroy'])->can('delete', QueueTicket::class)->name('tiket.destroy');
+        });
+        Route::get('/ringkasan', [QueueSummaryController::class, 'show'])->can('viewAny', QueueTicket::class)->name('ringkasan');
+        Route::get('/ringkasan/tiket', [QueueSummaryController::class, 'tickets'])->can('viewAny', QueueTicket::class)->name('ringkasan.tiket');
         Route::get('/layar', [QueueDisplayController::class, 'index'])->can('manage', QueueDisplay::class)->name('layar.index');
         Route::post('/layar', [QueueDisplayController::class, 'store'])->can('manage', QueueDisplay::class)->name('layar.store');
         Route::delete('/layar/{queueDisplay}', [QueueDisplayController::class, 'destroy'])

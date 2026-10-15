@@ -6,7 +6,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { mintaServer } from "@/lib/api/http"
-import { hariIniIso, tanggal, tanggalJam } from "@/lib/format"
+import { hariIniIso, tanggal, tanggalJam, ZONA_WAKTU } from "@/lib/format"
+
+import { teksCsv, unduhTeks } from "../../portal/penerimaan/csv"
 
 export type TahapAntrean = "pendaftaran" | "penetapan" | "kwitansi" | "pembayaran" | "cetak-skpd" | "cetak-stnk" | "penyerahan"
 
@@ -272,6 +274,200 @@ export function useUrungkanTanda() {
     onSuccess: () => void qc.invalidateQueries({ queryKey: KUNCI }),
   })
 }
+
+/* ---------- Arsip dan ringkasan (Irisan 4) ---------- */
+
+export interface RiwayatTiket {
+  aksi: string
+  tahap: TahapAntrean | null
+  /** Alasan batal, atau aksi yang diurungkan */
+  keterangan: string | null
+  loket: string | null
+  petugas: string | null
+  otomatis: boolean
+  waktu: string | null
+}
+
+export interface TiketBerriwayat extends TiketAntrean {
+  riwayat: RiwayatTiket[]
+}
+
+export interface SaringanArsip {
+  q: string
+  dari: string
+  sampai: string
+  layanan: string
+  status: StatusTiket | ""
+  tahap: TahapAntrean | ""
+}
+
+export const SARINGAN_KOSONG: SaringanArsip = { q: "", dari: "", sampai: "", layanan: "", status: "", tahap: "" }
+
+/** Nomor terbanyak dalam satu pencarian arsip, sama dengan batas server */
+export const BATAS_ARSIP = 200
+
+/** Nomor terbaru yang cocok dengan pencarian; isian kosong tidak dikirim */
+export function useArsipAntrean(saringan: SaringanArsip) {
+  const isi = new URLSearchParams(Object.entries(saringan).filter(([, nilai]) => nilai.trim() !== ""))
+  return useQuery({
+    queryKey: [...KUNCI, "arsip", isi.toString()],
+    queryFn: () => mintaServer<TiketAntrean[]>(`/api/antrean/arsip?${isi.toString()}`, "GET"),
+  })
+}
+
+export function useDetailTiket(id: string | null) {
+  return useQuery({
+    queryKey: [...KUNCI, "detail", id],
+    queryFn: () => mintaServer<TiketBerriwayat>(`/api/antrean/tiket/${encodeURIComponent(id!)}`, "GET"),
+    enabled: !!id,
+  })
+}
+
+/** Hapus tiket beserta riwayatnya; khusus Administrator, hanya tiket selesai atau batal dari hari sebelumnya */
+export function useHapusTiket() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => mintaServer<void>(`/api/antrean/tiket/${encodeURIComponent(id)}`, "DELETE"),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: KUNCI }),
+  })
+}
+
+/** Apakah tiket boleh dihapus: sudah selesai atau batal, dan dicetak sebelum hari ini (WITA) */
+export function bolehDihapus(t: Pick<TiketAntrean, "status" | "tanggal">): boolean {
+  return (t.status === "selesai" || t.status === "batal") && t.tanggal < hariIniIso()
+}
+
+export interface JumlahAntrean {
+  dicetak: number
+  selesai: number
+  batal: number
+  berjalan: number
+}
+
+export interface TahapRingkasan {
+  kunci: TahapAntrean
+  nama: string
+  /** Tahap yang nomornya dipanggil ke loket */
+  dipanggil: boolean
+  /** Ditandai selesai oleh loket atau pos */
+  selesai: number
+  /** Dilewati tanpa ditandai, dianggap selesai saat tahap sesudahnya diproses */
+  otomatis: number
+  /** Nomor yang pernah ditunda petugas di tahap ini */
+  ditunda: number
+  /** Nilai tengah waktu tunggu sampai dipanggil, dalam detik */
+  tunggu: number | null
+  /** Nilai tengah lama di tahap sampai selesai, dalam detik */
+  lama: number | null
+}
+
+export interface RingkasanAntrean {
+  dari: string
+  sampai: string
+  jumlah: JumlahAntrean & { ditunda: number }
+  layanan: (JumlahAntrean & { kode: string; nama: string })[]
+  harian: (JumlahAntrean & { tanggal: string })[]
+  tahap: TahapRingkasan[]
+}
+
+/** Rentang ringkasan terpanjang yang diterima server, dalam hari */
+export const MAKS_HARI_RINGKASAN = 31
+
+export function useRingkasanAntrean(dari: string, sampai: string, aktif: boolean) {
+  return useQuery({
+    queryKey: [...KUNCI, "ringkasan", dari, sampai],
+    queryFn: () => mintaServer<RingkasanAntrean>(`/api/antrean/ringkasan?dari=${encodeURIComponent(dari)}&sampai=${encodeURIComponent(sampai)}`, "GET"),
+    enabled: aktif,
+  })
+}
+
+/** Semua nomor yang dicetak pada hari-hari itu, untuk berkas CSV */
+export function tiketRingkasan(dari: string, sampai: string): Promise<TiketAntrean[]> {
+  return mintaServer<TiketAntrean[]>(`/api/antrean/ringkasan/tiket?dari=${encodeURIComponent(dari)}&sampai=${encodeURIComponent(sampai)}`, "GET")
+}
+
+/** "—", "<1 mnt", "12 mnt", atau "1 j 5 mnt" */
+export function durasi(detik: number | null): string {
+  if (detik === null) return "—"
+  const menit = Math.round(detik / 60)
+  if (menit < 1) return "<1 mnt"
+  const jam = Math.floor(menit / 60)
+  return jam === 0 ? `${menit} mnt` : `${jam} j${menit % 60 ? ` ${menit % 60} mnt` : ""}`
+}
+
+/** Satu baris riwayat tiket sebagai kalimat */
+export function labelRiwayat(r: RiwayatTiket): string {
+  const tahap = r.tahap ? LABEL_TAHAP[r.tahap] : ""
+  switch (r.aksi) {
+    case "dicetak":
+      return "Dicetak di Meja Informasi"
+    case "dicetak ulang":
+      return "Dicetak ulang"
+    case "dibatalkan":
+      return "Dibatalkan"
+    case "dipanggil":
+      return `Dipanggil ke ${r.loket ?? tahap}`
+    case "dipanggil ulang":
+      return `Dipanggil ulang ke ${r.loket ?? tahap}`
+    case "ditunda":
+      return r.otomatis ? `Ditunda otomatis di ${r.loket ?? tahap} (loket memanggil nomor lain)` : `Ditunda di ${r.loket ?? tahap} (wajib pajak belum datang)`
+    case "tahap selesai":
+      return r.otomatis ? `${tahap} dilewati, dianggap selesai` : `${tahap} selesai`
+    case "selesai":
+      return "Berkas selesai diproses"
+    case "perlu perubahan data":
+      return "Dikirim ke Server untuk perubahan data"
+    case "perubahan data selesai":
+      return "Perubahan data selesai, kembali ke Penetapan"
+    case "diurungkan":
+      return `Tanda di ${tahap} diurungkan`
+    default:
+      return r.aksi
+  }
+}
+
+const fmtCsv = new Intl.DateTimeFormat("sv-SE", { dateStyle: "short", timeStyle: "short", timeZone: ZONA_WAKTU })
+
+/** Waktu WITA "2026-10-15 10:32" untuk berkas CSV */
+const waktuCsv = (iso: string | null) => (iso ? fmtCsv.format(new Date(iso)) : "")
+
+const menitCsv = (detik: number | null) => (detik === null ? "" : Math.round(detik / 60))
+
+/** Berkas CSV ringkasan: per layanan, per tahap, per hari, lalu daftar nomor dengan nomor polisinya */
+export function csvRingkasan(r: RingkasanAntrean, tiket: TiketAntrean[], periode: string): string {
+  const jumlah = (j: JumlahAntrean) => [j.dicetak, j.selesai, j.batal, j.berjalan]
+  return teksCsv([
+    ["Ringkasan Antrean Online", periode],
+    [],
+    ["Layanan", "Dicetak", "Selesai", "Dibatalkan", "Masih berjalan"],
+    ...r.layanan.map((l) => [`${l.kode} – ${l.nama}`, ...jumlah(l)]),
+    ["Jumlah", ...jumlah(r.jumlah)],
+    ["Pernah ditunda", r.jumlah.ditunda],
+    [],
+    ["Tahap", "Ditandai selesai", "Dilewati otomatis", "Pernah ditunda", "Tunggu dipanggil (menit, nilai tengah)", "Lama di tahap (menit, nilai tengah)"],
+    ...r.tahap.map((t) => [t.nama, t.selesai, t.otomatis, t.ditunda, menitCsv(t.tunggu), menitCsv(t.lama)]),
+    [],
+    ["Tanggal", "Dicetak", "Selesai", "Dibatalkan", "Masih berjalan"],
+    ...r.harian.map((h) => [h.tanggal, ...jumlah(h)]),
+    [],
+    ["Tanggal", "Nomor", "Layanan", "Nomor polisi", "Status", "Tahap terakhir", "Dicetak", "Dicetak oleh", "Selesai", "Dibatalkan", "Alasan batal"],
+    ...tiket.map((t) => [
+      t.tanggal,
+      t.nomor,
+      t.layanan.nama,
+      t.nopol ?? "",
+      LABEL_STATUS[t.status],
+      t.tahap ? LABEL_TAHAP[t.tahap] : "",
+      waktuCsv(t.dicetak),
+      t.dicetakOleh ?? "",
+      waktuCsv(t.selesai),
+      waktuCsv(t.dibatalkan),
+      t.alasanBatal ?? "",
+    ]),
+  ])
+}
+
+export { unduhTeks }
 
 export function useLayarAntrean(aktif: boolean) {
   return useQuery({

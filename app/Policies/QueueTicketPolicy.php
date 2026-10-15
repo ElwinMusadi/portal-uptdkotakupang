@@ -55,6 +55,17 @@ class QueueTicketPolicy
         return $this->managesQueue($user);
     }
 
+    /**
+     * Determine whether the user can delete tickets from the archive with
+     * their history.
+     */
+    public function delete(User $user): Response
+    {
+        return $user->isAdministrator()
+            ? Response::allow()
+            : Response::deny('Hanya Administrator yang dapat menghapus nomor antrean.');
+    }
+
     private function managesQueue(User $user): Response
     {
         return in_array(DashboardModule::Antrean->value, $user->managedModules(), true)

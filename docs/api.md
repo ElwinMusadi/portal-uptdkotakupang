@@ -61,6 +61,8 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `POST`, `PUT`, `DELETE` | `/api/antrean/loket`, `/api/antrean/loket/{id}` | Administrator | tersedia |
 | `POST` | `/api/antrean/loket/{id}/panggil`, `/api/antrean/tiket/{id}/{panggil-ulang\|tunda\|selesai}` | Administrator, pengelola Antrean Online | tersedia |
 | `GET`, `POST` | `/api/antrean/pos/{pos}`, `/api/antrean/pos/{pos}/tandai`, `/api/antrean/tiket/{id}/{perubahan-data\|urungkan}` | Administrator, pengelola Antrean Online | tersedia |
+| `GET` | `/api/antrean/arsip`, `/api/antrean/tiket/{id}`, `/api/antrean/ringkasan`, `/api/antrean/ringkasan/tiket` | Administrator, pengelola Antrean Online | tersedia |
+| `DELETE` | `/api/antrean/tiket/{id}` | Administrator | tersedia |
 | `GET`, `POST`, `DELETE` | `/api/antrean/layar`, `/api/antrean/layar/{id}` | Administrator | tersedia |
 | `GET` | `/api/layar` | layar TV yang dipasang (bearer token) | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/kontak` | Administrator, pengelola Kontak & Kanal | tersedia |
@@ -462,6 +464,24 @@ Pos `penetapan`, `server` (perubahan data), `pelunasan` (tahap `pembayaran`), `c
 | `POST /api/antrean/tiket/{id}/urungkan` | — | `200` tiket kembali persis ke keadaan sebelum tanda terakhir petugas itu di pos (tahap, status, loket, waktu panggil, jumlah panggil, waktu masuk tahap). Ditolak `422` bila tanda terakhirnya milik petugas lain, sudah diurungkan, atau tidak ada ("Tidak ada tanda Anda pada nomor A-001 yang bisa diurungkan."), atau nomornya sudah berubah sesudahnya ("Nomor A-001 sudah berubah sesudah Anda menandainya, jadi tidak bisa diurungkan."). Tanda di loket pemanggil tidak bisa diurungkan. |
 
 Riwayat mencatat juga `perlu perubahan data`, `perubahan data selesai`, dan `diurungkan` (`keterangan` = aksi yang diurungkan). Tanda di pos menyimpan keadaan nomor sebelum dan sesudahnya di kolom `keadaan` untuk Urungkan; keadaan dibandingkan tanpa memperhatikan urutan kunci, karena kolom JSON MySQL menyusun ulang kunci objek.
+
+### Arsip dan ringkasan (Irisan 4)
+
+Semua petugas modul Antrean membuka arsip dan ringkasan (`QueueTicketPolicy::viewAny`); menghapus khusus Administrator (`QueueTicketPolicy::delete`, "Hanya Administrator yang dapat menghapus nomor antrean.").
+
+| Permintaan | Isi | Hasil |
+|---|---|---|
+| `GET /api/antrean/arsip` | semua opsional: `q` (QR atau kodenya, nomor seperti `A-001`/`a1` di tanggal mana pun, atau sebagian nomor polisi), `dari`, `sampai` (tanggal cetak `YYYY-MM-DD`), `layanan` (kode), `status`, `tahap` | `200` tiket yang cocok, termasuk yang selesai dan batal, tanggal terbaru dulu, maks. 200. `422` untuk tanggal yang salah ("Tanggal akhir tidak boleh sebelum tanggal awal."), layanan, status, atau tahap yang tidak ada. |
+| `GET /api/antrean/tiket/{id}` | — | `200` tiket dengan `riwayat`: `{aksi, tahap, keterangan, loket, petugas, otomatis, waktu}` urut terlama dulu. `keterangan` berisi alasan batal, atau aksi yang diurungkan. |
+| `DELETE /api/antrean/tiket/{id}` | — | `204`; tiket, nomor polisi, dan riwayatnya terhapus permanen (keputusan pemilik), dicatat di log aktivitas ("menghapus Nomor antrean A-001 (14 Okt 2026)", tanpa nomor polisi). `422` bila nomor masih berjalan ("Nomor A-001 masih berjalan. Batalkan dulu sebelum menghapusnya.") atau dicetak hari ini ("… baru bisa dihapus mulai besok, agar nomornya tidak terpakai dua kali."), karena nomor berikutnya diambil dari nomor terbesar hari itu. |
+| `GET /api/antrean/ringkasan?dari=&sampai=` | tanggal cetak; tanpa keduanya hari ini (WITA), `sampai` bawaan = `dari`; rentang maks. 31 hari | `200` `{dari, sampai, jumlah: {dicetak, selesai, batal, berjalan, ditunda}, layanan: [{kode, nama, dicetak, selesai, batal, berjalan}], harian: [{tanggal, …}], tahap: [{kunci, nama, dipanggil, selesai, otomatis, ditunda, tunggu, lama}]}`. `422` "Rentang ringkasan paling lama 31 hari.", "Pilih tanggal awal." (`sampai` tanpa `dari`), atau tanggal yang salah. |
+| `GET /api/antrean/ringkasan/tiket?dari=&sampai=` | seperti ringkasan | `200` semua tiket yang dicetak pada hari-hari itu, urut waktu cetak, untuk CSV di dashboard (dengan nomor polisi, keputusan pemilik). |
+
+Perhitungan ringkasan (`app/Actions/BuildQueueSummary.php`):
+
+- Tiket dihitung pada **tanggal cetaknya**, termasuk tahap yang selesai di hari berikutnya. `berjalan` = bukan selesai dan bukan batal. `ditunda` = tiket yang pernah ditunda petugas (bukan penundaan otomatis).
+- Per tahap: `selesai` = tahap sebelum tahap tiket sekarang yang ditandai petugas atau loket; `otomatis` = yang dilewati tanpa ditandai. Tanda yang sudah diurungkan tidak dihitung.
+- `tunggu` (tahap pemanggil) = dari mulai tahap sampai panggilan pertama; `lama` = dari mulai tahap sampai ditandai selesai. Keduanya dalam detik, **nilai tengah** (median), `null` bila tidak ada data. Mulai tahap hanya dihitung bila tercatat: saat cetak untuk tahap pertama, atau saat tahap sebelumnya ditandai petugas. Bila tahap sebelumnya dilewati otomatis, waktunya tidak diukur.
 
 ### Layar TV (Irisan 2)
 

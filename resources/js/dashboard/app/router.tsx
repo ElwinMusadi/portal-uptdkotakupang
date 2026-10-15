@@ -78,6 +78,8 @@ export const router = createHashRouter([
       { path: "antrean", ...halaman("Antrean Online · Meja Informasi", () => import("@/pages/antrean/meja")) },
       { path: "antrean/loket", ...halaman("Antrean Online · Loket", () => import("@/pages/antrean/loket")) },
       { path: "antrean/pos", ...halaman("Antrean Online · Pos Proses", () => import("@/pages/antrean/pos")) },
+      { path: "antrean/arsip", ...halaman("Antrean Online · Arsip", () => import("@/pages/antrean/arsip")) },
+      { path: "antrean/ringkasan", ...halaman("Antrean Online · Ringkasan", () => import("@/pages/antrean/ringkasan")) },
       { path: "antrean/pengaturan", ...halaman("Pengaturan Antrean", () => import("@/pages/antrean/pengaturan")) },
       // Tarif & Simulasi dipensiunkan (D-041); tautan lama menuju Kalkulator PKB
       { path: "tarif", loader: () => redirect("/kalkulator") },
