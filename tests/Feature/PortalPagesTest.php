@@ -289,8 +289,8 @@ class PortalPagesTest extends TestCase
         $this->assertStringContainsString('<div class="penerimaan" data-react="laporan-penerimaan">', $html);
         $this->assertStringContainsString('<p class="center muted" role="status" style="padding:48px 0">Memuat laporan penerimaan…</p>', $html);
         $this->assertStringContainsString('<script type="module" src="skrip/portal"></script>', $html);
-        // The masking rule is stated on the page, whatever the component shows (D-048)
-        $this->assertStringContainsString('Kelompok dengan kurang dari 3 transaksi digabung menjadi “Lainnya (disamarkan)”', $html);
+        // The masking rule is stated on the page, whatever the component shows (D-048, D-049)
+        $this->assertStringContainsString('Setiap kelompok hanya menampilkan jumlah transaksi dan rupiahnya. Kelompok dengan kurang dari 3 transaksi digabung menjadi “Lainnya (disamarkan)”', $html);
     }
 
     #[DataProvider('pagesWithHeader')]

@@ -22,67 +22,92 @@ class PublicRevenueReportTest extends TestCase
 
         $response->assertOk()->assertExactJson([
             'tersedia' => null,
+            'periode' => null,
             'dari' => null,
             'sampai' => null,
             'ringkasan' => null,
+            'kendaraanBaru' => null,
             'disamarkan' => false,
             'pembanding' => null,
             'rincian' => [],
-            'pilihan' => ['loket' => [], 'jenisDaftar' => [], 'jenisKendaraan' => [], 'kecamatan' => [], 'kelurahan' => []],
             'minimum' => 3,
         ]);
         $this->assertSame([], $response->headers->getCookies());
     }
 
-    public function test_reports_the_imports_shown_on_the_portal_from_their_latest_day(): void
+    public function test_reports_the_latest_published_day_with_its_totals_only(): void
     {
         $shown = RevenueImport::factory()->create(['tampil' => true]);
         $hidden = RevenueImport::factory()->create();
         RevenueTransaction::factory()->recycle($shown)->count(3)->create(['tanggal' => '2026-10-13']);
-        RevenueTransaction::factory()->recycle($shown)->count(4)->create();
+        RevenueTransaction::factory()->recycle($shown)->count(3)->create();
+        RevenueTransaction::factory()->recycle($shown)->paying(['bbn' => 2000000, 'opsen_bbn' => 1320000])->create(['jenis_daftar' => 'BARU']);
         RevenueTransaction::factory()->recycle($hidden)->count(5)->create();
         RevenueTransaction::factory()->recycle($hidden)->count(3)->create(['tanggal' => '2026-10-15']);
 
-        $this->report()
+        $this->report()->assertOk()->assertExactJson([
+            'tersedia' => ['awal' => '2026-10-13', 'akhir' => '2026-10-14'],
+            'periode' => 'harian',
+            'dari' => '2026-10-14',
+            'sampai' => '2026-10-14',
+            'ringkasan' => [
+                ...$this->sums(4),
+                'pkb' => 3 * 300000, 'bbn' => 2000000, 'opsenPkb' => 3 * 198000, 'opsenBbn' => 1320000, 'jumlah' => 3 * 498000 + 3320000,
+            ],
+            'kendaraanBaru' => ['transaksi' => 1, 'jumlah' => 3320000],
+            'disamarkan' => false,
+            'pembanding' => ['dari' => '2026-10-13', 'sampai' => '2026-10-13', 'ringkasan' => ['transaksi' => 3, 'jumlah' => 3 * 498000]],
+            'rincian' => [],
+            'minimum' => 3,
+        ]);
+    }
+
+    public function test_reports_a_whole_month_with_each_group_s_transactions_and_sum_only(): void
+    {
+        $import = RevenueImport::factory()->create(['tampil' => true]);
+        RevenueTransaction::factory()->recycle($import)->count(3)->create(['tanggal' => '2026-02-02']);
+        RevenueTransaction::factory()->recycle($import)->count(4)->create(['tanggal' => '2026-02-27']);
+        RevenueTransaction::factory()->recycle($import)->count(5)->create(['tanggal' => '2026-03-02']);
+
+        $this->report(['bulan' => '2026-02'])
             ->assertOk()
-            ->assertJsonPath('tersedia', ['awal' => '2026-10-13', 'akhir' => '2026-10-14'])
-            ->assertJsonPath('dari', '2026-10-14')
-            ->assertJsonPath('sampai', '2026-10-14')
-            ->assertJsonPath('ringkasan.transaksi', 4)
-            ->assertJsonPath('ringkasan.jumlah', 4 * 498000)
-            ->assertJsonPath('disamarkan', false)
-            ->assertJsonPath('pembanding.dari', '2026-10-13')
-            ->assertJsonPath('pembanding.ringkasan.transaksi', 3)
-            ->assertJsonPath('rincian.loket.0', ['nilai' => 'kantor', 'nama' => 'Loket SAMSAT', ...$this->sums(4)])
-            ->assertJsonPath('rincian.tanggal', [['nilai' => '2026-10-14', ...$this->sums(4)]])
-            ->assertJsonStructure(['rincian' => ['loket', 'jenisDaftar', 'jenisKendaraan', 'kecamatan', 'kelurahan', 'tanggal']])
-            ->assertJsonMissingPath('rincian.merk')
-            ->assertJsonMissingPath('loketBuka');
+            ->assertJsonPath('periode', 'bulanan')
+            ->assertJsonPath('dari', '2026-02-01')
+            ->assertJsonPath('sampai', '2026-02-28')
+            ->assertJsonPath('ringkasan', $this->sums(7))
+            ->assertJsonPath('kendaraanBaru', ['transaksi' => 0, 'jumlah' => 0])
+            ->assertJsonPath('pembanding', ['dari' => '2026-01-01', 'sampai' => '2026-01-31', 'ringkasan' => ['transaksi' => 0, 'jumlah' => 0]])
+            ->assertJsonPath('rincian', [
+                'loket' => [['nilai' => 'kantor', 'nama' => 'Loket SAMSAT', ...$this->figures(7)]],
+                'jenisDaftar' => [['nilai' => 'Teliti Ulang / Pengesahan', ...$this->figures(7)]],
+                'jenisKendaraan' => [['nilai' => 'SEPEDA MOTOR', ...$this->figures(7)]],
+                'kecamatan' => [['nilai' => 'OEBOBO', ...$this->figures(7)]],
+                'kelurahan' => [['nilai' => 'Oebobo', 'kecamatan' => 'OEBOBO', ...$this->figures(7)]],
+                'tanggal' => [['nilai' => '2026-02-02', ...$this->figures(3)], ['nilai' => '2026-02-27', ...$this->figures(4)]],
+            ]);
+        $this->report(['bulan' => '2026-03'])
+            ->assertJsonPath('pembanding.ringkasan', $this->figures(7));
     }
 
     public function test_merges_the_groups_of_fewer_than_three_transactions_into_one_masked_row(): void
     {
         $import = RevenueImport::factory()->create(['tampil' => true]);
-        RevenueTransaction::factory()->recycle($import)->count(5)->create(['kecamatan' => 'OEBOBO', 'kelurahan' => 'Oebobo']);
-        RevenueTransaction::factory()->recycle($import)->create(['kecamatan' => 'MAULAFA', 'kelurahan' => 'Penfui']);
-        RevenueTransaction::factory()->recycle($import)->count(2)->create(['kecamatan' => 'ALAK', 'kelurahan' => 'Manulai II', 'loket' => 'keliling-01']);
+        RevenueTransaction::factory()->recycle($import)->count(5)->create();
+        RevenueTransaction::factory()->recycle($import)->create(['jenis_daftar' => 'BARU']);
+        RevenueTransaction::factory()->recycle($import)->count(2)->create(['jenis_daftar' => 'JUAL BELI', 'loket' => 'keliling-01']);
 
-        $response = $this->report();
+        $response = $this->report(['bulan' => '2026-10']);
 
-        $this->assertSame([
-            ['nilai' => 'OEBOBO', 'transaksi' => 5, 'jumlah' => 5 * 498000],
-            ['nilai' => 'Lainnya (disamarkan)', 'transaksi' => 3, 'jumlah' => 3 * 498000, 'disamarkan' => true, 'kelompok' => 2],
-        ], $this->rows($response, 'kecamatan', ['nilai', 'transaksi', 'jumlah', 'disamarkan', 'kelompok']));
-        $response->assertJsonPath('rincian.kecamatan.1.pkb', 3 * 300000)
-            ->assertJsonPath('rincian.kelurahan.0.kecamatan', 'OEBOBO')
-            ->assertJsonPath('rincian.kelurahan.1.nilai', 'Lainnya (disamarkan)')
-            // Two counters only: hiding the unit's 2 transactions hides the office too, or the total would give them away
-            ->assertJsonPath('rincian.loket', [['nilai' => 'Lainnya (disamarkan)', 'nama' => 'Lainnya (disamarkan)', ...$this->sums(8), 'disamarkan' => true, 'kelompok' => 2]])
-            ->assertJsonPath('pilihan.kecamatan', ['OEBOBO'])
-            ->assertJsonPath('pilihan.kelurahan', ['Oebobo']);
-        $this->assertArrayHasKey('kecamatan', $response->json('rincian.kelurahan.1'));
-        $this->assertNull($response->json('rincian.kelurahan.1.kecamatan'));
-        $this->assertSame(['loket', 'jenisDaftar', 'jenisKendaraan', 'kecamatan', 'kelurahan'], array_keys($response->json('pilihan')));
+        $response->assertJsonPath('rincian.jenisDaftar', [
+            ['nilai' => 'Teliti Ulang / Pengesahan', ...$this->figures(5)],
+            ['nilai' => 'Lainnya (disamarkan)', ...$this->figures(3), 'disamarkan' => true, 'kelompok' => 2],
+        ]);
+        // Two counters only: hiding the unit's 2 transactions hides the office too, or the total would give them away
+        $response->assertJsonPath('rincian.loket', [
+            ['nilai' => 'Lainnya (disamarkan)', 'nama' => 'Lainnya (disamarkan)', ...$this->figures(8), 'disamarkan' => true, 'kelompok' => 2],
+        ]);
+        // So is the one new vehicle
+        $response->assertJsonPath('kendaraanBaru', null);
     }
 
     public function test_also_masks_the_smallest_shown_group_when_the_masked_ones_are_fewer_than_three_together(): void
@@ -93,7 +118,7 @@ class PublicRevenueReportTest extends TestCase
         RevenueTransaction::factory()->recycle($import)->count(4)->paying(['pkb' => 2500000])->create(['jenis_kendaraan' => 'PICK UP']);
         RevenueTransaction::factory()->recycle($import)->create(['jenis_kendaraan' => 'TRUCK']);
 
-        $response = $this->report();
+        $response = $this->report(['bulan' => '2026-10']);
 
         // MINIBUS joins the masked row: the fewest transactions, though not the smallest sum.
         // The shown groups keep their order, largest sum first.
@@ -104,97 +129,93 @@ class PublicRevenueReportTest extends TestCase
         ], $this->rows($response, 'jenisKendaraan', ['nilai', 'transaksi', 'kelompok']));
     }
 
-    public function test_hides_a_result_of_fewer_than_three_transactions_but_reports_an_empty_one(): void
+    public function test_hides_a_kecamatan_s_kelurahan_with_it_and_enough_of_them_to_keep_one_from_its_total(): void
     {
         $import = RevenueImport::factory()->create(['tampil' => true]);
-        RevenueTransaction::factory()->recycle($import)->count(4)->create(['tanggal' => '2026-10-13']);
-        RevenueTransaction::factory()->recycle($import)->count(4)->create(['tanggal' => '2026-10-13', 'kelurahan' => 'Penfui']);
-        RevenueTransaction::factory()->recycle($import)->count(3)->create();
-        RevenueTransaction::factory()->recycle($import)->count(2)->create(['kelurahan' => 'Penfui']);
+        RevenueTransaction::factory()->recycle($import)->count(6)->create();
+        RevenueTransaction::factory()->recycle($import)->count(4)->create(['kelurahan' => 'Fatululi']);
+        RevenueTransaction::factory()->recycle($import)->create(['kelurahan' => 'Oetete']);
+        RevenueTransaction::factory()->recycle($import)->count(5)->create(['kecamatan' => 'KELAPA LIMA', 'kelurahan' => 'Oesapa']);
+        RevenueTransaction::factory()->recycle($import)->count(3)->create(['kecamatan' => 'MAULAFA', 'kelurahan' => 'Penfui']);
+        RevenueTransaction::factory()->recycle($import)->create(['kecamatan' => 'ALAK', 'kelurahan' => 'Manulai II']);
 
-        $this->report(['dari' => '2026-10-14', 'sampai' => '2026-10-14', 'kelurahan' => ['Penfui']])
-            ->assertOk()
-            ->assertJsonPath('ringkasan', null)
-            ->assertJsonPath('disamarkan', true)
-            ->assertJsonPath('pembanding', null)
-            ->assertJsonPath('rincian', [])
-            ->assertJsonPath('pilihan.kelurahan', ['Oebobo']);
-        $this->report(['dari' => '2026-10-14', 'sampai' => '2026-10-14', 'kelurahan' => ['Oesapa']])
-            ->assertOk()
-            ->assertJsonPath('ringkasan.transaksi', 0)
-            ->assertJsonPath('disamarkan', false)
-            ->assertJsonPath('rincian.kelurahan', []);
+        $response = $this->report(['bulan' => '2026-10']);
+
+        // ALAK's one transaction takes MAULAFA with it
+        $this->assertSame([
+            ['nilai' => 'OEBOBO', 'transaksi' => 11],
+            ['nilai' => 'KELAPA LIMA', 'transaksi' => 5],
+            ['nilai' => 'Lainnya (disamarkan)', 'transaksi' => 4, 'kelompok' => 2],
+        ], $this->rows($response, 'kecamatan', ['nilai', 'transaksi', 'kelompok']));
+        // Penfui hides with MAULAFA; Fatululi with Oetete, or OEBOBO's total would give Oetete away
+        $this->assertSame([
+            ['nilai' => 'Oebobo', 'kecamatan' => 'OEBOBO', 'transaksi' => 6],
+            ['nilai' => 'Oesapa', 'kecamatan' => 'KELAPA LIMA', 'transaksi' => 5],
+            ['nilai' => 'Lainnya (disamarkan)', 'kecamatan' => null, 'transaksi' => 9, 'kelompok' => 4],
+        ], $this->rows($response, 'kelurahan', ['nilai', 'kecamatan', 'transaksi', 'kelompok']));
     }
 
-    public function test_hides_a_comparison_of_fewer_than_three_transactions(): void
+    public function test_hides_the_days_hidden_in_their_month_in_the_daily_report_too(): void
     {
         $import = RevenueImport::factory()->create(['tampil' => true]);
-        RevenueTransaction::factory()->recycle($import)->count(2)->create(['tanggal' => '2026-10-13']);
-        RevenueTransaction::factory()->recycle($import)->count(3)->create();
-
-        $this->report(['dari' => '2026-10-14', 'sampai' => '2026-10-14'])
-            ->assertJsonPath('pembanding', ['dari' => '2026-10-13', 'sampai' => '2026-10-13', 'ringkasan' => null]);
-    }
-
-    public function test_keeps_the_dates_of_days_with_too_few_transactions_without_their_figures(): void
-    {
-        $import = RevenueImport::factory()->create(['tampil' => true]);
-        RevenueTransaction::factory()->recycle($import)->count(4)->create(['tanggal' => '2026-10-01']);
-        RevenueTransaction::factory()->recycle($import)->create(['tanggal' => '2026-10-02']);
+        RevenueTransaction::factory()->recycle($import)->create(['tanggal' => '2026-10-01']);
+        RevenueTransaction::factory()->recycle($import)->count(4)->create(['tanggal' => '2026-10-02']);
         RevenueTransaction::factory()->recycle($import)->count(5)->create(['tanggal' => '2026-10-05']);
 
-        $this->report(['dari' => '2026-10-01', 'sampai' => '2026-10-31'])
-            ->assertOk()
+        // 1 October's one transaction takes 2 October with it
+        $this->report(['bulan' => '2026-10'])
             ->assertJsonPath('ringkasan.transaksi', 10)
             ->assertJsonPath('rincian.tanggal', [
                 ['nilai' => '2026-10-01', 'disamarkan' => true],
                 ['nilai' => '2026-10-02', 'disamarkan' => true],
-                ['nilai' => '2026-10-05', ...$this->sums(5)],
+                ['nilai' => '2026-10-05', ...$this->figures(5)],
             ]);
+        $this->report(['tanggal' => '2026-10-02'])
+            ->assertOk()
+            ->assertJsonPath('ringkasan', null)
+            ->assertJsonPath('kendaraanBaru', null)
+            ->assertJsonPath('disamarkan', true)
+            ->assertJsonPath('pembanding', null);
+        $this->report(['tanggal' => '2026-10-05'])
+            ->assertJsonPath('ringkasan.transaksi', 5)
+            ->assertJsonPath('pembanding', ['dari' => '2026-10-02', 'sampai' => '2026-10-02', 'ringkasan' => null]);
     }
 
-    public function test_keeps_only_the_transactions_matching_the_filters(): void
+    public function test_reports_a_day_without_transactions_as_zeros_and_hides_a_month_of_fewer_than_three(): void
     {
         $import = RevenueImport::factory()->create(['tampil' => true]);
-        RevenueTransaction::factory()->recycle($import)->count(3)->create(['jenis_daftar' => 'BARU']);
-        RevenueTransaction::factory()->recycle($import)->count(4)->create(['jenis_daftar' => 'BARU', 'kecamatan' => 'ALAK']);
-        RevenueTransaction::factory()->recycle($import)->count(5)->create();
+        RevenueTransaction::factory()->recycle($import)->count(2)->create(['tanggal' => '2026-09-30']);
+        RevenueTransaction::factory()->recycle($import)->count(3)->create();
 
-        $this->report(['dari' => '2026-10-14', 'sampai' => '2026-10-14', 'jenisDaftar' => ['BARU'], 'kecamatan' => ['OEBOBO', 'MAULAFA']])
-            ->assertOk()
+        $this->report(['tanggal' => '2026-10-11'])
+            ->assertJsonPath('ringkasan.transaksi', 0)
+            ->assertJsonPath('ringkasan.jumlah', 0)
+            ->assertJsonPath('disamarkan', false)
+            ->assertJsonPath('pembanding', ['dari' => '2026-09-30', 'sampai' => '2026-09-30', 'ringkasan' => null]);
+        $this->report(['bulan' => '2026-09'])
+            ->assertJsonPath('ringkasan', null)
+            ->assertJsonPath('kendaraanBaru', null)
+            ->assertJsonPath('disamarkan', true)
+            ->assertJsonPath('pembanding', null)
+            ->assertJsonPath('rincian', []);
+        $this->report(['bulan' => '2026-10'])
             ->assertJsonPath('ringkasan.transaksi', 3)
-            ->assertJsonPath('pilihan.jenisDaftar', ['BARU', 'Teliti Ulang / Pengesahan']);
+            ->assertJsonPath('pembanding', ['dari' => '2026-09-01', 'sampai' => '2026-09-30', 'ringkasan' => null]);
     }
 
     /**
      * @param  array<string, mixed>  $query
      */
-    #[TestWith([['tunggakan' => 'ada'], 'query', 'Parameter kueri tidak didukung.'])]
-    #[TestWith([['merk' => ['HONDA']], 'query', 'Parameter kueri tidak didukung.'])]
-    #[TestWith([['dari' => '2026-10-14'], 'sampai', 'Pilih tanggal akhir laporan.'])]
-    #[TestWith([['sampai' => '2026-10-14'], 'dari', 'Pilih tanggal awal laporan.'])]
-    #[TestWith([['dari' => '2026-02-30', 'sampai' => '2026-10-14'], 'dari', 'Tanggal awal laporan tidak valid.'])]
-    #[TestWith([['dari' => '2026-10-14', 'sampai' => '2026-10-13'], 'sampai', 'Tanggal akhir tidak boleh sebelum tanggal awal.'])]
-    #[TestWith([['dari' => '2025-10-13', 'sampai' => '2026-10-14'], 'sampai', 'Rentang laporan paling lama satu tahun.'])]
-    #[TestWith([['kelurahan' => 'Oebobo'], 'kelurahan', 'Saringan kelurahan tidak valid.'])]
-    public function test_rejects_an_unknown_parameter_or_an_invalid_period_or_filter(array $query, string $field, string $message): void
+    #[TestWith([['dari' => '2026-10-01', 'sampai' => '2026-10-14'], 'query', 'Parameter kueri tidak didukung.'])]
+    #[TestWith([['kecamatan' => ['OEBOBO']], 'query', 'Parameter kueri tidak didukung.'])]
+    #[TestWith([['tanggal' => '2026-02-30'], 'tanggal', 'Tanggal laporan tidak valid.'])]
+    #[TestWith([['tanggal' => ['2026-10-14']], 'tanggal', 'Tanggal laporan tidak valid.'])]
+    #[TestWith([['bulan' => '2026-13'], 'bulan', 'Bulan laporan tidak valid.'])]
+    #[TestWith([['bulan' => '2026-10-14'], 'bulan', 'Bulan laporan tidak valid.'])]
+    #[TestWith([['tanggal' => '2026-10-14', 'bulan' => '2026-10'], 'tanggal', 'Pilih tanggal atau bulan laporan, tidak keduanya.'])]
+    public function test_rejects_an_unknown_parameter_or_an_invalid_period(array $query, string $field, string $message): void
     {
         $this->report($query)->assertUnprocessable()->assertJsonValidationErrors([$field => $message]);
-    }
-
-    public function test_accepts_a_period_of_366_days(): void
-    {
-        $this->report(['dari' => '2025-10-14', 'sampai' => '2026-10-14'])->assertOk();
-    }
-
-    public function test_rejects_an_overlong_filter(): void
-    {
-        $this->report(['jenisKendaraan' => array_fill(0, 101, 'MINIBUS')])
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors(['jenisKendaraan' => 'Saringan jenis kendaraan terlalu panjang.']);
-        $this->report(['loket' => [str_repeat('a', 81)]])
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors(['loket.0' => 'Saringan loket terlalu panjang.']);
     }
 
     public function test_answers_at_most_60_reports_a_minute_from_one_address(): void
@@ -215,7 +236,7 @@ class PublicRevenueReportTest extends TestCase
     }
 
     /**
-     * The sums of so many default transactions.
+     * Every sum of so many default transactions.
      *
      * @return array<string, int>
      */
@@ -226,6 +247,16 @@ class PublicRevenueReportTest extends TestCase
             'dendaTunggakan' => 0, 'opsenPkb' => 198000 * $transactions, 'opsenBbn' => 0, 'opsenDendaPkb' => 0, 'opsenDendaBbn' => 0,
             'opsenTunggakan' => 0, 'opsenDendaTunggakan' => 0, 'jumlah' => 498000 * $transactions,
         ];
+    }
+
+    /**
+     * What a group of so many default transactions shows.
+     *
+     * @return array{transaksi: int, jumlah: int}
+     */
+    private function figures(int $transactions): array
+    {
+        return ['transaksi' => $transactions, 'jumlah' => 498000 * $transactions];
     }
 
     /**

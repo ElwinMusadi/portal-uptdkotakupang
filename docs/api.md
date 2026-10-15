@@ -10,7 +10,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET` | `/api/public/jam` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/papan` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/statistik` | anonim, hanya baca | tersedia |
-| `GET` | `/api/public/penerimaan` | anonim, hanya baca, parameter saringan terdaftar | tersedia |
+| `GET` | `/api/public/penerimaan` | anonim, hanya baca, parameter `tanggal` atau `bulan` | tersedia |
 | `GET` | `/api/public/kontak` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/visi-misi` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/profil` | anonim, hanya baca | tersedia |
@@ -945,39 +945,41 @@ Kode: `app/Http/Controllers/PublicStatisticsController.php`, `app/Actions/ShowPu
 
 ## `GET /api/public/penerimaan`
 
-Halaman *Laporan Penerimaan* portal (`/penerimaan`, `resources/js/portal/penerimaan/laporan-penerimaan.tsx`, [D-048](decisions.md#d-048--2026-10-15--halaman-portal-laporan-penerimaan)). Hanya transaksi dari impor yang dinyalakan Administrator (`tampil`), dengan saringan utama dan angka kecil disamarkan di server.
+Halaman *Laporan Penerimaan* portal (`/penerimaan`, `resources/js/portal/penerimaan/laporan-penerimaan.tsx`, [D-048](decisions.md#d-048--2026-10-15--halaman-portal-laporan-penerimaan), [D-049](decisions.md#d-049--2026-10-15--laporan-penerimaan-portal-sebagai-tabel-tetap)). Hanya transaksi dari impor yang dinyalakan Administrator (`tampil`), sebagai tabel tetap yang tidak bisa digabung pengunjung untuk membuka satu transaksi, dengan angka kecil disamarkan di server.
 
-Parameter, semuanya opsional: `dari` dan `sampai` (`YYYY-MM-DD`, keduanya atau tidak sama sekali, paling lama 366 hari; tanpa keduanya, hari terakhir yang sudah tampil), serta `loket[]`, `jenisDaftar[]`, `jenisKendaraan[]`, `kecamatan[]`, dan `kelurahan[]` (maks. 100 nilai, masing-masing maks. 80 karakter). Parameter lain ditolak, pengecualian dari D-004.
+Parameter, opsional dan salah satu saja: `tanggal` (`YYYY-MM-DD`) untuk laporan harian, atau `bulan` (`YYYY-MM`) untuk laporan bulanan. Tanpa keduanya: hari terakhir yang sudah tampil. Parameter lain ditolak, pengecualian dari D-004.
 
 ```json
 {
   "tersedia": { "awal": "2026-09-01", "akhir": "2026-10-14" },
-  "dari": "2026-10-14", "sampai": "2026-10-14",
-  "ringkasan": { "transaksi": 320, "pkb": 94695419, "…": 0, "jumlah": 563444182 },
+  "periode": "bulanan",
+  "dari": "2026-09-01", "sampai": "2026-09-30",
+  "ringkasan": { "transaksi": 7318, "pkb": 2643313922, "…": 0, "jumlah": 12847135065 },
+  "kendaraanBaru": { "transaksi": 1776, "jumlah": 8455902929 },
   "disamarkan": false,
-  "pembanding": { "dari": "2026-09-30", "sampai": "2026-09-30", "ringkasan": { "transaksi": 328, "…": 0 } },
+  "pembanding": { "dari": "2026-08-01", "sampai": "2026-08-31", "ringkasan": { "transaksi": 0, "jumlah": 0 } },
   "rincian": {
     "kecamatan": [
-      { "nilai": "ALAK", "transaksi": 50, "…": 0, "jumlah": 121221671 },
-      { "nilai": "Lainnya (disamarkan)", "transaksi": 26, "…": 0, "jumlah": 42913000, "disamarkan": true, "kelompok": 21 }
+      { "nilai": "OEBOBO", "transaksi": 1413, "jumlah": 2489010080 },
+      { "nilai": "Lainnya (disamarkan)", "transaksi": 95, "jumlah": 47646614, "disamarkan": true, "kelompok": 77 }
     ],
-    "kelurahan": [{ "nilai": "Oebobo", "kecamatan": "OEBOBO", "transaksi": 15, "…": 0 }],
-    "tanggal": [{ "nilai": "2026-10-01", "disamarkan": true }, { "nilai": "2026-10-02", "transaksi": 12, "…": 0 }]
+    "kelurahan": [{ "nilai": "Liliba", "kecamatan": "OEBOBO", "transaksi": 248, "jumlah": 509444524 }],
+    "tanggal": [{ "nilai": "2026-09-01", "transaksi": 352, "jumlah": 585842075 }, { "nilai": "2026-09-02", "disamarkan": true }]
   },
-  "pilihan": { "loket": [{ "nilai": "kantor", "nama": "Loket SAMSAT" }], "jenisDaftar": ["BARU"], "…": [] },
   "minimum": 3
 }
 ```
 
 | Hal | Perilaku |
 |---|---|
-| Isi | Seperti `GET /api/penerimaan/laporan`, tetapi hanya rincian `loket`, `jenisDaftar`, `jenisKendaraan`, `kecamatan`, `kelurahan`, dan `tanggal`, tanpa `loketBuka`. `tersedia` adalah tanggal pertama dan terakhir yang sudah tampil. `pilihan` hanya memuat nilai dengan sedikitnya `minimum` transaksi dalam periode, tanpa memperhitungkan saringan lain. |
-| Penyamaran | Kelompok dengan kurang dari 3 transaksi digabung menjadi baris terakhir `"Lainnya (disamarkan)"` (`disamarkan: true`, `kelompok`: banyaknya kelompok yang digabung; `kecamatan` `null` pada rincian kelurahan, `nama` sama pada rincian loket). Bila gabungannya masih kurang dari 3 transaksi, kelompok tampil dengan transaksi paling sedikit ikut digabung. Hari dengan kurang dari 3 transaksi hanya berisi `nilai` dan `disamarkan: true`, dengan aturan gabungan yang sama. Bila seluruh hasil berisi 1–2 transaksi: `ringkasan` dan `pembanding` `null`, `disamarkan: true`, `rincian` `[]`. `pembanding.ringkasan` juga `null` bila berisi 1–2 transaksi. Hasil 0 transaksi berisi nol. |
-| Belum ada yang tampil | `200` `{"tersedia": null, "dari": null, "sampai": null, "ringkasan": null, "disamarkan": false, "pembanding": null, "rincian": [], "pilihan": {"loket": [], …}, "minimum": 3}`. |
-| Galat | `422` `query` "Parameter kueri tidak didukung." untuk parameter lain, atau per isian seperti laporan dashboard ("Pilih tanggal akhir laporan.", "Rentang laporan paling lama satu tahun.", "Saringan kelurahan tidak valid.", "Saringan jenis kendaraan terlalu panjang."); `429` "Terlalu banyak permintaan. Silakan coba lagi sebentar lagi." setelah 60 permintaan per menit dari satu alamat (selain batas API publik). |
+| Harian | `periode: "harian"`, `ringkasan` dengan semua komponen, `kendaraanBaru` (transaksi dan jumlah jenis daftar BARU hari itu), `pembanding` hari terakhir sebelumnya yang berisi transaksi (`ringkasan` hanya `transaksi` dan `jumlah`), `rincian` `[]`. |
+| Bulanan | `periode: "bulanan"`, `ringkasan` dengan semua komponen, `pembanding` bulan sebelumnya, dan `rincian` per `loket`, `jenisDaftar`, `jenisKendaraan`, `kecamatan`, `kelurahan` (terbesar dulu) serta `tanggal` (urut tanggal). Setiap baris rincian hanya `nilai` (dan `nama` untuk loket, `kecamatan` untuk kelurahan), `transaksi`, dan `jumlah`. `kendaraanBaru` `null` bila BARU disamarkan di rincian jenis daftar. |
+| Penyamaran | Kelompok dengan kurang dari 3 transaksi digabung menjadi baris terakhir `"Lainnya (disamarkan)"` (`disamarkan: true`, `kelompok`: banyaknya kelompok yang digabung; `kecamatan` `null` pada rincian kelurahan, `nama` sama pada rincian loket). Bila gabungannya masih kurang dari 3 transaksi, kelompok tampil dengan transaksi paling sedikit ikut digabung. Kelurahan disamarkan per kecamatan: semua kelurahan di kecamatan yang disamarkan ikut disamarkan, dan di kecamatan lain berlaku aturan gabungan yang sama. Hari yang disamarkan hanya berisi `nilai` dan `disamarkan: true`; laporan harian hari itu juga disamarkan, begitu pula bila hari itu menjadi pembanding. Bila laporan disamarkan (hari tersebut, atau bulan dengan 1–2 transaksi): `ringkasan`, `kendaraanBaru`, dan `pembanding` `null`, `disamarkan: true`, `rincian` `[]`. `pembanding.ringkasan` juga `null` bila disamarkan. Hasil 0 transaksi berisi nol. |
+| Belum ada yang tampil | `200` `{"tersedia": null, "periode": null, "dari": null, "sampai": null, "ringkasan": null, "kendaraanBaru": null, "disamarkan": false, "pembanding": null, "rincian": [], "minimum": 3}`. |
+| Galat | `422` `query` "Parameter kueri tidak didukung." untuk parameter lain (termasuk `dari`, `sampai`, dan saringan), "Tanggal laporan tidak valid.", "Bulan laporan tidak valid.", atau "Pilih tanggal atau bulan laporan, tidak keduanya."; `429` "Terlalu banyak permintaan. Silakan coba lagi sebentar lagi." setelah 60 permintaan per menit dari satu alamat (selain batas API publik). |
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 
-Kode: `app/Http/Controllers/PublicRevenueReportController.php`, `app/Http/Requests/ShowPublicRevenueReportRequest.php`, `app/Actions/BuildPublicRevenueReport.php`, `app/Actions/BuildRevenueReport.php` (`published()`). Tes: `tests/Feature/PublicRevenueReportTest.php`.
+Kode: `app/Http/Controllers/PublicRevenueReportController.php`, `app/Http/Requests/ShowPublicRevenueReportRequest.php`, `app/Actions/BuildPublicRevenueReport.php`, `app/Actions/BuildRevenueReport.php` (`published()`, `totals()`, `comparison()`, `breakdown()`, `days()`). Tes: `tests/Feature/PublicRevenueReportTest.php`.
 
 ## `GET /api/public/kontak`
 

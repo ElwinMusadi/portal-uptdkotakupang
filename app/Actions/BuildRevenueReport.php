@@ -15,8 +15,8 @@ use stdClass;
  * matching the filters, broken down by counter, registration type, vehicle,
  * ownership, plate colour, make, region of origin, kecamatan, kelurahan and
  * date, with the earlier period to compare against. Everything is summed by
- * the database. The portal's report uses the same sums over the imports
- * shown on the portal only (D-048).
+ * the database. The portal's report puts together the same sums over the
+ * imports shown on the portal only (D-048, D-049).
  */
 class BuildRevenueReport
 {
@@ -56,38 +56,51 @@ class BuildRevenueReport
     }
 
     /**
-     * The report of the period, broken down by the given filters (all of them
-     * by default). A filter offers the values found in at least
-     * $fewestPerOption transactions of the period.
+     * The report of the period, broken down by every filter.
      *
      * @param  array<string, list<string>|string>  $filters
-     * @param  ?list<string>  $dimensions
      * @return array<string, mixed>
      */
-    public function handle(Carbon $from, Carbon $until, array $filters, ?array $dimensions = null, int $fewestPerOption = 1): array
+    public function handle(Carbon $from, Carbon $until, array $filters): array
     {
-        $dimensions = $dimensions === null ? self::DIMENSIONS : array_intersect_key(self::DIMENSIONS, array_flip($dimensions));
         $names = $this->counterNames();
-        $breakdown = [];
-        foreach ($dimensions as $dimension => $column) {
-            $group = $column === 'kelurahan' ? ['kelurahan', 'kecamatan'] : [$column];
-            $breakdown[$dimension] = $this->transactions($from, $until, $filters)
-                ->select($group)
-                ->selectRaw($this->sums())
-                ->groupBy($group)
-                ->get()
-                ->map(fn (stdClass $row): array => [
-                    'nilai' => $row->{$column},
-                    ...($column === 'loket' ? ['nama' => $names[$row->loket] ?? $row->loket] : []),
-                    ...($column === 'kelurahan' ? ['kecamatan' => $row->kecamatan] : []),
-                    ...$this->amounts($row),
-                ])
-                ->sortBy([['jumlah', 'desc'], ['transaksi', 'desc'], ['nilai', 'asc']])
-                ->values()
-                ->all();
-        }
 
-        $breakdown['tanggal'] = $this->transactions($from, $until, $filters)
+        return [
+            'dari' => $from->toDateString(),
+            'sampai' => $until->toDateString(),
+            'ringkasan' => $this->totals($from, $until, $filters),
+            'pembanding' => $this->comparison($from, $until, $filters),
+            'rincian' => [
+                ...$this->groups($from, $until, $filters, array_keys(self::DIMENSIONS), $names),
+                'tanggal' => $this->days($from, $until, $filters),
+            ],
+            'pilihan' => $this->options($from, $until, $names),
+            'loketBuka' => $from->equalTo($until) ? $this->counters->openOn($from) : [],
+        ];
+    }
+
+    /**
+     * The totals of the period broken down by each of the given filters,
+     * largest first.
+     *
+     * @param  array<string, list<string>|string>  $filters
+     * @param  list<string>  $dimensions
+     * @return array<string, list<array<string, mixed>>>
+     */
+    public function breakdown(Carbon $from, Carbon $until, array $filters, array $dimensions): array
+    {
+        return $this->groups($from, $until, $filters, $dimensions, $this->counterNames());
+    }
+
+    /**
+     * The totals of each day of the period with transactions, in date order.
+     *
+     * @param  array<string, list<string>|string>  $filters
+     * @return list<array<string, mixed>>
+     */
+    public function days(Carbon $from, Carbon $until, array $filters = []): array
+    {
+        return $this->transactions($from, $until, $filters)
             ->select('tanggal')
             ->selectRaw($this->sums())
             ->groupBy('tanggal')
@@ -95,16 +108,6 @@ class BuildRevenueReport
             ->get()
             ->map(fn (stdClass $row): array => ['nilai' => Str::substr((string) $row->tanggal, 0, 10), ...$this->amounts($row)])
             ->all();
-
-        return [
-            'dari' => $from->toDateString(),
-            'sampai' => $until->toDateString(),
-            'ringkasan' => $this->totals($from, $until, $filters),
-            'pembanding' => $this->comparison($from, $until, $filters),
-            'rincian' => $breakdown,
-            'pilihan' => $this->options($from, $until, $names, $dimensions, $fewestPerOption),
-            'loketBuka' => ! $this->publishedOnly && $from->equalTo($until) ? $this->counters->openOn($from) : [],
-        ];
     }
 
     /**
@@ -166,7 +169,7 @@ class BuildRevenueReport
      * @param  array<string, list<string>|string>  $filters
      * @return array<string, int>
      */
-    private function totals(Carbon $from, Carbon $until, array $filters): array
+    public function totals(Carbon $from, Carbon $until, array $filters = []): array
     {
         return $this->amounts($this->transactions($from, $until, $filters)->selectRaw($this->sums())->first());
     }
@@ -180,7 +183,7 @@ class BuildRevenueReport
      * @param  array<string, list<string>|string>  $filters
      * @return ?array{dari: string, sampai: string, ringkasan: array<string, int>}
      */
-    private function comparison(Carbon $from, Carbon $until, array $filters): ?array
+    public function comparison(Carbon $from, Carbon $until, array $filters = []): ?array
     {
         if ($from->equalTo($until)) {
             $day = $this->filtered($filters)->where('tanggal', '<', $from->toDateString())->max('tanggal');
@@ -200,24 +203,49 @@ class BuildRevenueReport
     }
 
     /**
+     * The totals of the period per value of each given filter, largest first.
+     *
+     * @param  array<string, list<string>|string>  $filters
+     * @param  list<string>  $dimensions
+     * @param  array<string, string>  $names
+     * @return array<string, list<array<string, mixed>>>
+     */
+    private function groups(Carbon $from, Carbon $until, array $filters, array $dimensions, array $names): array
+    {
+        $groups = [];
+        foreach (array_intersect_key(self::DIMENSIONS, array_flip($dimensions)) as $dimension => $column) {
+            $group = $column === 'kelurahan' ? ['kelurahan', 'kecamatan'] : [$column];
+            $groups[$dimension] = $this->transactions($from, $until, $filters)
+                ->select($group)
+                ->selectRaw($this->sums())
+                ->groupBy($group)
+                ->get()
+                ->map(fn (stdClass $row): array => [
+                    'nilai' => $row->{$column},
+                    ...($column === 'loket' ? ['nama' => $names[$row->loket] ?? $row->loket] : []),
+                    ...($column === 'kelurahan' ? ['kecamatan' => $row->kecamatan] : []),
+                    ...$this->amounts($row),
+                ])
+                ->sortBy([['jumlah', 'desc'], ['transaksi', 'desc'], ['nilai', 'asc']])
+                ->values()
+                ->all();
+        }
+
+        return $groups;
+    }
+
+    /**
      * The values each filter can take in the period, whatever the other
      * filters, so the filter lists show what the period holds.
      *
      * @param  array<string, string>  $names
-     * @param  array<string, string>  $dimensions
      * @return array<string, list<mixed>>
      */
-    private function options(Carbon $from, Carbon $until, array $names, array $dimensions, int $fewest): array
+    private function options(Carbon $from, Carbon $until, array $names): array
     {
         $options = [];
-        foreach ($dimensions as $dimension => $column) {
-            $values = $this->transactions($from, $until, [])
-                ->select($column)
-                ->groupBy($column)
-                ->havingRaw('COUNT(*) >= ?', [$fewest])
-                ->orderBy($column)
-                ->pluck($column)
-                ->all();
+        foreach (self::DIMENSIONS as $dimension => $column) {
+            $values = $this->transactions($from, $until, [])->distinct()->orderBy($column)->pluck($column)->all();
             $options[$dimension] = $column === 'loket'
                 ? array_map(fn (string $key): array => ['nilai' => $key, 'nama' => $names[$key] ?? $key], $values)
                 : $values;

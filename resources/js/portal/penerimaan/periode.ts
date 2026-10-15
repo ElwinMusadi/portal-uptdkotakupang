@@ -1,6 +1,7 @@
 /*
  * Periode Laporan Penerimaan (harian, bulanan, atau rentang), dipakai halaman
- * portal (D-048) dan dashboard (D-047). Tanggal ditulis "YYYY-MM-DD" dan
+ * portal (D-048; harian dan bulanan saja, D-049) dan dashboard (D-047).
+ * Tanggal ditulis "YYYY-MM-DD" dan
  * dihitung sebagai tanggal kalender, tanpa jam dan zona waktu.
  */
 

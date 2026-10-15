@@ -2,7 +2,7 @@
 
 > **Untuk agen AI dan pengembang berikutnya.** Satu berkas ini memuat seluruh konteks proyek PINTU sampai status terakhirnya: tujuan, arsitektur, aturan kerja dengan pemilik, keputusan, integrasi, cara menguji, jebakan lingkungan, dan pekerjaan yang tertunda. Baca berkas ini lebih dulu, lalu ikuti tautan ke dokumen rinci bila perlu.
 >
-> **Terakhir diperbarui:** 2026-10-15 · branch `laravel-development` · sampai commit porsi kecil "<0,1%" (sesudah `ba5aacf`, Laporan Penerimaan tahap 2, D-048).
+> **Terakhir diperbarui:** 2026-10-15 · branch `laravel-development` · sampai commit Laporan Penerimaan portal sebagai tabel tetap (D-049, sesudah `db21e53`).
 >
 > **Wajib diperbarui setiap ada perubahan** (lihat [§19](#19-prosedur-memperbarui-dokumen-ini)). Jangan pernah menulis rahasia (kata sandi, NIP akun uji, token, isi `.env`) di berkas ini.
 
@@ -23,7 +23,7 @@
 13. [Pengujian dan verifikasi](#13-pengujian-dan-verifikasi)
 14. [Lingkungan pengembangan dan jebakannya](#14-lingkungan-pengembangan-dan-jebakannya)
 15. [Deploy dan checklist go-live](#15-deploy-dan-checklist-go-live)
-16. [Ringkasan keputusan D-001 sampai D-048](#16-ringkasan-keputusan-d-001-sampai-d-048)
+16. [Ringkasan keputusan D-001 sampai D-049](#16-ringkasan-keputusan-d-001-sampai-d-049)
 17. [Riwayat commit](#17-riwayat-commit)
 18. [Pekerjaan tertunda dan hal yang diketahui](#18-pekerjaan-tertunda-dan-hal-yang-diketahui)
 19. [Prosedur memperbarui dokumen ini](#19-prosedur-memperbarui-dokumen-ini)
@@ -76,11 +76,11 @@ Satu aplikasi Laravel berisi empat bagian:
 | Hal | Status |
 |---|---|
 | Branch kerja | `laravel-development` (`main` = situs statis lama yang masih dilayani Cloudflare Pages; jangan diubah) |
-| Commit terakhir di origin | `fix(pintu): write revenue shares below 0.05% as "<0,1%"` (porsi kecil Laporan Penerimaan), sesudah `ba5aacf` (D-048, Laporan Penerimaan tahap 2). Hash: `git log -3 --oneline` |
+| Commit terakhir di origin | `feat(pintu): publish the portal revenue report as fixed tables only` (D-049, Laporan Penerimaan portal sebagai tabel tetap), sesudah `db21e53` (porsi kecil "<0,1%"). Hash: `git log -3 --oneline` |
 | Working tree | Bersih |
-| Tes | `composer test`: **1101 tes lulus, 5041 assertion** (SQLite di memori). Uji mutasi: D-047 66 dari 67 mutan mati, D-048 36 dari 37 (sisanya setara) |
-| Pemeriksaan frontend | `npm run typecheck`, `npm run lint`, build Vite: lulus. Dashboard Laporan Penerimaan diperiksa di browser (415 px dan 1280 px). Halaman portal `/penerimaan` diperiksa di browser (430 px dan 1280 px): keadaan belum diterbitkan dengan API sungguhan, lalu laporan berisi data dev yang sudah disamarkan server (dihitung dalam transaksi yang dibatalkan, tanpa mengubah tanda tampil) lewat `fetch` tiruan: periode, saringan, kartu kelompok, tabel, CSV. Setelah pemilik menyalakan Portal, diperiksa lagi dengan API sungguhan: harian, bulanan, rentang, batang per hari, penyamaran pada 8 kombinasi periode dan saringan, 430 px |
-| Keputusan terakhir | D-048 (halaman portal Laporan Penerimaan) |
+| Tes | `composer test`: **1098 tes lulus, 5020 assertion** (SQLite di memori; 19 tes laporan publik D-048 diganti 16 tes D-049). Uji mutasi: D-047 66 dari 67 mutan mati, D-048 36 dari 37 (sisanya setara), D-049 30 dari 30 |
+| Pemeriksaan frontend | `npm run typecheck`, `npm run lint`, build Vite: lulus. Dashboard Laporan Penerimaan diperiksa di browser (415 px dan 1280 px). Halaman portal `/penerimaan` diperiksa di browser (430 px dan 1280 px): keadaan belum diterbitkan dengan API sungguhan, lalu laporan berisi data dev yang sudah disamarkan server (dihitung dalam transaksi yang dibatalkan, tanpa mengubah tanda tampil) lewat `fetch` tiruan: periode, saringan, kartu kelompok, tabel, CSV. Setelah pemilik menyalakan Portal, diperiksa lagi dengan API sungguhan: harian, bulanan, rentang, batang per hari, penyamaran pada 8 kombinasi periode dan saringan, 430 px. D-049 diperiksa dengan API sungguhan: invarian penyamaran September dan Oktober (tanpa baris atau gabungan di bawah 3, kecamatan dikurangi kelurahan yang tampil 0 atau ≥3, bulan dikurangi hari yang tampil 0 atau ≥3, laporan harian sama dengan batang bulanan untuk setiap hari), parameter lama ditolak, CSV, 430 px |
+| Keputusan terakhir | D-049 (Laporan Penerimaan portal sebagai tabel tetap) |
 | Deploy Laravel Cloud | **Belum.** Pemilik: "jangan deploy ke Laravel Cloud dulu" (D-035). Deploy adalah langkah pemilik |
 | Produksi | Masih Cloudflare Pages dari branch `main` (situs statis lama) |
 | API data kendaraan (NJKB) | Token PINTU terpasang di `.env` lokal dan lolos Cloudflare Access; Worker `njkb-api-ntt` sudah di-deploy pemilik dengan perbaikan 404 (commit `6a4c4f8`), terverifikasi 2026-10-15 07.04 WITA. **Uji dengan kendaraan sungguhan oleh pemilik belum dikonfirmasi** |
@@ -239,7 +239,7 @@ Berkas alat: `AGENTS.md`, `boost.json`, `kilo.json` (skill di `.agents/skills/`,
 |---|---|---|
 | `beranda/judul-pembuka.tsx` + `.css` | `<h1 data-react="judul-pembuka">` | Judul pembuka dari `GET /api/public/beranda`. Kata judul yang sama dengan salah satu *kata bergilir* bergulir vertikal ke kata lain (1,2 detik setelah tampil, 1,6 detik per kata), kembali ke kata judul, diam 10 detik, lalu berulang. Berhenti saat tab tidak dilihat; "kurangi gerak" = judul diam; pembaca layar membaca judul utuh. Bila lebar kata mengubah letak baris, kata diberi baris sendiri agar judul tidak melompat |
 | `beranda/lambang-pembuka.tsx` + `.css` | `<div class="hero__lambang" data-react="lambang-pembuka">` | Lambang NTT di tengah; logo Ditlantas (kiri) dan Jasa Raharja (kanan) disimpan di `<template data-lambang-mitra>`. ±2,5 detik setelah halaman dibuka keduanya keluar dari balik lambang (hanya otomatis sekali per muat). Lambang NTT menjadi tombol (`aria-expanded`) untuk menyembunyikan/memunculkan |
-| `penerimaan/laporan-penerimaan.tsx` + `.css` | `<div class="penerimaan" data-react="laporan-penerimaan">` di `/penerimaan` | Laporan Penerimaan publik (D-048) dari `GET /api/public/penerimaan`: periode harian/bulanan/rentang dalam tanggal yang tersedia, saringan bercentang (loket, jenis daftar, jenis kendaraan, kecamatan, kelurahan) dari `<details>`, panel gelap ringkasan (gaya dasbor transparansi beranda), batang per hari, kartu per kelompok dengan baris "Lainnya (disamarkan)" bergaris, tabel rincian bertab, unduh CSV. Porsi yang ada tetapi di bawah 0,05% ditulis "<0,1%" (sama di dashboard). Periode dan saringan ditulis ke alamat halaman (`?dari=&sampai=&kecamatan=…`). Tanpa Recharts (±6 KB gzip) |
+| `penerimaan/laporan-penerimaan.tsx` + `.css` | `<div class="penerimaan" data-react="laporan-penerimaan">` di `/penerimaan` | Laporan Penerimaan publik (D-048, D-049) dari `GET /api/public/penerimaan`, sebagai tabel tetap: *Harian* hanya panel gelap ringkasan (total, susunan komponen, transaksi, kendaraan baru, pajak provinsi, opsen) dengan tombol ke laporan bulanannya; *Bulanan* juga batang per hari, kartu per loket/jenis daftar/jenis kendaraan/kecamatan dengan baris "Lainnya (disamarkan)" bergaris, dan tabel rincian bertab (transaksi, jumlah, porsi) dengan unduh CSV. Tanpa saringan dan rentang. Porsi yang ada tetapi di bawah 0,05% ditulis "<0,1%" (sama di dashboard). Periode ditulis ke alamat halaman (`?tanggal=` atau `?bulan=`). Tanpa Recharts (±6 KB gzip) |
 | `penerimaan/periode.ts`, `penerimaan/csv.ts` | (modul bersama) | Periode laporan (geser hari/bulan, label tanggal Indonesia) dan berkas CSV (titik koma, BOM); dipakai juga halaman dashboard Laporan Penerimaan |
 | `kata-bergilir.ts` | (modul bersama) | `kataDalamJudul()` dan `pisahJudul()`: pencocokan kata utuh tanpa membedakan huruf besar-kecil. Server memakai aturan yang sama (`Setting::rotatingWordIn`); dashboard mengimpornya untuk validasi |
 
@@ -345,7 +345,7 @@ Kontrak lengkap ada di [`docs/api.md`](docs/api.md). Ringkasan:
 - **Pengaturan:** `GET /api/pengaturan` (waktu simpan), `GET|PUT /api/pengaturan/{jam|papan|statistik|kontak|visiMisi|profil|beranda|situs}` (gate `SettingPolicy`; `situs` disimpan hanya Administrator).
 - **Lain-lain:** `POST /api/unggah`, `GET /api/berkas/{id}` (berkas privat), `GET /api/aktivitas?limit=`, `GET /api/kendaraan/{nopol}`, `/api/absensi/kegiatan` (Administrator), `GET /api/absen`, `POST /api/absen/{id}` (clock-in).
 - **Laporan Penerimaan (D-047, `RevenueImportPolicy`, modul `penerimaan`):** `GET /api/penerimaan/laporan?dari&sampai&<saringan>[]&tunggakan`, `GET /api/penerimaan/loket`, `GET|POST /api/penerimaan/impor`, `POST /api/penerimaan/impor/pratinjau` (multipart `berkas` + `loket`, tanpa menyimpan), `POST /api/penerimaan/impor/hapus`, `PATCH /api/penerimaan/impor/{id}` `{tampil}` (khusus Administrator, D-048). Pratinjau dan impor memakai batas `uploads`.
-- **Publik `/api/public/*`:** `faq`, `keliling`, `jam`, `papan`, `statistik`, `kontak`, `visi-misi`, `profil`, `layanan`, `dokumen`, `dokumentasi`, `struktur`, `berita`, `berita/{slug}`, `beranda`, `situs`, `halaman/{slug}`, `penerimaan` (GET; satu-satunya yang menerima parameter: `dari`, `sampai`, dan saringan terdaftar, D-048); `POST pesan` (formulir kontak, honeypot `kode_tambahan`); `POST kendaraan` (cek biaya pajak).
+- **Publik `/api/public/*`:** `faq`, `keliling`, `jam`, `papan`, `statistik`, `kontak`, `visi-misi`, `profil`, `layanan`, `dokumen`, `dokumentasi`, `struktur`, `berita`, `berita/{slug}`, `beranda`, `situs`, `halaman/{slug}`, `penerimaan` (GET; satu-satunya yang menerima parameter: `tanggal` atau `bulan`, D-048, D-049); `POST pesan` (formulir kontak, honeypot `kode_tambahan`); `POST kendaraan` (cek biaya pajak).
 
 ### 10.5 Model dan tabel
 
@@ -487,7 +487,7 @@ Checklist sebelum go-live (dari D-002, D-006, D-028, D-034, D-047):
 
 ---
 
-## 16. Ringkasan keputusan D-001 sampai D-048
+## 16. Ringkasan keputusan D-001 sampai D-049
 
 Rincian lengkap di [`docs/decisions.md`](docs/decisions.md). "Pemilik" = keputusan langsung pemilik.
 
@@ -541,6 +541,7 @@ Rincian lengkap di [`docs/decisions.md`](docs/decisions.md). "Pemilik" = keputus
 | D-046 | 10-15 | Logo Ditlantas (kiri) dan Jasa Raharja (kanan) keluar dari balik lambang NTT; klik lambang untuk menyembunyikan/memunculkan |
 | D-047 | 10-15 | Laporan Penerimaan dari berkas STS BPAD per loket (menu dan modul `penerimaan` terpisah, pemilik); identitas wajib pajak tidak disimpan, transaksi ganda dikenali sidik HMAC; data awal September dan 14 Oktober = Loket SAMSAT kantor (pemilik). Portal menyusul: per impor setelah diperiksa, sampai kelurahan dengan kelompok <3 transaksi disamarkan (pemilik) |
 | D-048 | 10-15 | Halaman portal `/penerimaan` (menu Informasi + tautan Transparansi beranda, pemilik); hanya impor yang dinyalakan Administrator (pemilik); saringan utama loket/jenis daftar/jenis kendaraan/kecamatan/kelurahan (pemilik); total + komponen + CSV (pemilik); penyamaran <3 transaksi di server dengan penggabungan kedua; API publik menerima parameter terdaftar (pengecualian D-004) |
+| D-049 | 10-15 | Laporan Penerimaan portal sebagai tabel tetap: per kelompok hanya transaksi dan jumlah, komponen hanya untuk seluruh periode (pemilik); Harian total saja, Bulanan dengan rincian, saringan dan rentang dihapus dari portal (pemilik); kelurahan disamarkan per kecamatan, hari disamarkan sama di laporan harian dan bulanan; API hanya `tanggal` atau `bulan` |
 
 **Pola lintas keputusan:** teks HTML sebagai isi awal (D-023/024/026); data contoh peramban tidak dipindahkan, kecuali data awal lewat migrasi; hapus konten editorial hanya Administrator; pengelola Jadwal Pemutakhiran boleh membaca daftar modul lain; WITA sebagai acuan waktu; retensi pesan dan swafoto absensi belum diputuskan (menunggu unit hukum/kearsipan).
 
@@ -548,7 +549,7 @@ Rincian lengkap di [`docs/decisions.md`](docs/decisions.md). "Pemilik" = keputus
 
 ## 17. Riwayat commit
 
-81 commit di `laravel-development` (per commit porsi kecil "<0,1%"). Tahapan besar:
+82 commit di `laravel-development` (per commit tabel tetap Laporan Penerimaan, D-049). Tahapan besar:
 
 | Rentang | Isi |
 |---|---|
@@ -567,7 +568,8 @@ Rincian lengkap di [`docs/decisions.md`](docs/decisions.md). "Pemilik" = keputus
 | `e0eb24d` | Foto pejabat di bagan Struktur terpotong bulat, dipangkas dari atas |
 | `8d481be` | Laporan Penerimaan tahap 1: impor berkas STS per loket, laporan harian/bulanan di dashboard (D-047) |
 | `ba5aacf` | Laporan Penerimaan tahap 2: halaman portal `/penerimaan`, sakelar Portal khusus Administrator, API publik dengan penyamaran (D-048) |
-| `fix(pintu): write revenue shares below 0.05% as "<0,1%"` | Porsi Laporan Penerimaan yang sangat kecil ditulis "<0,1%" di portal dan dashboard |
+| `db21e53` | Porsi Laporan Penerimaan yang sangat kecil ditulis "<0,1%" di portal dan dashboard |
+| `feat(pintu): publish the portal revenue report as fixed tables only` | Laporan Penerimaan portal sebagai tabel tetap: per kelompok hanya transaksi dan jumlah, tanpa saringan dan rentang, kelurahan disamarkan per kecamatan (D-049) |
 
 Repository terkait: `njkb-api-ntt` `main` — `f7a1ee5` (izin konsumen PINTU), `6a4c4f8` (404 untuk nomor polisi tidak terdaftar, sudah di-deploy).
 
@@ -591,7 +593,7 @@ Repository terkait: `njkb-api-ntt` `main` — `f7a1ee5` (izin konsumen PINTU), `
 **Fitur yang belum dibuat (dicatat di keputusan):**
 
 - Berkas STS loket selain Loket SAMSAT belum diterima pemilik (D-047).
-- Penyamaran Laporan Penerimaan publik (D-048) belum mencegah selisih dua hasil saringan yang hanya berbeda satu transaksi; pilihan perbaikan: batasi kombinasi saringan atau bulatkan angka.
+- Laporan Penerimaan publik (D-049) masih menampilkan komponen dan kendaraan baru seluruh hari walau berasal dari 1–2 transaksi (tanpa keterangan lain selain tanggal), dan jumlah kelompok yang didominasi satu transaksi besar; keduanya diterima pemilik bersama tabel tetap.
 - Bagian portal lain masih di `main.js` dan cek pajak belum React (D-045).
 - Ganti/lupa kata sandi sendiri, kirim tautan aktivasi via surel, MFA, waktu login terakhir (D-007, D-008).
 - Peran alur per langkah di server (D-010, D-022); versi draf untuk layanan terbit.
@@ -632,6 +634,7 @@ Bila commit dibuat sebelum hash-nya diketahui, tulis status "belum di-commit" la
 
 | Tanggal | Perubahan |
 |---|---|
+| 2026-10-15 | Laporan Penerimaan portal sebagai tabel tetap (D-049): komponen per kelompok ternyata membuka satu transaksi (114 dari 175 baris kelurahan September), dan selisih dua permintaan juga; kini per kelompok hanya transaksi dan jumlah, Harian total saja, Bulanan dengan rincian, saringan dan rentang dihapus dari portal, kelurahan disamarkan per kecamatan, hari disamarkan sama di laporan harian dan bulanan, API hanya `tanggal` atau `bulan`. Status, §8.4, §10.4, §16, §17 (hash `db21e53`), §18 diperbarui |
 | 2026-10-15 | Pemilik menyalakan Portal untuk impor 14 Oktober dan September; `/penerimaan` diperiksa dengan data sungguhan. Porsi yang ada tetapi di bawah 0,05% kini ditulis "<0,1%" di portal dan dashboard (dulu "0%"/"0,0%"), atas persetujuan pemilik. Status, §8.4, §17 (hash `ba5aacf`), §18 diperbarui |
 | 2026-10-15 | Laporan Penerimaan tahap 2 (D-048): halaman portal `/penerimaan` (komponen React, menu Informasi, tautan beranda), sakelar Portal khusus Administrator, `GET /api/public/penerimaan` dengan penyamaran; modul bersama `periode.ts` dan `csv.ts`. Status, §8.1, §8.4, §10.3, §10.4, §16, §17, §18 diperbarui. Diperiksa di browser (430 px dan 1280 px; perbaikan: angka di kotak kecil terpotong) dan pada data dev tanpa mengubah tanda tampil |
 | 2026-10-15 | Laporan Penerimaan tahap 1 (D-047): menu dan modul `penerimaan`, impor berkas STS dengan pratinjau, laporan harian/bulanan/rentang dengan saringan, bento, grafik, tabel, dan CSV; status, §9.1–9.2, §10.4–10.5, §12, §14 (batas PHP Herd, memori commit), §15, §16, §18 diperbarui. Diperiksa di browser setelah pemilik me-restart Claude Desktop (perbaikan: halaman melebar karena tabel riwayat impor dan deretan tab, lencana angka miliaran) |

@@ -203,7 +203,7 @@
       <div class="penerimaan" data-react="laporan-penerimaan">
         <p class="center muted" role="status" style="padding:48px 0">Memuat laporan penerimaan…</p>
       </div>
-      <p class="micro muted" style="margin-top:28px;max-width:72ch">Laporan ini tidak memuat nama pemilik, nomor polisi, atau alamat wajib pajak. Kelompok dengan kurang dari 3 transaksi digabung menjadi “Lainnya (disamarkan)”, dan hasil saringan dengan kurang dari 3 transaksi tidak ditampilkan.</p>
+      <p class="micro muted" style="margin-top:28px;max-width:72ch">Laporan ini tidak memuat nama pemilik, nomor polisi, atau alamat wajib pajak. Setiap kelompok hanya menampilkan jumlah transaksi dan rupiahnya. Kelompok dengan kurang dari 3 transaksi digabung menjadi “Lainnya (disamarkan)”, dan hari dengan kurang dari 3 transaksi tidak ditampilkan angkanya, bersama kelompok atau hari terkecil lain bila angkanya masih dapat dihitung dari total.</p>
     </div>
   </section>
 </main>

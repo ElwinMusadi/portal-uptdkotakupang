@@ -2,20 +2,26 @@
 
 namespace App\Http\Requests;
 
-use App\Actions\BuildPublicRevenueReport;
-use App\Http\Requests\Dashboard\ShowRevenueReportRequest;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Validator;
 
 /**
- * The period and filters of the portal's revenue report (D-048). Unlike the
- * other public endpoints (D-004), it takes query parameters, but only these:
- * a period of at most a year (the latest published day when omitted) and the
- * values to keep per main filter. Any other parameter is refused.
+ * The period of the portal's revenue report (D-048, D-049). Unlike the other
+ * public endpoints (D-004), it takes a query parameter, but only one: a day
+ * (`tanggal`) or a whole month (`bulan`); the latest published day when
+ * omitted. Any other parameter is refused, so no visitor can ask for a
+ * period or a group the fixed tables do not publish.
  */
 class ShowPublicRevenueReportRequest extends FormRequest
 {
+    /**
+     * The query parameters taken.
+     *
+     * @var list<string>
+     */
+    private const array PARAMETERS = ['tanggal', 'bulan'];
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -31,21 +37,14 @@ class ShowPublicRevenueReportRequest extends FormRequest
      */
     public function rules(): array
     {
-        $rules = [
-            'dari' => ['required_with:sampai', 'date_format:Y-m-d'],
-            'sampai' => ['required_with:dari', 'date_format:Y-m-d', 'after_or_equal:dari'],
+        return [
+            'tanggal' => ['sometimes', 'prohibits:bulan', 'date_format:Y-m-d'],
+            'bulan' => ['sometimes', 'date_format:Y-m'],
         ];
-
-        foreach (BuildPublicRevenueReport::DIMENSIONS as $filter) {
-            $rules[$filter] = ['sometimes', 'list', 'max:100'];
-            $rules["{$filter}.*"] = ['string', 'max:80'];
-        }
-
-        return $rules;
     }
 
     /**
-     * Refuse unknown parameters, and periods longer than a year.
+     * Refuse unknown parameters.
      *
      * @return array<int, callable(Validator): void>
      */
@@ -53,13 +52,8 @@ class ShowPublicRevenueReportRequest extends FormRequest
     {
         return [
             function (Validator $validator): void {
-                if (array_diff(array_keys($this->query()), ['dari', 'sampai', ...BuildPublicRevenueReport::DIMENSIONS]) !== []) {
+                if (array_diff(array_keys($this->query()), self::PARAMETERS) !== []) {
                     $validator->errors()->add('query', 'Parameter kueri tidak didukung.');
-                }
-
-                if ($this->hasPeriod() && ! $validator->errors()->hasAny(['dari', 'sampai'])
-                    && $this->from()->diffInDays($this->until()) + 1 > ShowRevenueReportRequest::MAX_DAYS) {
-                    $validator->errors()->add('sampai', 'Rentang laporan paling lama satu tahun.');
                 }
             },
         ];
@@ -71,63 +65,29 @@ class ShowPublicRevenueReportRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'dari.required_with' => 'Pilih tanggal awal laporan.',
-            'dari.date_format' => 'Tanggal awal laporan tidak valid.',
-            'sampai.required_with' => 'Pilih tanggal akhir laporan.',
-            'sampai.date_format' => 'Tanggal akhir laporan tidak valid.',
-            'sampai.after_or_equal' => 'Tanggal akhir tidak boleh sebelum tanggal awal.',
-            'list' => 'Saringan :attribute tidak valid.',
-            'max' => 'Saringan :attribute terlalu panjang.',
-            'string' => 'Saringan :attribute tidak valid.',
+            'tanggal.prohibits' => 'Pilih tanggal atau bulan laporan, tidak keduanya.',
+            'tanggal.date_format' => 'Tanggal laporan tidak valid.',
+            'bulan.date_format' => 'Bulan laporan tidak valid.',
         ];
     }
 
     /**
-     * The filters as the messages name them.
-     *
-     * @return array<string, string>
+     * The first day of the period, or null for the latest published day.
      */
-    public function attributes(): array
-    {
-        $names = ['loket' => 'loket', 'jenisDaftar' => 'jenis daftar', 'jenisKendaraan' => 'jenis kendaraan', 'kecamatan' => 'kecamatan', 'kelurahan' => 'kelurahan'];
-
-        $attributes = [];
-        foreach ($names as $filter => $name) {
-            $attributes[$filter] = $name;
-            $attributes["{$filter}.*"] = $name;
-        }
-
-        return $attributes;
-    }
-
-    /**
-     * Whether the request names its period.
-     */
-    public function hasPeriod(): bool
-    {
-        return $this->filled(['dari', 'sampai']);
-    }
-
     public function from(): ?Carbon
     {
-        return $this->hasPeriod() ? Carbon::createFromFormat('!Y-m-d', $this->input('dari')) : null;
-    }
-
-    public function until(): ?Carbon
-    {
-        return $this->hasPeriod() ? Carbon::createFromFormat('!Y-m-d', $this->input('sampai')) : null;
+        return match (true) {
+            $this->filled('tanggal') => Carbon::createFromFormat('!Y-m-d', $this->input('tanggal')),
+            $this->filled('bulan') => Carbon::createFromFormat('!Y-m', $this->input('bulan')),
+            default => null,
+        };
     }
 
     /**
-     * The chosen values per filter.
-     *
-     * @return array<string, list<string>>
+     * The last day of the period, or null for the latest published day.
      */
-    public function filters(): array
+    public function until(): ?Carbon
     {
-        return array_filter(
-            $this->safe()->only(BuildPublicRevenueReport::DIMENSIONS),
-            fn (mixed $value): bool => $value !== [] && $value !== null,
-        );
+        return $this->filled('bulan') ? $this->from()->endOfMonth()->startOfDay() : $this->from();
     }
 }
