@@ -390,6 +390,20 @@ class PortalPagesTest extends TestCase
         $this->assertStringNotContainsString('2:14', $html);
     }
 
+    public function test_shows_only_the_province_emblem_until_the_hero_component_brings_out_the_partner_logos(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+
+        $this->assertSame(1, preg_match('#<div class="hero__lambang" data-react="lambang-pembuka">(.*?)</div>#s', $html, $emblems));
+        $this->assertMatchesRegularExpression('#<img\s+class="emblem hero__emblem"\s+src="assets/img/lambang-ntt-360\.webp"[^>]*\sdata-lambang="utama"\s*/>#', $emblems[1]);
+        // Ditlantas on the left and Jasa Raharja on the right wait in a template, never shown without the component (D-046)
+        $this->assertSame(1, preg_match('#<template data-lambang-mitra>(.*?)</template>#s', $emblems[1], $partners));
+        foreach (['kiri' => 'logo-ditlantas-240.webp', 'kanan' => 'logo-jasa-raharja-240.webp'] as $position => $file) {
+            $this->assertMatchesRegularExpression('#<img\s+src="assets/img/'.preg_quote($file, '#').'"[^>]*\sdata-lambang="'.$position.'"\s*/>#', $partners[1]);
+            $this->assertFileExists(public_path("assets/img/{$file}"));
+        }
+    }
+
     public function test_sends_the_contact_form_to_the_message_api_with_the_services_it_accepts(): void
     {
         $html = $this->get('/kontak')->assertOk()->getContent();

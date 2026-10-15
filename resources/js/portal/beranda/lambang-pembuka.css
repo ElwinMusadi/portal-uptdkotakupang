@@ -1,0 +1,65 @@
+/* Lambang pembuka beranda (D-046), dibangun Vite bersama komponennya.
+   Lambang NTT tetap di tengah; logo Ditlantas dan Jasa Raharja (2/3 tingginya,
+   rata bawah) bersembunyi di baliknya lalu bergeser keluar ke kiri dan kanan.
+   Tinggi lambang mengikuti .hero__emblem (public/assets/css/pages.css). */
+.lambang-pembuka {
+  --tinggi-utama: clamp(92px, 10vw, 116px);
+  --lebar-utama: calc(var(--tinggi-utama) * 102 / 108);
+  --tinggi-mitra: calc(var(--tinggi-utama) * .68 - 2px);
+  --jarak: clamp(20px, 3.2vw, 34px);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: end;
+  column-gap: var(--jarak);
+  margin-bottom: 30px;
+}
+.lambang-pembuka .hero__emblem { margin: 0; }
+
+.lambang-pembuka__utama {
+  position: relative;
+  z-index: 2;
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--dur-2) var(--ease);
+}
+@media (hover: hover) {
+  .lambang-pembuka__utama:hover { transform: translateY(-2px); }
+}
+.lambang-pembuka__utama:active { transform: scale(.97); }
+
+/* Tersembunyi: di balik lambang NTT, mengecil, dan memudar di akhir gerak */
+.lambang-pembuka__mitra {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: auto;
+  height: var(--tinggi-mitra);
+  opacity: 0;
+  transition: transform 600ms cubic-bezier(.5, 0, .3, 1), opacity 250ms linear 350ms;
+}
+.lambang-pembuka__mitra--kiri {
+  justify-self: end;
+  transform: translateX(calc(50% + var(--jarak) + var(--lebar-utama) / 2)) translateY(-14%) scale(.6);
+}
+.lambang-pembuka__mitra--kanan {
+  justify-self: start;
+  transform: translateX(calc(-50% - var(--jarak) - var(--lebar-utama) / 2)) translateY(-14%) scale(.6);
+}
+
+/* Tampil: keluar dari balik lambang NTT ke tempatnya */
+.lambang-pembuka.is-tampil .lambang-pembuka__mitra {
+  opacity: 1;
+  transform: none;
+  transition: transform 750ms var(--ease), opacity 300ms linear;
+}
+
+/* Gerak dikurangi: base.css memendekkan geraknya; tanpa jeda, logo langsung hilang */
+@media (prefers-reduced-motion: reduce) {
+  .lambang-pembuka__mitra { transition-delay: 0s; }
+}

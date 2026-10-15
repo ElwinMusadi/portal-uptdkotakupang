@@ -8,6 +8,7 @@
  */
 const KOMPONEN: Record<string, () => Promise<{ pasang: (el: HTMLElement) => void }>> = {
   "judul-pembuka": () => import("./beranda/judul-pembuka"),
+  "lambang-pembuka": () => import("./beranda/lambang-pembuka"),
 }
 
 for (const el of document.querySelectorAll<HTMLElement>("[data-react]")) {

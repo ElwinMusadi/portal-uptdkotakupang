@@ -622,3 +622,14 @@ Pemilik ingin kata "SAMSAT" di judul pembuka beranda berganti-ganti (Pajak → S
 | Pengaturan | Dashboard › Beranda › Pembuka, isian **Kata bergilir**: kata ditambah, diubah, diurutkan, dan dihapus (2–8 kata, masing-masing maks. 24 karakter, tanpa kata ganda; huruf besar-kecil tidak dibedakan). Kata di judul yang sama dengan salah satu kata itu (kata utuh, huruf besar-kecil diabaikan) yang bergilir, mulai dari kata sesudahnya dalam daftar, jadi judul wajib memuat salah satunya. Daftar kosong berarti judul tanpa animasi. Isi awal: Pajak, STNK, Mutasi, BBN, SAMSAT. Beranda yang sudah disimpan sebelumnya mendapat daftar itu bila judulnya memuat salah satu katanya. |
 
 Belum dipindahkan ke React: bagian portal lain di `main.js` dan cek pajak (`/skrip/cek-pajak`, D-041).
+
+## D-046 · 2026-10-15 · Logo Ditlantas dan Jasa Raharja di samping lambang pembuka
+
+Samsat adalah kerja sama Pemerintah Provinsi NTT, Ditlantas Polda NTT, dan Jasa Raharja. Pemilik ingin ketiga logonya tampil di pembuka beranda.
+
+| Hal | Keputusan |
+|---|---|
+| Susunan | **Ditlantas di kiri, Jasa Raharja di kanan** lambang Provinsi NTT (keputusan pemilik). Kedua logo sekitar dua pertiga tinggi lambang NTT, ketiganya rata bawah, dan lambang NTT tetap di tengah. |
+| Kemunculan | **Otomatis hanya saat halaman dibuka** (keputusan pemilik): awalnya hanya lambang NTT; sekitar 2,5 detik kemudian kedua logo bergeser keluar dari balik lambang NTT ke tempatnya. |
+| Klik lambang | **Lambang NTT menyembunyikan dan memunculkan** kedua logo (keputusan pemilik) dengan gerak yang sama, kembali ke balik lambang. Lambang NTT menjadi tombol yang juga bisa dipakai dengan papan ketik; pembaca layar diberi tahu apakah logo sedang tampil, dan kursor menampilkan petunjuk "Tampilkan/Sembunyikan logo …". Pengunjung yang memilih gerak dikurangi melihat logo muncul dan hilang tanpa gerak. |
+| Teknis | Komponen React kedua di portal (D-045): `resources/js/portal/beranda/lambang-pembuka.tsx`. Kedua logo tertulis di HTML di dalam `<template>`, jadi tidak pernah tampil sebelum komponen siap dan tanpa skrip hanya lambang NTT yang tampil (atribut `hidden` tidak cukup karena `base.css` membuat setiap `img` tampil sebagai blok). Gambar dari pemilik dipotong tepi transparannya dan disimpan sebagai `public/assets/img/logo-ditlantas-240.webp` dan `logo-jasa-raharja-240.webp` (tinggi 240 px). Logo tidak diatur dari dashboard. |

@@ -206,13 +206,32 @@
       <!-- 1 · Hero -->
       <section class="hero">
         <div class="container center">
-          <img
-            class="emblem hero__emblem"
-            src="assets/img/lambang-ntt-360.webp"
-            alt="Lambang Provinsi Nusa Tenggara Timur"
-            width="102"
-            height="108"
-          />
+          <div class="hero__lambang" data-react="lambang-pembuka">
+            <img
+              class="emblem hero__emblem"
+              src="assets/img/lambang-ntt-360.webp"
+              alt="Lambang Provinsi Nusa Tenggara Timur"
+              width="102"
+              height="108"
+              data-lambang="utama"
+            />
+            <template data-lambang-mitra>
+              <img
+                src="assets/img/logo-ditlantas-240.webp"
+                alt="Logo Ditlantas Polda NTT"
+                width="203"
+                height="240"
+                data-lambang="kiri"
+              />
+              <img
+                src="assets/img/logo-jasa-raharja-240.webp"
+                alt="Logo Jasa Raharja"
+                width="240"
+                height="240"
+                data-lambang="kanan"
+              />
+            </template>
+          </div>
           <p class="eyebrow hero__eyebrow" data-beranda-teks="hero.eyebrow" data-reveal>
             UPTD Pendapatan Daerah Wilayah Kota Kupang · SAMSAT Kota Kupang
           </p>
