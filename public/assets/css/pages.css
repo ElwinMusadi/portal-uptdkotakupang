@@ -450,9 +450,10 @@
 @media (max-width: 600px) { .posts { grid-template-columns: 1fr; } .notice-list a { grid-template-columns: 1fr; gap: 4px; } .search { min-width: 0; width: 100%; } }
 
 /* ---------- Artikel ---------- */
-.article-head { max-width: 860px; margin-inline: auto; }
+/* Kepala, sampul, dan isi artikel selebar kolom info + teks (200 + 56 + 680), jadi tepi kirinya sejajar */
+.article-head { max-width: calc(200px + 56px + 680px); margin-inline: auto; }
 .article-head .h-display { max-width: 18ch; font-size: clamp(34px, 4.6vw, 58px); }
-/* Sampul selebar isi artikel (kolom info + teks) dan utuh dengan rasio aslinya, agar poster tidak terpotong */
+/* Sampul utuh dengan rasio aslinya, agar poster tidak terpotong */
 .article-figure { max-width: calc(200px + 56px + 680px); margin-inline: auto; }
 .article-media { border-radius: var(--r-xl); }
 .article-media > img { position: relative; height: auto; }
