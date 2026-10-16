@@ -363,7 +363,11 @@
       const t = nowWita();
       const hariIni = w.y === t.y && w.mo === t.mo && w.d === t.d;
       waktu.textContent = hariIni ? `Diperbarui ${pad(w.h)}.${pad(w.m)} WITA` : "Diperbarui hari ini";
-      if (catatan) catatan.textContent = typeof p.catatan === "string" ? p.catatan : "";
+      if (catatan) {
+        catatan.textContent = typeof p.catatan === "string" ? p.catatan : "";
+        // Baris keterangan di bawah papan hanya tampil bila ada catatan
+        catatan.parentElement.hidden = !catatan.textContent;
+      }
       const st = JAM ? serviceStatus() : null;
       const tutup = !!st && !st.none && !st.open;
       nomor.textContent = p.nomorAntrean || "—";

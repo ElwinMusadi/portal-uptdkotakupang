@@ -177,6 +177,7 @@
   display: flex; justify-content: space-between; align-items: baseline; gap: 24px;
   margin-top: 20px; padding-top: 20px; border-top: var(--hairline);
 }
+.caption-row[hidden] { display: none; }
 .caption-row p:first-child { font-size: 15px; color: var(--ink); max-width: 52ch; }
 .caption-row p:last-child { font-size: 13px; color: var(--text-2); text-align: right; flex: none; }
 @media (max-width: 640px) { .caption-row { flex-direction: column; gap: 6px; } .caption-row p:last-child { text-align: left; } }

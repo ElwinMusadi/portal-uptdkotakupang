@@ -376,10 +376,7 @@
               </button>
               <span class="board__tag" data-papan-waktu>Memuat…</span>
             </div>
-            <figcaption class="caption-row">
-              <p>
-                Dari kertas di kaca loket ke satu layar yang selalu terbaru.
-              </p>
+            <figcaption class="caption-row" hidden>
               <p data-papan-catatan></p>
             </figcaption>
           </figure>
