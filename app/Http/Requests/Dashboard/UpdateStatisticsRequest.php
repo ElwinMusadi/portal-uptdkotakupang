@@ -9,8 +9,8 @@ use Illuminate\Validation\Rule;
 
 /**
  * The complete statistics document: its status and year, a note, and the
- * four categories of the portal's transparency dashboard, each with four
- * tiles and twelve monthly values (January to December).
+ * three categories of the portal's transparency dashboard (D-055), each
+ * with four tiles and twelve monthly values (January to December).
  */
 class UpdateStatisticsRequest extends FormRequest
 {
@@ -42,7 +42,7 @@ class UpdateStatisticsRequest extends FormRequest
             'status' => ['required', Rule::in(self::STATES)],
             'tahun' => ['required', 'string', 'regex:/^(19|20)\d{2}\z/'],
             'catatan' => ['nullable', 'string', 'max:300', new PlainText('Catatan')],
-            'set' => ['required', 'list', 'size:4'],
+            'set' => ['required', 'list', 'size:'.count(Setting::STATISTICS_CATEGORIES)],
             'set.*' => ['required', 'array'],
             'set.*.kunci' => ['required', Rule::in(Setting::STATISTICS_CATEGORIES), 'distinct'],
             'set.*.label' => ['required', 'string', 'max:60', new PlainText('Nama tab')],

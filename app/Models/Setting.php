@@ -28,11 +28,13 @@ class Setting extends Model
     public const string STATISTICS = 'statistik';
 
     /**
-     * The statistics categories, as the portal's tabs name them.
+     * The statistics categories, as the portal's tabs name them. Penerimaan
+     * pajak is no longer one: the homepage summarises the published revenue
+     * report instead (D-055).
      *
      * @var list<string>
      */
-    public const array STATISTICS_CATEGORIES = ['transaksi', 'penerimaan', 'keliling', 'kepuasan'];
+    public const array STATISTICS_CATEGORIES = ['transaksi', 'keliling', 'kepuasan'];
 
     /**
      * The only statistics status the portal publishes (D-018).
@@ -472,14 +474,16 @@ class Setting extends Model
 
     /**
      * The statistics as the dashboard edits them. Until they are first saved,
-     * the four categories and their tiles are named but every figure is zero
+     * the three categories and their tiles are named but every figure is zero
      * and the status is "ilustrasi", so nothing is published.
      *
      * @return array{status: string, catatan: string, tahun: string, set: list<array{kunci: string, label: string, sub: string, judulGrafik: string, satuan: string, tiles: list<array{id: string, label: string, nilai: int|float, satuan: string, perubahan: int|float, naikBaik: bool}>, seri: list<int|float>}>}
      */
     public static function statistics(): array
     {
-        return self::query()->find(self::STATISTICS)?->value ?? [
+        $saved = self::query()->find(self::STATISTICS)?->value;
+
+        return $saved !== null ? self::currentStatisticsCategories($saved) : [
             'status' => 'ilustrasi',
             'catatan' => '',
             'tahun' => now('Asia/Makassar')->format('Y'),
@@ -502,9 +506,6 @@ class Setting extends Model
                 ['transaksi', 'Transaksi pelayanan', 'Transaksi pelayanan · UPTD Kota Kupang', 'Transaksi per bulan', 'transaksi', [
                     ['Total transaksi', '', true], ['Pajak tahunan', '', true], ['Perpanjangan 5 tahun', '', true], ['Mutasi & BBN', '', true],
                 ]],
-                ['penerimaan', 'Penerimaan pajak', 'Penerimaan pajak daerah · UPTD Kota Kupang', 'Penerimaan PKB per bulan', 'juta rupiah', [
-                    ['Penerimaan PKB', 'M', true], ['BBNKB', 'M', true], ['Opsen PKB (Pemkot)', 'M', true], ['Capaian target', '%', true],
-                ]],
                 ['keliling', 'Samsat Keliling', 'Samsat Keliling · 6 kecamatan, 51 kelurahan', 'Transaksi keliling per bulan', 'transaksi', [
                     ['Titik layanan', '', true], ['Transaksi keliling', '', true], ['Rata-rata per titik', '', true], ['Kelurahan terjangkau', '/51', true],
                 ]],
@@ -513,5 +514,22 @@ class Setting extends Model
                 ]],
             ]),
         ];
+    }
+
+    /**
+     * Saved statistics without the categories that left them: statistics
+     * saved before D-055 still hold Penerimaan pajak until saved again.
+     *
+     * @param  array{set: list<array{kunci: string}>}  $statistics
+     * @return array{set: list<array{kunci: string}>}
+     */
+    public static function currentStatisticsCategories(array $statistics): array
+    {
+        $statistics['set'] = array_values(array_filter(
+            $statistics['set'],
+            fn (array $category): bool => in_array($category['kunci'], self::STATISTICS_CATEGORIES, true),
+        ));
+
+        return $statistics;
     }
 }

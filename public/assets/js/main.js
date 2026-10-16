@@ -1914,11 +1914,20 @@
   }
 
   /* ---------- Dasbor transparansi ----------
-     Statistik dikelola di dashboard (Statistik Layanan) dan dibaca dari
-     GET /api/public/statistik, yang hanya memberikan angka berstatus
-     terverifikasi pimpinan (D-018). Tidak ada angka cadangan: selama dimuat,
-     sebelum diterbitkan, atau bila API gagal, dasbor menampilkan keterangannya.
-     Grafik memuat 12 nilai bulanan (Januari–Desember) tahun data tersebut. */
+     Setiap tab punya sumbernya sendiri (D-055):
+     - Transaksi pelayanan, Samsat Keliling, dan Kepuasan masyarakat dari
+       Statistik Layanan (GET /api/public/statistik), yang hanya memberikan
+       angka berstatus terverifikasi pimpinan (D-018); grafiknya 12 nilai
+       bulanan (Januari–Desember) tahun data tersebut.
+     - Penerimaan pajak dari Laporan Penerimaan yang ditampilkan di portal
+       (GET /api/public/penerimaan/ringkasan): tahun berjalan per bulan; bulan
+       yang disamarkan tidak dijumlah.
+     - Pemetaan PKB dari GET /api/public/pemetaan: angka kota dan persen
+       menunggak per kecamatan.
+     Tab Penerimaan dan Pemetaan disembunyikan selama datanya belum
+     ditampilkan di portal, dan menautkan ke halaman lengkapnya. Tidak ada
+     angka cadangan: selama dimuat atau bila API gagal, tab menampilkan
+     keterangannya. */
   async function muatStatistik() {
     const data = await ambilJson("/api/public/statistik");
     if (typeof data?.tahun !== "string" || typeof data.catatan !== "string" || !Array.isArray(data.set)) throw new Error("Respons tidak dikenal");
@@ -1931,6 +1940,28 @@
     return data;
   }
 
+  async function muatRingkasanPenerimaan() {
+    const d = await ambilJson("/api/public/penerimaan/ringkasan");
+    if (d?.tersedia === false) return null;
+    const angkaAtauNull = (n) => n === null || Number.isFinite(n);
+    const valid = d?.tersedia === true && typeof d.tahun === "string" && typeof d.dari === "string" && typeof d.sampai === "string"
+      && (d.ringkasan === null || ["transaksi", "pkb", "bbn", "jumlah"].every((k) => Number.isFinite(d.ringkasan[k])))
+      && Array.isArray(d.bulan) && d.bulan.length === 12 && d.bulan.every((b) => typeof b?.bulan === "string" && angkaAtauNull(b.transaksi) && angkaAtauNull(b.jumlah));
+    if (!valid) throw new Error("Respons tidak dikenal");
+    return d;
+  }
+
+  async function muatRingkasanPemetaan() {
+    const d = await ambilJson("/api/public/pemetaan");
+    if (d?.tersedia === false) return null;
+    const angkaAtauNull = (n) => n === null || Number.isFinite(n);
+    const valid = d?.tersedia === true && typeof d.tanggalPenetapan === "string" && d.kota
+      && ["kendaraan", "taat", "menunggak", "tagihan"].every((k) => angkaAtauNull(d.kota[k]))
+      && Array.isArray(d.kecamatan) && d.kecamatan.every((k) => typeof k?.kunci === "string" && typeof k.nama === "string" && angkaAtauNull(k.kendaraan) && angkaAtauNull(k.menunggak));
+    if (!valid) throw new Error("Respons tidak dikenal");
+    return d;
+  }
+
   // "M" berarti miliar rupiah: di bawah 1 miliar ditampilkan dalam juta
   const nilaiTile = (v, satuan) => {
     const u = satuan.trim();
@@ -1938,6 +1969,97 @@
     return `${fmt.format(Math.round(v * 10) / 10)}${u ? `<small>${esc(u)}</small>` : ""}`;
   };
   const nilaiBatang = (v, satuan) => (satuan === "juta rupiah" ? `${fmt.format(v)} jt` : satuan === "menit" ? `${fmt.format(v)} mnt` : fmt.format(v));
+  const fmtDesimal = new Intl.NumberFormat("id-ID", { maximumFractionDigits: 1 });
+  const persenDari = (bagian, total) => (Number.isFinite(bagian) && total > 0 ? `${fmtDesimal.format((bagian / total) * 100)}%` : "—");
+  const rupiahTile = (n) => (Number.isFinite(n) ? nilaiTile(n / 1e9, "M") : "—");
+  const rupiahRingkas = (n) => (n >= 1e9 ? `${fmtDesimal.format(n / 1e9)} M` : `${fmtDesimal.format(n / 1e6)} jt`);
+  const tanggalSingkat = (iso, tahun = true) => {
+    const [y, m, d] = iso.split("-").map(Number);
+    return `${d} ${BULAN[m - 1]}${tahun ? ` ${y}` : ""}`;
+  };
+
+  /* Isi satu tab: subjudul, angka utama, grafik batang, catatan, dan tautan */
+  function isiStatistik(D, d) {
+    const t = nowWita();
+    const bulanIni = String(t.y) === D.tahun ? t.mo - 1 : -1;
+    const w = nowWita(new Date(D.diperbarui));
+    return {
+      sub: d.sub,
+      tiles: d.tiles.map((x) => {
+        const good = (x.perubahan >= 0) === x.naikBaik;
+        return {
+          label: x.label,
+          nilai: nilaiTile(x.nilai, x.satuan),
+          meta: `<span class="delta ${good ? "delta--up" : "delta--down"}"><svg class="i" aria-hidden="true"><use href="#i-trend-${x.perubahan >= 0 ? "up" : "down"}"/></svg>${x.perubahan > 0 ? "+" : ""}${fmt.format(x.perubahan)}%</span><span>vs periode lalu</span>`,
+        };
+      }),
+      grafik: {
+        judul: d.judulGrafik,
+        satuan: d.satuan,
+        aria: `${d.judulGrafik}, Januari–Desember ${D.tahun}`,
+        batang: d.seri.map((v, i) => ({ x: BULAN[i], nilai: v, tip: nilaiBatang(v, d.satuan), aria: `${BULAN[i]} ${D.tahun}: ${fmt.format(v)} ${d.satuan}`.trim(), sorot: i === bulanIni })),
+      },
+      catatan: [`Data tahun ${D.tahun}, terverifikasi pimpinan · diperbarui ${w.d} ${BULAN[w.mo - 1]} ${w.y}.`, D.catatan].filter(Boolean),
+      tautan: null,
+    };
+  }
+
+  function isiPenerimaan(P) {
+    const r = P.ringkasan ?? { transaksi: 0, pkb: 0, bbn: 0, jumlah: 0 };
+    const opsen = ["opsenPkb", "opsenBbn", "opsenDendaPkb", "opsenDendaBbn", "opsenTunggakan", "opsenDendaTunggakan"].reduce((n, k) => n + (r[k] ?? 0), 0);
+    const t = nowWita();
+    const bulanIni = String(t.y) === P.tahun ? t.mo - 1 : -1;
+    const periode = `${tanggalSingkat(P.dari, P.dari.slice(0, 4) !== P.sampai.slice(0, 4))}–${tanggalSingkat(P.sampai)}`;
+    return {
+      sub: `Penerimaan pajak ${P.tahun} · ${periode}`,
+      tiles: [
+        { label: "Total penerimaan", nilai: rupiahTile(r.jumlah), meta: `<span>${fmt.format(r.transaksi)} transaksi</span>` },
+        { label: "PKB", nilai: rupiahTile(r.pkb), meta: `<span>${persenDari(r.pkb, r.jumlah)} dari total</span>` },
+        { label: "BBNKB", nilai: rupiahTile(r.bbn), meta: `<span>${persenDari(r.bbn, r.jumlah)} dari total</span>` },
+        { label: "Opsen kabupaten/kota", nilai: rupiahTile(opsen), meta: `<span>${persenDari(opsen, r.jumlah)} dari total</span>` },
+      ],
+      grafik: {
+        judul: `Penerimaan per bulan ${P.tahun}`,
+        satuan: "rupiah",
+        aria: `Penerimaan per bulan, Januari–Desember ${P.tahun}`,
+        batang: P.bulan.map((b, i) => ({
+          x: BULAN[i],
+          nilai: b.jumlah,
+          tip: b.disamarkan ? "disamarkan" : b.jumlah === null ? "belum ada data" : rupiahRingkas(b.jumlah),
+          aria: `${BULAN_PENUH[i]} ${P.tahun}: ${b.disamarkan ? "disamarkan" : b.jumlah === null ? "belum ada data" : `Rp${fmt.format(b.jumlah)}, ${fmt.format(b.transaksi)} transaksi`}`,
+          sorot: i === bulanIni,
+        })),
+      },
+      catatan: [`Dari Laporan Penerimaan yang ditampilkan di portal, data ${periode}.`, P.bulan.some((b) => b.disamarkan) ? "Bulan dengan kurang dari 3 transaksi disamarkan dan tidak ikut dijumlah." : ""].filter(Boolean),
+      tautan: { href: "penerimaan.html", teks: "Lihat laporan penerimaan" },
+    };
+  }
+
+  function isiPemetaan(M) {
+    const k = M.kota;
+    const wilayah = M.kecamatan.filter((x) => x.kunci);
+    return {
+      sub: `Pemetaan PKB · penetapan ${tanggalSingkat(M.tanggalPenetapan)}`,
+      tiles: [
+        { label: "Objek pajak", nilai: Number.isFinite(k.kendaraan) ? fmt.format(k.kendaraan) : "—", meta: "<span>kendaraan bermotor</span>" },
+        { label: "Taat", nilai: Number.isFinite(k.taat) ? fmt.format(k.taat) : "—", meta: `<span>${persenDari(k.taat, k.kendaraan)} dari objek pajak</span>` },
+        { label: "Menunggak ≥ 1 tahun", nilai: Number.isFinite(k.menunggak) ? fmt.format(k.menunggak) : "—", meta: `<span>${persenDari(k.menunggak, k.kendaraan)} dari objek pajak</span>` },
+        { label: "Tagihan belum terbayar", nilai: rupiahTile(k.tagihan), meta: "<span>pokok, denda, dan tunggakan</span>" },
+      ],
+      grafik: {
+        judul: "Menunggak ≥ 1 tahun per kecamatan",
+        satuan: "% objek pajak",
+        aria: "Persen kendaraan menunggak satu tahun atau lebih per kecamatan",
+        batang: wilayah.map((x) => {
+          const p = Number.isFinite(x.menunggak) && x.kendaraan > 0 ? (x.menunggak / x.kendaraan) * 100 : null;
+          return { x: x.nama, nilai: p, tip: p === null ? "disamarkan" : `${fmtDesimal.format(p)}%`, aria: `${x.nama}: ${p === null ? "disamarkan" : `${fmtDesimal.format(p)}% menunggak`}`, sorot: false };
+        }),
+        wilayah: true,
+      },
+      catatan: [`Dari Pemetaan PKB yang ditampilkan di portal, data penetapan ${tanggalSingkat(M.tanggalPenetapan)}.`],
+      tautan: { href: "pemetaan.html", teks: "Lihat pemetaan PKB per wilayah" },
+    };
+  }
 
   function initDash() {
     const dash = $("[data-dash]");
@@ -1946,110 +2068,142 @@
     const tilesEl = $("[data-dash-tiles]", dash);
     const chart = $("[data-dash-chart]", dash);
     const barsEl = $("[data-bars]", dash);
+    const tautan = $("[data-dash-tautan]", dash);
     const catatan = $("[data-dash-catatan]");
     const catatanBawaan = catatan ? catatan.textContent.replace(/\s+/g, " ").trim() : "";
-    let D = null;
+    const subBawaan = $("[data-dash-sub]", dash).textContent.replace(/\s+/g, " ").trim();
     let set = tabs.find((t) => t.getAttribute("aria-selected") === "true")?.dataset.set ?? "transaksi";
 
-    const keadaan = (pesan, tombol) => {
-      D = null;
+    // Tab Penerimaan dan Pemetaan punya sumber sendiri; tab lain dari Statistik Layanan
+    const SUMBER = {
+      statistik: { muat: muatStatistik, memuat: "Memuat statistik layanan…", kosong: "Statistik layanan belum diterbitkan.", gagal: "Statistik layanan belum dapat dimuat. " },
+      penerimaan: { muat: muatRingkasanPenerimaan, memuat: "Memuat ringkasan penerimaan…", kosong: "", gagal: "Ringkasan penerimaan belum dapat dimuat. " },
+      pemetaan: { muat: muatRingkasanPemetaan, memuat: "Memuat ringkasan pemetaan PKB…", kosong: "", gagal: "Ringkasan pemetaan PKB belum dapat dimuat. " },
+    };
+    const sumberDari = (kunci) => (kunci in SUMBER && kunci !== "statistik" ? kunci : "statistik");
+    const keadaan = Object.fromEntries(Object.keys(SUMBER).map((k) => [k, { status: "memuat", data: null }]));
+
+    const isiTab = (kunci) => {
+      const k = keadaan[sumberDari(kunci)];
+      if (k.status !== "siap" || !k.data) return null;
+      if (kunci === "penerimaan") return isiPenerimaan(k.data);
+      if (kunci === "pemetaan") return isiPemetaan(k.data);
+      const d = k.data.set.find((s) => s.kunci === kunci);
+      return d ? isiStatistik(k.data, d) : null;
+    };
+
+    const pesan = (teks, tombol) => {
       tilesEl.innerHTML = "";
       const p = document.createElement("p");
       p.className = "dash__status";
       p.setAttribute("role", "status");
-      p.textContent = pesan;
+      p.textContent = teks;
       if (tombol) p.append(tombol);
       tilesEl.append(p);
       chart.hidden = true;
+      if (tautan) tautan.hidden = true;
+      $("[data-dash-sub]", dash).textContent = subBawaan;
       if (catatan) catatan.textContent = catatanBawaan;
     };
 
-    const render = () => {
-      const d = D?.set.find((s) => s.kunci === set);
-      if (!d) return;
-      $("[data-dash-sub]", dash).textContent = d.sub;
-      $("[data-chart-title]", dash).textContent = d.judulGrafik;
-      $("[data-chart-unit]", dash).textContent = d.satuan;
-      tilesEl.innerHTML = d.tiles.map((t) => {
-        const good = (t.perubahan >= 0) === t.naikBaik;
-        return `<div class="tile">
-          <p class="tile__label">${esc(t.label)}</p>
-          <p class="tile__value">${nilaiTile(t.nilai, t.satuan)}</p>
-          <p class="tile__meta"><span class="delta ${good ? "delta--up" : "delta--down"}"><svg class="i" aria-hidden="true"><use href="#i-trend-${t.perubahan >= 0 ? "up" : "down"}"/></svg>${t.perubahan > 0 ? "+" : ""}${fmt.format(t.perubahan)}%</span><span>vs periode lalu</span></p>
-        </div>`;
-      }).join("");
-
-      // Bulan berjalan disorot bila tahun datanya tahun ini (WITA)
-      const t = nowWita();
-      const bulanIni = String(t.y) === D.tahun ? t.mo - 1 : -1;
-      const max = Math.max(...d.seri) || 1;
-      barsEl.innerHTML = d.seri.map((v, i) => {
-        const h = Math.max(3, (v / max) * 100);
-        const val = nilaiBatang(v, d.satuan);
-        const label = `${BULAN[i]} ${D.tahun}: ${fmt.format(v)} ${d.satuan}`.trim();
-        return `<div class="bar${i === bulanIni ? " is-now" : ""}" tabindex="0" style="--h:${h}%" aria-label="${esc(label)}"><span class="bar__fill" style="height:${h}%"></span><span class="bar__tip">${esc(val)}</span><span class="bar__x">${BULAN[i]}</span></div>`;
-      }).join("");
-      barsEl.setAttribute("aria-label", `${d.judulGrafik}, Januari–Desember ${D.tahun}`);
-      chart.hidden = false;
-    };
-
-    const tampilkan = (data) => {
-      D = data;
-      tabs.forEach((tab) => {
-        const s = D.set.find((x) => x.kunci === tab.dataset.set);
-        const txt = $(".catlist__txt", tab);
-        if (s && txt) txt.textContent = s.label;
-      });
-      if (catatan) {
-        const w = nowWita(new Date(D.diperbarui));
-        const waktu = document.createElement("span");
-        waktu.textContent = `Data tahun ${D.tahun}, terverifikasi pimpinan · diperbarui ${w.d} ${BULAN[w.mo - 1]} ${w.y}.`;
-        catatan.replaceChildren(waktu);
-        if (D.catatan) {
-          const isi = document.createElement("span");
-          isi.textContent = D.catatan;
-          catatan.append(isi);
-        }
-      }
-      render();
-    };
-
-    const muat = async (fokus) => {
-      keadaan("Memuat statistik layanan…");
-      dash.setAttribute("aria-busy", "true");
-      try {
-        const data = await muatStatistik();
-        if (typeof data.diperbarui !== "string" || !data.set.length) keadaan("Statistik layanan belum diterbitkan.");
-        else tampilkan(data);
-      } catch {
+    const render = (fokusUlang) => {
+      const nama = sumberDari(set);
+      const k = keadaan[nama];
+      if (k.status === "memuat") return pesan(SUMBER[nama].memuat);
+      if (k.status === "gagal") {
         const retry = document.createElement("button");
         retry.type = "button";
         retry.className = "link";
         retry.textContent = "Coba lagi";
-        retry.addEventListener("click", () => muat(true));
-        keadaan("Statistik layanan belum dapat dimuat. ", retry);
-        if (fokus) retry.focus();
-      } finally {
-        dash.removeAttribute("aria-busy");
+        retry.addEventListener("click", () => muat(nama, true));
+        pesan(SUMBER[nama].gagal, retry);
+        if (fokusUlang) retry.focus();
+        return;
+      }
+      const isi = isiTab(set);
+      if (!isi) return pesan(SUMBER[nama].kosong || SUMBER.statistik.kosong);
+
+      $("[data-dash-sub]", dash).textContent = isi.sub;
+      tilesEl.innerHTML = isi.tiles.map((t) => `<div class="tile">
+          <p class="tile__label">${esc(t.label)}</p>
+          <p class="tile__value">${t.nilai}</p>
+          <p class="tile__meta">${t.meta}</p>
+        </div>`).join("");
+
+      const g = isi.grafik;
+      $("[data-chart-title]", dash).textContent = g.judul;
+      $("[data-chart-unit]", dash).textContent = g.satuan;
+      const max = Math.max(0, ...g.batang.map((b) => b.nilai ?? 0)) || 1;
+      barsEl.classList.toggle("bars--wilayah", !!g.wilayah);
+      barsEl.style.setProperty("--kolom", String(g.batang.length));
+      barsEl.innerHTML = g.batang.map((b) => {
+        const h = b.nilai === null ? 0 : Math.max(3, (b.nilai / max) * 100);
+        return `<div class="bar${b.sorot ? " is-now" : ""}${b.nilai === null ? " is-empty" : ""}" tabindex="0" style="--h:${h}%" aria-label="${esc(b.aria)}"><span class="bar__fill" style="height:${h}%"></span><span class="bar__tip">${esc(b.tip)}</span><span class="bar__x">${esc(b.x)}</span></div>`;
+      }).join("");
+      barsEl.setAttribute("aria-label", g.aria);
+      chart.hidden = false;
+
+      if (tautan) {
+        tautan.hidden = !isi.tautan;
+        if (isi.tautan) {
+          tautan.href = isi.tautan.href;
+          $("[data-dash-tautan-teks]", tautan).textContent = isi.tautan.teks;
+        }
+      }
+      if (catatan) catatan.replaceChildren(...isi.catatan.map((teks) => Object.assign(document.createElement("span"), { textContent: teks })));
+    };
+
+    // Tab yang sumbernya belum ditampilkan di portal disembunyikan; tab terpilih pindah ke tab pertama yang tampil
+    const pilih = (tab, fokus) => {
+      tabs.forEach((t) => { t.setAttribute("aria-selected", String(t === tab)); t.tabIndex = t === tab ? 0 : -1; });
+      set = tab.dataset.set;
+      render();
+      if (fokus) tab.focus();
+    };
+    const aturTab = () => {
+      tabs.forEach((tab) => {
+        const nama = sumberDari(tab.dataset.set);
+        tab.hidden = nama !== "statistik" && keadaan[nama].status === "siap" && keadaan[nama].data === null;
+        const s = nama === "statistik" ? keadaan.statistik.data?.set?.find((x) => x.kunci === tab.dataset.set) : null;
+        const txt = $(".catlist__txt", tab);
+        if (s && txt) txt.textContent = s.label;
+      });
+      const aktif = tabs.find((t) => t.dataset.set === set);
+      if (aktif?.hidden) {
+        const pertama = tabs.find((t) => !t.hidden);
+        if (pertama) pilih(pertama);
       }
     };
 
-    tabs.forEach((tab, i, all) => {
-      const pick = (focus) => {
-        all.forEach((t) => { t.setAttribute("aria-selected", String(t === tab)); t.tabIndex = t === tab ? 0 : -1; });
-        set = tab.dataset.set; render();
-        if (focus) tab.focus();
-      };
-      tab.addEventListener("click", () => pick());
+    const muat = async (nama, fokus) => {
+      keadaan[nama] = { status: "memuat", data: null };
+      if (sumberDari(set) === nama) render();
+      if (nama === sumberDari(set)) dash.setAttribute("aria-busy", "true");
+      try {
+        const data = await SUMBER[nama].muat();
+        keadaan[nama] = { status: "siap", data: nama === "statistik" && (typeof data.diperbarui !== "string" || !data.set.length) ? null : data };
+      } catch {
+        keadaan[nama] = { status: "gagal", data: null };
+      } finally {
+        if (nama === sumberDari(set)) dash.removeAttribute("aria-busy");
+      }
+      aturTab();
+      if (sumberDari(set) === nama) render(fokus);
+    };
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => pilih(tab));
       tab.addEventListener("keydown", (e) => {
         const dir = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.key];
         if (!dir) return;
         e.preventDefault();
-        const next = all[(i + dir + all.length) % all.length];
-        next.click(); next.focus();
+        const tampil = tabs.filter((t) => !t.hidden);
+        const next = tampil[(tampil.indexOf(tab) + dir + tampil.length) % tampil.length];
+        pilih(next, true);
       });
     });
-    muat(false);
+    render();
+    Object.keys(SUMBER).forEach((nama) => muat(nama, false));
   }
 
   /* ---------- Dialog ---------- */

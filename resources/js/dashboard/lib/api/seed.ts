@@ -1156,20 +1156,6 @@ function pengaturan(sekarang: Date): Pengaturan {
           seri: [880, 910, 1020, 960, 1040, 1100, 990, 1080, 1150, 1120, 1060, 1160],
         },
         {
-          kunci: "penerimaan",
-          label: "Penerimaan pajak",
-          sub: "Penerimaan pajak daerah · UPTD Kota Kupang",
-          judulGrafik: "Penerimaan PKB per bulan",
-          satuan: "juta rupiah",
-          tiles: [
-            { id: id(), label: "Penerimaan PKB", nilai: 18.4, satuan: "M", perubahan: 5.6, naikBaik: true },
-            { id: id(), label: "BBNKB", nilai: 6.1, satuan: "M", perubahan: -1.8, naikBaik: true },
-            { id: id(), label: "Opsen PKB (Pemkot)", nilai: 12.1, satuan: "M", perubahan: 5.6, naikBaik: true },
-            { id: id(), label: "Capaian target", nilai: 78, satuan: "%", perubahan: 3, naikBaik: true },
-          ],
-          seri: [1310, 1380, 1520, 1460, 1590, 1640, 1500, 1620, 1710, 1680, 1600, 1740],
-        },
-        {
           kunci: "keliling",
           label: "Samsat Keliling",
           sub: "Samsat Keliling · 6 kecamatan, 51 kelurahan",

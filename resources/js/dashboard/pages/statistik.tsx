@@ -196,7 +196,7 @@ export default function HalamanStatistik() {
   const [tab, setTab] = React.useState("0")
   return (
     <Halaman>
-      <PengantarHalaman deskripsi="Angka di dasbor transparansi beranda (Transaksi, Penerimaan, Samsat Keliling, Kepuasan). Ubah status menjadi Terverifikasi setelah angka disetujui pimpinan." />
+      <PengantarHalaman deskripsi="Angka di dasbor transparansi beranda (Transaksi, Samsat Keliling, Kepuasan). Ubah status menjadi Terverifikasi setelah angka disetujui pimpinan. Tab Penerimaan pajak dan Pemetaan PKB di beranda terisi otomatis dari Laporan Penerimaan dan Pemetaan PKB yang ditampilkan di portal." />
       <Alert>
         <IconServer />
         <AlertTitle>Tersimpan di server</AlertTitle>

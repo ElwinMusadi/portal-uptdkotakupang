@@ -86,6 +86,7 @@ use App\Http\Controllers\PublicPotentialMapController;
 use App\Http\Controllers\PublicProfileController;
 use App\Http\Controllers\PublicQueueTicketController;
 use App\Http\Controllers\PublicRevenueReportController;
+use App\Http\Controllers\PublicRevenueSummaryController;
 use App\Http\Controllers\PublicServiceBoardController;
 use App\Http\Controllers\PublicServiceController;
 use App\Http\Controllers\PublicSiteController;
@@ -585,6 +586,8 @@ Route::prefix('public')
             ->name('halaman.show');
         // Laporan Penerimaan: the imports shown on the portal, small groups masked (D-048)
         Route::get('/penerimaan', PublicRevenueReportController::class)->middleware('throttle:public-penerimaan')->name('penerimaan.show');
+        // The homepage's summary of the year's published revenue (D-055)
+        Route::get('/penerimaan/ringkasan', PublicRevenueSummaryController::class)->middleware('throttle:public-penerimaan')->name('penerimaan.ringkasan');
         // Pemetaan PKB: figures per kecamatan and kelurahan without identities, small groups hidden (D-052)
         Route::get('/pemetaan', PublicPotentialMapController::class)->name('pemetaan.show');
         // Antrean Online: the taxpayer's tracking page behind a ticket's QR, by its random code only (D-051)

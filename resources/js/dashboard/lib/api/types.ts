@@ -401,7 +401,8 @@ export interface JamPelayanan {
   pemberitahuan: string
 }
 
-export type KunciStatistik = "transaksi" | "penerimaan" | "keliling" | "kepuasan"
+/** Penerimaan pajak bukan lagi kategori statistik: beranda meringkas Laporan Penerimaan (D-055) */
+export type KunciStatistik = "transaksi" | "keliling" | "kepuasan"
 
 export interface Statistik {
   status: "ilustrasi" | "terverifikasi"

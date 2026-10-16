@@ -327,12 +327,17 @@ class PortalPagesTest extends TestCase
         $this->get('/aplikasi.html')->assertMovedPermanently()->assertRedirect('/aplikasi');
     }
 
-    public function test_links_the_revenue_report_from_the_homepage_transparency_section(): void
+    public function test_summarises_the_revenue_report_and_the_tax_map_in_the_homepage_dashboard(): void
     {
         $html = $this->get('/')->assertOk()->getContent();
 
         $this->assertSame(1, preg_match('/<section[^>]*\bid="transparansi"[^>]*>.*?<\/section>/s', $html, $section));
-        $this->assertMatchesRegularExpression('#<a class="link-arrow" href="penerimaan\.html"\s*>Lihat laporan penerimaan<svg#', $section[0]);
+        // Both are tabs of the dashboard (D-055), with a link to the whole page inside the panel
+        $this->assertSame(5, preg_match_all('#data-set="(transaksi|penerimaan|pemetaan|keliling|kepuasan)"#', $section[0], $tabs));
+        $this->assertSame(['transaksi', 'penerimaan', 'pemetaan', 'keliling', 'kepuasan'], $tabs[1]);
+        $this->assertMatchesRegularExpression('#<a class="dash__more" href="penerimaan\.html" data-dash-tautan hidden\s*><span data-dash-tautan-teks>Lihat laporan penerimaan</span#', $section[0]);
+        $this->assertStringNotContainsString('class="link-arrow" href="penerimaan.html"', $section[0]);
+        $this->assertStringNotContainsString('href="pemetaan.html"', $section[0]);
     }
 
     public function test_leaves_the_tax_potential_map_to_its_component_and_the_public_api(): void
@@ -356,14 +361,6 @@ class PortalPagesTest extends TestCase
         $current = $view === 'pemetaan' ? ' aria-current="page"' : '';
         $this->assertStringContainsString("<a class=\"nav__menu-link\" data-nav=\"pemetaan\"{$current} href=\"pemetaan.html\">", $html);
         $this->assertStringContainsString("<a data-nav=\"pemetaan\"{$current} href=\"pemetaan.html\">Pemetaan PKB</a>", $html);
-    }
-
-    public function test_links_the_tax_potential_map_from_the_homepage_transparency_section(): void
-    {
-        $html = $this->get('/')->assertOk()->getContent();
-
-        $this->assertSame(1, preg_match('/<section[^>]*\bid="transparansi"[^>]*>.*?<\/section>/s', $html, $section));
-        $this->assertMatchesRegularExpression('#<a class="link-arrow" href="pemetaan\.html"\s*>Lihat pemetaan PKB per wilayah<svg#', $section[0]);
     }
 
     public function test_leaves_the_news_to_the_public_api(): void

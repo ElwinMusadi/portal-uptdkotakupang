@@ -483,18 +483,6 @@
               Capaian pelayanan kami tampilkan berkala, agar masyarakat ikut
               mengawasi.
             </p>
-            <p style="margin-top: 16px">
-              <a class="link-arrow" href="penerimaan.html"
-                >Lihat laporan penerimaan<svg class="i" aria-hidden="true">
-                  <use href="#i-arrow-right" /></svg
-              ></a>
-            </p>
-            <p style="margin-top: 8px">
-              <a class="link-arrow" href="pemetaan.html"
-                >Lihat pemetaan PKB per wilayah<svg class="i" aria-hidden="true">
-                  <use href="#i-arrow-right" /></svg
-              ></a>
-            </p>
             <div
               class="catlist"
               role="tablist"
@@ -515,6 +503,17 @@
                 tabindex="-1"
               >
                 <span class="catlist__txt">Penerimaan pajak</span
+                ><svg class="i" aria-hidden="true">
+                  <use href="#i-arrow-right" />
+                </svg>
+              </button>
+              <button
+                role="tab"
+                aria-selected="false"
+                data-set="pemetaan"
+                tabindex="-1"
+              >
+                <span class="catlist__txt">Pemetaan PKB</span
                 ><svg class="i" aria-hidden="true">
                   <use href="#i-arrow-right" />
                 </svg>
@@ -573,6 +572,11 @@
                   aria-label="Grafik batang transaksi per bulan"
                 ></div>
               </div>
+              <a class="dash__more" href="penerimaan.html" data-dash-tautan hidden
+                ><span data-dash-tautan-teks>Lihat laporan penerimaan</span
+                ><svg class="i" aria-hidden="true">
+                  <use href="#i-arrow-right" /></svg
+              ></a>
             </div>
             <p class="micro muted dash__note" data-dash-catatan>
               Angka resmi tampil setelah diverifikasi dan disetujui.

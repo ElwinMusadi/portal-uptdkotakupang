@@ -121,10 +121,15 @@
 .dash__chart { padding-bottom: 12px; }
 .dash__legend { font-size: 12px; color: var(--night-muted); }
 .dash__note { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 6px 10px; }
-/* Selama statistik dimuat, belum diterbitkan, atau gagal dimuat (initDash) */
+/* Tautan ke halaman lengkap tab Penerimaan dan Pemetaan (D-055) */
+.dash__more { justify-self: start; display: inline-flex; align-items: center; gap: 8px; padding: 4px 6px 2px; font-size: 14px; font-weight: 550; color: var(--night-accent); }
+.dash__more[hidden] { display: none; }
+.dash__more .i { width: 16px; height: 16px; transition: transform var(--dur-2) var(--ease); }
+.dash__more:hover .i { transform: translateX(3px); }
+/* Selama data dimuat, belum diterbitkan, atau gagal dimuat (initDash) */
 .dash__status { grid-column: 1 / -1; padding: 28px 6px; font-size: 13.5px; color: var(--night-muted); }
 .dash__status .link { color: var(--night-accent); }
-.bars { display: grid; grid-template-columns: repeat(12, 1fr); align-items: end; gap: 2px; height: 160px; margin-top: 18px; padding-bottom: 22px; position: relative; border-bottom: 1px solid var(--night-line); }
+.bars { display: grid; grid-template-columns: repeat(var(--kolom, 12), 1fr); align-items: end; gap: 2px; height: 160px; margin-top: 18px; padding-bottom: 22px; position: relative; border-bottom: 1px solid var(--night-line); }
 .bar { position: relative; height: 100%; display: flex; align-items: flex-end; justify-content: center; cursor: default; outline: none; }
 .bar__fill { width: min(100%, 24px); border-radius: 4px 4px 0 0; background: var(--night-faint); transition: height var(--dur-3) var(--ease), background-color var(--dur-1) var(--ease); }
 .bar.is-now .bar__fill { background: var(--night-accent); }
@@ -132,7 +137,10 @@
 .bar__x { position: absolute; bottom: -22px; font-size: 11px; color: var(--night-muted); }
 .bar__tip { position: absolute; bottom: calc(var(--h, 50%) + 8px); left: 50%; transform: translate(-50%, 4px); background: #fff; color: var(--ink); font-size: 12px; font-weight: 550; padding: 5px 9px; border-radius: 8px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity var(--dur-1) var(--ease), transform var(--dur-1) var(--ease); z-index: 2; }
 .bar:hover .bar__tip, .bar:focus-visible .bar__tip { opacity: 1; transform: translate(-50%, 0); }
-@media (max-width: 520px) { .dash__tiles { grid-template-columns: 1fr; } .bar__x { font-size: 11px; } .bar:nth-child(odd) .bar__x { display: none; } .dash .filter-row { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; scrollbar-width: none; } .dash .filter-row button { white-space: nowrap; padding: 6px 10px; } }
+/* Grafik per kecamatan: nama wilayah utuh di bawah setiap batang, boleh dua baris */
+.bars--wilayah { padding-bottom: 34px; gap: 6px; }
+.bars--wilayah .bar__x { bottom: -34px; left: 0; right: 0; text-align: center; line-height: 1.2; }
+@media (max-width: 520px) { .dash__tiles { grid-template-columns: 1fr; } .bar__x { font-size: 11px; } .bars:not(.bars--wilayah) .bar:nth-child(odd) .bar__x { display: none; } .dash .filter-row { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; scrollbar-width: none; } .dash .filter-row button { white-space: nowrap; padding: 6px 10px; } }
 
 /* ================= 7 · Peta kanal ================= */
 .notch {

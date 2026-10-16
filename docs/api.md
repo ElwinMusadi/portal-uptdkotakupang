@@ -11,6 +11,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET` | `/api/public/papan` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/statistik` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/penerimaan` | anonim, hanya baca, parameter `tanggal` atau `bulan` | tersedia |
+| `GET` | `/api/public/penerimaan/ringkasan` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/antrean/{kode}` | anonim, hanya baca, kode lacak dari QR tiket | tersedia |
 | `GET` | `/api/public/kontak` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/visi-misi` | anonim, hanya baca | tersedia |
@@ -364,8 +365,8 @@ Dipakai halaman *Statistik Layanan* di dashboard ([D-018](decisions.md#d-018--20
 
 | Alamat | Permintaan | Respons |
 |---|---|---|
-| `GET /api/pengaturan/statistik` | — | `200` dokumen di atas. Sebelum pertama kali disimpan: empat kategori dengan label bawaan, semua angka `0`, status `ilustrasi`, dan tahun berjalan (WITA). |
-| `PUT /api/pengaturan/statistik` | dokumen lengkap | `200` dokumen tersimpan. Bilangan bulat disimpan sebagai bilangan bulat (`12480.0` menjadi `12480`); isi yang sama dengan yang tersimpan tidak dicatat. `422` bila status selain `ilustrasi` atau `terverifikasi`; tahun bukan 4 angka 19xx/20xx; `set` tidak berisi tepat 4 kategori `transaksi`, `penerimaan`, `keliling`, `kepuasan` (masing-masing sekali); kategori tanpa nama tab (maks. 60 karakter) atau judul grafik (maks. 80); kategori tanpa tepat 4 angka utama atau 12 nilai bulanan; angka utama tanpa label (maks. 60); nilai bukan angka; perubahan di luar -1.000–1.000%; nilai bulanan negatif; atau teks berisi karakter kontrol. |
+| `GET /api/pengaturan/statistik` | — | `200` dokumen di atas. Sebelum pertama kali disimpan: tiga kategori dengan label bawaan, semua angka `0`, status `ilustrasi`, dan tahun berjalan (WITA). |
+| `PUT /api/pengaturan/statistik` | dokumen lengkap | `200` dokumen tersimpan. Bilangan bulat disimpan sebagai bilangan bulat (`12480.0` menjadi `12480`); isi yang sama dengan yang tersimpan tidak dicatat. `422` bila status selain `ilustrasi` atau `terverifikasi`; tahun bukan 4 angka 19xx/20xx; `set` tidak berisi tepat 3 kategori `transaksi`, `keliling`, `kepuasan` (masing-masing sekali; `penerimaan` bukan lagi kategori sejak [D-055](decisions.md#d-055--2026-10-17--ringkasan-penerimaan-dan-pemetaan-di-dasbor-beranda)); kategori tanpa nama tab (maks. 60 karakter) atau judul grafik (maks. 80); kategori tanpa tepat 4 angka utama atau 12 nilai bulanan; angka utama tanpa label (maks. 60); nilai bukan angka; perubahan di luar -1.000–1.000%; nilai bulanan negatif; atau teks berisi karakter kontrol. |
 
 Penyimpanan tercatat di log aktivitas sebagai "memperbarui Statistik Layanan".
 
@@ -1082,7 +1083,7 @@ Kode: `app/Http/Controllers/PublicVehicleController.php`, `app/Http/Requests/Che
 
 ## `GET /api/public/statistik`
 
-Dasbor transparansi di beranda ([D-018](decisions.md#d-018--2026-10-13--statistik-layanan-tersimpan-di-server-hanya-angka-terverifikasi-yang-terbit), `initDash()` di `public/assets/js/main.js`). Hanya statistik berstatus `terverifikasi` yang diterbitkan: bentuknya sama dengan dokumen dashboard tanpa `status` dan tanpa `id` angka utama, ditambah `diperbarui` (waktu terakhir disimpan).
+Dasbor transparansi di beranda ([D-018](decisions.md#d-018--2026-10-13--statistik-layanan-tersimpan-di-server-hanya-angka-terverifikasi-yang-terbit), `initDash()` di `public/assets/js/main.js`). Hanya statistik berstatus `terverifikasi` yang diterbitkan: bentuknya sama dengan dokumen dashboard tanpa `status` dan tanpa `id` angka utama, ditambah `diperbarui` (waktu terakhir disimpan). Sejak [D-055](decisions.md#d-055--2026-10-17--ringkasan-penerimaan-dan-pemetaan-di-dasbor-beranda) `set` berisi `transaksi`, `keliling`, dan `kepuasan`; kategori `penerimaan` dokumen yang disimpan sebelumnya tidak dikirim, dan tab Penerimaan pajak beranda memakai `GET /api/public/penerimaan/ringkasan`.
 
 | Hal | Perilaku |
 |---|---|
@@ -1129,6 +1130,31 @@ Parameter, opsional dan salah satu saja: `tanggal` (`YYYY-MM-DD`) untuk laporan 
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 
 Kode: `app/Http/Controllers/PublicRevenueReportController.php`, `app/Http/Requests/ShowPublicRevenueReportRequest.php`, `app/Actions/BuildPublicRevenueReport.php`, `app/Actions/BuildRevenueReport.php` (`published()`, `totals()`, `comparison()`, `breakdown()`, `days()`). Tes: `tests/Feature/PublicRevenueReportTest.php`.
+
+## `GET /api/public/penerimaan/ringkasan`
+
+Tab *Penerimaan pajak* dasbor transparansi beranda ([D-055](decisions.md#d-055--2026-10-17--ringkasan-penerimaan-dan-pemetaan-di-dasbor-beranda), `initDash()` di `public/assets/js/main.js`): tahun berjalan dari impor yang dinyalakan Administrator (`tampil`), per bulan. Tanpa parameter.
+
+```json
+{
+  "tersedia": true, "tahun": "2026", "dari": "2026-09-01", "sampai": "2026-10-14",
+  "ringkasan": { "transaksi": 7638, "pkb": 2738009341, "bbn": 4830522600, "…": 0, "jumlah": 13410579247 },
+  "bulan": [
+    { "bulan": "2026-08", "transaksi": null, "jumlah": null },
+    { "bulan": "2026-09", "transaksi": 7318, "jumlah": 12847135065 },
+    { "bulan": "2026-10", "transaksi": 320, "jumlah": 563444182 }
+  ]
+}
+```
+
+| Hal | Perilaku |
+|---|---|
+| Berhasil | `200`. `tahun` adalah tahun hari terakhir yang tampil; `dari` hari pertama yang tampil di tahun itu (atau 1 Januari bila data mulai tahun sebelumnya) dan `sampai` hari terakhir. `bulan` selalu 12 baris Januari–Desember: bulan di luar `dari`–`sampai` tanpa angka (`null`), bulan dengan 1–2 transaksi `{"transaksi": null, "jumlah": null, "disamarkan": true}` seperti laporan bulanannya. `ringkasan` (semua komponen seperti `GET /api/public/penerimaan`) adalah jumlah bulan yang tampil saja, sehingga bulan yang disamarkan tidak bisa dihitung balik dari total; `null` bila tidak ada bulan yang tampil. |
+| Belum ada yang tampil | `200` `{"tersedia": false, "tahun": null, "dari": null, "sampai": null, "ringkasan": null, "bulan": []}`; beranda menyembunyikan tab Penerimaan pajak. |
+| Galat | `422` untuk query parameter apa pun; `429` setelah batas laju yang sama dengan `GET /api/public/penerimaan`. |
+| Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
+
+Kode: `app/Http/Controllers/PublicRevenueSummaryController.php`, `app/Actions/BuildPublicRevenueSummary.php`. Tes: `tests/Feature/PublicRevenueSummaryTest.php`.
 
 ## `GET /api/public/pemetaan`
 

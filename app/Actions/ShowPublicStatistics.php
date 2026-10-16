@@ -31,7 +31,7 @@ class ShowPublicStatistics
             return ['tahun' => '', 'catatan' => '', 'set' => [], 'diperbarui' => null];
         }
 
-        $statistics = $setting->value;
+        $statistics = Setting::currentStatisticsCategories($setting->value);
 
         return [
             'tahun' => $statistics['tahun'],

@@ -44,7 +44,7 @@ class PublicStatisticsControllerTest extends TestCase
             ->assertJsonPath('tahun', '2026')
             ->assertJsonPath('catatan', 'Angka triwulan III telah disetujui pimpinan.')
             ->assertJsonPath('diperbarui', '2026-10-13T08:00:00+00:00')
-            ->assertJsonPath('set.*.kunci', ['transaksi', 'penerimaan', 'keliling', 'kepuasan'])
+            ->assertJsonPath('set.*.kunci', ['transaksi', 'keliling', 'kepuasan'])
             ->assertJsonPath('set.0', [
                 'kunci' => 'transaksi',
                 'label' => 'Transaksi pelayanan',
@@ -88,7 +88,14 @@ class PublicStatisticsControllerTest extends TestCase
         Exceptions::assertReported(PublicContentUnavailableException::class);
     }
 
-    private function saveStatistics(string $status): void
+    public function test_leaves_out_the_revenue_category_of_statistics_saved_before_it_left(): void
+    {
+        $this->saveStatistics('terverifikasi', withRevenue: true);
+
+        $this->getJson('/api/public/statistik')->assertOk()->assertJsonPath('set.*.kunci', ['transaksi', 'keliling', 'kepuasan']);
+    }
+
+    private function saveStatistics(string $status, bool $withRevenue = false): void
     {
         $statistics = Setting::statistics();
         $statistics['status'] = $status;
@@ -97,6 +104,10 @@ class PublicStatisticsControllerTest extends TestCase
         $statistics['set'][0]['tiles'][0]['nilai'] = 12480;
         $statistics['set'][0]['tiles'][0]['perubahan'] = 4.2;
         $statistics['set'][0]['seri'] = [880, 910, 1020, 960, 1040, 1100, 990, 1080, 1150, 1120, 1060, 1160];
+        if ($withRevenue) {
+            // Saved before Penerimaan pajak left the statistics (D-055)
+            array_splice($statistics['set'], 1, 0, [['kunci' => 'penerimaan', 'label' => 'Penerimaan pajak', 'sub' => '', 'judulGrafik' => 'Penerimaan PKB per bulan', 'satuan' => 'juta rupiah', 'tiles' => $statistics['set'][0]['tiles'], 'seri' => array_fill(0, 12, 0)]]);
+        }
         (new Setting)->forceFill(['name' => Setting::STATISTICS, 'value' => $statistics])->save();
     }
 }
