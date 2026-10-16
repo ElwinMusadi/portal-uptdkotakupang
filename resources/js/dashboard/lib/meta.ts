@@ -3,6 +3,7 @@ import type {
   Faq,
   Hari,
   JadwalKeliling,
+  JenisAplikasi,
   JenisLayananLuar,
   JenisPesan,
   JenisUnit,
@@ -13,6 +14,7 @@ import type {
   ModulPantau,
   NamaKoleksi,
   NamaPengaturan,
+  PengelolaAplikasi,
   StatusAlur,
   StatusFaq,
   StatusLoket,
@@ -33,6 +35,7 @@ export const KOLEKSI_LABEL: Record<NamaKoleksi, string> = {
   pesan: "Pesan & Pengaduan",
   halaman: "Halaman Statis",
   pemutakhiran: "Jadwal Pemutakhiran",
+  aplikasi: "Aplikasi & Situs",
 }
 
 export const PENGATURAN_LABEL: Record<NamaPengaturan, string> = {
@@ -270,6 +273,16 @@ export const JENIS_UNIT: Record<JenisUnit, string> = {
   seksi: "Seksi",
   fungsional: "Jabatan fungsional",
   mitra: "Mitra satu atap",
+}
+
+export const JENIS_APLIKASI: Record<JenisAplikasi, string> = {
+  situs: "Situs web",
+  android: "Android (Google Play)",
+}
+
+export const PENGELOLA_APLIKASI: Record<PengelolaAplikasi, string> = {
+  bpad: "BPAD Provinsi NTT",
+  uptd: "UPTD Pendapatan Daerah Wilayah Kota Kupang",
 }
 
 export const PESAN_JENIS: Record<JenisPesan, string> = {

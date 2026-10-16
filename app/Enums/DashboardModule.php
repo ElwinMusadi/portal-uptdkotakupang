@@ -36,6 +36,8 @@ enum DashboardModule: string
     case Beranda = 'beranda';
     case Halaman = 'halaman';
     case Pemutakhiran = 'pemutakhiran';
+    /** Aplikasi & Situs: the apps and websites of BPAD and the UPTD (D-054). */
+    case Aplikasi = 'aplikasi';
 
     /**
      * The module's name as the dashboard menu shows it.
@@ -64,6 +66,7 @@ enum DashboardModule: string
             self::Beranda => 'Beranda',
             self::Halaman => 'Halaman Statis',
             self::Pemutakhiran => 'Jadwal Pemutakhiran',
+            self::Aplikasi => 'Aplikasi & Situs',
         };
     }
 

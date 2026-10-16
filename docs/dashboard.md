@@ -100,6 +100,7 @@ resources/js/dashboard/
 | Jadwal Pemutakhiran | `#/pemutakhiran` | koleksi `pemutakhiran` | — (internal) |
 | Absensi Lapangan | `#/absensi` | server (`/api/absensi/kegiatan`); aplikasi petugas di `/absen` | — (internal) |
 | Kalkulator PKB | `#/kalkulator` | server (`/api/kendaraan/{nopol}`) | — (internal) |
+| Aplikasi & Situs | `#/aplikasi` | koleksi `aplikasi` | `aplikasi.html` |
 | Pengaturan | `#/pengaturan` | pengaturan `situs`, `akun`, cadangan data | — |
 
 Formulir sunting membuka panel samping dengan status di URL (`?baru=1` atau `?ubah=<id>`), jadi tautannya bisa dibagikan. Perubahan yang belum disimpan dijaga saat pindah halaman atau menutup tab. Tekan `Ctrl K` (`⌘K` di Mac) untuk mencari halaman dan konten.
@@ -153,7 +154,7 @@ Contoh entri `faq`:
 
 Tanpa `VITE_API_URL`, dashboard berjalan dalam **mode campuran** (`lib/api/hybrid.ts`, [D-011](decisions.md#d-011--2026-10-13--tanya-jawab-tersimpan-di-server)):
 
-- Koleksi di `KOLEKSI_SERVER` (saat ini `faq`, `keliling`, `penyesuaian`, `pesan`, `layanan`, `halaman`, `pemutakhiran`, `dokumen`, `berita`, `dokumentasi`, dan `unit`) dan pengaturan di `PENGATURAN_SERVER` (saat ini `jam`, `papan`, `statistik`, `kontak`, `visiMisi`, `profil`, `beranda`, `situs`, dan `akun`) dibaca dan ditulis lewat API PINTU (`/api/koleksi/…`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/statistik`, `/api/pengaturan/kontak`, `/api/pengaturan/visiMisi`, `/api/pengaturan/profil`, `/api/pengaturan/beranda`, `/api/pengaturan/situs`, `/api/pengaturan/akun`, lihat [docs/api.md](api.md#tanya-jawab-di-dashboard)). Perubahan pegawai lain muncul saat tab kembali dilihat, dan server memeriksa modul pengguna. Waktu simpan pengaturan server (`GET /api/pengaturan`) menggantikan waktu di peramban untuk pengaturan itu.
+- Koleksi di `KOLEKSI_SERVER` (saat ini `faq`, `keliling`, `penyesuaian`, `pesan`, `layanan`, `halaman`, `pemutakhiran`, `dokumen`, `berita`, `dokumentasi`, `unit`, dan `aplikasi`) dan pengaturan di `PENGATURAN_SERVER` (saat ini `jam`, `papan`, `statistik`, `kontak`, `visiMisi`, `profil`, `beranda`, `situs`, dan `akun`) dibaca dan ditulis lewat API PINTU (`/api/koleksi/…`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/statistik`, `/api/pengaturan/kontak`, `/api/pengaturan/visiMisi`, `/api/pengaturan/profil`, `/api/pengaturan/beranda`, `/api/pengaturan/situs`, `/api/pengaturan/akun`, lihat [docs/api.md](api.md#tanya-jawab-di-dashboard)). Perubahan pegawai lain muncul saat tab kembali dilihat, dan server memeriksa modul pengguna. Waktu simpan pengaturan server (`GET /api/pengaturan`) menggantikan waktu di peramban untuk pengaturan itu.
 - Koleksi dan pengaturan lain serta unggahan tersimpan di IndexedDB peramban: database `pintu-dashboard`, store `data`, dengan kunci `koleksi:<nama>`, `pengaturan:<nama>`, `aktivitas`, dan `meta`.
 - Saat pertama dibuka, dashboard mengisi data lokal awal dari isi portal yang sudah ada (`resources/js/dashboard/lib/api/seed.ts`). Tanya jawab contoh di sana tidak dipakai lagi dan tidak dipindahkan ke server.
 - Foto dan berkas disimpan sebagai data URL. Foto dikecilkan dulu menjadi maks. 1600 px.
@@ -198,7 +199,7 @@ Server perlu menyediakan endpoint berikut. Bentuk JSON-nya sama dengan model dat
 | `GET` | `/pengaturan` | — | `{ "situs": "<waktu ISO>", … }`, waktu terakhir tiap pengaturan disimpan |
 | `GET` | `/aktivitas?limit=50` | — | Log aktivitas terbaru `{ id, waktu, oleh, aksi, modul, target }` |
 | `DELETE` | `/aktivitas` | — | 204 |
-| `POST` | `/unggah` | `multipart/form-data`, field `modul` (tujuan) dan `berkas` | `{ nama, ukuran, tipe, url }`; tersedia di server ([D-028](decisions.md#d-028--2026-10-14--unggahan-disimpan-di-laravel-cloud-object-storage)). Mode campuran memakainya untuk tujuan di `UNGGAHAN_SERVER` (saat ini `visiMisi`, `profil`, `beranda`, `dokumen`, `berita`, `dokumentasi`, dan `unit`) |
+| `POST` | `/unggah` | `multipart/form-data`, field `modul` (tujuan) dan `berkas` | `{ nama, ukuran, tipe, url }`; tersedia di server ([D-028](decisions.md#d-028--2026-10-14--unggahan-disimpan-di-laravel-cloud-object-storage)). Mode campuran memakainya untuk tujuan di `UNGGAHAN_SERVER` (saat ini `visiMisi`, `profil`, `beranda`, `dokumen`, `berita`, `dokumentasi`, `unit`, dan `aplikasi`) |
 | `GET` | `/ekspor` | — | Cadangan lengkap (format di atas) |
 | `POST` | `/impor` | Cadangan lengkap | 204 |
 | `POST` | `/reset` | — | 204 |
@@ -238,7 +239,7 @@ Pegawai UPTD hanya melihat modul yang ditugaskan Administrator ([D-010](decision
 - `app/nav.ts` adalah satu-satunya sumber: setiap item menu konten punya `modul`, item khusus Administrator punya `khusus`. `navUntuk()` menyaring menu samping, pencarian, dan "Buat konten"; `GRUP_MODUL` menyusun centang modul di panel akun dengan judul dan kelompok yang sama dengan menu.
 - `Layout` mencocokkan alamat yang dibuka dengan item menu. Bila item itu tidak boleh dilihat, halaman diganti pesan "Modul ini belum ditugaskan kepada Anda" atau "Khusus Administrator".
 - `useItemAlur()` dan `usePemutakhiran()` di `lib/hitung.ts` menyaring konten dan jadwal per modul, sehingga Ringkasan dan Alur Publikasi ikut terbatas. Daftar Jadwal Pemutakhiran juga sudah disaring server ([D-025](decisions.md#d-025--2026-10-14--jadwal-pemutakhiran-tersimpan-di-server)). Kartu dan grafik pesan hanya tampil bagi pengelola Pesan & Pengaduan.
-- Untuk Tanya Jawab, Layanan Luar Kantor, Pesan & Pengaduan, Persyaratan Layanan, Jam Pelayanan, Papan Layanan, Statistik Layanan, Laporan Penerimaan, Kontak & Kanal, Visi & Misi, Tentang UPTD, Beranda, Halaman Statis, dan Jadwal Pemutakhiran, server ikut menegakkannya (`FaqPolicy`, `MobileServiceStopPolicy`, `MessagePolicy`, `ServicePolicy`, `SettingPolicy`, `RevenueImportPolicy`, `ScheduleAdjustmentPolicy`, `StaticPagePolicy`, `UpdateStandardPolicy`): pegawai tanpa modul itu mendapat `403`. Pengaturan Situs bukan milik modul mana pun: semua pegawai membacanya, hanya Administrator yang menyimpannya, dan formulirnya hanya-baca bagi pegawai lain. Karena itu Ringkasan hanya memuat jadwal Samsat Keliling bagi pengelolanya dan pengelola Jadwal Pemutakhiran (`useKoleksi(…, { aktif })`), isi Papan Layanan hanya bagi pengelolanya (`usePengaturan(…, { aktif })`), dan pesan (lencana menu, kartu, grafik, antrean kerja, jumlah di *Pengaturan › Data*) hanya bagi pengelola Pesan & Pengaduan; yang lain memakai waktu simpannya. Untuk konten yang masih di IndexedDB, pembatasan ini baru mengatur tampilan; endpoint konten berikutnya wajib memeriksa modul yang sama.
+- Untuk Tanya Jawab, Layanan Luar Kantor, Pesan & Pengaduan, Persyaratan Layanan, Jam Pelayanan, Papan Layanan, Statistik Layanan, Laporan Penerimaan, Kontak & Kanal, Visi & Misi, Tentang UPTD, Beranda, Halaman Statis, dan Jadwal Pemutakhiran, server ikut menegakkannya (`FaqPolicy`, `MobileServiceStopPolicy`, `MessagePolicy`, `ServicePolicy`, `SettingPolicy`, `RevenueImportPolicy`, `ScheduleAdjustmentPolicy`, `StaticPagePolicy`, `UpdateStandardPolicy`, `AgencyAppPolicy`): pegawai tanpa modul itu mendapat `403`. Pengaturan Situs bukan milik modul mana pun: semua pegawai membacanya, hanya Administrator yang menyimpannya, dan formulirnya hanya-baca bagi pegawai lain. Karena itu Ringkasan hanya memuat jadwal Samsat Keliling bagi pengelolanya dan pengelola Jadwal Pemutakhiran (`useKoleksi(…, { aktif })`), isi Papan Layanan hanya bagi pengelolanya (`usePengaturan(…, { aktif })`), dan pesan (lencana menu, kartu, grafik, antrean kerja, jumlah di *Pengaturan › Data*) hanya bagi pengelola Pesan & Pengaduan; yang lain memakai waktu simpannya. Untuk konten yang masih di IndexedDB, pembatasan ini baru mengatur tampilan; endpoint konten berikutnya wajib memeriksa modul yang sama.
 
 ## Tanya Jawab
 
@@ -375,6 +376,14 @@ Halaman *Struktur Organisasi* (`#/struktur`, `pages/struktur.tsx`) tersimpan di 
 - Urutan di daftar adalah urutan unit di bagan portal, dari kiri ke kanan. Foto pejabat diunggah ke server (tujuan `unit`) dan menggantikan inisial di bagan.
 - NIP pejabat hanya untuk internal dan tidak dikirim ke portal.
 - Ketujuh unit yang tampil di portal menjadi data awal; nama pejabat selain Kepala UPTD diisi setelah diverifikasi.
+
+## Aplikasi & Situs
+
+Halaman *Aplikasi & Situs* (`#/aplikasi`, `pages/aplikasi.tsx`, di bagian Alat Bantu) mengelola daftar aplikasi dan situs milik BPAD Provinsi NTT dan UPTD untuk halaman portal `aplikasi.html` ([D-054](decisions.md#d-054--2026-10-17--halaman-aplikasi--situs)), sebagai koleksi `aplikasi` di server tanpa alur publikasi: perubahan langsung tampil di portal (`GET /api/public/aplikasi`).
+
+- Menu dan halamannya hanya bagi Administrator dan pegawai yang ditugasi modul *Aplikasi & Situs* (`AgencyAppPolicy`).
+- Pengelola menambah, menyunting, mengurutkan (seret baris), dan menghapus aplikasi. Isian: logo (unggahan tujuan `aplikasi`, inisial bila kosong), nama, nama lengkap, keterangan, jenis (*Situs web* atau *Android (Google Play)*), pengelola (*BPAD Provinsi NTT* atau *UPTD Pendapatan Daerah Wilayah Kota Kupang*), dan tautan. Aplikasi Android harus ditautkan ke halamannya di Google Play.
+- Lima aplikasi yang didaftarkan pemilik menjadi data awal (PINTU, PRO NTT, SIKAP, SIPAS, Tilang / Razia) dengan logo dari sumber masing-masing di `public/assets/img/aplikasi/`; logo itu bisa diganti dengan unggahan.
 
 ## Regulasi & Unduhan
 

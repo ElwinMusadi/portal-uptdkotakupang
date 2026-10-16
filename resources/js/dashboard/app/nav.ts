@@ -1,6 +1,7 @@
 import {
   IconAddressBook,
   IconAlarm,
+  IconApps,
   IconBook2,
   IconBuildingCommunity,
   IconCalculator,
@@ -118,6 +119,15 @@ export const NAV_GRUP: GrupNav[] = [
     item: [
       { judul: "Absensi Lapangan", url: "/absensi", ikon: IconCamera, keterangan: "Clock-in kegiatan lapangan dengan swafoto dan lokasi" },
       { judul: "Kalkulator PKB", url: "/kalkulator", ikon: IconCalculator, keterangan: "Rincian PKB dari nomor polisi, menurut Pergub NTT 54/2026" },
+      {
+        judul: "Aplikasi & Situs",
+        url: "/aplikasi",
+        ikon: IconApps,
+        portal: "aplikasi.html",
+        tambah: "/aplikasi?baru=1",
+        keterangan: "Aplikasi dan situs milik BPAD dan UPTD di halaman portal",
+        modul: ["aplikasi"],
+      },
     ],
   },
 ]

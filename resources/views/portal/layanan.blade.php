@@ -129,6 +129,7 @@
           <a class="nav__menu-link" data-nav="layanan" aria-current="page" href="layanan.html"><span class="nav__menu-icon"><svg class="i i--sm" aria-hidden="true"><use href="#i-list-check"/></svg></span><strong>Persyaratan Layanan</strong><span>Berkas untuk setiap jenis layanan.</span></a>
           <a class="nav__menu-link" href="layanan.html#alur"><span class="nav__menu-icon"><svg class="i i--sm" aria-hidden="true"><use href="#i-qr"/></svg></span><strong>Alur Non-Tunai</strong><span>Langkah bayar tanpa uang tunai.</span></a>
           <a class="nav__menu-link" href="layanan.html#simulasi"><span class="nav__menu-icon"><svg class="i i--sm" aria-hidden="true"><use href="#i-calculator"/></svg></span><strong>Simulasi Pajak</strong><span>Perkiraan total sebelum datang.</span></a>
+          <a class="nav__menu-link" data-nav="aplikasi" href="aplikasi.html"><span class="nav__menu-icon"><svg class="i i--sm" aria-hidden="true"><use href="#i-grid"/></svg></span><strong>Aplikasi &amp; Situs</strong><span>Aplikasi resmi BPAD dan UPTD.</span></a>
         </div>
       </li>
       <li class="nav__item has-menu" data-group="jadwal">
@@ -168,6 +169,7 @@
       <p class="mobile-menu__label">Layanan &amp; Jadwal</p>
       <a data-nav="layanan" aria-current="page" href="layanan.html">Persyaratan Layanan</a>
       <a href="layanan.html#simulasi">Simulasi Pajak</a>
+      <a data-nav="aplikasi" href="aplikasi.html">Aplikasi &amp; Situs</a>
       <a data-nav="jadwal" href="jadwal.html">Jam Pelayanan</a>
       <a href="jadwal.html#keliling">Samsat Keliling</a>
     </div>

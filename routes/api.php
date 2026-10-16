@@ -5,6 +5,9 @@ use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\AccountStatusController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Dashboard\ActivityController;
+use App\Http\Controllers\Dashboard\AgencyAppController;
+use App\Http\Controllers\Dashboard\AgencyAppDeletionController;
+use App\Http\Controllers\Dashboard\AgencyAppOrderController;
 use App\Http\Controllers\Dashboard\ArticleController;
 use App\Http\Controllers\Dashboard\ArticleDeletionController;
 use App\Http\Controllers\Dashboard\ClockInController;
@@ -68,6 +71,7 @@ use App\Http\Controllers\Dashboard\UpdateStandardOrderController;
 use App\Http\Controllers\Dashboard\UploadController;
 use App\Http\Controllers\Dashboard\VehicleController;
 use App\Http\Controllers\Dashboard\VisionMissionController;
+use App\Http\Controllers\PublicAgencyAppController;
 use App\Http\Controllers\PublicArticleController;
 use App\Http\Controllers\PublicContactController;
 use App\Http\Controllers\PublicDocumentationController;
@@ -91,6 +95,7 @@ use App\Http\Controllers\PublicVehicleController;
 use App\Http\Controllers\PublicVisionMissionController;
 use App\Http\Controllers\QueueDisplayDataController;
 use App\Http\Middleware\EnsureAccountIsActive;
+use App\Models\AgencyApp;
 use App\Models\Article;
 use App\Models\Document;
 use App\Models\Documentation;
@@ -353,6 +358,20 @@ Route::middleware('auth:sanctum')->group(function (): void {
     });
 
     /*
+     * Aplikasi & Situs (AgencyAppPolicy, D-054): module managers add, change,
+     * reorder and delete the apps and websites of BPAD and the UPTD, which
+     * reach the portal when saved.
+     */
+    Route::prefix('koleksi/aplikasi')->name('koleksi.aplikasi.')->whereUlid('agencyApp')->group(function (): void {
+        Route::get('/', [AgencyAppController::class, 'index'])->can('viewAny', AgencyApp::class)->name('index');
+        Route::post('/', [AgencyAppController::class, 'store'])->can('create', AgencyApp::class)->name('store');
+        Route::put('/urutan', [AgencyAppOrderController::class, 'update'])->can('reorder', AgencyApp::class)->name('urutan');
+        Route::post('/hapus', [AgencyAppDeletionController::class, 'store'])->can('deleteAny', AgencyApp::class)->name('hapus');
+        Route::get('/{agencyApp}', [AgencyAppController::class, 'show'])->can('view', 'agencyApp')->name('show');
+        Route::patch('/{agencyApp}', [AgencyAppController::class, 'update'])->can('update', 'agencyApp')->name('update');
+    });
+
+    /*
      * Regulasi & Unduhan (DocumentPolicy) with the publication workflow, as
      * for services: module managers prepare, submit and review; administrators
      * approve, withdraw and delete (D-030). The portal sorts documents by
@@ -554,6 +573,7 @@ Route::prefix('public')
         Route::get('/dokumen', PublicDocumentController::class)->name('dokumen.index');
         Route::get('/dokumentasi', PublicDocumentationController::class)->name('dokumentasi.index');
         Route::get('/struktur', PublicOrganizationController::class)->name('struktur.show');
+        Route::get('/aplikasi', PublicAgencyAppController::class)->name('aplikasi.show');
         Route::get('/berita', [PublicArticleController::class, 'index'])->name('berita.index');
         Route::get('/berita/{slug}', [PublicArticleController::class, 'show'])
             ->where('slug', Article::SLUG_PATTERN)

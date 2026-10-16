@@ -1453,6 +1453,65 @@
     muat(false);
   }
 
+  /* ---------- Aplikasi & Situs ----------
+     Aplikasi dan situs milik BPAD/UPTD dikelola di dashboard (Aplikasi &
+     Situs) dan dibaca dari GET /api/public/aplikasi (D-054), sesuai urutan.
+     Logo hanya dari alamat http(s), tautan hanya alamat yang aman, dan teks
+     dipasang sebagai teks. Aplikasi Android ditawarkan lewat Google Play;
+     tautan ke luar portal dibuka di tab baru. */
+  const PENGELOLA_APLIKASI = { bpad: "BPAD Provinsi NTT", uptd: "UPTD Kota Kupang" };
+
+  async function muatAplikasi() {
+    const d = await ambilJson("/api/public/aplikasi");
+    const teks = (x) => typeof x === "string";
+    const valid = Array.isArray(d?.aplikasi)
+      && d.aplikasi.every((a) => ["nama", "namaLengkap", "keterangan", "jenis", "pengelola", "tautan"].every((f) => teks(a?.[f])) && (a.logo === null || teks(a.logo)));
+    if (!valid) throw new Error("Respons tidak dikenal");
+    return d.aplikasi;
+  }
+
+  function initAplikasi() {
+    const daftar = $("[data-aplikasi-daftar]");
+    if (!daftar) return;
+
+    const kartu = (a) => {
+      const logo = gambarAman(a.logo);
+      const url = tautanAman(a.tautan);
+      const luar = /^https?:/i.test(url);
+      const label = a.jenis === "android" ? "Unduh di Google Play" : luar ? "Buka situs" : "Buka halaman";
+      const tag = [a.jenis === "android" ? "Android · Google Play" : "Situs web", PENGELOLA_APLIKASI[a.pengelola]].filter(Boolean);
+      return `<li class="card card--pad app">
+        <div class="app__head">
+          <span class="app__logo">${logo ? `<img src="${esc(logo)}" alt="" width="56" height="56" loading="lazy" decoding="async">` : esc(a.nama.slice(0, 2).toUpperCase())}</span>
+          <div><h2 class="app__name">${esc(a.nama)}</h2>${a.namaLengkap ? `<p class="app__full">${esc(a.namaLengkap)}</p>` : ""}</div>
+        </div>
+        ${a.keterangan ? `<p class="app__desc">${esc(a.keterangan)}</p>` : ""}
+        <ul class="app__tags" role="list">${tag.map((t) => `<li class="tag tag--line">${esc(t)}</li>`).join("")}</ul>
+        ${url ? `<a class="btn btn--sm btn--dark app__cta" href="${esc(url)}"${luar ? ' target="_blank" rel="noopener"' : ""}>${label}<span class="sr-only"> ${esc(a.nama)}${luar ? " (tab baru)" : ""}</span>${luar ? '<svg class="i" aria-hidden="true"><use href="#i-external"/></svg>' : ""}</a>` : ""}
+      </li>`;
+    };
+
+    const muat = async (fokus) => {
+      daftar.innerHTML = '<p class="muted center" role="status">Memuat daftar aplikasi…</p>';
+      try {
+        const aplikasi = await muatAplikasi();
+        daftar.innerHTML = aplikasi.length
+          ? `<ul class="apps__list" role="list">${aplikasi.map(kartu).join("")}</ul>`
+          : '<p class="muted center" role="status">Belum ada aplikasi yang ditampilkan.</p>';
+      } catch {
+        const retry = tombolCobaLagi(() => muat(true));
+        const p = document.createElement("p");
+        p.className = "muted center";
+        p.setAttribute("role", "status");
+        p.append("Daftar aplikasi belum dapat dimuat. ", retry);
+        daftar.replaceChildren(p);
+        if (fokus) retry.focus();
+      }
+    };
+
+    muat(false);
+  }
+
   /* ---------- Beranda ----------
      Teks beranda dikelola di dashboard (Beranda) dan dibaca dari
      GET /api/public/beranda (D-023). Teks di HTML sama dengan isi awal di
@@ -2366,7 +2425,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil(); initLayanan(); initDokumen(); initInformasi(); initBerita(); initPengumumanBeranda(); initDokumentasi(); initStruktur(); initBeranda(); initHalaman(); initSitus();
+    initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil(); initLayanan(); initDokumen(); initInformasi(); initBerita(); initPengumumanBeranda(); initDokumentasi(); initStruktur(); initAplikasi(); initBeranda(); initHalaman(); initSitus();
     initDash(); initDialogs(); initGag(); initFilters(); initGallery(); initFaq(); initForms(); initPesanForm(); initAuthFit(); initUtilities();
   });
 })();

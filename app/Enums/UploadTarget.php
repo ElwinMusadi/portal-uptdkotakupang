@@ -17,6 +17,8 @@ enum UploadTarget: string
     case Profil = 'profil';
     case Beranda = 'beranda';
     case Absensi = 'absensi';
+    /** App logos on the Aplikasi & Situs page (D-054). */
+    case Aplikasi = 'aplikasi';
 
     /**
      * Images by detected type, with the extension they are stored under.

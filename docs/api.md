@@ -20,6 +20,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET` | `/api/public/berita`, `/api/public/berita/{slug}` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/dokumentasi` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/struktur` | anonim, hanya baca | tersedia |
+| `GET` | `/api/public/aplikasi` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/beranda` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/halaman/{slug}` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/situs` | anonim, hanya baca | tersedia |
@@ -99,6 +100,10 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET`, `PATCH` | `/api/koleksi/unit/{id}` | Administrator, pengelola Struktur Organisasi | tersedia |
 | `PUT` | `/api/koleksi/unit/urutan` | Administrator, pengelola Struktur Organisasi | tersedia |
 | `POST` | `/api/koleksi/unit/hapus` | Administrator, pengelola Struktur Organisasi | tersedia |
+| `GET`, `POST` | `/api/koleksi/aplikasi` | Administrator, pengelola Aplikasi & Situs | tersedia |
+| `GET`, `PATCH` | `/api/koleksi/aplikasi/{id}` | Administrator, pengelola Aplikasi & Situs | tersedia |
+| `PUT` | `/api/koleksi/aplikasi/urutan` | Administrator, pengelola Aplikasi & Situs | tersedia |
+| `POST` | `/api/koleksi/aplikasi/hapus` | Administrator, pengelola Aplikasi & Situs | tersedia |
 | `GET` | `/api/koleksi/halaman` | Administrator, pengelola Halaman Statis | tersedia |
 | `GET`, `PATCH` | `/api/koleksi/halaman/{id}` | Administrator, pengelola Halaman Statis | tersedia |
 | `GET` | `/api/koleksi/pemutakhiran` | semua pegawai; daftarnya sebatas modul pengguna, lengkap bagi Administrator dan pengelola Jadwal Pemutakhiran | tersedia |
@@ -176,6 +181,7 @@ Kunci modul untuk `modul` ([D-010](decisions.md#d-010--2026-10-13--penugasan-mod
 | `layanan` | Persyaratan Layanan | `beranda` | Beranda |
 | `jam` | Jam Pelayanan (termasuk koleksi `penyesuaian`) | `halaman` | Halaman Statis |
 | | | `pemutakhiran` | Jadwal Pemutakhiran |
+| | | `aplikasi` | Aplikasi & Situs ([D-054](decisions.md#d-054--2026-10-17--halaman-aplikasi--situs)) |
 
 Endpoint konten dashboard (`/api/koleksi/…`, `/api/pengaturan/…`) wajib menolak pegawai yang tidak mengelola modul koleksi atau pengaturan itu. `/api/koleksi/faq`, `/api/koleksi/keliling`, `/api/koleksi/penyesuaian`, `/api/koleksi/pesan`, `/api/koleksi/layanan`, `/api/koleksi/halaman`, `/api/koleksi/pemutakhiran`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/statistik`, `/api/pengaturan/kontak`, `/api/pengaturan/visiMisi`, `/api/pengaturan/profil`, dan `/api/pengaturan/beranda` sudah melakukannya; daftar Jadwal Pemutakhiran boleh dibaca semua pegawai, sebatas standar modul mereka, dan Pengaturan Situs, yang bukan milik modul mana pun, boleh dibaca semua pegawai tetapi hanya disimpan Administrator (`/api/pengaturan/situs`).
 
@@ -862,13 +868,40 @@ Penyimpanan profil tidak dicatat di log aktivitas.
 
 Kode: `app/Http/Controllers/Dashboard/OwnAccountController.php`, `app/Http/Requests/Dashboard/UpdateOwnAccountRequest.php`, `app/Models/User.php`. Tes: `tests/Feature/OwnAccountControllerTest.php`.
 
-## Unggahan di dashboard
+## Aplikasi & Situs di dashboard
 
-Penyimpanan berkas dari dashboard ([D-028](decisions.md#d-028--2026-10-14--unggahan-disimpan-di-laravel-cloud-object-storage)). Tamu mendapat `401`. Dashboard memakainya untuk tujuan yang modulnya sudah di server, saat ini `visiMisi`, `profil` ([D-029](decisions.md#d-029--2026-10-14--foto-tentang-uptd-dan-maklumat-diunggah-ke-server-profil-disusun-dari-renstra-dan-rpjmd)), `dokumen` ([D-030](decisions.md#d-030--2026-10-14--regulasi--unduhan-tersimpan-di-server-dengan-alur-persetujuan)), `berita` ([D-031](decisions.md#d-031--2026-10-14--berita--pengumuman-tersimpan-di-server-pengelola-berita-menerbitkan-sendiri)), `dokumentasi` ([D-032](decisions.md#d-032--2026-10-14--dokumentasi-kegiatan-tersimpan-di-server-galeri-disusun-per-bulan)), `unit` ([D-033](decisions.md#d-033--2026-10-14--struktur-organisasi-tersimpan-di-server-nip-pejabat-tidak-ditampilkan-di-portal)), dan `beranda` untuk logo mitra ([D-037](decisions.md#d-037--2026-10-14--mitra-satu-atap-memakai-logo-inisial-sebagai-cadangan)). Aplikasi Absensi PINTU memakai tujuan `absensi` ([D-034](decisions.md#d-034--2026-10-14--absensi-lapangan-tersimpan-di-server-petugas-clock-in-lewat-aplikasi-absen)).
+Dipakai halaman *Aplikasi & Situs* di dashboard ([D-054](decisions.md#d-054--2026-10-17--halaman-aplikasi--situs)), di bagian Alat Bantu. Tamu mendapat `401`; pegawai yang tidak mengelola modul `aplikasi` mendapat `403` `{"message": "Modul Aplikasi & Situs belum ditugaskan kepada Anda."}`. Perubahan langsung tampil di portal; tidak ada alur publikasi.
+
+```json
+{
+  "id": "01m5…", "nama": "PRO NTT", "namaLengkap": "Pajak Retribusi Online NTT",
+  "keterangan": "Bayar Pajak Tahunan kendaraan secara online dari ponsel. …",
+  "jenis": "android", "pengelola": "bpad",
+  "tautan": "https://play.google.com/store/apps/details?id=com.iwana.betantt&hl=en",
+  "logo": "https://…/assets/img/aplikasi/pro-ntt-240.webp", "urutan": 1, "dibuat": "…", "diperbarui": "…"
+}
+```
 
 | Alamat | Permintaan | Respons |
 |---|---|---|
-| `POST /api/unggah` | `multipart/form-data`: `modul` (tujuan: `berita`, `dokumentasi`, `dokumen`, `unit`, `visiMisi`, `profil`, `beranda`, atau `absensi`) dan `berkas` | `201` `{ "nama": "Foto Loket.jpg", "ukuran": 182400, "tipe": "image/jpeg", "url": "…" }`. `url` adalah alamat bucket publik, atau `/api/berkas/{id}` untuk foto absensi. `403` bila pegawai tidak mengelola modul tujuan, mis. `{"message": "Modul Berita & Pengumuman belum ditugaskan kepada Anda."}`; foto absensi boleh diunggah semua pegawai. `422` bila tujuan tidak dikenal, berkas kosong, formatnya tidak sesuai tujuan menurut isinya (`{"berkas": ["Format berkas harus JPG, PNG, atau WebP."]}`), gambar lebih dari 5 MB atau 25 megapiksel, atau dokumen lebih dari 10 MB. `429` setelah 30 unggahan per menit. |
+| `GET /api/koleksi/aplikasi` | — | `200` semua aplikasi sesuai urutan. |
+| `GET /api/koleksi/aplikasi/{id}` | — | `200` satu aplikasi; `404` bila tidak ada. |
+| `POST /api/koleksi/aplikasi` | isi aplikasi seperti di atas | `201` di akhir daftar; dicatat "menambahkan". |
+| `PATCH /api/koleksi/aplikasi/{id}` | sebagian isi | `200`; perubahan dicatat "memperbarui", simpan ulang tanpa perubahan tidak dicatat. Logo yang dikirim balik tanpa perubahan (alamat lengkap atau nilai tersimpannya) bukan perubahan, termasuk logo bawaan daftar awal yang bukan unggahan; `logo: null` menghapus logo. |
+| `PUT /api/koleksi/aplikasi/urutan` | `{"ids": ["…"]}` | `204`. Aplikasi yang tidak disebut tetap berurutan di belakang; waktu `diperbarui` tidak berubah. `422` bila daftar tidak cocok dengan data terbaru. |
+| `POST /api/koleksi/aplikasi/hapus` | `{"ids": ["…"]}` | `204`; logo unggahannya ikut terhapus, logo bawaan tetap di situs. |
+
+Isi divalidasi seperti formulir dashboard: nama (maks. 60 karakter) wajib; nama lengkap maks. 160 dan keterangan maks. 300, boleh kosong (disimpan `""`); `jenis` `situs` atau `android`; `pengelola` `bpad` atau `uptd`; `tautan` wajib (maks. 500), alamat lengkap `http(s)://…` atau halaman portal (mis. `index.html`), dan untuk `android` harus halaman Google Play (`https://play.google.com/store/apps/…`, "Aplikasi Android ditautkan ke halamannya di Google Play …"); tanpa karakter kontrol. Logo baru harus alamat unggahan PINTU untuk tujuan `aplikasi` yang belum dipakai aplikasi lain ("Logo harus diunggah lewat dashboard.", "Logo ini sudah dipakai aplikasi lain. Unggah ulang logonya."). `logo` di respons selalu alamat lengkap: logo bawaan disimpan sebagai jalur `assets/img/aplikasi/…` dan diberi alamat situs.
+
+Kode: `app/Http/Controllers/Dashboard/AgencyApp*`, `app/Http/Requests/Dashboard/*AgencyApp*`, `app/Models/AgencyApp.php`, `app/Policies/AgencyAppPolicy.php`, `database/migrations/*_insert_initial_agency_apps.php`. Tes: `tests/Feature/AgencyAppControllerTest.php`.
+
+## Unggahan di dashboard
+
+Penyimpanan berkas dari dashboard ([D-028](decisions.md#d-028--2026-10-14--unggahan-disimpan-di-laravel-cloud-object-storage)). Tamu mendapat `401`. Dashboard memakainya untuk tujuan yang modulnya sudah di server, saat ini `visiMisi`, `profil` ([D-029](decisions.md#d-029--2026-10-14--foto-tentang-uptd-dan-maklumat-diunggah-ke-server-profil-disusun-dari-renstra-dan-rpjmd)), `dokumen` ([D-030](decisions.md#d-030--2026-10-14--regulasi--unduhan-tersimpan-di-server-dengan-alur-persetujuan)), `berita` ([D-031](decisions.md#d-031--2026-10-14--berita--pengumuman-tersimpan-di-server-pengelola-berita-menerbitkan-sendiri)), `dokumentasi` ([D-032](decisions.md#d-032--2026-10-14--dokumentasi-kegiatan-tersimpan-di-server-galeri-disusun-per-bulan)), `unit` ([D-033](decisions.md#d-033--2026-10-14--struktur-organisasi-tersimpan-di-server-nip-pejabat-tidak-ditampilkan-di-portal)), `beranda` untuk logo mitra ([D-037](decisions.md#d-037--2026-10-14--mitra-satu-atap-memakai-logo-inisial-sebagai-cadangan)), dan `aplikasi` untuk logo aplikasi ([D-054](decisions.md#d-054--2026-10-17--halaman-aplikasi--situs)). Aplikasi Absensi PINTU memakai tujuan `absensi` ([D-034](decisions.md#d-034--2026-10-14--absensi-lapangan-tersimpan-di-server-petugas-clock-in-lewat-aplikasi-absen)).
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `POST /api/unggah` | `multipart/form-data`: `modul` (tujuan: `berita`, `dokumentasi`, `dokumen`, `unit`, `visiMisi`, `profil`, `beranda`, `aplikasi`, atau `absensi`) dan `berkas` | `201` `{ "nama": "Foto Loket.jpg", "ukuran": 182400, "tipe": "image/jpeg", "url": "…" }`. `url` adalah alamat bucket publik, atau `/api/berkas/{id}` untuk foto absensi. `403` bila pegawai tidak mengelola modul tujuan, mis. `{"message": "Modul Berita & Pengumuman belum ditugaskan kepada Anda."}`; foto absensi boleh diunggah semua pegawai. `422` bila tujuan tidak dikenal, berkas kosong, formatnya tidak sesuai tujuan menurut isinya (`{"berkas": ["Format berkas harus JPG, PNG, atau WebP."]}`), gambar lebih dari 5 MB atau 25 megapiksel, atau dokumen lebih dari 10 MB. `429` setelah 30 unggahan per menit. |
 | `GET /api/berkas/{id}` | — | `200` isi berkas privat dengan `Content-Type` hasil deteksi, `X-Content-Type-Options: nosniff`, dan `Cache-Control: no-store, private`. Hanya bagi pengunggahnya dan Administrator; pegawai lain mendapat `403` `{"message": "Berkas ini tidak dapat Anda buka."}`. `404` untuk berkas publik dan berkas yang tidak ada. |
 
 Format per tujuan: gambar (JPG, PNG, WebP) untuk semua tujuan kecuali `visiMisi`; `dokumen` juga menerima PDF, DOCX, dan XLSX; `visiMisi` hanya PDF. Gambar disimpan ulang oleh server tanpa metadata dan paling panjang 1600 px; dokumen disimpan apa adanya. Nama berkas asli hanya untuk tampilan; nama simpannya acak.
@@ -1274,6 +1307,26 @@ Bagan dan uraian tugas halaman Struktur Organisasi ([D-033](decisions.md#d-033--
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 
 Kode: `app/Http/Controllers/PublicOrganizationController.php`, `app/Actions/ShowPublicOrganization.php`. Tes: `tests/Feature/PublicOrganizationControllerTest.php`.
+
+## `GET /api/public/aplikasi`
+
+Daftar halaman Aplikasi & Situs ([D-054](decisions.md#d-054--2026-10-17--halaman-aplikasi--situs), `initAplikasi()` di `public/assets/js/main.js`).
+
+```json
+{
+  "aplikasi": [
+    { "nama": "PINTU", "namaLengkap": "Portal Informasi dan Pelayanan UPTD Pendapatan Daerah Wilayah Kota Kupang", "keterangan": "…", "jenis": "situs", "pengelola": "uptd", "tautan": "index.html", "logo": "https://…/assets/img/aplikasi/pintu-240.webp" }
+  ]
+}
+```
+
+| Hal | Perilaku |
+|---|---|
+| Berhasil | `200`. `aplikasi` sesuai urutan di dashboard, tanpa ID. `logo` alamat lengkap atau `null`. Portal hanya memakai logo beralamat `http(s)` dan tautan yang aman (alamat lengkap atau halaman portal), menampilkan teks sebagai teks polos, membuka tautan ke luar portal di tab baru, dan menamai tombolnya "Unduh di Google Play" untuk `android`, "Buka situs" untuk alamat lengkap, atau "Buka halaman" untuk halaman portal. |
+| Galat | `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah batas laju yang sama dengan `GET /api/public/faq`; `503` bila data tidak bisa dibaca. |
+| Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
+
+Kode: `app/Http/Controllers/PublicAgencyAppController.php`, `app/Actions/ListPublicAgencyApps.php`. Tes: `tests/Feature/PublicAgencyAppControllerTest.php`.
 
 ## `GET /api/public/beranda`
 

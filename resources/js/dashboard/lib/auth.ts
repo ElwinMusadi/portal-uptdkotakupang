@@ -36,6 +36,7 @@ export const SEMUA_MODUL = [
   "beranda",
   "halaman",
   "pemutakhiran",
+  "aplikasi",
 ] as const
 
 export type Modul = (typeof SEMUA_MODUL)[number]

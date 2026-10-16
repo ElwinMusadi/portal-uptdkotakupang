@@ -1332,6 +1332,7 @@ export function buatSeed(sekarang = new Date()): Snapshot {
       pesan: pesan(sekarang),
       halaman: halaman(sekarang),
       pemutakhiran: pemutakhiran(sekarang),
+      aplikasi: [],
     },
     pengaturan: pengaturan(sekarang),
     aktivitas: aktivitas(sekarang),

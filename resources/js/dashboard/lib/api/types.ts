@@ -61,7 +61,7 @@ export interface Beralur {
 /* ------------------------------------------------------------------ */
 
 /** Tempat berkas dipakai; menentukan bucket, format yang diterima, dan siapa yang boleh mengunggah (D-028) */
-export type TujuanUnggah = "berita" | "dokumentasi" | "dokumen" | "unit" | "visiMisi" | "profil" | "beranda" | "absensi"
+export type TujuanUnggah = "berita" | "dokumentasi" | "dokumen" | "unit" | "visiMisi" | "profil" | "beranda" | "absensi" | "aplikasi"
 
 export interface Berkas {
   nama: string
@@ -226,6 +226,22 @@ export interface UnitKerja extends Entri {
   catatan: string
 }
 
+export type JenisAplikasi = "situs" | "android"
+export type PengelolaAplikasi = "bpad" | "uptd"
+
+/** Aplikasi atau situs milik BPAD/UPTD di halaman Aplikasi & Situs portal (D-054) */
+export interface Aplikasi extends Entri {
+  nama: string
+  namaLengkap: string
+  keterangan: string
+  jenis: JenisAplikasi
+  pengelola: PengelolaAplikasi
+  /** Alamat lengkap (https://…) atau halaman portal (mis. index.html); aplikasi Android ke Google Play */
+  tautan: string
+  /** Alamat lengkap logo: unggahan, atau logo bawaan daftar awal */
+  logo: string | null
+}
+
 export type JenisPesan = "pertanyaan" | "masukan" | "pengaduan"
 export type StatusPesan = "baru" | "diproses" | "selesai"
 export type SumberPesan = "formulir" | "kotak-saran" | "lapor" | "whatsapp" | "telepon"
@@ -304,6 +320,7 @@ export interface Koleksi {
   pesan: Pesan
   halaman: Halaman
   pemutakhiran: Pemutakhiran
+  aplikasi: Aplikasi
 }
 
 export type NamaKoleksi = keyof Koleksi

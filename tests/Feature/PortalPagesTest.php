@@ -23,6 +23,7 @@ class PortalPagesTest extends TestCase
             'visi misi' => ['/visi-misi', 'visi-misi'],
             'struktur organisasi' => ['/struktur-organisasi', 'struktur-organisasi'],
             'layanan' => ['/layanan', 'layanan'],
+            'aplikasi' => ['/aplikasi', 'aplikasi'],
             'jadwal' => ['/jadwal', 'jadwal'],
             'informasi' => ['/informasi', 'informasi'],
             'berita' => ['/berita/pintu-resmi-diluncurkan', 'berita-detail'],
@@ -304,6 +305,26 @@ class PortalPagesTest extends TestCase
         $current = $view === 'penerimaan' ? ' aria-current="page"' : '';
         $this->assertStringContainsString("<a class=\"nav__menu-link\" data-nav=\"penerimaan\"{$current} href=\"penerimaan.html\">", $html);
         $this->assertStringContainsString("<a data-nav=\"penerimaan\"{$current} href=\"penerimaan.html\">Laporan Penerimaan</a>", $html);
+    }
+
+    #[DataProvider('pagesWithHeader')]
+    public function test_links_the_apps_page_from_the_services_menu(string $uri, string $view): void
+    {
+        $html = $this->get($uri)->assertOk()->getContent();
+
+        $current = $view === 'aplikasi' ? ' aria-current="page"' : '';
+        $this->assertStringContainsString("<a class=\"nav__menu-link\" data-nav=\"aplikasi\"{$current} href=\"aplikasi.html\">", $html);
+        $this->assertStringContainsString("<a data-nav=\"aplikasi\"{$current} href=\"aplikasi.html\">Aplikasi &amp; Situs</a>", $html);
+    }
+
+    public function test_leaves_the_apps_to_the_public_api(): void
+    {
+        $html = $this->get('/aplikasi')->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('class="card card--pad app"', $html);
+        $this->assertMatchesRegularExpression('#<div class="apps" data-aplikasi-daftar>\s*<p class="muted center" role="status">Memuat daftar aplikasi…</p>\s*</div>#', $html);
+        $this->assertStringContainsString('<body id="top" data-page="aplikasi" data-group="layanan">', $html);
+        $this->get('/aplikasi.html')->assertMovedPermanently()->assertRedirect('/aplikasi');
     }
 
     public function test_links_the_revenue_report_from_the_homepage_transparency_section(): void

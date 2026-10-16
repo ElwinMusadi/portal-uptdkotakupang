@@ -25,6 +25,7 @@ $portalPages = [
     'visi-misi',
     'struktur-organisasi',
     'layanan',
+    'aplikasi',
     'jadwal',
     'informasi',
     'dokumentasi',
