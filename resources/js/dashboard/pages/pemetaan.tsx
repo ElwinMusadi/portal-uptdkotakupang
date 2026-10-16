@@ -5,7 +5,7 @@ import { toast } from "sonner"
 
 import { useKonfirmasi } from "@/components/data/confirm"
 import { Halaman, PengantarHalaman } from "@/components/data/page"
-import { PetaKecamatan, type PetakKecamatan } from "@/components/pemetaan/peta-kecamatan"
+import { PetaWilayah, type PetakWilayah } from "@/components/pemetaan/peta-wilayah"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -195,16 +195,20 @@ function TabRingkasan() {
   const j = r.jumlah
   const terpetakan = r.kecamatan.filter((k) => k.kunci !== "")
   const m = METRIK[metrik]
-  // Warna dari nilai terendah sampai tertinggi di antara kecamatan, agar selisih kecil tetap terlihat
-  const nilai = terpetakan.map((k) => m.nilai(k))
-  const [terendah, tertinggi] = [Math.min(...nilai), Math.max(...nilai)]
-  const petak: PetakKecamatan[] = terpetakan.map((k) => ({
-    kunci: k.kunci,
-    nama: k.nama,
-    skala: tertinggi > terendah ? (m.nilai(k) - terendah) / (tertinggi - terendah) : 0.5,
-    label: m.teks(k),
-  }))
+  // Warna dari nilai terendah sampai tertinggi di antara wilayah yang tampil, agar selisih kecil tetap terlihat
+  const petakDari = (wilayah: (AngkaPotensi & { nama: string; kunci?: string })[]): PetakWilayah[] => {
+    const nilai = wilayah.map((w) => m.nilai(w))
+    const [terendah, tertinggi] = [Math.min(...nilai), Math.max(...nilai)]
+    return wilayah.map((w) => ({
+      kunci: w.kunci ?? w.nama,
+      nama: w.nama,
+      skala: tertinggi > terendah ? (m.nilai(w) - terendah) / (tertinggi - terendah) : 0.5,
+      label: m.teks(w),
+    }))
+  }
+  const petak = petakDari(terpetakan)
   const dipilih = r.kecamatan.find((k) => k.kunci === kecamatan) ?? null
+  const petakKelurahan = dipilih ? petakDari(dipilih.kelurahan) : []
   const kelurahan = (dipilih ? dipilih.kelurahan.map((l) => ({ ...l, kecamatan: dipilih.nama })) : r.kecamatan.flatMap((k) => k.kelurahan.map((l) => ({ ...l, kecamatan: k.nama })))).sort(
     (a, b) => b.tagihan - a.tagihan
   )
@@ -256,7 +260,7 @@ function TabRingkasan() {
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
-          <PetaKecamatan petak={petak} dipilih={kecamatan} pilih={setKecamatan} judulSkala={m.label} />
+          <PetaWilayah petak={petak} kelurahan={petakKelurahan} dipilih={kecamatan} pilih={setKecamatan} judulSkala={m.label} />
         </CardContent>
       </Card>
 

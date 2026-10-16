@@ -205,7 +205,7 @@
       <div class="pemetaan" data-react="pemetaan-pkb">
         <p class="center muted" role="status" style="padding:48px 0">Memuat pemetaan PKB…</p>
       </div>
-      <p class="micro muted" style="margin-top:28px;max-width:72ch">Pemetaan ini tidak memuat nama pemilik, nomor polisi, atau alamat wajib pajak, hanya jumlah kendaraan dan rupiahnya per wilayah. Angka yang menggambarkan kurang dari 3 kendaraan disamarkan, bersama angka terkecil lain bila angkanya masih dapat dihitung dari total. Batas kecamatan pada peta dari geodatabase batas desa/kelurahan edisi Mei 2021 (Badan Informasi Geospasial, lewat geoportal Kementerian Pertanian); batasnya disederhanakan dan belum mengikuti batas kota yang definitif, jadi bisa sedikit berbeda dari batas sebenarnya.</p>
+      <p class="micro muted" style="margin-top:28px;max-width:72ch">Pemetaan ini tidak memuat nama pemilik, nomor polisi, atau alamat wajib pajak, hanya jumlah kendaraan dan rupiahnya per wilayah. Angka yang menggambarkan kurang dari 3 kendaraan disamarkan, bersama angka terkecil lain bila angkanya masih dapat dihitung dari total. Batas kecamatan dan kelurahan pada peta dari Batas Desa/Kelurahan skala 1:10.000 edisi 2022, Badan Informasi Geospasial, yang disederhanakan untuk peta ini.</p>
     </div>
   </section>
 </main>

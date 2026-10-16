@@ -40,29 +40,29 @@
 .pm-bagian__kepala { display: grid; gap: 4px; }
 .pm-bagian__judul { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
 
-/* Peta kecamatan (batas dari geoportal, batas-kecamatan.ts) */
-.pm-peta { display: grid; gap: 16px; container-type: inline-size; }
-.pm-peta__svg { width: 100%; max-width: 480px; height: auto; }
-.pm-peta__laut { font-size: 11px; font-style: italic; fill: var(--text-2); }
+/* Peta wilayah (batas BIG, batas-wilayah.ts); --px = satuan peta per piksel yang tampil, agar tulisan selalu 12/11 px */
+.pm-peta { display: grid; gap: 16px; }
+.pm-peta__svg { --px: 1; width: 100%; max-width: 480px; height: auto; }
+.pm-peta__laut { font-size: calc(11px * var(--px)); font-style: italic; fill: var(--text-2); }
 .pm-peta__petak { cursor: pointer; outline: none; }
-/* Garis batas sewarna latar menutupi celah kecil batas yang disederhanakan */
-.pm-peta__petak path { stroke: var(--surface); stroke-width: 1.5; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
-.pm-peta__petak path.is-aktif { stroke: var(--ink); stroke-width: 2.5; }
+/* Garis batas sewarna latar */
+.pm-peta__petak path, .pm-peta__kelurahan path { stroke: var(--surface); stroke-width: 1.5; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.pm-peta__kelurahan path { stroke-width: 1; }
 .pm-peta__petak:focus-visible path { stroke: var(--accent); stroke-width: 3; }
+/* Kecamatan lain saat kelurahan satu kecamatan ditampilkan */
+.pm-peta__petak.is-redup path { fill: var(--paper-2); opacity: .7; }
+.pm-peta__petak.is-redup:hover path { opacity: 1; }
+.pm-peta__tepi { fill: none; stroke: var(--ink); stroke-width: 2; vector-effect: non-scaling-stroke; pointer-events: none; }
 .pm-peta__label { pointer-events: none; }
 /* Tulisan bertepi latar agar tetap terbaca di atas warna apa pun dan saat melewati batas */
-.pm-peta__nama, .pm-peta__nilai { paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; }
-.pm-peta__nama { font-size: 12px; font-weight: 600; fill: var(--ink); }
-.pm-peta__nilai { font-size: 11px; fill: var(--text-2); }
+.pm-peta__nama, .pm-peta__nilai { paint-order: stroke; stroke: var(--surface); stroke-width: calc(3px * var(--px)); stroke-linejoin: round; }
+.pm-peta__nama { font-size: calc(12px * var(--px)); font-weight: 600; fill: var(--ink); }
+.pm-peta__nilai { font-size: calc(11px * var(--px)); fill: var(--text-2); }
 .pm-peta__garis { stroke: var(--ink); stroke-width: 1; vector-effect: non-scaling-stroke; }
-.pm-peta__legenda { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.pm-peta__legenda { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
 .pm-peta__rentang { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
-/* Peta mengecil bersama kartunya: di kartu sempit (ponsel) hurufnya dibesarkan agar tetap ±11–12 px */
-@container (max-width: 380px) {
-  .pm-peta__nama { font-size: 16px; }
-  .pm-peta__nilai { font-size: 14px; }
-  .pm-peta__laut { font-size: 13px; }
-}
+.pm-peta__samar { width: 14px; height: 10px; border-radius: 3px; background: var(--paper-2); border: var(--hairline); }
+.pm-kembali { justify-self: start; background: none; border: 0; padding: 0; font: inherit; font-size: 14px; color: var(--accent-ink); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .pm-peta__skala {
   width: 96px; height: 8px; border-radius: var(--r-pill);
   background: linear-gradient(to right, color-mix(in oklab, var(--danger) 8%, var(--surface)), color-mix(in oklab, var(--danger) 70%, var(--surface)));
