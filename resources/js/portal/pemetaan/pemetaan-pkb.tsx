@@ -341,7 +341,7 @@ function PetaWilayah({ wilayah, u, pilih, setPilih }: { wilayah: Kecamatan[]; u:
         ref={refPeta}
         viewBox={`${tampil.x} ${tampil.y} ${tampil.w} ${tampil.h}`}
         className="pm-peta__svg"
-        style={{ "--px": px } as CSSProperties}
+        style={{ "--px": px, "--rasio": tampil.w / tampil.h } as CSSProperties}
         role="group"
         aria-label={dipilih ? `Peta kelurahan di ${dipilih.nama}` : "Peta kecamatan Kota Kupang"}
       >

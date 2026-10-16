@@ -42,7 +42,9 @@
 
 /* Peta wilayah (batas BIG, batas-wilayah.ts); --px = satuan peta per piksel yang tampil, agar tulisan selalu 12/11 px */
 .pm-peta { display: grid; gap: 16px; }
-.pm-peta__svg { --px: 1; width: 100%; max-width: 480px; height: auto; }
+/* Lebar mengikuti bentuk tampilan (--rasio = lebar/tinggi): setinggi 600 px (paling tinggi 75% layar), sedikitnya 480 px,
+   sehingga kecamatan yang melebar (Oebobo, Kelapa Lima, Kota Lama) tampil lebih besar di layar lebar */
+.pm-peta__svg { --px: 1; --rasio: 0; width: 100%; max-width: max(480px, min(600px, 75svh) * var(--rasio)); height: auto; }
 .pm-peta__laut { font-size: calc(11px * var(--px)); font-style: italic; fill: var(--text-2); }
 .pm-peta__petak { cursor: pointer; outline: none; }
 /* Garis batas sewarna latar */
@@ -70,7 +72,8 @@
 
 /* Tabel kecamatan dan kelurahan */
 .pm-tabel { display: grid; gap: 16px; }
-.pm-tabel__isi { border: var(--hairline); border-radius: var(--r-md); }
+/* relative: teks pembaca layar (sr-only, absolute) di sel tetap di dalam wadah gulir, tidak melebarkan halaman di ponsel */
+.pm-tabel__isi { position: relative; border: var(--hairline); border-radius: var(--r-md); }
 .pm-tabel__isi table { width: 100%; border-collapse: collapse; }
 .pm-tabel__isi thead th { white-space: normal; vertical-align: bottom; background: var(--surface); }
 .pm-tabel__isi tbody th { padding: 14px 16px; border-bottom: var(--hairline); font-size: 15px; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--ink); text-align: left; white-space: nowrap; }
