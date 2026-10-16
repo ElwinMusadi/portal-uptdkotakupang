@@ -31,6 +31,7 @@ use App\Http\Controllers\Dashboard\OrganizationUnitDeletionController;
 use App\Http\Controllers\Dashboard\OrganizationUnitOrderController;
 use App\Http\Controllers\Dashboard\OwnAccountController;
 use App\Http\Controllers\Dashboard\PotentialImportController;
+use App\Http\Controllers\Dashboard\PotentialMapColumnsController;
 use App\Http\Controllers\Dashboard\PotentialSummaryController;
 use App\Http\Controllers\Dashboard\PotentialVehicleController;
 use App\Http\Controllers\Dashboard\ProfileController;
@@ -516,6 +517,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
             Route::post('/impor/{potentialImport}/selesai', [PotentialImportController::class, 'finish'])->can('create', PotentialImport::class)->name('impor.selesai');
         });
         Route::get('/ringkasan', PotentialSummaryController::class)->can('viewAny', PotentialImport::class)->name('ringkasan');
+        // The columns of the tables, which the portal follows too: chosen by Administrators
+        Route::get('/kolom', [PotentialMapColumnsController::class, 'show'])->can('viewAny', PotentialImport::class)->name('kolom.show');
+        Route::put('/kolom', [PotentialMapColumnsController::class, 'update'])->can('arrangeColumns', PotentialImport::class)->name('kolom.update');
         Route::get('/kendaraan', [PotentialVehicleController::class, 'index'])->can('viewAny', PotentialImport::class)->name('kendaraan.index');
         Route::get('/kendaraan/{potentialVehicle}', [PotentialVehicleController::class, 'show'])
             ->can('viewAny', PotentialImport::class)

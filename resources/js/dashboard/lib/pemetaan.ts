@@ -199,6 +199,66 @@ export function useTampilPotensi() {
   })
 }
 
+/** Kolom tabel kecamatan dan kelurahan (dashboard dan portal), berurutan */
+export const KOLOM_WILAYAH = {
+  kendaraan: "Kendaraan",
+  rodaDua: "Roda dua",
+  rodaTiga: "Roda tiga",
+  rodaEmpat: "Roda empat+",
+  taat: "Taat",
+  belumBayar: "Belum bayar < 1 th",
+  menunggak: "Menunggak ≥ 1 th",
+  persenMenunggak: "% menunggak",
+  potensi: "Potensi pokok",
+  tagihan: "Tagihan",
+  tunggakan: "Tunggakan",
+} as const
+export type KolomWilayah = keyof typeof KOLOM_WILAYAH
+
+/** Kolom daftar sasaran penagihan (hanya dashboard), berurutan; nomor polisi selalu tampil */
+export const KOLOM_SASARAN = {
+  pemilik: "Pemilik",
+  telepon: "Telepon",
+  kendaraan: "Kendaraan",
+  kecamatan: "Kecamatan",
+  kepatuhan: "Kepatuhan",
+  lamaTunggakan: "Lama tunggakan",
+  pokokPajak: "Pokok pajak",
+  tunggakan: "Tunggakan",
+  tagihan: "Tagihan",
+  kunjungan: "Hasil kunjungan",
+} as const
+export type KolomSasaran = keyof typeof KOLOM_SASARAN
+
+export interface KolomPemetaan {
+  wilayah: KolomWilayah[]
+  sasaran: KolomSasaran[]
+}
+
+/** Kolom sebelum Administrator memilihnya; sama dengan Setting::potentialMapColumns() */
+export const KOLOM_BAWAAN: KolomPemetaan = {
+  wilayah: ["kendaraan", "rodaDua", "rodaTiga", "rodaEmpat", "taat", "belumBayar", "menunggak", "persenMenunggak", "tagihan"],
+  sasaran: ["pemilik", "telepon", "kendaraan", "kepatuhan", "tagihan"],
+}
+
+/** Kolom yang tampil di tabel pemetaan; dipilih Administrator dan tersimpan di server */
+export function useKolomPemetaan() {
+  return useQuery({
+    queryKey: [...KUNCI, "kolom"],
+    queryFn: () => mintaServer<KolomPemetaan>("/api/pemetaan/kolom", "GET"),
+    staleTime: 60_000,
+  })
+}
+
+/** Simpan pilihan kolom; khusus Administrator, juga berlaku di portal untuk tabel wilayah */
+export function useSimpanKolomPemetaan() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (kolom: KolomPemetaan) => mintaServer<KolomPemetaan>("/api/pemetaan/kolom", "PUT", kolom),
+    onSuccess: (kolom) => qc.setQueryData([...KUNCI, "kolom"], kolom),
+  })
+}
+
 /** Hapus seluruh data potensi yang sedang ditampilkan; khusus Administrator */
 export function useHapusPotensi() {
   const qc = useQueryClient()

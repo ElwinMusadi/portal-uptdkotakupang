@@ -20,7 +20,8 @@ type Angka = number | null
 interface AngkaWilayah {
   kendaraan: Angka
   rodaDua: Angka
-  rodaTigaLebih: Angka
+  rodaTiga: Angka
+  rodaEmpat: Angka
   taat: Angka
   belumBayar: Angka
   menunggak: Angka
@@ -41,9 +42,31 @@ interface Pemetaan {
   diperbarui?: string | null
   minimum?: number
   /** `rodaLain`: kendaraan yang jenisnya tidak tercatat di berkas (null bila 1–2) */
-  kota?: Omit<AngkaWilayah, "rodaTigaLebih"> & { rodaTiga: Angka; rodaEmpat: Angka; rodaLain?: Angka }
+  kota?: AngkaWilayah & { rodaLain?: Angka }
+  /** Kolom tabel kecamatan dan kelurahan, dipilih Administrator di dashboard */
+  kolom?: KolomWilayah[]
   kecamatan?: Kecamatan[]
 }
+
+
+/** Kolom tabel kecamatan dan kelurahan, berurutan; sama dengan dashboard (lib/pemetaan.ts) */
+const KOLOM_WILAYAH = {
+  kendaraan: "Kendaraan",
+  rodaDua: "Roda dua",
+  rodaTiga: "Roda tiga",
+  rodaEmpat: "Roda empat+",
+  taat: "Taat",
+  belumBayar: "Belum bayar < 1 th",
+  menunggak: "Menunggak ≥ 1 th",
+  persenMenunggak: "% menunggak",
+  potensi: "Potensi pokok",
+  tagihan: "Tagihan",
+  tunggakan: "Tunggakan",
+} as const
+type KolomWilayah = keyof typeof KOLOM_WILAYAH
+
+/** Kolom sebelum Administrator memilihnya */
+const KOLOM_BAWAAN: KolomWilayah[] = ["kendaraan", "rodaDua", "rodaTiga", "rodaEmpat", "taat", "belumBayar", "menunggak", "persenMenunggak", "tagihan"]
 
 const fmtAngka = new Intl.NumberFormat("id-ID")
 const fmtSatu = new Intl.NumberFormat("id-ID", { maximumFractionDigits: 1 })
@@ -224,6 +247,7 @@ function PemetaanPkb() {
         </div>
         <Tabel
           judul="Kecamatan"
+          kolom={data.kolom ?? KOLOM_BAWAAN}
           baris={wilayah.map((k) => ({ kunci: k.kunci || "tanpa", nama: k.nama, angka: k, pilih: k.kelurahan.length ? () => setPilih(pilih === k.kunci ? null : k.kunci) : undefined, aktif: pilih === k.kunci }))}
         />
       </section>
@@ -235,7 +259,7 @@ function PemetaanPkb() {
               Kelurahan di {dipilih.nama}
             </h2>
           </div>
-          <Tabel judul="Kelurahan" baris={dipilih.kelurahan.map((l) => ({ kunci: l.nama, nama: namaWilayah(l.nama), angka: l }))} />
+          <Tabel judul="Kelurahan" kolom={data.kolom ?? KOLOM_BAWAAN} baris={dipilih.kelurahan.map((l) => ({ kunci: l.nama, nama: namaWilayah(l.nama), angka: l }))} />
         </section>
       )}
     </div>
@@ -414,7 +438,24 @@ function Petak({ label, nilai, catatan }: { label: string; nilai: string | null;
   )
 }
 
-function Tabel({ judul, baris }: { judul: string; baris: { kunci: string; nama: string; angka: AngkaWilayah; pilih?: () => void; aktif?: boolean }[] }) {
+const rupiahUtuh = (n: Angka) => (n === null ? null : `Rp${fmtAngka.format(n)}`)
+
+/** Isi sel tabel per kolom; null berarti disamarkan */
+const SEL: Record<KolomWilayah, (a: AngkaWilayah) => string | null> = {
+  kendaraan: (a) => angka(a.kendaraan),
+  rodaDua: (a) => angka(a.rodaDua),
+  rodaTiga: (a) => angka(a.rodaTiga),
+  rodaEmpat: (a) => angka(a.rodaEmpat),
+  taat: (a) => angka(a.taat),
+  belumBayar: (a) => angka(a.belumBayar),
+  menunggak: (a) => angka(a.menunggak),
+  persenMenunggak: (a) => persen(a.menunggak, a.kendaraan),
+  potensi: (a) => rupiahUtuh(a.potensi),
+  tagihan: (a) => rupiahUtuh(a.tagihan),
+  tunggakan: (a) => rupiahUtuh(a.tunggakan),
+}
+
+function Tabel({ judul, kolom, baris }: { judul: string; kolom: KolomWilayah[]; baris: { kunci: string; nama: string; angka: AngkaWilayah; pilih?: () => void; aktif?: boolean }[] }) {
   return (
     <div className="table-wrap pm-tabel__isi" role="region" aria-label={`Tabel per ${judul.toLowerCase()}`} tabIndex={0}>
       <table className="table">
@@ -422,30 +463,11 @@ function Tabel({ judul, baris }: { judul: string; baris: { kunci: string; nama: 
         <thead>
           <tr>
             <th scope="col">{judul}</th>
-            <th scope="col" className="pm-angka">
-              Kendaraan
-            </th>
-            <th scope="col" className="pm-angka">
-              Roda dua
-            </th>
-            <th scope="col" className="pm-angka">
-              Roda tiga+
-            </th>
-            <th scope="col" className="pm-angka">
-              Taat
-            </th>
-            <th scope="col" className="pm-angka">
-              Belum bayar &lt; 1 th
-            </th>
-            <th scope="col" className="pm-angka">
-              Menunggak ≥ 1 th
-            </th>
-            <th scope="col" className="pm-angka">
-              % menunggak
-            </th>
-            <th scope="col" className="pm-angka">
-              Tagihan
-            </th>
+            {kolom.map((k) => (
+              <th key={k} scope="col" className="pm-angka">
+                {KOLOM_WILAYAH[k]}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>
@@ -460,30 +482,11 @@ function Tabel({ judul, baris }: { judul: string; baris: { kunci: string; nama: 
                   b.nama
                 )}
               </th>
-              <td className="pm-angka">
-                <Nilai teks={angka(b.angka.kendaraan)} />
-              </td>
-              <td className="pm-angka">
-                <Nilai teks={angka(b.angka.rodaDua)} />
-              </td>
-              <td className="pm-angka">
-                <Nilai teks={angka(b.angka.rodaTigaLebih)} />
-              </td>
-              <td className="pm-angka">
-                <Nilai teks={angka(b.angka.taat)} />
-              </td>
-              <td className="pm-angka">
-                <Nilai teks={angka(b.angka.belumBayar)} />
-              </td>
-              <td className="pm-angka">
-                <Nilai teks={angka(b.angka.menunggak)} />
-              </td>
-              <td className="pm-angka">
-                <Nilai teks={persen(b.angka.menunggak, b.angka.kendaraan)} />
-              </td>
-              <td className="pm-angka pm-angka--kuat">
-                <Nilai teks={b.angka.tagihan === null ? null : `Rp${fmtAngka.format(b.angka.tagihan)}`} />
-              </td>
+              {kolom.map((k) => (
+                <td key={k} className={k === "tagihan" ? "pm-angka pm-angka--kuat" : "pm-angka"}>
+                  <Nilai teks={SEL[k](b.angka)} />
+                </td>
+              ))}
             </tr>
           ))}
         </tbody>

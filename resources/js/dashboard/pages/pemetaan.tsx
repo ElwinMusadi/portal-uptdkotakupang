@@ -1,5 +1,5 @@
 import * as React from "react"
-import { IconAlertTriangle, IconFileUpload, IconSearch, IconTrash } from "@tabler/icons-react"
+import { IconAlertTriangle, IconChevronDown, IconFileUpload, IconLayoutColumns, IconSearch, IconTrash } from "@tabler/icons-react"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 
@@ -8,7 +8,15 @@ import { Halaman, PengantarHalaman } from "@/components/data/page"
 import { PetaWilayah, type PetakWilayah } from "@/components/pemetaan/peta-wilayah"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -24,6 +32,9 @@ import {
   BATAS_SASARAN,
   imporBerkasPotensi,
   KECAMATAN,
+  KOLOM_BAWAAN,
+  KOLOM_SASARAN,
+  KOLOM_WILAYAH,
   LABEL_KELOMPOK,
   LABEL_RODA,
   NAMA_BULAN,
@@ -33,11 +44,17 @@ import {
   useDetailKendaraan,
   useHapusPotensi,
   useImporPotensi,
+  useKolomPemetaan,
   useRingkasanPemetaan,
   useSasaranPenagihan,
+  useSimpanKolomPemetaan,
   useTampilPotensi,
   type AngkaPotensi,
   type ImporPotensi,
+  type KendaraanPotensi,
+  type KolomPemetaan,
+  type KolomSasaran,
+  type KolomWilayah,
   type Kelompok,
   type PemeriksaanBerkas,
   type RingkasanPemetaan,
@@ -188,6 +205,7 @@ function TabRingkasan() {
   const [kecamatan, setKecamatan] = React.useState<string | null>(null)
   const ringkasan = useRingkasanPemetaan(bulan)
   const r = ringkasan.data
+  const { kolom, atur } = useKolom()
 
   if (ringkasan.isLoading) return <Skeleton className="h-96" />
   if (ringkasan.error || !r?.jumlah || !r.kecamatan) return <p className="text-sm text-destructive">Ringkasan gagal dimuat: {ringkasan.error?.message}</p>
@@ -268,9 +286,20 @@ function TabRingkasan() {
         <CardHeader>
           <CardTitle className="text-base">Per kecamatan</CardTitle>
           <CardDescription>Kecamatan menurut daftar resmi kelurahan Kota Kupang, karena kolom kecamatan di berkas tidak selalu konsisten.</CardDescription>
+          {atur && (
+            <CardAction>
+              <AturKolom
+                katalog={KOLOM_WILAYAH}
+                terpilih={kolom.wilayah}
+                keterangan="Berlaku untuk tabel kecamatan dan kelurahan, di dashboard dan portal."
+                ubah={(wilayah) => atur({ ...kolom, wilayah })}
+              />
+            </CardAction>
+          )}
         </CardHeader>
         <CardContent>
           <TabelWilayah
+            kolom={kolom.wilayah}
             baris={r.kecamatan.map((k) => ({ kunci: k.kunci || "tanpa", nama: k.nama, angka: k }))}
             jumlah={j}
             dipilih={kecamatan ?? undefined}
@@ -285,7 +314,10 @@ function TabRingkasan() {
           <CardDescription>Tagihan terbesar dulu.{dipilih && " Pilih kecamatan lain di peta atau tabel, atau pilih lagi untuk melihat semua."}</CardDescription>
         </CardHeader>
         <CardContent>
-          <TabelWilayah baris={kelurahan.map((l) => ({ kunci: `${l.kecamatan}|${l.nama}`, nama: namaWilayah(l.nama), keterangan: dipilih ? undefined : l.kecamatan, angka: l }))} />
+          <TabelWilayah
+            kolom={kolom.wilayah}
+            baris={kelurahan.map((l) => ({ kunci: `${l.kecamatan}|${l.nama}`, nama: namaWilayah(l.nama), keterangan: dipilih ? undefined : l.kecamatan, angka: l }))}
+          />
         </CardContent>
       </Card>
 
@@ -357,43 +389,51 @@ function Angka({ label, nilai, keterangan }: { label: string; nilai: string; ket
   )
 }
 
+/** Isi sel tabel wilayah per kolom */
+const SEL_WILAYAH: Record<KolomWilayah, (a: AngkaPotensi) => string> = {
+  kendaraan: (a) => angka(a.kendaraan),
+  rodaDua: (a) => angka(a.roda.r2),
+  rodaTiga: (a) => angka(a.roda.r3),
+  rodaEmpat: (a) => angka(a.roda.r4),
+  taat: (a) => angka(a.kelompok.taat),
+  belumBayar: (a) => angka(belumBayar(a)),
+  menunggak: (a) => angka(a.kelompok.menunggak),
+  persenMenunggak: (a) => persen(a.kelompok.menunggak, a.kendaraan),
+  potensi: (a) => rupiah(a.pokokPajak),
+  tagihan: (a) => rupiah(a.tagihan),
+  tunggakan: (a) => rupiah(a.pokokTunggak + a.dendaTunggak),
+}
+
 function TabelWilayah({
+  kolom,
   baris,
   jumlah,
   dipilih,
   pilih,
 }: {
+  kolom: KolomWilayah[]
   baris: { kunci: string; nama: string; keterangan?: string; angka: AngkaPotensi }[]
   jumlah?: AngkaPotensi
   dipilih?: string
   pilih?: (kunci: string) => void
 }) {
-  const sel = (a: AngkaPotensi) => (
-    <>
-      <TableCell className="text-right tabular-nums">{angka(a.kendaraan)}</TableCell>
-      <TableCell className="text-right tabular-nums">{angka(a.roda.r2)}</TableCell>
-      <TableCell className="text-right tabular-nums">{angka(a.roda.r3 + a.roda.r4)}</TableCell>
-      <TableCell className="text-right tabular-nums">{angka(a.kelompok.taat)}</TableCell>
-      <TableCell className="text-right tabular-nums">{angka(belumBayar(a))}</TableCell>
-      <TableCell className="text-right tabular-nums">{angka(a.kelompok.menunggak)}</TableCell>
-      <TableCell className="text-right tabular-nums">{persen(a.kelompok.menunggak, a.kendaraan)}</TableCell>
-      <TableCell className="text-right whitespace-nowrap tabular-nums">{rupiah(a.tagihan)}</TableCell>
-    </>
-  )
+  const sel = (a: AngkaPotensi) =>
+    kolom.map((k) => (
+      <TableCell key={k} className="text-right whitespace-nowrap tabular-nums">
+        {SEL_WILAYAH[k](a)}
+      </TableCell>
+    ))
   return (
     <div className="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Wilayah</TableHead>
-            <TableHead className="text-right">Kendaraan</TableHead>
-            <TableHead className="text-right">Roda dua</TableHead>
-            <TableHead className="text-right">Roda 3+</TableHead>
-            <TableHead className="text-right">Taat</TableHead>
-            <TableHead className="text-right">Belum bayar &lt; 1 th</TableHead>
-            <TableHead className="text-right">Menunggak ≥ 1 th</TableHead>
-            <TableHead className="text-right">% menunggak</TableHead>
-            <TableHead className="text-right">Tagihan</TableHead>
+            {kolom.map((k) => (
+              <TableHead key={k} className="text-right">
+                {KOLOM_WILAYAH[k]}
+              </TableHead>
+            ))}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -458,6 +498,7 @@ function TabSasaran() {
   const [pilih, setPilih] = React.useState<number | null>(null)
   const sasaran = useSasaranPenagihan(saringan)
   const ringkasan = useRingkasanPemetaan(null)
+  const { kolom, atur } = useKolom()
   const ubah = <K extends keyof SaringanSasaran>(k: K, v: SaringanSasaran[K]) => setIsian((s) => ({ ...s, [k]: v, ...(k === "kecamatan" ? { kelurahan: "" } : {}) }))
   const kelurahan = pilihanKelurahan(ringkasan.data, isian.kecamatan)
 
@@ -519,6 +560,16 @@ function TabSasaran() {
           <CardTitle className="text-base">
             Kendaraan {sasaran.data && <span className="text-muted-foreground">({angka(sasaran.data.jumlah)})</span>}
           </CardTitle>
+          {atur && (
+            <CardAction>
+              <AturKolom
+                katalog={KOLOM_SASARAN}
+                terpilih={kolom.sasaran}
+                keterangan="Hanya untuk daftar ini di dashboard; nomor polisi selalu tampil."
+                ubah={(sasaran) => atur({ ...kolom, sasaran })}
+              />
+            </CardAction>
+          )}
           <CardDescription>
             {sasaran.data && sasaran.data.jumlah > BATAS_SASARAN
               ? `Menampilkan ${BATAS_SASARAN} kendaraan dengan tagihan terbesar. Persempit pencarian untuk melihat yang lain.`
@@ -538,11 +589,11 @@ function TabSasaran() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nomor polisi</TableHead>
-                    <TableHead>Pemilik</TableHead>
-                    <TableHead>Telepon</TableHead>
-                    <TableHead>Kendaraan</TableHead>
-                    <TableHead>Kepatuhan</TableHead>
-                    <TableHead className="text-right">Tagihan</TableHead>
+                    {kolom.sasaran.map((k) => (
+                      <TableHead key={k} className={KANAN_SASARAN.includes(k) ? "text-right" : undefined}>
+                        {KOLOM_SASARAN[k]}
+                      </TableHead>
+                    ))}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -553,23 +604,9 @@ function TabSasaran() {
                           {k.nopol}
                         </button>
                       </TableCell>
-                      <TableCell className="min-w-56">
-                        <span className="block font-medium">{k.nama}</span>
-                        <span className="block text-xs text-muted-foreground">
-                          {k.alamat}
-                          {(k.rt || k.rw) && ` RT ${k.rt || "-"}/RW ${k.rw || "-"}`}, {namaWilayah(k.kelurahan)}
-                        </span>
-                      </TableCell>
-                      <TableCell className="font-mono whitespace-nowrap">{k.telepon || "—"}</TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        {k.merk} {k.jenis.toLowerCase()}
-                        {k.tahunBuat && <span className="block text-xs text-muted-foreground">{k.tahunBuat}</span>}
-                      </TableCell>
-                      <TableCell className="min-w-40">
-                        <span className="block">{k.kepatuhan}</span>
-                        {k.sdNotice && <span className="block text-xs text-muted-foreground">Berlaku s.d. {tanggal(k.sdNotice)}</span>}
-                      </TableCell>
-                      <TableCell className="text-right whitespace-nowrap tabular-nums">{k.tagihan ? rupiah(k.tagihan) : "—"}</TableCell>
+                      {kolom.sasaran.map((kol) => (
+                        <SelSasaran key={kol} kolom={kol} kendaraan={k} />
+                      ))}
                     </TableRow>
                   ))}
                 </TableBody>
@@ -581,6 +618,100 @@ function TabSasaran() {
       <SheetKendaraan id={pilih} tutup={() => setPilih(null)} />
     </>
   )
+}
+
+/* ---------- Kolom tabel (D-052) ---------- */
+
+/** Kolom tabel pemetaan dari server, dan cara Administrator menyimpannya (null untuk pegawai lain) */
+function useKolom(): { kolom: KolomPemetaan; atur: ((kolom: KolomPemetaan) => void) | null } {
+  const data = useKolomPemetaan()
+  const simpan = useSimpanKolomPemetaan()
+  const atur = async (kolom: KolomPemetaan) => {
+    try {
+      await simpan.mutateAsync(kolom)
+      toast.success("Kolom tabel disimpan")
+    } catch (e) {
+      toast.error("Kolom tabel gagal disimpan", { description: (e as Error).message })
+    }
+  }
+  return { kolom: data.data ?? KOLOM_BAWAAN, atur: sesi().peran === "administrator" ? (kolom) => void atur(kolom) : null }
+}
+
+/** Pilihan kolom yang tampil; sedikitnya satu kolom tetap terpilih */
+function AturKolom<K extends string>({ katalog, terpilih, keterangan, ubah }: { katalog: Record<K, string>; terpilih: K[]; keterangan: string; ubah: (kolom: K[]) => void }) {
+  const semua = Object.keys(katalog) as K[]
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm">
+          <IconLayoutColumns />
+          Atur kolom
+          <IconChevronDown />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-64">
+        <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">{keterangan}</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {semua.map((k) => (
+          <DropdownMenuCheckboxItem
+            key={k}
+            checked={terpilih.includes(k)}
+            disabled={terpilih.length === 1 && terpilih.includes(k)}
+            onCheckedChange={(nyala) => ubah(nyala ? semua.filter((x) => x === k || terpilih.includes(x)) : terpilih.filter((x) => x !== k))}
+            onSelect={(e) => e.preventDefault()}
+          >
+            {katalog[k]}
+          </DropdownMenuCheckboxItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+/** Kolom sasaran penagihan yang berisi rupiah, rata kanan */
+const KANAN_SASARAN: KolomSasaran[] = ["pokokPajak", "tunggakan", "tagihan"]
+
+function SelSasaran({ kolom, kendaraan: k }: { kolom: KolomSasaran; kendaraan: KendaraanPotensi }) {
+  switch (kolom) {
+    case "pemilik":
+      return (
+        <TableCell className="min-w-56">
+          <span className="block font-medium">{k.nama}</span>
+          <span className="block text-xs text-muted-foreground">
+            {k.alamat}
+            {(k.rt || k.rw) && ` RT ${k.rt || "-"}/RW ${k.rw || "-"}`}, {namaWilayah(k.kelurahan)}
+          </span>
+        </TableCell>
+      )
+    case "telepon":
+      return <TableCell className="font-mono whitespace-nowrap">{k.telepon || "—"}</TableCell>
+    case "kendaraan":
+      return (
+        <TableCell className="whitespace-nowrap">
+          {k.merk} {k.jenis.toLowerCase()}
+          {k.tahunBuat && <span className="block text-xs text-muted-foreground">{k.tahunBuat}</span>}
+        </TableCell>
+      )
+    case "kecamatan":
+      return <TableCell className="whitespace-nowrap">{KECAMATAN.find((x) => x.kunci === k.kecamatan)?.nama ?? "Tanpa kelurahan"}</TableCell>
+    case "kepatuhan":
+      return (
+        <TableCell className="min-w-40">
+          <span className="block">{k.kepatuhan}</span>
+          {k.sdNotice && <span className="block text-xs text-muted-foreground">Berlaku s.d. {tanggal(k.sdNotice)}</span>}
+        </TableCell>
+      )
+    case "lamaTunggakan":
+      return <TableCell className="whitespace-nowrap">{k.tahunTunggak ? `${k.tahunTunggak} tahun` : "—"}</TableCell>
+    case "pokokPajak":
+      return <TableCell className="text-right whitespace-nowrap tabular-nums">{rupiah(k.pokokPajak)}</TableCell>
+    case "tunggakan":
+      return <TableCell className="text-right whitespace-nowrap tabular-nums">{k.pokokTunggak + k.dendaTunggak ? rupiah(k.pokokTunggak + k.dendaTunggak) : "—"}</TableCell>
+    case "tagihan":
+      return <TableCell className="text-right whitespace-nowrap tabular-nums">{k.tagihan ? rupiah(k.tagihan) : "—"}</TableCell>
+    case "kunjungan":
+      return <TableCell className="min-w-40">{k.hasilKunjungan || "—"}</TableCell>
+  }
 }
 
 /** Kelurahan yang ada di data, untuk kecamatan yang dipilih atau semuanya */

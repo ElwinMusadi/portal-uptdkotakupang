@@ -57,11 +57,11 @@ class PublicPotentialMapTest extends TestCase
             ->assertJsonPath('kecamatan.*.kunci', ['ALAK', 'KELAPA LIMA', ''])
             ->assertJsonPath('kecamatan.1', [
                 'kunci' => 'KELAPA LIMA', 'nama' => 'Kelapa Lima',
-                'kendaraan' => 10, 'rodaDua' => 7, 'rodaTigaLebih' => 3, 'taat' => 7, 'belumBayar' => 0, 'menunggak' => 3,
+                'kendaraan' => 10, 'rodaDua' => 7, 'rodaTiga' => 0, 'rodaEmpat' => 3, 'taat' => 7, 'belumBayar' => 0, 'menunggak' => 3,
                 'potensi' => 4100000, 'tagihan' => 3900000, 'tunggakan' => 3300000,
                 'kelurahan' => [
-                    ['nama' => 'LASIANA', 'kendaraan' => 3, 'rodaDua' => 3, 'rodaTigaLebih' => 0, 'taat' => 0, 'belumBayar' => 0, 'menunggak' => 3, 'potensi' => 600000, 'tagihan' => 3900000, 'tunggakan' => 3300000],
-                    ['nama' => 'OESAPA', 'kendaraan' => 7, 'rodaDua' => 4, 'rodaTigaLebih' => 3, 'taat' => 7, 'belumBayar' => 0, 'menunggak' => 0, 'potensi' => 3500000, 'tagihan' => 0, 'tunggakan' => 0],
+                    ['nama' => 'LASIANA', 'kendaraan' => 3, 'rodaDua' => 3, 'rodaTiga' => 0, 'rodaEmpat' => 0, 'taat' => 0, 'belumBayar' => 0, 'menunggak' => 3, 'potensi' => 600000, 'tagihan' => 3900000, 'tunggakan' => 3300000],
+                    ['nama' => 'OESAPA', 'kendaraan' => 7, 'rodaDua' => 4, 'rodaTiga' => 0, 'rodaEmpat' => 3, 'taat' => 7, 'belumBayar' => 0, 'menunggak' => 0, 'potensi' => 3500000, 'tagihan' => 0, 'tunggakan' => 0],
                 ],
             ])
             ->assertJsonPath('kecamatan.2.nama', 'Tanpa kelurahan')
@@ -84,14 +84,15 @@ class PublicPotentialMapTest extends TestCase
 
         // Oesapa: one car in arrears; the motorcycles and paid-up count would give it away
         $response->assertJsonPath('kecamatan.0.kelurahan.1', [
-            'nama' => 'OESAPA', 'kendaraan' => 7, 'rodaDua' => null, 'rodaTigaLebih' => null, 'taat' => null, 'belumBayar' => 0, 'menunggak' => null,
+            'nama' => 'OESAPA', 'kendaraan' => 7, 'rodaDua' => null, 'rodaTiga' => 0, 'rodaEmpat' => null, 'taat' => null, 'belumBayar' => 0, 'menunggak' => null,
             'potensi' => 1400000, 'tagihan' => null, 'tunggakan' => null,
         ]);
         // Lasiana: one three-wheeler; the vehicles of no recorded type do not hide it, as other figures may give their number away
         $response->assertJsonPath('kota.rodaLain', 5)
             ->assertJsonPath('kecamatan.0.kelurahan.0.kendaraan', 11)
             ->assertJsonPath('kecamatan.0.kelurahan.0.rodaDua', null)
-            ->assertJsonPath('kecamatan.0.kelurahan.0.rodaTigaLebih', null)
+            ->assertJsonPath('kecamatan.0.kelurahan.0.rodaTiga', null)
+            ->assertJsonPath('kecamatan.0.kelurahan.0.rodaEmpat', 0)
             ->assertJsonPath('kecamatan.0.kelurahan.0.taat', 11);
     }
 
@@ -120,17 +121,19 @@ class PublicPotentialMapTest extends TestCase
             ->assertJsonPath('kota.taat', 10);
     }
 
-    public function test_hides_the_city_four_wheelers_that_would_give_a_single_three_wheeler_away(): void
+    public function test_hides_a_single_three_wheeler_with_the_four_wheelers_of_its_areas(): void
     {
         $this->vehicles(10, 'OESAPA');
         $this->vehicles(1, 'OESAPA', ['jenis' => 'SPM R3', 'roda' => 'r3']);
         $this->vehicles(4, 'OESAPA', ['jenis' => 'MINIBUS', 'roda' => 'r4']);
 
-        // The kecamatan give the three-wheelers and up together, so the city's four-wheelers would give the one three-wheeler away
+        // The vehicles less the motorcycles would give the one three-wheeler away with the four-wheelers shown
         $this->map()->assertJsonPath('kota.rodaDua', 10)
             ->assertJsonPath('kota.rodaTiga', null)
             ->assertJsonPath('kota.rodaEmpat', null)
-            ->assertJsonPath('kecamatan.0.rodaTigaLebih', 5);
+            ->assertJsonPath('kecamatan.0.rodaTiga', null)
+            ->assertJsonPath('kecamatan.0.rodaEmpat', null)
+            ->assertJsonPath('kecamatan.0.kelurahan.0.rodaEmpat', null);
     }
 
     public function test_hides_the_city_vehicles_of_no_recorded_type_only_below_three(): void
@@ -235,7 +238,7 @@ class PublicPotentialMapTest extends TestCase
         // Shown as zeros, Lasiana's paid-up, late and in-arrears figures would give away its one vehicle with another compliance text
         $this->map()->assertJsonPath('kecamatan.0.kelurahan.0.nama', 'LASIANA')
             ->assertJsonPath('kecamatan.0.kelurahan.0.kendaraan', null)
-            ->assertJsonPath('kecamatan.0.kelurahan.0.rodaTigaLebih', 0)
+            ->assertJsonPath('kecamatan.0.kelurahan.0.rodaTiga', 0)
             ->assertJsonPath('kecamatan.0.kelurahan.0.taat', null)
             ->assertJsonPath('kecamatan.0.kelurahan.0.belumBayar', 0)
             ->assertJsonPath('kecamatan.0.kelurahan.0.menunggak', 0);
@@ -277,6 +280,81 @@ class PublicPotentialMapTest extends TestCase
         $this->getJson('/api/public/pemetaan?kecamatan=ALAK')->assertUnprocessable()->assertJsonValidationErrors(['query' => 'Parameter kueri tidak didukung.']);
     }
 
+    public function test_hides_the_four_wheelers_of_a_kelurahan_whose_motorcycles_are_hidden_for_its_kecamatan(): void
+    {
+        $this->vehicles(10, 'LASIANA');
+        $this->vehicles(1, 'LASIANA', ['jenis' => 'SPM R3', 'roda' => 'r3']);
+        $this->vehicles(20, 'OESAPA');
+        $this->vehicles(5, 'OESAPA', ['jenis' => 'MINIBUS', 'roda' => 'r4']);
+        $this->vehicles(30, 'OESAPA SELATAN');
+        $this->vehicles(10, 'NAIONI', ['kecamatan' => 'ALAK']);
+        $this->vehicles(10, 'NAIONI', ['kecamatan' => 'ALAK', 'jenis' => 'MINIBUS', 'roda' => 'r4']);
+        $this->vehicles(10, 'ALAK', ['kecamatan' => 'ALAK']);
+        $this->vehicles(10, 'ALAK', ['kecamatan' => 'ALAK', 'jenis' => 'MINIBUS', 'roda' => 'r4']);
+
+        // Oesapa's motorcycles are hidden for Kelapa Lima's motorcycle total; its four-wheelers must not leave them alone in its row
+        $this->map()->assertJsonPath('kecamatan.1.kelurahan.1.nama', 'OESAPA')
+            ->assertJsonPath('kecamatan.1.kelurahan.1.rodaDua', null)
+            ->assertJsonPath('kecamatan.1.kelurahan.1.rodaEmpat', null);
+    }
+
+    public function test_settles_every_total_again_after_hiding_a_part_for_another(): void
+    {
+        // Wheel class and compliance group of the vehicles of three kelurahan of Alak (found by a randomised check)
+        $kelurahan = [
+            'ALAK' => [['r2', 'jatuh-tempo', 1], ['r2', 'terlambat', 1], ['r2', 'menunggak', 1], ['r3', 'taat', 1], ['r3', 'terlambat', 2], ['r3', 'menunggak', 1], ['r4', 'taat', 1], ['r4', 'jatuh-tempo', 14], ['r4', 'terlambat', 1], ['r4', 'menunggak', 2], ['lain', 'jatuh-tempo', 3]],
+            'NAIONI' => [['r2', 'jatuh-tempo', 1], ['r2', 'lainnya', 1], ['r3', 'taat', 2], ['r3', 'jatuh-tempo', 5], ['r3', 'terlambat', 2], ['r4', 'taat', 2], ['r4', 'jatuh-tempo', 2], ['r4', 'terlambat', 2], ['lain', 'taat', 2], ['lain', 'lainnya', 2]],
+            'NAMOSAIN' => [['r2', 'menunggak', 1], ['r3', 'taat', 1], ['r3', 'menunggak', 4], ['r4', 'jatuh-tempo', 2], ['r4', 'terlambat', 1], ['lain', 'taat', 1], ['lain', 'terlambat', 2], ['lain', 'menunggak', 1]],
+        ];
+        $wheels = ['r2' => ['jenis' => 'SEPEDA MOTOR', 'roda' => 'r2'], 'r3' => ['jenis' => 'SPM R3', 'roda' => 'r3'], 'r4' => ['jenis' => 'MINIBUS', 'roda' => 'r4'], 'lain' => ['jenis' => '', 'roda' => null]];
+        $groups = [
+            'taat' => [],
+            'jatuh-tempo' => ['kepatuhan' => 'Pajak Berlaku Sampai 20/10/2026', 'kelompok' => TaxCompliance::JatuhTempo],
+            'terlambat' => ['kepatuhan' => 'Terlambat Membayar 3 Hari', 'kelompok' => TaxCompliance::Terlambat],
+            'lainnya' => ['kepatuhan' => 'Blokir', 'kelompok' => TaxCompliance::Lainnya],
+        ];
+        foreach ($kelurahan as $nama => $kelompok) {
+            foreach ($kelompok as [$roda, $kepatuhan, $jumlah]) {
+                $this->vehicles($jumlah, $nama, ['kecamatan' => 'ALAK', ...$wheels[$roda], ...($groups[$kepatuhan] ?? [])], $kepatuhan === 'menunggak' ? fn ($factory) => $factory->inArrears(1) : null);
+            }
+        }
+
+        // map() checks that no total is left with a single hidden figure
+        $this->map()->assertJsonPath('kecamatan.0.kelurahan.*.nama', ['ALAK', 'NAIONI', 'NAMOSAIN']);
+    }
+
+    /**
+     * No total and its parts hold exactly one hidden figure, which the others
+     * would work out: an area's vehicles over its wheel classes and its
+     * compliance groups, and the city and kecamatan figures over the areas
+     * within.
+     */
+    private function assertNothingHiddenAlone(TestResponse $response): void
+    {
+        $map = $response->json();
+        $areas = [$map['kota']];
+        $relations = [];
+        foreach (['kendaraan', 'rodaDua', 'rodaTiga', 'rodaEmpat', 'taat', 'belumBayar', 'menunggak', 'potensi', 'tagihan', 'tunggakan'] as $column) {
+            $relations[] = [$map['kota'][$column], array_column($map['kecamatan'], $column)];
+            foreach ($map['kecamatan'] as $kecamatan) {
+                if ($kecamatan['kelurahan'] !== []) {
+                    $relations[] = [$kecamatan[$column], array_column($kecamatan['kelurahan'], $column)];
+                }
+            }
+        }
+        foreach ($map['kecamatan'] as $kecamatan) {
+            $areas = [...$areas, $kecamatan, ...$kecamatan['kelurahan']];
+        }
+        foreach ($areas as $area) {
+            $relations[] = [$area['kendaraan'], [$area['rodaDua'], $area['rodaTiga'], $area['rodaEmpat']]];
+            $relations[] = [$area['kendaraan'], [$area['taat'], $area['belumBayar'], $area['menunggak']]];
+        }
+
+        foreach ($relations as [$total, $parts]) {
+            $this->assertNotSame(1, count(array_filter([$total, ...$parts], fn (?int $value): bool => $value === null)));
+        }
+    }
+
     /**
      * Vehicles of the current import in a kelurahan of Kelapa Lima unless
      * told otherwise, paid-up motorcycles unless changed.
@@ -290,12 +368,20 @@ class PublicPotentialMapTest extends TestCase
         ($state === null ? $factory : $state($factory))->create(['kelurahan' => $kelurahan, ...$attributes]);
     }
 
+    /**
+     * The public map, which never leaves a hidden figure alone in a total.
+     */
     private function map(): TestResponse
     {
         if ($this->current->exists) {
             app(BuildPotentialSummary::class)->store($this->current);
         }
 
-        return $this->getJson('/api/public/pemetaan');
+        $response = $this->getJson('/api/public/pemetaan');
+        if ($response->json('tersedia')) {
+            $this->assertNothingHiddenAlone($response);
+        }
+
+        return $response;
     }
 }

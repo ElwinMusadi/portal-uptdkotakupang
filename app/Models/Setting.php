@@ -289,6 +289,24 @@ class Setting extends Model
         ],
     ];
 
+    /**
+     * The columns of the Pemetaan PKB tables (D-052), chosen by an
+     * Administrator: "wilayah" for the kecamatan and kelurahan tables in the
+     * dashboard and on the portal, "sasaran" for the dashboard's collection
+     * list. The name of the area or the plate number is always shown.
+     */
+    public const string POTENTIAL_MAP = 'pemetaan';
+
+    /**
+     * Every column of the area tables, in their order.
+     */
+    public const array POTENTIAL_MAP_REGION_COLUMNS = ['kendaraan', 'rodaDua', 'rodaTiga', 'rodaEmpat', 'taat', 'belumBayar', 'menunggak', 'persenMenunggak', 'potensi', 'tagihan', 'tunggakan'];
+
+    /**
+     * Every column of the collection list, in their order.
+     */
+    public const array POTENTIAL_MAP_TARGET_COLUMNS = ['pemilik', 'telepon', 'kendaraan', 'kecamatan', 'kepatuhan', 'lamaTunggakan', 'pokokPajak', 'tunggakan', 'tagihan', 'kunjungan'];
+
     protected $primaryKey = 'name';
 
     protected $keyType = 'string';
@@ -436,6 +454,20 @@ class Setting extends Model
         }
 
         return null;
+    }
+
+    /**
+     * The columns shown in the Pemetaan PKB tables. Until an Administrator
+     * first chooses them, the columns the tables had before.
+     *
+     * @return array{sasaran: list<string>, wilayah: list<string>}
+     */
+    public static function potentialMapColumns(): array
+    {
+        return self::query()->find(self::POTENTIAL_MAP)?->value ?? [
+            'sasaran' => ['pemilik', 'telepon', 'kendaraan', 'kepatuhan', 'tagihan'],
+            'wilayah' => ['kendaraan', 'rodaDua', 'rodaTiga', 'rodaEmpat', 'taat', 'belumBayar', 'menunggak', 'persenMenunggak', 'tagihan'],
+        ];
     }
 
     /**

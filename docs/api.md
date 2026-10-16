@@ -441,6 +441,8 @@ Berkas Data Potensi (tabel HTML berakhiran .xls, 43 kolom: NOPOL … PETUGAS DTD
 | `POST /api/pemetaan/impor/{id}/baris` | `{"mulai": letak baris pertama (0 untuk baris pertama berkas), "baris": [[43 teks], …]}`, maks. 1.000 baris | `200` `{diterima, jumlah}`. Bagian harus berurutan ("Bagian berkas tidak berurutan: berikutnya baris N."), tidak melebihi `jumlah`, dan setiap baris berisi 43 teks ("Baris N tidak berisi 43 kolom seperti berkas Data Potensi.", "Baris N tidak bisa dibaca."). Angka bertitik ribuan dibaca sebagai rupiah; tanggal hanya `YYYY-MM-DD`; teks yang terlalu panjang dipotong. KTP dan telepon dienkripsi. |
 | `POST /api/pemetaan/impor/{id}/selesai` | — | `200` impor. Ditolak bila belum semua baris diterima ("Baru N dari M baris yang diterima.") atau sudah selesai. Kendaraan dihitung ke tabel ringkasan, impor menggantikan data sebelumnya (dihapus beserta kendaraannya), dan dicatat di log aktivitas ("mengimpor Data potensi PKB penetapan 16 Okt 2026 (28.725 kendaraan)"). |
 | `DELETE /api/pemetaan/impor` | — | `204`; data yang ditampilkan dihapus seluruhnya (log "menghapus"). `404` bila belum ada. |
+| `GET /api/pemetaan/kolom` | — | `200` `{sasaran: [...], wilayah: [...]}`: kolom yang tampil di tabel pemetaan, berurutan. Sebelum diatur: `wilayah` = kendaraan, rodaDua, rodaTiga, rodaEmpat, taat, belumBayar, menunggak, persenMenunggak, tagihan; `sasaran` = pemilik, telepon, kendaraan, kepatuhan, tagihan. |
+| `PUT /api/pemetaan/kolom` | `{"wilayah": [...], "sasaran": [...]}` | `200` kolom tersimpan (urutan mengikuti urutan baku tabel). Khusus Administrator ("Hanya Administrator yang dapat mengatur kolom tabel pemetaan PKB."). `wilayah` dari kunci tabel wilayah (lihat `GET /api/public/pemetaan`), `sasaran` dari `pemilik`, `telepon`, `kendaraan`, `kecamatan`, `kepatuhan`, `lamaTunggakan`, `pokokPajak`, `tunggakan`, `tagihan`, `kunjungan`; masing-masing sedikitnya satu ("Pilih sedikitnya satu kolom untuk …"), tidak dikenal ("Kolom … tidak dikenal.") atau berulang ("Kolom … dipilih lebih dari sekali.") ditolak `422`. Tersimpan sebagai pengaturan `pemetaan` dan dicatat di log aktivitas ("memperbarui Pemetaan PKB") bila berubah. Kolom `wilayah` juga dipakai tabel portal. |
 | `GET /api/pemetaan/ringkasan?bulan=` | bulan jatuh tempo 1–12, opsional | `200` `{impor, bulanDipilih, jumlah, kecamatan: [{kunci, nama, …angka, kelurahan: [{nama, …angka}]}], tunggakan: [{tahun, kendaraan, pokokTunggak, dendaTunggak}], jenis: [{jenis, roda, kendaraan}], kunjungan: [{hasil, kendaraan}], bulan: [{bulan, kendaraan}]}`; angka = `{kendaraan, roda: {r2, r3, r4, lain}, kelompok: {taat, jatuh-tempo, terlambat, menunggak, lainnya}, pokokPajak, dendaBerjalan, pokokTunggak, dendaTunggak, tagihan}`. Kecamatan menurut daftar resmi kelurahan, urut resmi; `kunci` kosong ("Tanpa kelurahan") terakhir. `kunjungan` = bagian sebelum catatan petugas pada kolom STS KENDARAAN DTD. `{impor: null}` sebelum impor pertama. |
 | `GET /api/pemetaan/kendaraan` | opsional: `q` (sebagian nomor polisi atau nama), `kecamatan` (atau `tanpa`), `kelurahan`, `kelompok`, `roda` (`r2`/`r3`/`r4`), `tahun` (tahun tunggakan), `bulan` | `200` `{jumlah, kendaraan}`: banyaknya yang cocok dan maks. 200 kendaraan dengan tagihan terbesar dulu, dengan nama, alamat, telepon, jenis, kepatuhan, dan rupiahnya (tanpa KTP). |
 | `GET /api/pemetaan/kendaraan/{id}` | — | `200` semua kolom satu kendaraan, termasuk KTP, mesin, rangka, dan kunjungan lapangan. `404` untuk kendaraan dari impor yang tidak ditampilkan. |
@@ -1109,22 +1111,24 @@ Halaman *Pemetaan PKB* portal (`/pemetaan`, `resources/js/portal/pemetaan/pemeta
   "kecamatan": [
     {
       "kunci": "ALAK", "nama": "Alak",
-      "kendaraan": 300, "rodaDua": 260, "rodaTigaLebih": 40, "taat": 120, "belumBayar": 60, "menunggak": 120,
+      "kendaraan": 300, "rodaDua": 260, "rodaTiga": 4, "rodaEmpat": 36, "taat": 120, "belumBayar": 60, "menunggak": 120,
       "potensi": 150000000, "tagihan": 220000000, "tunggakan": 130000000,
       "kelurahan": [
-        { "nama": "NAIONI", "kendaraan": 12, "rodaDua": null, "rodaTigaLebih": null, "taat": 6, "belumBayar": null, "menunggak": null, "potensi": 6000000, "tagihan": 9000000, "tunggakan": null },
+        { "nama": "NAIONI", "kendaraan": 12, "rodaDua": null, "rodaTiga": null, "rodaEmpat": null, "taat": 6, "belumBayar": null, "menunggak": null, "potensi": 6000000, "tagihan": 9000000, "tunggakan": null },
         { "nama": "…" }
       ]
     },
     { "kunci": "", "nama": "Tanpa kelurahan", "kendaraan": 40, "…": 0, "kelurahan": [] }
-  ]
+  ],
+  "kolom": ["kendaraan", "rodaDua", "rodaTiga", "rodaEmpat", "taat", "belumBayar", "menunggak", "persenMenunggak", "tagihan"]
 }
 ```
 
 | Hal | Perilaku |
 |---|---|
-| Angka | Kota: `rodaTiga` dan `rodaEmpat` terpisah, ditambah `rodaLain` (kendaraan yang jenisnya tidak tercatat di berkas, sehingga `rodaDua` + `rodaTiga` + `rodaEmpat` + `rodaLain` = `kendaraan`); kecamatan dan kelurahan: `rodaTigaLebih` (roda tiga dan roda empat atau lebih). `belumBayar` = jatuh tempo dan terlambat kurang dari setahun; `menunggak` = menunggak setahun atau lebih. `potensi` = pokok PKB, `tagihan` = tagihan kendaraan yang belum taat, `tunggakan` = pokok dan denda tunggakan. Kecamatan urut daftar resmi; "Tanpa kelurahan" (`kunci` kosong) terakhir dan tanpa rincian kelurahan. |
+| Angka | Setiap wilayah: `rodaDua`, `rodaTiga`, dan `rodaEmpat` (roda empat atau lebih) terpisah; kota juga `rodaLain` (kendaraan yang jenisnya tidak tercatat di berkas, sehingga `rodaDua` + `rodaTiga` + `rodaEmpat` + `rodaLain` = `kendaraan`). `belumBayar` = jatuh tempo dan terlambat kurang dari setahun; `menunggak` = menunggak setahun atau lebih. `potensi` = pokok PKB, `tagihan` = tagihan kendaraan yang belum taat, `tunggakan` = pokok dan denda tunggakan. Kecamatan urut daftar resmi; "Tanpa kelurahan" (`kunci` kosong) terakhir dan tanpa rincian kelurahan. |
 | Penyamaran | Angka yang disamarkan bernilai `null`. Angka yang menggambarkan 1–2 kendaraan disamarkan, beserta angka lain yang diperlukan agar tidak bisa dihitung balik dari total mana pun, satu per satu maupun digabung (aturan lengkap di D-052). `rodaLain` kota hanya `null` bila 1–2 dan tidak ikut penyamaran lanjutan, karena selalu sama dengan selisih kendaraan dan jenis roda yang tampil. |
+| Kolom tabel | `kolom`: kolom tabel kecamatan dan kelurahan pilihan Administrator (`GET /api/pemetaan/kolom`, bagian `wilayah`), berurutan; kolom daftar sasaran penagihan tidak pernah dikirim. Kunci: `kendaraan`, `rodaDua`, `rodaTiga`, `rodaEmpat`, `taat`, `belumBayar`, `menunggak`, `persenMenunggak`, `potensi`, `tagihan`, `tunggakan`. Angka semua kolom tetap dikirim (peta dan panel kota memakainya). |
 | Belum tampil | `200` `{"tersedia": false}`, juga sebelum impor pertama. |
 | Galat | `422` `query` "Parameter kueri tidak didukung." untuk parameter apa pun; `429` setelah batas API publik. |
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |

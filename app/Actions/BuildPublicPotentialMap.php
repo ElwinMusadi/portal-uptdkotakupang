@@ -8,16 +8,14 @@ use App\Models\PotentialImport;
  * The Pemetaan PKB figures on the public portal (D-052 slice 2): only once an
  * Administrator has shown the data, for the whole data only, with no
  * identity. Each area (the city, each kecamatan, each kelurahan) gives its
- * vehicles, motorcycles and vehicles with three wheels or more (the city also
- * three and four wheels apart, and the vehicles of no recorded type), paid
- * up, late by less than a year and in arrears, and the tax potential, the
- * amount still due and the arrears.
+ * vehicles with two, three, and four or more wheels (the city also the
+ * vehicles of no recorded type), paid up, late by less than a year and in
+ * arrears, and the tax potential, the amount still due and the arrears.
  *
  * No figure describes fewer than three vehicles: such figures are hidden,
  * and so are the smallest others while a hidden one could still be worked
  * out from a total it adds up to (cell suppression). The totals are an
- * area's vehicles for its wheel classes and its compliance groups, the
- * city's three-wheelers and up for its three and four wheels, and the
+ * area's vehicles for its wheel classes and its compliance groups, and the
  * kecamatan and city figures for the areas within them. Last, all totals
  * are combined as equations, and one more figure is hidden while they
  * still work out a hidden figure, or hidden figures together, describing
@@ -35,7 +33,7 @@ class BuildPublicPotentialMap
      *
      * @var list<string>
      */
-    private const array COUNTS = ['kendaraan', 'rodaDua', 'rodaTigaLebih', 'taat', 'belumBayar', 'menunggak'];
+    private const array COUNTS = ['kendaraan', 'rodaDua', 'rodaTiga', 'rodaEmpat', 'taat', 'belumBayar', 'menunggak'];
 
     /**
      * The amounts published for every area, with the count they sum over.
@@ -120,7 +118,6 @@ class BuildPublicPotentialMap
         $counts = [
             'kendaraan' => $figures['kendaraan'],
             'rodaDua' => $figures['roda']['r2'],
-            'rodaTigaLebih' => $figures['roda']['r3'] + $figures['roda']['r4'],
             'rodaTiga' => $figures['roda']['r3'],
             'rodaEmpat' => $figures['roda']['r4'],
             'rodaLain' => $figures['roda']['lain'],
@@ -146,9 +143,8 @@ class BuildPublicPotentialMap
     /**
      * The totals the published figures add up to: an area's vehicles over
      * its wheel classes and over its compliance groups (the vehicles of no
-     * recorded type and of other compliance texts are taken as known), the
-     * city's three-wheelers and up over its three and four wheels, and each
-     * kecamatan and city figure over the areas within.
+     * recorded type and of other compliance texts are taken as known), and
+     * each kecamatan and city figure over the areas within.
      *
      * @param  array<string, list<string>>  $tree  the kelurahan areas of each kecamatan
      * @return list<array{array{string, string}, list<array{string, string}>}>
@@ -157,10 +153,9 @@ class BuildPublicPotentialMap
     {
         $totals = [];
         foreach (array_keys($this->cells) as $area) {
-            $totals[] = [[$area, 'kendaraan'], [[$area, 'rodaDua'], [$area, 'rodaTigaLebih']]];
+            $totals[] = [[$area, 'kendaraan'], [[$area, 'rodaDua'], [$area, 'rodaTiga'], [$area, 'rodaEmpat']]];
             $totals[] = [[$area, 'kendaraan'], [[$area, 'taat'], [$area, 'belumBayar'], [$area, 'menunggak']]];
         }
-        $totals[] = [['kota', 'rodaTigaLebih'], [['kota', 'rodaTiga'], ['kota', 'rodaEmpat']]];
         foreach ([...self::COUNTS, ...array_keys(self::AMOUNTS)] as $column) {
             $totals[] = [['kota', $column], array_map(fn (string $kecamatan): array => [$kecamatan, $column], array_keys($tree))];
             foreach (array_filter($tree) as $kecamatan => $kelurahan) {
@@ -174,17 +169,22 @@ class BuildPublicPotentialMap
     /**
      * Hide more figures until no hidden one describing fewer than the
      * minimum vehicles can be worked out: each total is checked on its own,
-     * then all totals are combined, and while that still works out such a
-     * figure, one more is hidden and everything is checked again.
+     * again until none changes (hiding a figure for one total can leave it
+     * alone in another), then all totals are combined, and while that still
+     * works out such a figure, one more is hidden and everything is checked
+     * again.
      *
      * @param  list<array{array{string, string}, list<array{string, string}>}>  $totals
      */
     private function suppress(array $totals): void
     {
         do {
-            foreach ($totals as [$total, $parts]) {
-                $this->protect($total, $parts);
-            }
+            do {
+                $changed = false;
+                foreach ($totals as [$total, $parts]) {
+                    $changed = $this->protect($total, $parts) || $changed;
+                }
+            } while ($changed);
             $workedOut = $this->workedOut($totals);
         } while ($workedOut !== null && $this->hideAnother($workedOut, $totals));
     }
@@ -196,18 +196,23 @@ class BuildPublicPotentialMap
      * @param  array{string, string}  $total
      * @param  list<array{string, string}>  $parts
      */
-    private function protect(array $total, array $parts): void
+    private function protect(array $total, array $parts): bool
     {
+        $changed = false;
         while ($this->givesAway($total, $parts)) {
             $shown = array_values(array_filter($parts, fn (array $part): bool => ! $this->cell($part)['samar'] && $this->cell($part)['bobot'] > 0));
             if ($shown === []) {
+                $changed = $changed || ! $this->cell($total)['samar'];
                 $this->cells[$total[0]][$total[1]]['samar'] = true;
 
-                return;
+                return $changed;
             }
             usort($shown, fn (array $a, array $b): int => $this->cell($a)['bobot'] <=> $this->cell($b)['bobot']);
             $this->cells[$shown[0][0]][$shown[0][1]]['samar'] = true;
+            $changed = true;
         }
+
+        return $changed;
     }
 
     /**
@@ -382,9 +387,8 @@ class BuildPublicPotentialMap
     }
 
     /**
-     * The figures published of an area: the city gives its three and four
-     * wheels apart and its vehicles of no recorded type, the others their
-     * three-wheelers and up together.
+     * The figures published of an area; the city also gives its vehicles of
+     * no recorded type.
      *
      * @return list<string>
      */
