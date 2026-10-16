@@ -787,3 +787,17 @@ Pemilik ingin ketiga kategori Statistik Layanan (Transaksi pelayanan, Samsat Kel
 | Sakelar | Setiap kategori di dashboard Statistik Layanan punya sakelar **Tampil di portal** (permintaan pemilik), tersimpan di dokumen `statistik` sebagai `tampil` per kategori. Bawaannya menyala, dan dokumen yang disimpan sebelumnya dibaca dengan semua kategori tampil, jadi beranda tidak berubah sampai sakelar dimatikan. |
 | Di beranda | Kategori yang dimatikan **tidak muncul sebagai tab** dasbor transparansi beranda, apa pun status datanya (Ilustrasi atau Terverifikasi); isinya tetap tersimpan di dashboard. Bila tab yang terpilih tersembunyi, beranda memilih tab pertama yang tampil; bila tidak ada tab sama sekali, panel menyatakan statistik layanan belum diterbitkan. `GET /api/public/statistik` menyebut kategori yang tampil di `kategori` dan hanya mengirim angka kategori itu. |
 | Status data | Status Ilustrasi/Terverifikasi (D-018) tetap berlaku untuk semua kategori: kategori yang tampil tetap menunggu status Terverifikasi sebelum angkanya terbit. |
+
+## D-057 · 2026-10-17 · Tema portal dan dashboard: rencana dan keputusan awal
+
+Pemilik ingin Administrator dapat mengatur tema (jenis huruf, warna utama, skala tampilan, dan pengaturan tampilan lain yang lazim) dari menu Pengaturan di dashboard, agar tampilan tidak itu-itu saja. Rencananya di [`docs/rencana-tema-situs.md`](rencana-tema-situs.md); belum ada kode.
+
+| Hal | Keputusan |
+|---|---|
+| Cakupan | **Portal dan dashboard punya tema masing-masing** (pemilik), diatur dari satu tab *Tampilan* di Pengaturan, khusus Administrator. Absensi mengikuti dashboard; 404, Login Pegawai, Aktivasi, dan layar TV antrean mengikuti portal. Mode gelap dashboard tetap pilihan tiap pegawai. |
+| Pengaturan | Tema siap pakai (PINTU bawaan dan beberapa lainnya), warna aksen bebas dengan turunan warna yang dipaksa memenuhi kontras WCAG AA, nuansa latar, huruf teks dan judul, skala tampilan, dan kelengkungan sudut; tombol kembali ke bawaan. Warna status (taat, menunggak, peringatan) tidak ikut aksen. |
+| Skala portal | **`zoom` per halaman** (pemilik), 90–120%, karena CSS portal memakai px; dashboard memakai ukuran huruf dasar (rem). |
+| Logo | **Tetap biru PINTU** (pemilik) di header, footer, dan favicon. |
+| Huruf | **Daftar terkurasi yang di-host sendiri** (pemilik), berlisensi OFL, bukan Google Fonts. |
+| Cara menerapkan | Dua stylesheet yang dibuat server (`tema-portal.css`, `tema-dashboard.css`) lewat satu `<link>` tetap di setiap halaman, sehingga halaman portal tetap dilayani byte demi byte dan tidak berkedip; kosong selama tema belum disimpan. |
+| Tahapan | Irisan 1 fondasi (warna yang ditulis langsung dijadikan variabel, tanpa perubahan tampilan), Irisan 2 warna/latar/huruf/sudut dengan tab Tampilan, Irisan 3 skala dan pratinjau portal, Irisan 4 opsional (`theme-color`, mode gelap portal). |
