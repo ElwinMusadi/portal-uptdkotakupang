@@ -1147,6 +1147,7 @@ function pengaturan(sekarang: Date): Pengaturan {
           sub: "Transaksi pelayanan · UPTD Kota Kupang",
           judulGrafik: "Transaksi per bulan",
           satuan: "transaksi",
+          tampil: true,
           tiles: [
             { id: id(), label: "Total transaksi", nilai: 12480, satuan: "", perubahan: 4.2, naikBaik: true },
             { id: id(), label: "Pajak tahunan", nilai: 9316, satuan: "", perubahan: 3.1, naikBaik: true },
@@ -1161,6 +1162,7 @@ function pengaturan(sekarang: Date): Pengaturan {
           sub: "Samsat Keliling · 6 kecamatan, 51 kelurahan",
           judulGrafik: "Transaksi keliling per bulan",
           satuan: "transaksi",
+          tampil: true,
           tiles: [
             { id: id(), label: "Titik layanan", nilai: 22, satuan: "", perubahan: 10, naikBaik: true },
             { id: id(), label: "Transaksi keliling", nilai: 1284, satuan: "", perubahan: 12.5, naikBaik: true },
@@ -1175,6 +1177,7 @@ function pengaturan(sekarang: Date): Pengaturan {
           sub: "Survei Kepuasan Masyarakat (IKM)",
           judulGrafik: "Waktu tunggu rata-rata per bulan",
           satuan: "menit",
+          tampil: true,
           tiles: [
             { id: id(), label: "Indeks kepuasan", nilai: 88.4, satuan: "", perubahan: 1.6, naikBaik: true },
             { id: id(), label: "Waktu tunggu rata-rata", nilai: 18, satuan: " mnt", perubahan: -6, naikBaik: false },

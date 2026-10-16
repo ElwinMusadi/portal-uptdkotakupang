@@ -414,6 +414,8 @@ export interface Statistik {
     sub: string
     judulGrafik: string
     satuan: string
+    /** Tab kategori ini tampil di dasbor transparansi beranda (D-056) */
+    tampil: boolean
     tiles: { id: Id; label: string; nilai: number; satuan: string; perubahan: number; naikBaik: boolean }[]
     /** 12 nilai bulanan, Januari–Desember */
     seri: number[]

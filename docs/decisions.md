@@ -777,3 +777,13 @@ Pemilik ingin bagian *Transparansi layanan* di beranda menampilkan ringkasan Lap
 | Tautan | "Lihat laporan penerimaan" dan "Lihat pemetaan PKB per wilayah" di bawah judul bagian dihapus (pemilik); masing-masing kini tampil di dalam panel dasbor pada tabnya. |
 | Bila belum tampil | Kedua tab disembunyikan selama datanya belum dinyalakan untuk portal (sakelar Administrator D-048 dan D-052). Tab lain tetap dari Statistik Layanan dan hanya berisi angka bila terverifikasi pimpinan (D-018). |
 | Statistik Layanan | Kategori Penerimaan pajak **dihapus dari editor** (pemilik): Statistik Layanan tinggal tiga kategori (Transaksi pelayanan, Samsat Keliling, Kepuasan masyarakat). Dokumen yang tersimpan sebelumnya dibaca tanpa kategori itu, dan kategori itu hilang saat disimpan lagi. |
+
+## D-056 · 2026-10-17 · Kategori Statistik Layanan bisa disembunyikan dari portal
+
+Pemilik ingin ketiga kategori Statistik Layanan (Transaksi pelayanan, Samsat Keliling, Kepuasan masyarakat) masing-masing punya pilihan tampil di portal atau tidak.
+
+| Hal | Keputusan |
+|---|---|
+| Sakelar | Setiap kategori di dashboard Statistik Layanan punya sakelar **Tampil di portal** (permintaan pemilik), tersimpan di dokumen `statistik` sebagai `tampil` per kategori. Bawaannya menyala, dan dokumen yang disimpan sebelumnya dibaca dengan semua kategori tampil, jadi beranda tidak berubah sampai sakelar dimatikan. |
+| Di beranda | Kategori yang dimatikan **tidak muncul sebagai tab** dasbor transparansi beranda, apa pun status datanya (Ilustrasi atau Terverifikasi); isinya tetap tersimpan di dashboard. Bila tab yang terpilih tersembunyi, beranda memilih tab pertama yang tampil; bila tidak ada tab sama sekali, panel menyatakan statistik layanan belum diterbitkan. `GET /api/public/statistik` menyebut kategori yang tampil di `kategori` dan hanya mengirim angka kategori itu. |
+| Status data | Status Ilustrasi/Terverifikasi (D-018) tetap berlaku untuk semua kategori: kategori yang tampil tetap menunggu status Terverifikasi sebelum angkanya terbit. |

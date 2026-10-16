@@ -1,11 +1,11 @@
 import * as React from "react"
-import { IconInfoCircle, IconServer } from "@tabler/icons-react"
+import { IconEyeOff, IconInfoCircle, IconServer } from "@tabler/icons-react"
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 import type { UseFormReturn } from "react-hook-form"
 import { z } from "zod"
 
 import { Bagian, Baris, Halaman, PengantarHalaman } from "@/components/data/page"
-import { FieldPilih, FieldTeks } from "@/components/form/fields"
+import { FieldPilih, FieldSakelar, FieldTeks } from "@/components/form/fields"
 import { FormPengaturan } from "@/components/form/settings-form"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
@@ -39,6 +39,7 @@ const schema = z.object({
       sub: v.teks.max(120, "Maksimal 120 karakter."),
       judulGrafik: v.wajib("Judul grafik").max(80, "Maksimal 80 karakter."),
       satuan: v.teks.max(30, "Maksimal 30 karakter."),
+      tampil: z.boolean(),
       tiles: z.array(
         z.object({
           id: z.string(),
@@ -63,6 +64,12 @@ function IsiSet({ form, i }: { form: UseFormReturn<Statistik>; i: number }) {
   const dataGrafik = set.seri.map((n, b) => ({ bulan: BULAN[b], nilai: Number.isFinite(n) ? n : 0 }))
   return (
     <div className="grid gap-4">
+      <FieldSakelar
+        control={form.control}
+        name={`set.${i}.tampil`}
+        label="Tampil di portal"
+        deskripsi="Bila dimatikan, tab ini tidak muncul di dasbor transparansi beranda, apa pun status datanya. Isinya tetap tersimpan di sini."
+      />
       <Bagian judul="Judul">
         <Baris>
           <FieldTeks control={form.control} name={`set.${i}.label`} label="Nama tab" wajib />
@@ -202,7 +209,8 @@ export default function HalamanStatistik() {
         <AlertTitle>Tersimpan di server</AlertTitle>
         <AlertDescription>
           Statistik ini dipakai bersama semua pengelola Statistik Layanan. Hanya statistik berstatus Terverifikasi
-          pimpinan yang tampil di dasbor transparansi beranda, langsung setelah disimpan.
+          pimpinan yang tampil di dasbor transparansi beranda, langsung setelah disimpan. Setiap kategori bisa
+          disembunyikan dari beranda lewat sakelar Tampil di portal.
         </AlertDescription>
       </Alert>
       <FormPengaturan nama="statistik" schema={schema}>
@@ -238,9 +246,16 @@ export default function HalamanStatistik() {
                 <TabsList className="flex h-auto flex-wrap justify-start">
                   {form.getValues("set").map((s, i) => {
                     const galat = !!form.formState.errors.set?.[i]
+                    const tersembunyi = !form.watch(`set.${i}.tampil`)
                     return (
                       <TabsTrigger key={s.kunci} value={String(i)}>
                         {form.watch(`set.${i}.label`) || s.kunci}
+                        {tersembunyi && (
+                          <>
+                            <IconEyeOff aria-hidden="true" className="text-muted-foreground" />
+                            <span className="sr-only">(tidak tampil di portal)</span>
+                          </>
+                        )}
                         {galat && (
                           <>
                             <span aria-hidden="true" className="size-1.5 rounded-full bg-destructive" />

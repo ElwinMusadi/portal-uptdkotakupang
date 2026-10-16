@@ -45,6 +45,7 @@ class StatisticsControllerTest extends TestCase
             ->assertJsonPath('tahun', '2027')
             ->assertJsonPath('catatan', '')
             ->assertJsonPath('set.*.kunci', ['transaksi', 'keliling', 'kepuasan'])
+            ->assertJsonPath('set.*.tampil', [true, true, true])
             ->assertJsonPath('set.1.tiles.3', ['id' => 'keliling-4', 'label' => 'Kelurahan terjangkau', 'nilai' => 0, 'satuan' => '/51', 'perubahan' => 0, 'naikBaik' => true])
             ->assertJsonPath('set.2.tiles.1.naikBaik', false)
             ->assertJsonPath('set.2.seri', array_fill(0, 12, 0));
@@ -61,6 +62,7 @@ class StatisticsControllerTest extends TestCase
         $statistics['catatan'] = null;
         $statistics['set'][2]['sub'] = null;
         $statistics['set'][2]['tiles'][1]['satuan'] = ' mnt';
+        $statistics['set'][1]['tampil'] = false;
 
         $response = $this->actingAs($employee)->putJson('/api/pengaturan/statistik', $statistics);
 
@@ -68,6 +70,7 @@ class StatisticsControllerTest extends TestCase
             ->assertJsonPath('catatan', '')
             ->assertJsonPath('set.2.sub', '')
             ->assertJsonPath('set.2.tiles.1.satuan', 'mnt')
+            ->assertJsonPath('set.*.tampil', [true, false, true])
             ->assertJsonPath('set.0.tiles.0.satuan', '')
             ->assertJsonPath('set.1.tiles.0.nilai', 18.4)
             ->assertJsonPath('set.0.seri.0', 880);
@@ -104,6 +107,8 @@ class StatisticsControllerTest extends TestCase
         $statistics['set'][1]['tiles'][2]['nilai'] = 'banyak';
         $statistics['set'][2]['tiles'][0]['perubahan'] = 1001;
         $statistics['set'][2]['seri'][5] = -1;
+        $statistics['set'][0]['tampil'] = 'ya';
+        unset($statistics['set'][1]['tampil']);
 
         $response = $this->actingAs($this->statistikEmployee())->putJson('/api/pengaturan/statistik', $statistics);
 
@@ -115,6 +120,8 @@ class StatisticsControllerTest extends TestCase
             'set.1.tiles.2.nilai' => 'Nilai angka utama harus berupa angka.',
             'set.2.tiles.0.perubahan' => 'Perubahan -1.000 sampai 1.000%.',
             'set.2.seri.5' => 'Nilai bulanan tidak boleh negatif atau terlalu besar.',
+            'set.0.tampil' => 'Pilihan tampil di portal tidak valid.',
+            'set.1.tampil' => 'Pilih apakah kategori tampil di portal.',
         ]);
         $this->assertDatabaseCount('settings', 0);
     }
@@ -157,11 +164,13 @@ class StatisticsControllerTest extends TestCase
     {
         $saved = $this->statistics();
         array_splice($saved['set'], 1, 0, [['kunci' => 'penerimaan', 'label' => 'Penerimaan pajak', 'sub' => '', 'judulGrafik' => 'Penerimaan PKB per bulan', 'satuan' => 'juta rupiah', 'tiles' => $saved['set'][0]['tiles'], 'seri' => array_fill(0, 12, 0)]]);
+        // Also saved before categories could be switched off (D-056)
+        $saved['set'] = array_map(fn (array $category): array => array_diff_key($category, ['tampil' => true]), $saved['set']);
         (new Setting)->forceFill(['name' => Setting::STATISTICS, 'value' => $saved])->save();
 
         $response = $this->actingAs($this->statistikEmployee())->getJson('/api/pengaturan/statistik');
 
-        $response->assertOk()->assertJsonPath('set.*.kunci', ['transaksi', 'keliling', 'kepuasan']);
+        $response->assertOk()->assertJsonPath('set.*.kunci', ['transaksi', 'keliling', 'kepuasan'])->assertJsonPath('set.*.tampil', [true, true, true]);
         $this->actingAs($this->statistikEmployee())->putJson('/api/pengaturan/statistik', $response->json())->assertOk();
     }
 

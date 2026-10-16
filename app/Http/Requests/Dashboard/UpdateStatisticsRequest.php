@@ -10,7 +10,8 @@ use Illuminate\Validation\Rule;
 /**
  * The complete statistics document: its status and year, a note, and the
  * three categories of the portal's transparency dashboard (D-055), each
- * with four tiles and twelve monthly values (January to December).
+ * with whether it is shown on the portal (D-056), four tiles and twelve
+ * monthly values (January to December).
  */
 class UpdateStatisticsRequest extends FormRequest
 {
@@ -49,6 +50,7 @@ class UpdateStatisticsRequest extends FormRequest
             'set.*.sub' => ['nullable', 'string', 'max:120', new PlainText('Subjudul dasbor')],
             'set.*.judulGrafik' => ['required', 'string', 'max:80', new PlainText('Judul grafik')],
             'set.*.satuan' => ['nullable', 'string', 'max:30', new PlainText('Satuan grafik')],
+            'set.*.tampil' => ['required', 'boolean'],
             'set.*.tiles' => ['required', 'list', 'size:4'],
             'set.*.tiles.*' => ['required', 'array'],
             'set.*.tiles.*.id' => ['required', 'string', 'max:40'],
@@ -93,6 +95,8 @@ class UpdateStatisticsRequest extends FormRequest
             'set.*.judulGrafik.max' => 'Judul grafik maksimal :max karakter.',
             'set.*.satuan.string' => 'Satuan grafik tidak valid.',
             'set.*.satuan.max' => 'Satuan grafik maksimal :max karakter.',
+            'set.*.tampil.required' => 'Pilih apakah kategori tampil di portal.',
+            'set.*.tampil.boolean' => 'Pilihan tampil di portal tidak valid.',
             'set.*.tiles.required' => 'Angka utama wajib dikirim.',
             'set.*.tiles.list' => 'Angka utama tidak valid.',
             'set.*.tiles.size' => 'Setiap kategori berisi :size angka utama.',
@@ -128,7 +132,7 @@ class UpdateStatisticsRequest extends FormRequest
      * so saved statistics read back identical and saving them again is no
      * change.
      *
-     * @return array{status: string, catatan: string, tahun: string, set: list<array{kunci: string, label: string, sub: string, judulGrafik: string, satuan: string, tiles: list<array{id: string, label: string, nilai: int|float, satuan: string, perubahan: int|float, naikBaik: bool}>, seri: list<int|float>}>}
+     * @return array{status: string, catatan: string, tahun: string, set: list<array{kunci: string, label: string, sub: string, judulGrafik: string, satuan: string, tampil: bool, tiles: list<array{id: string, label: string, nilai: int|float, satuan: string, perubahan: int|float, naikBaik: bool}>, seri: list<int|float>}>}
      */
     public function statistics(): array
     {
@@ -142,6 +146,7 @@ class UpdateStatisticsRequest extends FormRequest
                 'sub' => $category['sub'] ?? '',
                 'judulGrafik' => $category['judulGrafik'],
                 'satuan' => $category['satuan'] ?? '',
+                'tampil' => (bool) $category['tampil'],
                 'tiles' => array_map(fn (array $tile): array => [
                     'id' => $tile['id'],
                     'label' => $tile['label'],

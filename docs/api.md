@@ -356,7 +356,7 @@ Dipakai halaman *Statistik Layanan* di dashboard ([D-018](decisions.md#d-018--20
   "status": "terverifikasi", "tahun": "2026", "catatan": "…",
   "set": [{
     "kunci": "transaksi", "label": "Transaksi pelayanan", "sub": "Transaksi pelayanan · UPTD Kota Kupang",
-    "judulGrafik": "Transaksi per bulan", "satuan": "transaksi",
+    "judulGrafik": "Transaksi per bulan", "satuan": "transaksi", "tampil": true,
     "tiles": [{ "id": "transaksi-1", "label": "Total transaksi", "nilai": 12480, "satuan": "", "perubahan": 4.2, "naikBaik": true }],
     "seri": [880, 910, 1020, 960, 1040, 1100, 990, 1080, 1150, 1120, 0, 0]
   }]
@@ -366,7 +366,7 @@ Dipakai halaman *Statistik Layanan* di dashboard ([D-018](decisions.md#d-018--20
 | Alamat | Permintaan | Respons |
 |---|---|---|
 | `GET /api/pengaturan/statistik` | — | `200` dokumen di atas. Sebelum pertama kali disimpan: tiga kategori dengan label bawaan, semua angka `0`, status `ilustrasi`, dan tahun berjalan (WITA). |
-| `PUT /api/pengaturan/statistik` | dokumen lengkap | `200` dokumen tersimpan. Bilangan bulat disimpan sebagai bilangan bulat (`12480.0` menjadi `12480`); isi yang sama dengan yang tersimpan tidak dicatat. `422` bila status selain `ilustrasi` atau `terverifikasi`; tahun bukan 4 angka 19xx/20xx; `set` tidak berisi tepat 3 kategori `transaksi`, `keliling`, `kepuasan` (masing-masing sekali; `penerimaan` bukan lagi kategori sejak [D-055](decisions.md#d-055--2026-10-17--ringkasan-penerimaan-dan-pemetaan-di-dasbor-beranda)); kategori tanpa nama tab (maks. 60 karakter) atau judul grafik (maks. 80); kategori tanpa tepat 4 angka utama atau 12 nilai bulanan; angka utama tanpa label (maks. 60); nilai bukan angka; perubahan di luar -1.000–1.000%; nilai bulanan negatif; atau teks berisi karakter kontrol. |
+| `PUT /api/pengaturan/statistik` | dokumen lengkap | `200` dokumen tersimpan. Bilangan bulat disimpan sebagai bilangan bulat (`12480.0` menjadi `12480`); isi yang sama dengan yang tersimpan tidak dicatat. `422` bila status selain `ilustrasi` atau `terverifikasi`; tahun bukan 4 angka 19xx/20xx; `set` tidak berisi tepat 3 kategori `transaksi`, `keliling`, `kepuasan` (masing-masing sekali; `penerimaan` bukan lagi kategori sejak [D-055](decisions.md#d-055--2026-10-17--ringkasan-penerimaan-dan-pemetaan-di-dasbor-beranda)); kategori tanpa nama tab (maks. 60 karakter) atau judul grafik (maks. 80); kategori tanpa tepat 4 angka utama atau 12 nilai bulanan; `tampil` tidak berupa benar/salah ("Pilih apakah kategori tampil di portal.", "Pilihan tampil di portal tidak valid.", [D-056](decisions.md#d-056--2026-10-17--kategori-statistik-layanan-bisa-disembunyikan-dari-portal)); angka utama tanpa label (maks. 60); nilai bukan angka; perubahan di luar -1.000–1.000%; nilai bulanan negatif; atau teks berisi karakter kontrol. |
 
 Penyimpanan tercatat di log aktivitas sebagai "memperbarui Statistik Layanan".
 
@@ -1083,7 +1083,7 @@ Kode: `app/Http/Controllers/PublicVehicleController.php`, `app/Http/Requests/Che
 
 ## `GET /api/public/statistik`
 
-Dasbor transparansi di beranda ([D-018](decisions.md#d-018--2026-10-13--statistik-layanan-tersimpan-di-server-hanya-angka-terverifikasi-yang-terbit), `initDash()` di `public/assets/js/main.js`). Hanya statistik berstatus `terverifikasi` yang diterbitkan: bentuknya sama dengan dokumen dashboard tanpa `status` dan tanpa `id` angka utama, ditambah `diperbarui` (waktu terakhir disimpan). Sejak [D-055](decisions.md#d-055--2026-10-17--ringkasan-penerimaan-dan-pemetaan-di-dasbor-beranda) `set` berisi `transaksi`, `keliling`, dan `kepuasan`; kategori `penerimaan` dokumen yang disimpan sebelumnya tidak dikirim, dan tab Penerimaan pajak beranda memakai `GET /api/public/penerimaan/ringkasan`.
+Dasbor transparansi di beranda ([D-018](decisions.md#d-018--2026-10-13--statistik-layanan-tersimpan-di-server-hanya-angka-terverifikasi-yang-terbit), `initDash()` di `public/assets/js/main.js`). Hanya statistik berstatus `terverifikasi` yang diterbitkan: bentuknya sama dengan dokumen dashboard tanpa `status` dan tanpa `id` angka utama, ditambah `diperbarui` (waktu terakhir disimpan). Sejak [D-055](decisions.md#d-055--2026-10-17--ringkasan-penerimaan-dan-pemetaan-di-dasbor-beranda) `set` berisi `transaksi`, `keliling`, dan `kepuasan`; kategori `penerimaan` dokumen yang disimpan sebelumnya tidak dikirim, dan tab Penerimaan pajak beranda memakai `GET /api/public/penerimaan/ringkasan`. Sejak [D-056](decisions.md#d-056--2026-10-17--kategori-statistik-layanan-bisa-disembunyikan-dari-portal) `kategori` menyebut kategori yang `tampil` di portal, juga selama statistik belum terbit (sebelum pertama kali disimpan: ketiganya), dan `set` hanya memuat kategori itu (tanpa `tampil`); beranda menyembunyikan tab kategori lain. Dokumen yang disimpan sebelum D-056 dibaca dengan semua kategori `tampil`.
 
 | Hal | Perilaku |
 |---|---|

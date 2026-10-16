@@ -12,10 +12,13 @@ class ShowPublicStatistics
      * Build the transparency dashboard for the portal's homepage. Only
      * statistics verified by the leadership are published (D-018): until
      * then "set" is empty and "diperbarui" is null, and no unverified figure
-     * leaves the server. Tile IDs and the status are left out. A source that
-     * cannot be read fails the request instead of showing no statistics.
+     * leaves the server. "kategori" names the categories shown on the portal
+     * (D-056), also before they are published, so the homepage leaves out
+     * the tabs switched off; "set" holds only those. Tile IDs and the status
+     * are left out. A source that cannot be read fails the request instead
+     * of showing no statistics.
      *
-     * @return array{tahun: string, catatan: string, set: list<array{kunci: string, label: string, sub: string, judulGrafik: string, satuan: string, tiles: list<array{label: string, nilai: int|float, satuan: string, perubahan: int|float, naikBaik: bool}>, seri: list<int|float>}>, diperbarui: ?string}
+     * @return array{tahun: string, catatan: string, set: list<array{kunci: string, label: string, sub: string, judulGrafik: string, satuan: string, tiles: list<array{label: string, nilai: int|float, satuan: string, perubahan: int|float, naikBaik: bool}>, seri: list<int|float>}>, kategori: list<string>, diperbarui: ?string}
      *
      * @throws PublicContentUnavailableException
      */
@@ -27,11 +30,17 @@ class ShowPublicStatistics
             throw new PublicContentUnavailableException('The statistics could not be read.', previous: $exception);
         }
 
-        if ($setting === null || $setting->value['status'] !== Setting::STATISTICS_VERIFIED) {
-            return ['tahun' => '', 'catatan' => '', 'set' => [], 'diperbarui' => null];
+        if ($setting === null) {
+            return ['tahun' => '', 'catatan' => '', 'set' => [], 'kategori' => Setting::STATISTICS_CATEGORIES, 'diperbarui' => null];
         }
 
         $statistics = Setting::currentStatisticsCategories($setting->value);
+        $shown = array_values(array_filter($statistics['set'], fn (array $category): bool => $category['tampil']));
+        $categories = array_column($shown, 'kunci');
+
+        if ($statistics['status'] !== Setting::STATISTICS_VERIFIED) {
+            return ['tahun' => '', 'catatan' => '', 'set' => [], 'kategori' => $categories, 'diperbarui' => null];
+        }
 
         return [
             'tahun' => $statistics['tahun'],
@@ -50,7 +59,8 @@ class ShowPublicStatistics
                     'naikBaik' => $tile['naikBaik'],
                 ], $category['tiles']),
                 'seri' => $category['seri'],
-            ], $statistics['set']),
+            ], $shown),
+            'kategori' => $categories,
             'diperbarui' => $setting->updated_at?->toIso8601String(),
         ];
     }

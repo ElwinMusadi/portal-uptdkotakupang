@@ -307,6 +307,7 @@ Halaman *Tarif & Simulasi* dipensiunkan oleh [D-041](decisions.md#d-041--2026-10
 Halaman *Statistik Layanan* (`#/statistik`, `pages/statistik.tsx`) tersimpan di server sejak [D-018](decisions.md#d-018--2026-10-13--statistik-layanan-tersimpan-di-server-hanya-angka-terverifikasi-yang-terbit) sebagai pengaturan `statistik`.
 
 - Hanya statistik berstatus *Terverifikasi pimpinan* yang tampil di dasbor transparansi beranda (`GET /api/public/statistik`). Selama berstatus *Ilustrasi*, angkanya tidak keluar dari server dan beranda menyatakan statistik layanan belum diterbitkan.
+- Setiap kategori punya sakelar *Tampil di portal* ([D-056](decisions.md#d-056--2026-10-17--kategori-statistik-layanan-bisa-disembunyikan-dari-portal)) di atas isiannya; kategori yang dimatikan tidak muncul sebagai tab di dasbor transparansi beranda, apa pun status datanya, dan tabnya di editor diberi ikon mata dicoret. Bawaannya menyala.
 - Ketiga kategori (Transaksi pelayanan, Samsat Keliling, Kepuasan masyarakat), empat angka utama per kategori, dan 12 nilai bulanan (Januari–Desember) tetap; server menolak dokumen dengan susunan lain. Kategori Penerimaan pajak dihapus ([D-055](decisions.md#d-055--2026-10-17--ringkasan-penerimaan-dan-pemetaan-di-dasbor-beranda)): tab Penerimaan pajak dan Pemetaan PKB di dasbor beranda terisi otomatis dari Laporan Penerimaan dan Pemetaan PKB yang ditampilkan di portal. Dokumen yang tersimpan sebelumnya dibaca tanpa kategori itu. Angka contoh dari penyimpanan peramban tidak dipindahkan.
 
 ## Laporan Penerimaan

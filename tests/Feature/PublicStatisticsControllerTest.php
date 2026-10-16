@@ -20,7 +20,7 @@ class PublicStatisticsControllerTest extends TestCase
     {
         $response = $this->getJson('/api/public/statistik');
 
-        $response->assertOk()->assertExactJson(['tahun' => '', 'catatan' => '', 'set' => [], 'diperbarui' => null]);
+        $response->assertOk()->assertExactJson(['tahun' => '', 'catatan' => '', 'set' => [], 'kategori' => ['transaksi', 'keliling', 'kepuasan'], 'diperbarui' => null]);
     }
 
     public function test_publishes_no_figure_while_the_statistics_are_an_illustration(): void
@@ -29,7 +29,7 @@ class PublicStatisticsControllerTest extends TestCase
 
         $response = $this->getJson('/api/public/statistik');
 
-        $response->assertOk()->assertExactJson(['tahun' => '', 'catatan' => '', 'set' => [], 'diperbarui' => null]);
+        $response->assertOk()->assertExactJson(['tahun' => '', 'catatan' => '', 'set' => [], 'kategori' => ['transaksi', 'keliling', 'kepuasan'], 'diperbarui' => null]);
         $this->assertStringNotContainsString('12480', $response->getContent());
     }
 
@@ -92,10 +92,34 @@ class PublicStatisticsControllerTest extends TestCase
     {
         $this->saveStatistics('terverifikasi', withRevenue: true);
 
-        $this->getJson('/api/public/statistik')->assertOk()->assertJsonPath('set.*.kunci', ['transaksi', 'keliling', 'kepuasan']);
+        $this->getJson('/api/public/statistik')
+            ->assertOk()
+            ->assertJsonPath('set.*.kunci', ['transaksi', 'keliling', 'kepuasan'])
+            ->assertJsonPath('kategori', ['transaksi', 'keliling', 'kepuasan']);
     }
 
-    private function saveStatistics(string $status, bool $withRevenue = false): void
+    public function test_leaves_out_the_categories_switched_off_for_the_portal(): void
+    {
+        $this->saveStatistics('terverifikasi', hidden: ['keliling']);
+
+        $this->getJson('/api/public/statistik')
+            ->assertOk()
+            ->assertJsonPath('set.*.kunci', ['transaksi', 'kepuasan'])
+            ->assertJsonPath('kategori', ['transaksi', 'kepuasan'])
+            ->assertJsonMissingPath('set.0.tampil');
+
+        // Before the statistics are verified, the homepage still leaves the tab out
+        $this->saveStatistics('ilustrasi', hidden: ['transaksi', 'kepuasan']);
+
+        $this->getJson('/api/public/statistik')
+            ->assertOk()
+            ->assertExactJson(['tahun' => '', 'catatan' => '', 'set' => [], 'kategori' => ['keliling'], 'diperbarui' => null]);
+    }
+
+    /**
+     * @param  list<string>  $hidden  the categories switched off for the portal
+     */
+    private function saveStatistics(string $status, bool $withRevenue = false, array $hidden = []): void
     {
         $statistics = Setting::statistics();
         $statistics['status'] = $status;
@@ -104,10 +128,15 @@ class PublicStatisticsControllerTest extends TestCase
         $statistics['set'][0]['tiles'][0]['nilai'] = 12480;
         $statistics['set'][0]['tiles'][0]['perubahan'] = 4.2;
         $statistics['set'][0]['seri'] = [880, 910, 1020, 960, 1040, 1100, 990, 1080, 1150, 1120, 1060, 1160];
+        foreach ($statistics['set'] as $index => $category) {
+            $statistics['set'][$index]['tampil'] = ! in_array($category['kunci'], $hidden, true);
+        }
         if ($withRevenue) {
+            // Also saved before categories could be switched off (D-056)
+            $statistics['set'] = array_map(fn (array $category): array => array_diff_key($category, ['tampil' => true]), $statistics['set']);
             // Saved before Penerimaan pajak left the statistics (D-055)
             array_splice($statistics['set'], 1, 0, [['kunci' => 'penerimaan', 'label' => 'Penerimaan pajak', 'sub' => '', 'judulGrafik' => 'Penerimaan PKB per bulan', 'satuan' => 'juta rupiah', 'tiles' => $statistics['set'][0]['tiles'], 'seri' => array_fill(0, 12, 0)]]);
         }
-        (new Setting)->forceFill(['name' => Setting::STATISTICS, 'value' => $statistics])->save();
+        (Setting::query()->find(Setting::STATISTICS) ?? new Setting)->forceFill(['name' => Setting::STATISTICS, 'value' => $statistics])->save();
     }
 }

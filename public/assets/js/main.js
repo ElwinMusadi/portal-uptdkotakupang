@@ -1925,7 +1925,9 @@
      - Pemetaan PKB dari GET /api/public/pemetaan: angka kota dan persen
        menunggak per kecamatan.
      Tab Penerimaan dan Pemetaan disembunyikan selama datanya belum
-     ditampilkan di portal, dan menautkan ke halaman lengkapnya. Tidak ada
+     ditampilkan di portal, dan menautkan ke halaman lengkapnya. Tab
+     kategori Statistik Layanan yang dimatikan "Tampil di portal" juga
+     disembunyikan, apa pun status datanya (D-056). Tidak ada
      angka cadangan: selama dimuat atau bila API gagal, tab menampilkan
      keterangannya. */
   async function muatStatistik() {
@@ -1935,7 +1937,9 @@
     const teks = (s) => typeof s === "string";
     const lengkap = data.set.every((s) => ["kunci", "label", "sub", "judulGrafik", "satuan"].every((k) => teks(s?.[k]))
       && Array.isArray(s.seri) && s.seri.length === 12 && s.seri.every(angka)
-      && Array.isArray(s.tiles) && s.tiles.every((t) => teks(t?.label) && teks(t.satuan) && angka(t.nilai) && angka(t.perubahan) && typeof t.naikBaik === "boolean"));
+      && Array.isArray(s.tiles) && s.tiles.every((t) => teks(t?.label) && teks(t.satuan) && angka(t.nilai) && angka(t.perubahan) && typeof t.naikBaik === "boolean"))
+      // Kategori yang tampil di portal (D-056); tanpa daftar ini semua tab statistik tampil
+      && (data.kategori === undefined || (Array.isArray(data.kategori) && data.kategori.every(teks)));
     if (!lengkap) throw new Error("Respons tidak dikenal");
     return data;
   }
@@ -2107,6 +2111,7 @@
     };
 
     const render = (fokusUlang) => {
+      if (tabs.length && tabs.every((t) => t.hidden)) return pesan(SUMBER.statistik.kosong);
       const nama = sumberDari(set);
       const k = keadaan[nama];
       if (k.status === "memuat") return pesan(SUMBER[nama].memuat);
@@ -2163,7 +2168,10 @@
     const aturTab = () => {
       tabs.forEach((tab) => {
         const nama = sumberDari(tab.dataset.set);
-        tab.hidden = nama !== "statistik" && keadaan[nama].status === "siap" && keadaan[nama].data === null;
+        const kategori = keadaan.statistik.data?.kategori;
+        tab.hidden = nama === "statistik"
+          ? keadaan.statistik.status === "siap" && Array.isArray(kategori) && !kategori.includes(tab.dataset.set)
+          : keadaan[nama].status === "siap" && keadaan[nama].data === null;
         const s = nama === "statistik" ? keadaan.statistik.data?.set?.find((x) => x.kunci === tab.dataset.set) : null;
         const txt = $(".catlist__txt", tab);
         if (s && txt) txt.textContent = s.label;
@@ -2181,7 +2189,8 @@
       if (nama === sumberDari(set)) dash.setAttribute("aria-busy", "true");
       try {
         const data = await SUMBER[nama].muat();
-        keadaan[nama] = { status: "siap", data: nama === "statistik" && (typeof data.diperbarui !== "string" || !data.set.length) ? null : data };
+        // Statistik yang belum terbit tetap disimpan: daftar kategorinya menentukan tab yang tampil
+        keadaan[nama] = { status: "siap", data };
       } catch {
         keadaan[nama] = { status: "gagal", data: null };
       } finally {

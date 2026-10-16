@@ -475,9 +475,10 @@ class Setting extends Model
     /**
      * The statistics as the dashboard edits them. Until they are first saved,
      * the three categories and their tiles are named but every figure is zero
-     * and the status is "ilustrasi", so nothing is published.
+     * and the status is "ilustrasi", so nothing is published; every
+     * category is shown on the portal until switched off (D-056).
      *
-     * @return array{status: string, catatan: string, tahun: string, set: list<array{kunci: string, label: string, sub: string, judulGrafik: string, satuan: string, tiles: list<array{id: string, label: string, nilai: int|float, satuan: string, perubahan: int|float, naikBaik: bool}>, seri: list<int|float>}>}
+     * @return array{status: string, catatan: string, tahun: string, set: list<array{kunci: string, label: string, sub: string, judulGrafik: string, satuan: string, tampil: bool, tiles: list<array{id: string, label: string, nilai: int|float, satuan: string, perubahan: int|float, naikBaik: bool}>, seri: list<int|float>}>}
      */
     public static function statistics(): array
     {
@@ -493,6 +494,7 @@ class Setting extends Model
                 'sub' => $category[2],
                 'judulGrafik' => $category[3],
                 'satuan' => $category[4],
+                'tampil' => true,
                 'tiles' => array_map(fn (array $tile, int $index): array => [
                     'id' => "{$category[0]}-".($index + 1),
                     'label' => $tile[0],
@@ -517,17 +519,22 @@ class Setting extends Model
     }
 
     /**
-     * Saved statistics without the categories that left them: statistics
-     * saved before D-055 still hold Penerimaan pajak until saved again.
+     * Saved statistics in their current shape: without the categories that
+     * left them, as statistics saved before D-055 still hold Penerimaan
+     * pajak until saved again, and with the categories saved before D-056
+     * shown on the portal.
      *
-     * @param  array{set: list<array{kunci: string}>}  $statistics
-     * @return array{set: list<array{kunci: string}>}
+     * @param  array{set: list<array{kunci: string, tampil?: bool}>}  $statistics
+     * @return array{set: list<array{kunci: string, tampil: bool}>}
      */
     public static function currentStatisticsCategories(array $statistics): array
     {
-        $statistics['set'] = array_values(array_filter(
-            $statistics['set'],
-            fn (array $category): bool => in_array($category['kunci'], self::STATISTICS_CATEGORIES, true),
+        $statistics['set'] = array_values(array_map(
+            fn (array $category): array => $category + ['tampil' => true],
+            array_filter(
+                $statistics['set'],
+                fn (array $category): bool => in_array($category['kunci'], self::STATISTICS_CATEGORIES, true),
+            ),
         ));
 
         return $statistics;
