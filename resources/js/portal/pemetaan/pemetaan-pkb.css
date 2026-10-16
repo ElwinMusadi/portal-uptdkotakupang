@@ -41,7 +41,7 @@
 .pm-bagian__judul { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
 
 /* Peta skematis */
-.pm-peta { display: grid; gap: 16px; }
+.pm-peta { display: grid; gap: 16px; container-type: inline-size; }
 .pm-peta__svg { width: 100%; max-width: 620px; height: auto; }
 .pm-peta__laut { font-size: 9px; fill: var(--text-2); }
 .pm-peta__petak { cursor: pointer; outline: none; }
@@ -51,7 +51,14 @@
 .pm-peta__nama { font-size: 12px; font-weight: 600; fill: var(--ink); }
 .pm-peta__nilai { font-size: 11px; fill: var(--text-2); }
 .pm-peta__nama.is-gelap, .pm-peta__nilai.is-gelap { fill: #fff; }
-.pm-peta__legenda { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pm-peta__legenda { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.pm-peta__rentang { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+/* Peta mengecil bersama kartunya: di kartu sempit (ponsel) hurufnya dibesarkan agar tetap ±11–12 px */
+@container (max-width: 380px) {
+  .pm-peta__nama { font-size: 16px; }
+  .pm-peta__nilai { font-size: 14px; }
+  .pm-peta__laut { font-size: 13px; }
+}
 .pm-peta__skala {
   width: 96px; height: 8px; border-radius: var(--r-pill);
   background: linear-gradient(to right, color-mix(in oklab, var(--danger) 8%, var(--surface)), color-mix(in oklab, var(--danger) 70%, var(--surface)));

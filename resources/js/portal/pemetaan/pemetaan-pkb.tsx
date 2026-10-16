@@ -247,10 +247,10 @@ function PemetaanPkb() {
                     className={aktif ? "is-aktif" : undefined}
                     style={{ fill: s === null ? "var(--paper-2)" : `color-mix(in oklab, var(--danger) ${Math.round(8 + s * 62)}%, var(--surface))` }}
                   />
-                  <text x={l.x + l.w / 2} y={l.y + l.h / 2 - 4} textAnchor="middle" className={gelap ? "pm-peta__nama is-gelap" : "pm-peta__nama"}>
+                  <text x={l.x + l.w / 2} y={l.y + l.h / 2} dy="-0.3em" textAnchor="middle" className={gelap ? "pm-peta__nama is-gelap" : "pm-peta__nama"}>
                     {k.nama}
                   </text>
-                  <text x={l.x + l.w / 2} y={l.y + l.h / 2 + 13} textAnchor="middle" className={gelap ? "pm-peta__nilai is-gelap" : "pm-peta__nilai"}>
+                  <text x={l.x + l.w / 2} y={l.y + l.h / 2} dy="1.1em" textAnchor="middle" className={gelap ? "pm-peta__nilai is-gelap" : "pm-peta__nilai"}>
                     {teks ?? "disamarkan"}
                   </text>
                 </g>
@@ -258,9 +258,12 @@ function PemetaanPkb() {
             })}
         </svg>
         <p className="micro muted pm-peta__legenda">
-          <span>{u.label}: terendah</span>
-          <span className="pm-peta__skala" aria-hidden="true" />
-          <span>tertinggi di antara kecamatan.</span>
+          <span>{u.label} per kecamatan:</span>
+          <span className="pm-peta__rentang">
+            terendah
+            <span className="pm-peta__skala" aria-hidden="true" />
+            tertinggi
+          </span>
         </p>
       </section>
 
