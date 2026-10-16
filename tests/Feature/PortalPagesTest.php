@@ -76,6 +76,17 @@ class PortalPagesTest extends TestCase
         $this->assertSame(file_get_contents(resource_path("views/portal/{$view}.blade.php")), $response->getContent());
     }
 
+    #[DataProvider('pages')]
+    public function test_loads_the_portal_theme_after_the_portal_stylesheets(string $uri, string $view): void
+    {
+        $html = $this->get($uri)->assertOk()->getContent();
+        $this->assertMatchesRegularExpression('#<link rel="stylesheet" href="tema-portal\.css"( /)?>#', (string) file_get_contents(resource_path("views/portal/{$view}.blade.php")));
+
+        preg_match_all('/<link rel="stylesheet" href="([^"]+)"/', $html, $links);
+        $this->assertSame('/tema-portal.css', '/'.ltrim(end($links[1]), '/'));
+        $this->assertSame(1, substr_count($html, 'tema-portal.css'));
+    }
+
     public function test_leaves_the_home_page_faq_entries_to_the_public_api(): void
     {
         $html = $this->get('/')->assertOk()->getContent();
@@ -586,6 +597,7 @@ class PortalPagesTest extends TestCase
         $this->assertSame(PortalPage::fromSiteRoot(file_get_contents(resource_path('views/errors/404.blade.php'))), $html);
         $this->assertSame(0, preg_match('/\s(?:href|src)="(?![a-z][a-z0-9+.-]*:|\/|#)/i', $html));
         $this->assertStringContainsString('<link rel="stylesheet" href="/assets/css/components.css">', $html);
+        $this->assertStringContainsString('<link rel="stylesheet" href="/tema-portal.css">', $html);
         $this->assertStringContainsString('<script src="/assets/js/main.js" defer></script>', $html);
     }
 

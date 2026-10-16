@@ -63,7 +63,7 @@
 .pm-peta__garis { stroke: var(--ink); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .pm-peta__legenda { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
 .pm-peta__rentang { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
-.pm-peta__samar { width: 14px; height: 10px; border-radius: 3px; background: var(--paper-2); border: var(--hairline); }
+.pm-peta__samar { width: 14px; height: 10px; border-radius: calc(3px * var(--r-scale, 1)); background: var(--paper-2); border: var(--hairline); }
 .pm-kembali { justify-self: start; background: none; border: 0; padding: 0; font: inherit; font-size: 14px; color: var(--accent-ink); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .pm-peta__skala {
   width: 96px; height: 8px; border-radius: var(--r-pill);

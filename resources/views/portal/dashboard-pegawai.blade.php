@@ -12,6 +12,7 @@
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
   <link rel="stylesheet" href="assets/css/tokens.css">
   <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="tema-portal.css">
   <script>location.replace("dashboard/" + location.hash)</script>
 </head>
 <body>

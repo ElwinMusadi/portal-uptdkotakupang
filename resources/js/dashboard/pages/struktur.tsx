@@ -56,7 +56,7 @@ function KotakUnit({ u, onBuka }: { u: UnitKerja; onBuka: () => void }) {
       <span className="flex items-center gap-2">
         <span
           className={cn(
-            "flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary text-[11px] font-semibold text-primary-foreground",
+            "flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary text-[0.6875rem] font-semibold text-primary-foreground",
             mitra && "bg-muted text-muted-foreground",
             mitra && u.foto && "border bg-white p-0.5"
           )}
@@ -187,7 +187,7 @@ export default function HalamanStruktur() {
           onClick={() => ed.bukaUbah(row.original.id)}
           className="flex min-w-56 items-center gap-2 rounded-md text-left whitespace-normal focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
         >
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-[11px] font-semibold">
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-[0.6875rem] font-semibold">
             {row.original.singkatan}
           </span>
           <span className="font-medium underline-offset-4 hover:underline">{row.original.nama}</span>
@@ -283,7 +283,7 @@ export default function HalamanStruktur() {
           <FieldTeks control={ed.form.control} name="jabatan" label="Jabatan pimpinan unit" placeholder="Mis. Kepala Seksi" />
           <FieldTeks control={ed.form.control} name="pejabat" label="Nama pejabat" />
         </Baris>
-        <div className="grid gap-5 sm:grid-cols-[180px_minmax(0,1fr)]">
+        <div className="grid gap-5 sm:grid-cols-[11.25rem_minmax(0,1fr)]">
           {mitraDisunting ? (
             <FieldGambar
               control={ed.form.control}

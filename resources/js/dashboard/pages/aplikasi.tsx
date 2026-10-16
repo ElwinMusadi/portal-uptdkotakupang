@@ -36,7 +36,7 @@ type FormAplikasi = z.infer<typeof schema>
 /** Logo aplikasi, atau inisial namanya bila belum ada */
 function LogoAplikasi({ a }: { a: Pick<Aplikasi, "nama" | "logo"> }) {
   return (
-    <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-white p-0.5 text-[11px] font-semibold text-muted-foreground">
+    <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-white p-0.5 text-[0.6875rem] font-semibold text-muted-foreground">
       {a.logo ? <img src={a.logo} alt="" className="size-full object-contain" /> : a.nama.slice(0, 2).toUpperCase()}
     </span>
   )
@@ -147,7 +147,7 @@ export default function HalamanAplikasi() {
         menyimpan={ed.menyimpan}
         lebar="sm:max-w-2xl"
       >
-        <div className="grid gap-5 sm:grid-cols-[160px_minmax(0,1fr)]">
+        <div className="grid gap-5 sm:grid-cols-[10rem_minmax(0,1fr)]">
           <FieldGambar
             control={ed.form.control}
             name="logo"

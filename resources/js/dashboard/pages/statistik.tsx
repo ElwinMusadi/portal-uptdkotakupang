@@ -183,7 +183,7 @@ function IsiSet({ form, i }: { form: UseFormReturn<Statistik>; i: number }) {
             />
           ))}
         </div>
-        <ChartContainer config={configGrafik} className="aspect-auto h-[220px] w-full">
+        <ChartContainer config={configGrafik} className="aspect-auto h-55 w-full">
           <BarChart data={dataGrafik} accessibilityLayer>
             <CartesianGrid vertical={false} />
             <XAxis dataKey="bulan" tickLine={false} axisLine={false} tickMargin={8} />

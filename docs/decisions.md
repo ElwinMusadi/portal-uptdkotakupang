@@ -790,7 +790,7 @@ Pemilik ingin ketiga kategori Statistik Layanan (Transaksi pelayanan, Samsat Kel
 
 ## D-057 · 2026-10-17 · Tema portal dan dashboard: rencana dan keputusan awal
 
-Pemilik ingin Administrator dapat mengatur tema (jenis huruf, warna utama, skala tampilan, dan pengaturan tampilan lain yang lazim) dari menu Pengaturan di dashboard, agar tampilan tidak itu-itu saja. Rencananya di [`docs/rencana-tema-situs.md`](rencana-tema-situs.md); belum ada kode.
+Pemilik ingin Administrator dapat mengatur tema (jenis huruf, warna utama, skala tampilan, dan pengaturan tampilan lain yang lazim) dari menu Pengaturan di dashboard, agar tampilan tidak itu-itu saja. Rencananya di [`docs/rencana-tema-situs.md`](rencana-tema-situs.md). **Irisan 1 (fondasi) dibangun** pada 17 Oktober 2026, tanpa perubahan tampilan: warna dan sudut yang ditulis langsung menjadi variabel bernilai sama (dipakai dengan nilai cadangan karena CSS portal tidak berversi), daun logo punya variabel sendiri agar tetap biru, huruf dan ukuran dashboard bisa ditimpa, serta `/tema-portal.css` dan `/tema-dashboard.css` (masih kosong) dimuat di semua halaman.
 
 | Hal | Keputusan |
 |---|---|

@@ -255,7 +255,7 @@ export default function HalamanPenerimaan() {
                 hapusSaringan={hapusSaringan}
               />
             ) : (
-              <Skeleton className="h-[120px] rounded-xl" />
+              <Skeleton className="h-30 rounded-xl" />
             )}
           </div>
 
@@ -333,9 +333,9 @@ function KerangkaLaporan() {
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4" role="status">
       <span className="sr-only">Memuat laporan…</span>
-      <Skeleton className="h-[260px] rounded-xl md:col-span-2 xl:row-span-2" />
+      <Skeleton className="h-65 rounded-xl md:col-span-2 xl:row-span-2" />
       {Array.from({ length: 4 }).map((_, i) => (
-        <Skeleton key={i} className="h-[122px] rounded-xl" />
+        <Skeleton key={i} className="h-30.5 rounded-xl" />
       ))}
     </div>
   )
@@ -784,7 +784,7 @@ function GrafikHarian({ laporan, bukaHari }: { laporan: LaporanPenerimaan; bukaH
         </CardDescription>
       </CardHeader>
       <CardContent className="px-2 sm:px-6">
-        <ChartContainer config={KONFIG_HARIAN} className="aspect-auto h-[240px] w-full">
+        <ChartContainer config={KONFIG_HARIAN} className="aspect-auto h-60 w-full">
           <BarChart
             data={data}
             margin={{ left: 4, right: 4 }}
@@ -966,7 +966,7 @@ function TabelRincian({ laporan, saring }: { laporan: LaporanPenerimaan; saring:
             </TabsList>
           </div>
         </Tabs>
-        <div className="max-h-[480px] overflow-auto rounded-lg border">
+        <div className="max-h-120 overflow-auto rounded-lg border">
           <Table aria-label={`Rincian penerimaan per ${judulRincian(dimensi).toLowerCase()}`}>
             <TableHeader className="sticky top-0 z-10 bg-muted">
               <TableRow>

@@ -121,7 +121,7 @@ export default function HalamanUnduhan() {
           onClick={() => ed.bukaUbah(row.original.id)}
           className="flex min-w-64 items-start gap-3 rounded-md text-left whitespace-normal focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
         >
-          <span className="mt-0.5 flex h-8 w-9 shrink-0 items-center justify-center rounded-md border bg-muted text-[10px] font-semibold tracking-wide text-muted-foreground">
+          <span className="mt-0.5 flex h-8 w-9 shrink-0 items-center justify-center rounded-md border bg-muted text-[0.625rem] font-semibold tracking-wide text-muted-foreground">
             {row.original.format === "Tautan" ? <IconExternalLink className="size-4" /> : row.original.format}
           </span>
           <span className="grid max-w-[28rem] gap-0.5">

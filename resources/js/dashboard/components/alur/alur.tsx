@@ -162,7 +162,7 @@ export function TahapAlur({ status }: { status: Beralur["status"] }) {
             />
             <span
               className={cn(
-                "text-[11px] leading-tight text-muted-foreground",
+                "text-[0.6875rem] leading-tight text-muted-foreground",
                 kini && "font-medium text-foreground"
               )}
             >
@@ -190,7 +190,7 @@ export function RiwayatAlur({ riwayat, batas = 6 }: { riwayat: Riwayat[]; batas?
             <span
               aria-hidden="true"
               className={cn(
-                "absolute top-1.5 -left-[21px] size-2.5 rounded-full border-2 border-background bg-muted-foreground/50",
+                "absolute top-1.5 -left-[1.3125rem] size-2.5 rounded-full border-2 border-background bg-muted-foreground/50",
                 i === 0 && "bg-brand"
               )}
             />

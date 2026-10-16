@@ -43,22 +43,22 @@ const schema = z.object({
 function PratinjauPapan({ p }: { p: PapanLayanan }) {
   const lebih = p.selisihKemarin <= 0
   return (
-    <div className="rounded-xl bg-[#0a0a0c] p-4 text-white shadow-sm" aria-label="Pratinjau papan layanan">
-      <p className="text-[11px] tracking-[0.12em] text-[#9ba0a8] uppercase">PINTU · Papan layanan hari ini</p>
+    <div className="rounded-xl bg-night p-4 text-white shadow-sm" aria-label="Pratinjau papan layanan">
+      <p className="text-[0.6875rem] tracking-[0.12em] text-night-muted uppercase">PINTU · Papan layanan hari ini</p>
       <div className="mt-3 grid gap-2 sm:grid-cols-2">
-        <div className="rounded-lg bg-[#17181b] p-3">
-          <p className="text-xs text-[#9ba0a8]">Nomor antrean dilayani</p>
+        <div className="rounded-lg bg-night-2 p-3">
+          <p className="text-xs text-night-muted">Nomor antrean dilayani</p>
           <p className="mt-1 font-display text-3xl font-semibold tracking-tight tabular-nums">{p.nomorAntrean || "—"}</p>
-          <p className="mt-1 text-xs text-[#9ba0a8]">{p.layananAntrean}</p>
+          <p className="mt-1 text-xs text-night-muted">{p.layananAntrean}</p>
         </div>
-        <div className="rounded-lg bg-[#17181b] p-3">
-          <p className="text-xs text-[#9ba0a8]">Perkiraan waktu tunggu</p>
+        <div className="rounded-lg bg-night-2 p-3">
+          <p className="text-xs text-night-muted">Perkiraan waktu tunggu</p>
           <p className="mt-1 font-display text-3xl font-semibold tracking-tight tabular-nums">
             {Number.isFinite(p.waktuTunggu) ? p.waktuTunggu : "—"}
-            <span className="ml-1 text-base font-normal text-[#9ba0a8]">menit</span>
+            <span className="ml-1 text-base font-normal text-night-muted">menit</span>
           </p>
           {Number.isFinite(p.selisihKemarin) && p.selisihKemarin !== 0 && (
-            <p className={cn("mt-1 text-xs", lebih ? "text-[#5fd39b]" : "text-[#ff8f7e]")}>
+            <p className={cn("mt-1 text-xs", lebih ? "text-ok-night" : "text-danger-night")}>
               {Math.abs(p.selisihKemarin)} mnt {lebih ? "lebih cepat" : "lebih lama"} dari kemarin
             </p>
           )}
@@ -66,13 +66,13 @@ function PratinjauPapan({ p }: { p: PapanLayanan }) {
       </div>
       <ul className="mt-2 grid gap-1.5 sm:grid-cols-2">
         {p.loket.map((l) => (
-          <li key={l.id} className="flex items-center gap-2 rounded-lg bg-[#17181b] px-3 py-2 text-sm">
-            <span className="w-7 font-semibold text-[#7fa4ff]">{l.kode}</span>
+          <li key={l.id} className="flex items-center gap-2 rounded-lg bg-night-2 px-3 py-2 text-sm">
+            <span className="w-7 font-semibold text-night-accent">{l.kode}</span>
             <span className="flex-1 truncate">{l.nama}</span>
             <span
               className={cn(
                 "text-xs",
-                l.status === "buka" ? "text-[#5fd39b]" : l.status === "istirahat" ? "text-[#f2c46b]" : "text-[#9ba0a8]"
+                l.status === "buka" ? "text-ok-night" : l.status === "istirahat" ? "text-warn-night" : "text-night-muted"
               )}
             >
               {STATUS_LOKET[l.status].label}
@@ -80,7 +80,7 @@ function PratinjauPapan({ p }: { p: PapanLayanan }) {
           </li>
         ))}
       </ul>
-      <p className="mt-3 text-xs text-[#9ba0a8]">{p.catatan}</p>
+      <p className="mt-3 text-xs text-night-muted">{p.catatan}</p>
     </div>
   )
 }
@@ -106,7 +106,7 @@ export default function HalamanPapan() {
         {(form) => {
           const nilai = form.watch()
           return (
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px] xl:items-start">
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_26.25rem] xl:items-start">
               <div className="grid gap-4">
                 <Bagian judul="Antrean" deskripsi={`Terakhir diperbarui ${tanggalJam(nilai.diperbarui)}.`}>
                   <Baris>

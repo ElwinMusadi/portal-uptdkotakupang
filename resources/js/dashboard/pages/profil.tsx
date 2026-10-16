@@ -124,7 +124,7 @@ export default function HalamanProfil() {
                 />
               </Bagian>
               <Bagian judul="Sambutan pimpinan">
-                <div className="grid gap-5 md:grid-cols-[220px_minmax(0,1fr)]">
+                <div className="grid gap-5 md:grid-cols-[13.75rem_minmax(0,1fr)]">
                   <FieldGambar
                     control={form.control}
                     name="sambutan.foto"

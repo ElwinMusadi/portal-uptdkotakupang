@@ -448,7 +448,7 @@ function Kalkulator() {
   const tarif = hasil && keteranganTarif(hasil)
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start">
+    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_25rem] lg:items-start">
       <Card className="gap-6">
         <CardHeader>
           <CardTitle className="text-base">Data kendaraan</CardTitle>

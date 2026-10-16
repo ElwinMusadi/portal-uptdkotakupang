@@ -23,6 +23,7 @@
     </script>
     @viteReactRefresh
     @vite('resources/js/absen/main.tsx')
+    <link rel="stylesheet" href="{{ route('tema.dashboard') }}" />
   </head>
   <body>
     <noscript>Aplikasi Absensi PINTU memerlukan JavaScript.</noscript>

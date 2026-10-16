@@ -2,11 +2,11 @@
 
 .lp {
   /* Warna komponen penerimaan di panel gelap: PKB, BBNKB, denda, tunggakan, opsen */
-  --lp-1: #7fa4ff;
-  --lp-2: #2b63f6;
-  --lp-3: #ff8f7e;
-  --lp-4: #f2c46b;
-  --lp-5: #b5c8ff;
+  --lp-1: var(--night-accent);
+  --lp-2: var(--accent);
+  --lp-3: var(--danger-night);
+  --lp-4: var(--warn-night, #F2C46B);
+  --lp-5: var(--night-accent-2, #B5C8FF);
   display: grid;
   gap: 20px;
 }
@@ -52,7 +52,7 @@
 .lp-susunan > span { display: block; height: 100%; }
 .lp-susunan__keterangan { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px 16px; margin: 0; }
 .lp-susunan__keterangan dt { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--night-muted); }
-.lp-susunan__keterangan dt span { width: 9px; height: 9px; border-radius: 2px; }
+.lp-susunan__keterangan dt span { width: 9px; height: 9px; border-radius: calc(2px * var(--r-scale, 1)); }
 .lp-susunan__keterangan dd { margin: 2px 0 0; font-weight: 600; color: #fff; font-variant-numeric: tabular-nums; }
 .lp-ringkas__catatan { font-size: 12.5px; color: var(--night-muted); }
 .lp-ringkas__petak { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -78,10 +78,10 @@
 .lp-hari__batang > li { display: flex; height: 100%; }
 .lp-hari__kolom {
   display: flex; align-items: flex-end; width: 100%; height: 100%; padding: 0;
-  background: none; border: 0; border-radius: 3px; cursor: pointer;
+  background: none; border: 0; border-radius: calc(3px * var(--r-scale, 1)); cursor: pointer;
 }
 .lp-hari__kolom:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.lp-hari__isi { display: block; width: 100%; min-height: 2px; background: var(--accent); border-radius: 3px 3px 0 0; transition: background-color var(--dur-1) var(--ease); }
+.lp-hari__isi { display: block; width: 100%; min-height: 2px; background: var(--accent); border-radius: calc(3px * var(--r-scale, 1)) calc(3px * var(--r-scale, 1)) 0 0; transition: background-color var(--dur-1) var(--ease); }
 .lp-hari__kolom:hover .lp-hari__isi, .lp-hari__kolom:focus-visible .lp-hari__isi { background: var(--accent-ink); }
 .lp-hari__kolom.is-samar .lp-hari__isi { background: repeating-linear-gradient(135deg, #9a9ea5 0 2px, transparent 2px 5px); }
 .lp-hari__sumbu { display: flex; justify-content: space-between; }

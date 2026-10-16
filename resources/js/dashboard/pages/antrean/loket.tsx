@@ -147,7 +147,7 @@ function MejaLoket({ loket }: { loket: LoketAntrean }) {
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-4">
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_22.5rem] lg:items-start">
         <Card>
           <CardHeader>
             <CardTitle className="text-base">{loket.nama}</CardTitle>

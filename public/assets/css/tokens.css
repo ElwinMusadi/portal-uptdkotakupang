@@ -4,6 +4,8 @@
    Bahasa desain: editorial tenang (SF Pro Display untuk headline, SF Pro Text
    untuk isi), kertas hangat, tinta biru-hitam, satu aksen biru untuk tautan
    & status aktif.
+   Tema dari dashboard (D-057) menimpa variabel ini lewat tema-portal.css,
+   stylesheet terakhir di setiap halaman; tanpa tema, nilai di sini yang berlaku.
    ========================================================================== */
 
 :root {
@@ -18,11 +20,22 @@
   --text-2: #646A72;         /* teks pendukung — 5.05:1 di atas --paper */
   --line: #E7E4DC;           /* garis rambut */
   --line-2: #D9D5CA;         /* garis tegas (input, pemisah tabel) */
+  --line-3: #C6C1B4;         /* garis input saat disorot */
+  --surface-2: #FBFAF7;      /* baris daftar periksa saat disorot, kaki daftar */
+  --surface-hover: #ECEAE4;  /* tombol terang saat disorot */
+  --ink-hover: #262B33;      /* tombol hitam saat disorot */
+  --map: #ECE9E1;            /* latar kotak peta */
 
   /* ---------- Aksen: hanya untuk tautan, status aktif, garis bawah ---------- */
   --accent: #2B63F6;
   --accent-ink: #2457E0;     /* hover / teks kecil */
   --accent-soft: #E8EEFE;    /* latar fokus lembut */
+  --accent-line: #C9D6FD;    /* garis di atas --accent-soft */
+  --accent-halo: rgba(43, 99, 246, .18); /* lingkar penanda peta */
+
+  /* ---------- Logo: tetap biru PINTU apa pun temanya (D-057) ---------- */
+  --logo-leaf: #2B63F6;
+  --logo-leaf-night: #7FA4FF;
 
   /* ---------- Mockup gelap (hanya di dalam media/mockup) ---------- */
   --night: #0A0A0C;          /* panel */
@@ -33,12 +46,17 @@
   --night-muted: #9BA0A8;    /* 6.75:1 di atas tile */
   --night-faint: #5C6068;    /* sparkline de-emphasis */
   --night-accent: #7FA4FF;   /* aksen di permukaan gelap */
+  --night-accent-2: #B5C8FF; /* aksen terang: batang grafik disorot, palet laporan */
+  --night-accent-soft: rgba(127, 164, 255, .1);  /* isian sparkline */
+  --night-accent-ring: rgba(127, 164, 255, .35); /* lingkar tombol suara layar TV */
+  --night-accent-dim: #23345F; /* kedipan panggilan di layar TV */
+  --night-hover: #2A2B31;    /* tombol gelap saat disorot */
 
   /* ---------- Status (selalu dengan ikon + label, bukan warna saja) ---------- */
   --ok: #1A7349;       --ok-soft: #E3F2EA;   /* 5,05:1 di atas ok-soft */
   --warn: #8C5900;     --warn-soft: #F8EED9; /* 5,14:1 di atas warn-soft */
   --danger: #B93A28;   --danger-soft: #F9E4DF;
-  --ok-night: #5FD39B; --danger-night: #FF8F7E;
+  --ok-night: #5FD39B; --danger-night: #FF8F7E; --warn-night: #F2C46B;
 
   /* ---------- Tipografi ---------- */
   /* SF Pro adalah font sistem Apple. Berkasnya TIDAK di-host di situs karena
@@ -80,12 +98,16 @@
   --container-narrow: 760px;
 
   /* ---------- Sudut & garis ---------- */
+  /* Sudut lain ditulis calc(… * var(--r-scale, 1)); kapsul tetap kapsul. Variabel
+     yang ditambahkan untuk tema selalu dipakai dengan nilai cadangannya, karena
+     CSS portal tidak berversi dan tokens.css lama bisa masih tersimpan di peramban. */
+  --r-scale: 1;   /* pengali kelengkungan sudut dari tema (D-057) */
   --r-pill: 999px;
-  --r-xl: 32px;   /* kartu seksi / media */
-  --r-lg: 24px;
-  --r-md: 16px;   /* tile UI dalam */
-  --r-sm: 12px;
-  --r-xs: 8px;
+  --r-xl: calc(32px * var(--r-scale, 1));   /* kartu seksi / media */
+  --r-lg: calc(24px * var(--r-scale, 1));
+  --r-md: calc(16px * var(--r-scale, 1));   /* tile UI dalam */
+  --r-sm: calc(12px * var(--r-scale, 1));
+  --r-xs: calc(8px * var(--r-scale, 1));
   --hairline: 1px solid var(--line);
 
   /* ---------- Bayangan (jarang & lembut) ---------- */

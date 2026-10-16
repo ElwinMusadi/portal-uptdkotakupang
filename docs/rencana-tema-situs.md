@@ -1,6 +1,6 @@
 # Rencana Implementasi — Tema Portal dan Dashboard
 
-**Status:** rencana dengan keputusan awal pemilik (17 Oktober 2026, [D-057](decisions.md#d-057--2026-10-17--tema-portal-dan-dashboard-rencana-dan-keputusan-awal)); menunggu persetujuan untuk mulai Irisan 1. Belum ada kode yang diubah.
+**Status:** rencana dengan keputusan awal pemilik (17 Oktober 2026, [D-057](decisions.md#d-057--2026-10-17--tema-portal-dan-dashboard-rencana-dan-keputusan-awal)). **Irisan 1 (fondasi) selesai** pada 17 Oktober 2026 tanpa perubahan tampilan (hasilnya di §5.1); berikutnya Irisan 2.
 **Sumber:** permintaan pemilik pada 17 Oktober 2026: Administrator dapat mengatur tema (jenis huruf, warna utama, skala tampilan, dan pengaturan tampilan lain yang lazim) dari menu Pengaturan di dashboard, agar tampilan tidak itu-itu saja.
 
 ---
@@ -74,7 +74,8 @@ Semua nilai dari daftar tertutup kecuali `aksen` (hex `#RRGGBB` yang divalidasi)
   - **Dashboard:** blok `:root { … }` dan `.dark { … }` yang menimpa variabel shadcn untuk mode terang dan gelap, `@font-face` huruf terpilih, ukuran huruf dasar untuk skala, dan `--radius`.
 - Bila dokumen belum pernah disimpan, isinya kosong (komentar saja), jadi tampilan sama persis dengan sekarang.
 - `Content-Type: text/css`, `Cache-Control: no-cache` dengan `ETag` (hash isi): peramban selalu memeriksa ulang dan mendapat `304` bila tidak berubah, jadi perubahan tema langsung terlihat tanpa nomor versi di HTML.
-- Satu `<link rel="stylesheet" href="tema-portal.css">` ditambahkan **sesudah** `tokens.css` di 20 halaman portal, 404, Login, Aktivasi, dan layar TV; satu `<link rel="stylesheet" href="/tema-dashboard.css">` sesudah CSS Vite di `dashboard.blade.php` dan `absen.blade.php`. Teksnya tetap sama di setiap permintaan, jadi aturan "byte demi byte" halaman portal tetap terpenuhi. Bila stylesheet gagal dimuat, halaman tampil dengan tema bawaan.
+- Satu `<link rel="stylesheet" href="tema-portal.css">` ditambahkan sebagai **stylesheet terakhir** (sesudah `pages.css`) di 20 halaman portal, 404, Login, Aktivasi, dan layar TV; satu `<link rel="stylesheet" href="{{ route('tema.dashboard') }}">` sesudah CSS Vite di `dashboard.blade.php` dan `absen.blade.php`. Teksnya tetap sama di setiap permintaan, jadi aturan "byte demi byte" halaman portal tetap terpenuhi. Bila stylesheet gagal dimuat, halaman tampil dengan tema bawaan.
+- Saat `npm run dev`, Vite menyisipkan CSS dashboard lewat JavaScript **sesudah** `<link>` tema, sehingga aturan `:root` yang sama kuatnya akan kalah. Karena itu `tema-dashboard.css` (Irisan 2) memakai pemilih yang lebih kuat, mis. `html:root` untuk mode terang dan `html.dark` untuk mode gelap.
 - Karena `<link>` di `<head>` memblokir penggambaran, halaman tidak sempat tampil dengan warna lama (tanpa kedipan).
 
 ### 4.3 Turunan warna dan kontras
@@ -134,6 +135,18 @@ Warna status (hijau taat, merah menunggak, kuning peringatan) **tidak** ikut aks
 
 Setiap irisan diperiksa seperti biasa: tes fitur dan unit, uji mutasi, typecheck/lint/build, dan pemeriksaan di browser (375, 768, 1280 px) di portal dan dashboard.
 
+### 5.1 Hasil Irisan 1 (17 Oktober 2026)
+
+| Bagian | Yang dibuat |
+|---|---|
+| Variabel baru portal (`tokens.css`, nilainya sama dengan warna yang digantikan) | `--line-3`, `--surface-2`, `--surface-hover`, `--ink-hover`, `--map` (latar dan garis); `--accent-line`, `--accent-halo` (turunan aksen); `--night-accent-2`, `--night-accent-soft`, `--night-accent-ring`, `--night-accent-dim`, `--night-hover` (panel gelap); `--warn-night`; `--logo-leaf`, `--logo-leaf-night` (daun logo, sebelumnya mengikuti `--accent`, kini terpisah agar logo tetap biru); `--r-scale` (pengali sudut). |
+| Pemakaian di portal | `components.css`, `pages.css`, CSS komponen React (`layar-antrean`, `laporan-penerimaan` dengan palet `--lp-1..5` dari variabel, `lambang-pembuka`, `pemetaan-pkb`), dan gaya sebaris `layar.blade.php`. Sudut yang ditulis langsung menjadi `var(--r-xl…xs)` atau `calc(N * var(--r-scale, 1))`; kapsul, lingkaran, dan `0` tetap. |
+| Cache CSS portal | CSS portal tidak berversi, jadi peramban bisa memakai `tokens.css` lama bersama `components.css` baru (terjadi saat pemeriksaan: sudut menu menjadi 0). Karena itu setiap variabel baru dipakai **dengan nilai cadangannya**, mis. `var(--map, #ECE9E1)`, seperti `layar-antrean.css` sejak awal. |
+| Dashboard | Huruf di blok `@theme` biasa (bukan `inline`) sehingga `font-*` membaca variabel; pratinjau Papan Layanan memakai variabel `--night*`, `--ok-night`, `--warn-night`, `--danger-night` (kelas `bg-night`, `text-night-muted`, …); lencana pesan baru memakai `--brand-foreground`; 30 ukuran px di halaman dan komponen dashboard menjadi `rem` atau skala Tailwind. |
+| Rute | `GET /tema-portal.css` dan `GET /tema-dashboard.css` (komentar saja sampai Irisan 2), `no-cache` + `ETag`, tanpa sesi dan cookie, beserta `<link>` di semua halaman. |
+| Sengaja tidak dijadikan variabel | Warna status (`--ok`, `--danger`, …, hijau `rgba(95,211,155,.1)`), bayangan dan tirai berbasis tinta (`rgba(15,19,25,…)`, `rgba(10,10,12,.55)`), abu-abu netral (`#9A9EA5`), palet placeholder foto `.ph--*`, contoh warna di halaman Design System (mendokumentasikan palet bawaan), ilustrasi peta statis di Kontak, `meta theme-color`, garis dan cincin fokus komponen shadcn/ui, label peta dashboard (ukurannya dihitung `peta.ts`). |
+| Pemeriksaan | Gaya terhitung semua elemen (warna, latar, garis, sudut, huruf, ukuran, bayangan, termasuk `::before`/`::after`) dibandingkan sebelum dan sesudah di 23 halaman portal, 18 halaman dashboard (terang), 5 halaman dashboard (gelap), dan Absensi: tidak ada beda selain teks yang bergerak sendiri (judul berganti di beranda, waktu relatif "… jam yang lalu"). Bukti statis: setelah variabel diganti nilainya, CSS lama dan baru identik (termasuk keadaan *hover*). Uji aksen hijau: tidak ada sisa biru selain daun logo, contoh warna Design System, dan placeholder `.ph--blue`. Simulasi `tokens.css` lama: tetap tanpa beda. |
+
 ---
 
 ## 6. Pengujian
@@ -174,4 +187,5 @@ Setiap irisan diperiksa seperti biasa: tes fitur dan unit, uji mutasi, typecheck
 ## 9. Dokumen dan kode yang terdampak
 
 - Baru: `app/Support/ThemePalette.php`, controller dan request tema, rute `tema-portal.css` dan `tema-dashboard.css`, `public/assets/fonts/`, tab Tampilan di `resources/js/dashboard/pages/pengaturan.tsx`, tes unit dan fitur.
+- Dibuat di Irisan 1: `app/Http/Controllers/ThemeStylesheetController.php`, rute `tema.portal` dan `tema.dashboard` di `routes/web.php`, `tests/Feature/ThemeStylesheetTest.php`.
 - Diubah: `public/assets/css/{tokens,base,components,pages}.css`, CSS komponen portal (`resources/js/portal/**/*.css`), `resources/js/dashboard/index.css`, `pages/papan.tsx`, semua halaman portal dan `errors/404`, `auth/aktivasi`, `layar`, `dashboard`, `absen` (satu `<link>`), `app/Models/Setting.php`, `routes/api.php`, `routes/web.php`, `tests/Feature/PortalPagesTest.php`, `docs/api.md`, `docs/dashboard.md`, `docs/decisions.md`, `KONTEKS-PROYEK.md`.

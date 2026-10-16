@@ -7,10 +7,17 @@
  * Tema shadcn/ui (new-york) yang diselaraskan dengan design system portal PINTU:
  * kertas hangat untuk sidebar, tinta biru-hitam untuk tombol utama, dan satu
  * aksen biru (#2B63F6) untuk fokus, grafik, dan status aktif.
+ *
+ * Tema dari Pengaturan (D-057) menimpa variabel :root dan .dark di bawah
+ * serta huruf berikut lewat tema-dashboard.css, yang dimuat sesudah CSS ini.
+ * Huruf sengaja di luar @theme inline agar kelas font-* membaca variabelnya.
  */
-@theme inline {
+@theme {
   --font-sans: "SF Pro Text", -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-display: "SF Pro Display", -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+@theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -47,6 +54,14 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-night: var(--night);
+  --color-night-2: var(--night-2);
+  --color-night-muted: var(--night-muted);
+  --color-night-accent: var(--night-accent);
+  --color-ok-night: var(--ok-night);
+  --color-warn-night: var(--warn-night);
+  --color-danger-night: var(--danger-night);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
@@ -75,6 +90,7 @@
   --input: #dcd8cd;
   --ring: #2b63f6;
   --brand: #2b63f6;
+  --brand-foreground: #ffffff;
   --chart-1: #2b63f6;
   --chart-2: #9cb8ff;
   --chart-3: #1a3fa8;
@@ -93,6 +109,14 @@
   --sidebar-accent-foreground: #0f1319;
   --sidebar-border: #e7e4dc;
   --sidebar-ring: #2b63f6;
+  /* Panel gelap portal untuk pratinjau Papan Layanan, sama di mode terang dan gelap */
+  --night: #0a0a0c;
+  --night-2: #17181b;
+  --night-muted: #9ba0a8;
+  --night-accent: #7fa4ff;
+  --ok-night: #5fd39b;
+  --warn-night: #f2c46b;
+  --danger-night: #ff8f7e;
 }
 
 .dark {
@@ -115,6 +139,7 @@
   --input: rgb(255 255 255 / 0.16);
   --ring: #7fa4ff;
   --brand: #7fa4ff;
+  --brand-foreground: #0f1319;
   --chart-1: #7fa4ff;
   --chart-2: #2b63f6;
   --chart-3: #c3d4ff;
@@ -154,7 +179,7 @@
 @layer components {
   /* Isi kaya-teks (editor & pratinjau) */
   .prose-pintu {
-    @apply text-[15px] leading-7 text-foreground;
+    @apply text-[0.9375rem] leading-7 text-foreground;
   }
   .prose-pintu > * + * {
     @apply mt-3;

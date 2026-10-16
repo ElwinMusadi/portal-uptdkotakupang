@@ -139,9 +139,9 @@ export function ChartAreaInteractive() {
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
         {!pesan ? (
-          <Skeleton className="h-[250px] w-full" />
+          <Skeleton className="h-62.5 w-full" />
         ) : (
-          <ChartContainer config={chartConfig} className="aspect-auto h-[250px] w-full">
+          <ChartContainer config={chartConfig} className="aspect-auto h-62.5 w-full">
             <AreaChart data={data} accessibilityLayer>
               <defs>
                 <linearGradient id="fillPengaduan" x1="0" y1="0" x2="0" y2="1">

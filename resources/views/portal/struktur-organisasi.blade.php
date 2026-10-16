@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="assets/css/base.css">
   <link rel="stylesheet" href="assets/css/components.css">
   <link rel="stylesheet" href="assets/css/pages.css">
+  <link rel="stylesheet" href="tema-portal.css">
   <script>document.documentElement.classList.replace("no-js", "js");</script>
 </head>
 <body id="top" data-page="struktur" data-group="profil">

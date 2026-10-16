@@ -971,6 +971,13 @@ Dipakai aplikasi Absensi PINTU di `/absen`. Tamu mendapat `401`. Swafoto diungga
 
 Kode: `app/Http/Controllers/Dashboard/FieldActivity*`, `app/Http/Controllers/Dashboard/ClockInController.php`, `app/Http/Requests/Dashboard/*FieldActivit*`, `app/Http/Requests/Dashboard/ClockInRequest.php`, `app/Actions/ClockIn.php`, `app/Models/FieldActivity.php`, `app/Models/FieldAttendance.php`, `app/Policies/FieldActivityPolicy.php`. Tes: `tests/Feature/FieldActivityControllerTest.php`, `tests/Feature/ClockInControllerTest.php`, `tests/Feature/ClockInPageTest.php`.
 
+## Stylesheet tema: `GET /tema-portal.css` dan `GET /tema-dashboard.css`
+
+Bukan rute API (`routes/web.php`, `ThemeStylesheetController`), tetapi bagian dari tema ([D-057](decisions.md#d-057--2026-10-17--tema-portal-dan-dashboard-rencana-dan-keputusan-awal), [rencana](rencana-tema-situs.md)). `tema-portal.css` adalah stylesheet terakhir di semua halaman portal, 404, Login Pegawai, Aktivasi, dan layar TV; `tema-dashboard.css` dimuat sesudah CSS hasil build di dashboard dan Absensi.
+
+- `200` `text/css; charset=UTF-8`, tanpa sesi dan cookie. `Cache-Control: no-cache, private` dengan `ETag`: peramban memeriksa ulang setiap kali dan mendapat `304` tanpa isi bila tidak berubah, sehingga tema yang disimpan langsung terlihat tanpa nomor versi di HTML.
+- Sampai tab *Tampilan* dibuat (Irisan 2) isinya hanya komentar, jadi tampilan bawaan PINTU yang berlaku.
+
 ## `GET /api/public/faq`
 
 Daftar tanya jawab untuk portal publik. Menjalankan keputusan pemilik produk GC18-01–09 ([Phase 2.19](phases/PHASE-2.19-GC18-DECISION-BINDING-AND-CLOSURE-EVIDENCE-COORDINATION.md)), dengan urutan menurut [D-003](decisions.md#d-003--2026-10-13--urutan-faq-publik-mengikuti-dashboard). Bagian Tanya Jawab di beranda memuatnya setiap kali halaman dibuka (`initFaq()` di `public/assets/js/main.js`, [D-012](decisions.md#d-012--2026-10-13--beranda-menampilkan-tanya-jawab-dari-api-publik)), jadi setiap kunjungan beranda ikut dihitung dalam batas laju di bawah.

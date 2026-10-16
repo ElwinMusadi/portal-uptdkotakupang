@@ -52,12 +52,12 @@ Dashboard memakai rute hash (`/dashboard/#/berita`), jadi satu rute Laravel (`/d
 ## Struktur folder
 
 ```
-resources/views/dashboard.blade.php  ← halaman induk (tema terang/gelap dipasang sebelum React dimuat; bawaannya Terang)
+resources/views/dashboard.blade.php  ← halaman induk (tema terang/gelap dipasang sebelum React dimuat; bawaannya Terang; /tema-dashboard.css dimuat sesudah CSS Vite)
 public/assets/img/                   ← lambang NTT dan favicon (dipakai bersama portal)
 vite.config.ts                       ← entri resources/js/dashboard/main.tsx, keluaran public/build
 resources/js/dashboard/
     ├── main.tsx          ← cek sesi, lalu pasang provider dan router
-    ├── index.css         ← token warna shadcn/ui yang diselaraskan dengan portal
+    ├── index.css         ← token warna shadcn/ui yang diselaraskan dengan portal, huruf, dan warna pratinjau papan (bisa ditimpa tema)
     ├── app/              ← layout, router (rute lazy), daftar menu
     ├── components/
     │   ├── ui/           ← komponen shadcn/ui (teks bawaan sudah berbahasa Indonesia)
@@ -439,6 +439,14 @@ Halaman *Pesan & Pengaduan* (`#/pesan`, `pages/pesan.tsx`) tersimpan di server s
 - Membuka pesan baru menandainya *Diproses*. Tanggapan ditambahkan dari panel detail dan dicatat atas nama akun yang masuk; isi pesan dan tanggapan lama tidak bisa diubah.
 - Hapus, per baris maupun massal, hanya untuk Administrator. Tombol *Hapus semua pesan* di *Pengaturan › Data* tidak tampil selama pesan tersimpan di server.
 - Pesan contoh dari penyimpanan peramban tidak dipindahkan ke server.
+
+## Tema
+
+Dashboard dan Absensi memuat `/tema-dashboard.css` sesudah CSS hasil build ([D-057](decisions.md#d-057--2026-10-17--tema-portal-dan-dashboard-rencana-dan-keputusan-awal), [rencana](rencana-tema-situs.md)); sampai tab *Tampilan* dibuat isinya hanya komentar. Agar tema bisa menimpa tampilan:
+
+- Warna ditulis lewat variabel di `index.css` (`:root` dan `.dark`), bukan heksadesimal di kelas. Pratinjau Papan Layanan memakai `bg-night`, `bg-night-2`, `text-night-muted`, `text-night-accent`, `text-ok-night`, `text-warn-night`, dan `text-danger-night`; teks di atas warna merek memakai `text-brand-foreground`.
+- `--font-sans` dan `--font-display` ada di blok `@theme` biasa (bukan `@theme inline`), sehingga kelas `font-*` membaca variabelnya.
+- Ukuran ditulis dalam `rem` atau skala Tailwind (mis. `h-62.5`, `text-[0.6875rem]`), bukan `px`, agar ikut skala tampilan. Pengecualian: garis dan cincin fokus di `components/ui`, serta label peta yang ukurannya dihitung `peta.ts`.
 
 ## Pemeriksaan sebelum commit
 

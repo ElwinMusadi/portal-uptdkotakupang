@@ -20,6 +20,7 @@
     </script>
     @viteReactRefresh
     @vite('resources/js/dashboard/main.tsx')
+    <link rel="stylesheet" href="{{ route('tema.dashboard') }}" />
   </head>
   <body>
     <noscript>Dashboard PINTU memerlukan JavaScript.</noscript>

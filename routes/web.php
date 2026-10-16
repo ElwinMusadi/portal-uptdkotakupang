@@ -3,6 +3,7 @@
 use App\Http\Controllers\ArticlePageController;
 use App\Http\Controllers\Auth\AccountActivationController;
 use App\Http\Controllers\QueueTrackingPageController;
+use App\Http\Controllers\ThemeStylesheetController;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Models\Article;
 use App\Models\QueueTicket;
@@ -73,6 +74,12 @@ Route::withoutMiddleware([
     // Layanan (D-041) and the React components that take over [data-react] elements (D-045).
     Route::get('/skrip/cek-pajak', fn (): RedirectResponse => redirect(Vite::asset('resources/js/portal/cek-pajak.ts')))->name('portal.cek-pajak');
     Route::get('/skrip/portal', fn (): RedirectResponse => redirect(Vite::asset('resources/js/portal/main.tsx')))->name('portal.skrip');
+
+    // The theme stylesheets loaded after the portal's and the dashboard's own, revalidated on every load (D-057)
+    Route::middleware('cache.headers:no_cache;etag')->group(function (): void {
+        Route::get('/tema-portal.css', [ThemeStylesheetController::class, 'portal'])->name('tema.portal');
+        Route::get('/tema-dashboard.css', [ThemeStylesheetController::class, 'dashboard'])->name('tema.dashboard');
+    });
 });
 
 /*

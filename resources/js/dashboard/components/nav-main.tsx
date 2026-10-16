@@ -101,7 +101,7 @@ export function NavMain({ items }: { items: ItemNav[] }) {
                     {baru > 0 && (
                       <span
                         aria-hidden="true"
-                        className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-semibold text-white tabular-nums dark:text-[#0f1319]"
+                        className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[0.625rem] font-semibold text-brand-foreground tabular-nums"
                       >
                         {baru > 99 ? "99+" : baru}
                       </span>

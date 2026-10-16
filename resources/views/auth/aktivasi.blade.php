@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="{{ asset('assets/css/base.css') }}">
   <link rel="stylesheet" href="{{ asset('assets/css/components.css') }}">
   <link rel="stylesheet" href="{{ asset('assets/css/pages.css') }}">
+  <link rel="stylesheet" href="{{ route('tema.portal') }}">
   <script>document.documentElement.classList.replace("no-js", "js");</script>
 </head>
 <body id="top" data-page="aktivasi">

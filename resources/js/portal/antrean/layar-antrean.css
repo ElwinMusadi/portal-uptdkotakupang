@@ -20,11 +20,11 @@
 
 .ly-utama {
   display: grid; align-content: center; justify-items: start; gap: 1.5vh; padding: 4vh 3vw;
-  border-radius: 2.5vh; background: var(--night-2, #17181B); border-left: 1vh solid var(--night-accent, #7FA4FF);
+  border-radius: calc(2.5vh * var(--r-scale, 1)); background: var(--night-2, #17181B); border-left: 1vh solid var(--night-accent, #7FA4FF);
 }
 .ly-utama > p { line-height: 1.15; }
 .ly-utama.is-baru { animation: ly-kedip 1s ease-in-out 3; }
-@keyframes ly-kedip { 50% { background: #23345F; } }
+@keyframes ly-kedip { 50% { background: var(--night-accent-dim, #23345F); } }
 .ly-utama__nomor { font-family: var(--font-display); font-size: 17vh; font-weight: 700; line-height: 0.95; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
 .ly-utama__tgl { font-size: 5vh; font-weight: 600; color: var(--night-muted, #9BA0A8); }
 .ly-utama__nopol { font-size: 6vh; font-weight: 600; letter-spacing: 0.06em; }
@@ -32,14 +32,14 @@
 .ly-utama__layanan { font-size: 2.8vh; color: var(--night-muted, #9BA0A8); }
 
 .ly-samping { grid-row: span 2; display: grid; align-content: start; gap: 2.5vh; min-height: 0; }
-.ly-kotak { display: grid; gap: 1.5vh; padding: 3vh 1.8vw; border-radius: 2.5vh; background: var(--night-2, #17181B); }
+.ly-kotak { display: grid; gap: 1.5vh; padding: 3vh 1.8vw; border-radius: calc(2.5vh * var(--r-scale, 1)); background: var(--night-2, #17181B); }
 .ly-loket, .ly-menunggu { display: grid; gap: 1.2vh; }
 .ly-loket li, .ly-menunggu li { display: flex; justify-content: space-between; align-items: baseline; gap: 1vw; font-size: 2.8vh; }
 .ly-loket__nama { color: var(--night-muted, #9BA0A8); }
 .ly-loket__nomor { font-family: var(--font-display); font-size: 5vh; font-weight: 700; font-variant-numeric: tabular-nums; }
 .ly-menunggu__jumlah { font-family: var(--font-display); font-size: 4vh; font-weight: 700; font-variant-numeric: tabular-nums; }
 
-.ly-riwayat { display: grid; gap: 1.5vh; padding: 2.5vh 2vw; border-radius: 2.5vh; background: var(--night-2, #17181B); }
+.ly-riwayat { display: grid; gap: 1.5vh; padding: 2.5vh 2vw; border-radius: calc(2.5vh * var(--r-scale, 1)); background: var(--night-2, #17181B); }
 .ly-riwayat__daftar { display: grid; gap: 1vh; }
 .ly-riwayat__daftar li { display: grid; grid-template-columns: 1.2fr 1.4fr 2fr auto; gap: 1.5vw; align-items: baseline; font-size: 2.6vh; line-height: 1.2; color: var(--night-muted, #9BA0A8); }
 .ly-riwayat__nomor { font-family: var(--font-display); font-size: 3vh; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
@@ -49,10 +49,10 @@
 
 .ly-status { position: absolute; left: 3vw; bottom: 1.5vh; font-size: 2vh; color: var(--danger-night, #FF8F7E); }
 .ly-tombol {
-  padding: 1.6vh 2.4vw; border: 0; border-radius: 999px; background: #fff; color: #0A0A0C;
+  padding: 1.6vh 2.4vw; border: 0; border-radius: 999px; background: #fff; color: var(--night);
   font: inherit; font-size: 2.6vh; font-weight: 600; cursor: pointer;
 }
-.ly-tombol--suara { position: absolute; right: 3vw; bottom: 3vh; box-shadow: 0 0 0 0.8vh rgba(127, 164, 255, 0.35); }
+.ly-tombol--suara { position: absolute; right: 3vw; bottom: 3vh; box-shadow: 0 0 0 0.8vh var(--night-accent-ring, rgba(127, 164, 255, .35)); }
 
 .ly--pesan { place-items: center; grid-template-rows: 1fr; }
 .ly-pesan { display: grid; gap: 2vh; max-width: 70ch; text-align: center; font-size: 2.6vh; color: var(--night-muted, #9BA0A8); }

@@ -108,7 +108,7 @@ function DetailPesan({ pesan, tutup }: { pesan: Pesan | null; tutup: () => void 
               </SheetDescription>
             </SheetHeader>
             <div className="grid flex-1 content-start gap-5 overflow-y-auto p-4">
-              <blockquote className="rounded-lg border-l-2 border-brand bg-muted/40 p-4 text-[15px] leading-relaxed whitespace-pre-line">
+              <blockquote className="rounded-lg border-l-2 border-brand bg-muted/40 p-4 text-[0.9375rem] leading-relaxed whitespace-pre-line">
                 {pesan.isi}
               </blockquote>
               <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">

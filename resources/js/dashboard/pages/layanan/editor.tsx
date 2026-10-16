@@ -205,7 +205,7 @@ function IsiEditor({ entri, semua }: { entri: Layanan | null; semua: Layanan[] }
             void simpan()
           }}
         >
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_21.25rem] lg:items-start">
             <fieldset disabled={terkunci} className="grid min-w-0 gap-4">
               <Bagian judul="Identitas layanan">
                 <FieldTeks control={form.control} name="nama" label="Nama layanan" wajib placeholder="Mis. Pajak tahunan" />

@@ -48,7 +48,7 @@ export default function HalamanMejaInformasi() {
     <Halaman>
       <NavAntrean />
       <PengantarHalaman deskripsi="Cetak nomor antrean setelah berkas wajib pajak dinyatakan lengkap. Tiket dua lembar: lembar 1 untuk wajib pajak, lembar 2 ditempel pada berkas. Keduanya ber-QR untuk melacak berkas." />
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_21.25rem] lg:items-start">
         <FormCetak setelahCetak={setTerakhir} />
         <TiketTerakhir tiket={terakhir} />
       </div>

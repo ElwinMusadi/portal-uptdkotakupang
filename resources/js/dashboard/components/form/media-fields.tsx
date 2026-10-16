@@ -95,7 +95,7 @@ export function IsianLogo<T extends FieldValues>({
             <div className="flex items-center gap-1">
               <span
                 className={cn(
-                  "relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full border text-[11px] font-semibold text-muted-foreground",
+                  "relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full border text-[0.6875rem] font-semibold text-muted-foreground",
                   src ? "bg-white p-1" : "bg-muted"
                 )}
               >
