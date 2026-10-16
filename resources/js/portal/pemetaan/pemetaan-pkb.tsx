@@ -37,7 +37,8 @@ interface Pemetaan {
   tanggalPenetapan?: string | null
   diperbarui?: string | null
   minimum?: number
-  kota?: Omit<AngkaWilayah, "rodaTigaLebih"> & { rodaTiga: Angka; rodaEmpat: Angka }
+  /** `rodaLain`: kendaraan yang jenisnya tidak tercatat di berkas (null bila 1–2) */
+  kota?: Omit<AngkaWilayah, "rodaTigaLebih"> & { rodaTiga: Angka; rodaEmpat: Angka; rodaLain?: Angka }
   kecamatan?: Kecamatan[]
 }
 
@@ -181,6 +182,12 @@ function PemetaanPkb() {
                 <Nilai teks={angka(kota.rodaEmpat)} />
               </dd>
             </div>
+            {!!kota.rodaLain && (
+              <div>
+                <dt>Jenis tidak tercatat</dt>
+                <dd>{angka(kota.rodaLain)}</dd>
+              </div>
+            )}
           </dl>
           <p className="pm-ringkas__catatan">
             {data.tanggalPenetapan ? `Data penetapan ${labelTanggal(data.tanggalPenetapan, "lengkap")}` : "Data sistem BPAD"} · plat putih Kota Kupang

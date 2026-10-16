@@ -9,8 +9,9 @@ use App\Models\PotentialImport;
  * Administrator has shown the data, for the whole data only, with no
  * identity. Each area (the city, each kecamatan, each kelurahan) gives its
  * vehicles, motorcycles and vehicles with three wheels or more (the city also
- * three and four wheels apart), paid up, late by less than a year and in
- * arrears, and the tax potential, the amount still due and the arrears.
+ * three and four wheels apart, and the vehicles of no recorded type), paid
+ * up, late by less than a year and in arrears, and the tax potential, the
+ * amount still due and the arrears.
  *
  * No figure describes fewer than three vehicles: such figures are hidden,
  * and so are the smallest others while a hidden one could still be worked
@@ -107,9 +108,10 @@ class BuildPublicPotentialMap
 
     /**
      * The cells of an area from its summary figures, those below the minimum
-     * hidden. Vehicles of no recorded type and of other compliance texts are
-     * not published, but they are not counted on to hide anything either:
-     * the published figures of other areas may give their number away.
+     * hidden. Vehicles of no recorded type (published for the city only) and
+     * of other compliance texts are not counted on to hide anything: they
+     * are the difference of figures already shown, so they are taken as
+     * known, and the city's are only hidden below the minimum.
      *
      * @param  array<string, mixed>  $figures
      */
@@ -121,6 +123,7 @@ class BuildPublicPotentialMap
             'rodaTigaLebih' => $figures['roda']['r3'] + $figures['roda']['r4'],
             'rodaTiga' => $figures['roda']['r3'],
             'rodaEmpat' => $figures['roda']['r4'],
+            'rodaLain' => $figures['roda']['lain'],
             'taat' => $figures['kelompok']['taat'],
             'belumBayar' => $figures['kelompok']['jatuh-tempo'] + $figures['kelompok']['terlambat'],
             'menunggak' => $figures['kelompok']['menunggak'],
@@ -380,14 +383,15 @@ class BuildPublicPotentialMap
 
     /**
      * The figures published of an area: the city gives its three and four
-     * wheels apart, the others their three-wheelers and up together.
+     * wheels apart and its vehicles of no recorded type, the others their
+     * three-wheelers and up together.
      *
      * @return list<string>
      */
     private function figures(string $area): array
     {
         return $area === 'kota'
-            ? ['kendaraan', 'rodaDua', 'rodaTiga', 'rodaEmpat', 'taat', 'belumBayar', 'menunggak', ...array_keys(self::AMOUNTS)]
+            ? ['kendaraan', 'rodaDua', 'rodaTiga', 'rodaEmpat', 'rodaLain', 'taat', 'belumBayar', 'menunggak', ...array_keys(self::AMOUNTS)]
             : [...self::COUNTS, ...array_keys(self::AMOUNTS)];
     }
 

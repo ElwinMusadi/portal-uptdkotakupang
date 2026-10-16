@@ -1105,7 +1105,7 @@ Halaman *Pemetaan PKB* portal (`/pemetaan`, `resources/js/portal/pemetaan/pemeta
   "tanggalPenetapan": "2026-10-16",
   "diperbarui": "2026-10-16T03:16:00+00:00",
   "minimum": 3,
-  "kota": { "kendaraan": 1200, "rodaDua": 1000, "rodaTiga": 5, "rodaEmpat": 195, "taat": 500, "belumBayar": 200, "menunggak": 500, "potensi": 600000000, "tagihan": 900000000, "tunggakan": 550000000 },
+  "kota": { "kendaraan": 1200, "rodaDua": 990, "rodaTiga": 5, "rodaEmpat": 195, "rodaLain": 10, "taat": 500, "belumBayar": 200, "menunggak": 500, "potensi": 600000000, "tagihan": 900000000, "tunggakan": 550000000 },
   "kecamatan": [
     {
       "kunci": "ALAK", "nama": "Alak",
@@ -1123,8 +1123,8 @@ Halaman *Pemetaan PKB* portal (`/pemetaan`, `resources/js/portal/pemetaan/pemeta
 
 | Hal | Perilaku |
 |---|---|
-| Angka | Kota: `rodaTiga` dan `rodaEmpat` terpisah; kecamatan dan kelurahan: `rodaTigaLebih` (roda tiga dan roda empat atau lebih). `belumBayar` = jatuh tempo dan terlambat kurang dari setahun; `menunggak` = menunggak setahun atau lebih. `potensi` = pokok PKB, `tagihan` = tagihan kendaraan yang belum taat, `tunggakan` = pokok dan denda tunggakan. Kecamatan urut daftar resmi; "Tanpa kelurahan" (`kunci` kosong) terakhir dan tanpa rincian kelurahan. |
-| Penyamaran | Angka yang disamarkan bernilai `null`. Angka yang menggambarkan 1–2 kendaraan disamarkan, beserta angka lain yang diperlukan agar tidak bisa dihitung balik dari total mana pun, satu per satu maupun digabung (aturan lengkap di D-052). |
+| Angka | Kota: `rodaTiga` dan `rodaEmpat` terpisah, ditambah `rodaLain` (kendaraan yang jenisnya tidak tercatat di berkas, sehingga `rodaDua` + `rodaTiga` + `rodaEmpat` + `rodaLain` = `kendaraan`); kecamatan dan kelurahan: `rodaTigaLebih` (roda tiga dan roda empat atau lebih). `belumBayar` = jatuh tempo dan terlambat kurang dari setahun; `menunggak` = menunggak setahun atau lebih. `potensi` = pokok PKB, `tagihan` = tagihan kendaraan yang belum taat, `tunggakan` = pokok dan denda tunggakan. Kecamatan urut daftar resmi; "Tanpa kelurahan" (`kunci` kosong) terakhir dan tanpa rincian kelurahan. |
+| Penyamaran | Angka yang disamarkan bernilai `null`. Angka yang menggambarkan 1–2 kendaraan disamarkan, beserta angka lain yang diperlukan agar tidak bisa dihitung balik dari total mana pun, satu per satu maupun digabung (aturan lengkap di D-052). `rodaLain` kota hanya `null` bila 1–2 dan tidak ikut penyamaran lanjutan, karena selalu sama dengan selisih kendaraan dan jenis roda yang tampil. |
 | Belum tampil | `200` `{"tersedia": false}`, juga sebelum impor pertama. |
 | Galat | `422` `query` "Parameter kueri tidak didukung." untuk parameter apa pun; `429` setelah batas API publik. |
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |

@@ -51,7 +51,7 @@ class PublicPotentialMapTest extends TestCase
             ->assertJsonPath('diperbarui', '2026-10-16T02:00:00+00:00')
             ->assertJsonPath('minimum', 3)
             ->assertJsonPath('kota', [
-                'kendaraan' => 16, 'rodaDua' => 10, 'rodaTiga' => 3, 'rodaEmpat' => 3, 'taat' => 10, 'belumBayar' => 3, 'menunggak' => 3,
+                'kendaraan' => 16, 'rodaDua' => 10, 'rodaTiga' => 3, 'rodaEmpat' => 3, 'rodaLain' => 0, 'taat' => 10, 'belumBayar' => 3, 'menunggak' => 3,
                 'potensi' => 5300000, 'tagihan' => 4530000, 'tunggakan' => 3300000,
             ])
             ->assertJsonPath('kecamatan.*.kunci', ['ALAK', 'KELAPA LIMA', ''])
@@ -88,7 +88,8 @@ class PublicPotentialMapTest extends TestCase
             'potensi' => 1400000, 'tagihan' => null, 'tunggakan' => null,
         ]);
         // Lasiana: one three-wheeler; the vehicles of no recorded type do not hide it, as other figures may give their number away
-        $response->assertJsonPath('kecamatan.0.kelurahan.0.kendaraan', 11)
+        $response->assertJsonPath('kota.rodaLain', 5)
+            ->assertJsonPath('kecamatan.0.kelurahan.0.kendaraan', 11)
             ->assertJsonPath('kecamatan.0.kelurahan.0.rodaDua', null)
             ->assertJsonPath('kecamatan.0.kelurahan.0.rodaTigaLebih', null)
             ->assertJsonPath('kecamatan.0.kelurahan.0.taat', 11);
@@ -130,6 +131,19 @@ class PublicPotentialMapTest extends TestCase
             ->assertJsonPath('kota.rodaTiga', null)
             ->assertJsonPath('kota.rodaEmpat', null)
             ->assertJsonPath('kecamatan.0.rodaTigaLebih', 5);
+    }
+
+    public function test_hides_the_city_vehicles_of_no_recorded_type_only_below_three(): void
+    {
+        $this->vehicles(10, 'OESAPA');
+        $this->vehicles(2, 'OESAPA', ['jenis' => '', 'roda' => null]);
+
+        // They are the city's vehicles less its wheel classes anyway, so nothing else is hidden for them
+        $this->map()->assertJsonPath('kota.rodaLain', null)
+            ->assertJsonPath('kota.kendaraan', 12)
+            ->assertJsonPath('kota.rodaDua', 10)
+            ->assertJsonPath('kecamatan.0.kelurahan.0.rodaDua', 10)
+            ->assertJsonMissingPath('kecamatan.0.rodaLain');
     }
 
     public function test_hides_a_kelurahan_figure_that_the_kecamatan_total_would_give_away(): void
