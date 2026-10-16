@@ -4,12 +4,14 @@
  * dari GET /api/public/pemetaan. Datanya hanya tampil setelah Administrator
  * menyalakannya, untuk seluruh data tanpa saringan, tanpa identitas wajib
  * pajak; angka yang menggambarkan kurang dari 3 kendaraan datang sebagai null
- * dan ditulis "disamarkan". Peta bersifat skematis (keputusan pemilik).
+ * dan ditulis "disamarkan". Peta memakai batas kecamatan dari geoportal
+ * (batas-kecamatan.ts); batas kelurahan menyusul bila berkas resminya ada.
  */
 import { useEffect, useState } from "react"
 import { createRoot } from "react-dom/client"
 
 import { labelTanggal } from "../penerimaan/periode"
+import { BATAS_KECAMATAN, UKURAN_PETA } from "./batas-kecamatan"
 import "./pemetaan-pkb.css"
 
 type Angka = number | null
@@ -90,16 +92,6 @@ const UKURAN: Record<Ukuran, { label: string; nilai: (a: AngkaWilayah) => number
   tagihan: { label: "Tagihan belum terbayar", nilai: (a) => a.tagihan, teks: (a) => rupiahRingkas(a.tagihan) },
 }
 
-/** Letak petak kecamatan dalam kotak 400 × 300, utara (Teluk Kupang) di atas */
-const LETAK: Record<string, { x: number; y: number; w: number; h: number }> = {
-  ALAK: { x: 8, y: 52, w: 112, h: 176 },
-  "KOTA LAMA": { x: 128, y: 30, w: 118, h: 72 },
-  "KELAPA LIMA": { x: 254, y: 20, w: 138, h: 92 },
-  "KOTA RAJA": { x: 128, y: 110, w: 100, h: 82 },
-  OEBOBO: { x: 236, y: 120, w: 156, h: 72 },
-  MAULAFA: { x: 128, y: 200, w: 264, h: 92 },
-}
-
 function PemetaanPkb() {
   const [data, setData] = useState<Pemetaan | null>(null)
   const [galat, setGalat] = useState<string | null>(null)
@@ -151,7 +143,9 @@ function PemetaanPkb() {
   const wilayah = data.kecamatan
   const dipilih = wilayah.find((k) => k.kunci === pilih) ?? null
   const u = UKURAN[ukuran]
-  const nilai = wilayah.filter((k) => LETAK[k.kunci]).map((k) => u.nilai(k)).filter((v): v is number => v !== null)
+  // Kecamatan di peta, yang dipilih terakhir agar garis tepinya tidak tertutup tetangganya
+  const peta = wilayah.filter((k) => BATAS_KECAMATAN[k.kunci]).sort((a, b) => Number(a.kunci === pilih) - Number(b.kunci === pilih))
+  const nilai = peta.map((k) => u.nilai(k)).filter((v): v is number => v !== null)
   const [terendah, tertinggi] = [Math.min(...nilai), Math.max(...nilai)]
   const skala = (v: number | null) => (v === null ? null : tertinggi > terendah ? (v - terendah) / (tertinggi - terendah) : 0.5)
 
@@ -217,52 +211,52 @@ function PemetaanPkb() {
             </button>
           ))}
         </div>
-        <svg viewBox="0 0 400 300" className="pm-peta__svg" role="group" aria-label="Peta skematis kecamatan Kota Kupang">
-          <text x="200" y="12" textAnchor="middle" className="pm-peta__laut">
-            Teluk Kupang (utara)
+        <svg viewBox={`0 0 ${UKURAN_PETA.lebar} ${UKURAN_PETA.tinggi}`} className="pm-peta__svg" role="group" aria-label="Peta kecamatan Kota Kupang">
+          <text x={UKURAN_PETA.laut[0]} y={UKURAN_PETA.laut[1]} textAnchor="middle" className="pm-peta__laut">
+            Teluk Kupang
           </text>
-          {wilayah
-            .filter((k) => LETAK[k.kunci])
-            .map((k) => {
-              const l = LETAK[k.kunci]
-              const s = skala(u.nilai(k))
-              const aktif = pilih === k.kunci
-              const teks = u.teks(k)
-              const gelap = s !== null && s > 0.55
-              return (
-                <g
-                  key={k.kunci}
-                  role="button"
-                  tabIndex={0}
-                  aria-pressed={aktif}
-                  aria-label={`${k.nama}: ${teks ?? "disamarkan"}`}
-                  className="pm-peta__petak"
-                  onClick={() => setPilih(aktif ? null : k.kunci)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault()
-                      setPilih(aktif ? null : k.kunci)
-                    }
-                  }}
-                >
-                  <rect
-                    x={l.x}
-                    y={l.y}
-                    width={l.w}
-                    height={l.h}
-                    rx={10}
-                    className={aktif ? "is-aktif" : undefined}
-                    style={{ fill: s === null ? "var(--paper-2)" : `color-mix(in oklab, var(--danger) ${Math.round(8 + s * 62)}%, var(--surface))` }}
-                  />
-                  <text x={l.x + l.w / 2} y={l.y + l.h / 2} dy="-0.3em" textAnchor="middle" className={gelap ? "pm-peta__nama is-gelap" : "pm-peta__nama"}>
-                    {k.nama}
-                  </text>
-                  <text x={l.x + l.w / 2} y={l.y + l.h / 2} dy="1.1em" textAnchor="middle" className={gelap ? "pm-peta__nilai is-gelap" : "pm-peta__nilai"}>
-                    {teks ?? "disamarkan"}
-                  </text>
-                </g>
-              )
-            })}
+          {peta.map((k) => {
+            const s = skala(u.nilai(k))
+            const aktif = pilih === k.kunci
+            return (
+              <g
+                key={k.kunci}
+                role="button"
+                tabIndex={0}
+                aria-pressed={aktif}
+                aria-label={`${k.nama}: ${u.teks(k) ?? "disamarkan"}`}
+                className="pm-peta__petak"
+                onClick={() => setPilih(aktif ? null : k.kunci)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault()
+                    setPilih(aktif ? null : k.kunci)
+                  }
+                }}
+              >
+                <path
+                  d={BATAS_KECAMATAN[k.kunci].jalur}
+                  className={aktif ? "is-aktif" : undefined}
+                  style={{ fill: s === null ? "var(--paper-2)" : `color-mix(in oklab, var(--danger) ${Math.round(8 + s * 62)}%, var(--surface))` }}
+                />
+              </g>
+            )
+          })}
+          {peta.map((k) => {
+            const { label, luar } = BATAS_KECAMATAN[k.kunci]
+            const [x, y] = luar ?? label
+            return (
+              <g key={k.kunci} className="pm-peta__label" aria-hidden="true">
+                {luar && <line x1={luar[0]} y1={luar[1] + 17} x2={label[0]} y2={label[1]} className="pm-peta__garis" />}
+                <text x={x} y={y} dy="-0.3em" textAnchor="middle" className="pm-peta__nama">
+                  {k.nama}
+                </text>
+                <text x={x} y={y} dy="1.1em" textAnchor="middle" className="pm-peta__nilai">
+                  {u.teks(k) ?? "disamarkan"}
+                </text>
+              </g>
+            )
+          })}
         </svg>
         <p className="micro muted pm-peta__legenda">
           <span>{u.label} per kecamatan:</span>

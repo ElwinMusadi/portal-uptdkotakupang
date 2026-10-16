@@ -323,6 +323,8 @@ class PortalPagesTest extends TestCase
         $this->assertStringContainsString('<script type="module" src="skrip/portal"></script>', $html);
         // The masking rule is stated on the page, whatever the component shows (D-052)
         $this->assertStringContainsString('Angka yang menggambarkan kurang dari 3 kendaraan disamarkan, bersama angka terkecil lain bila angkanya masih dapat dihitung dari total.', $html);
+        // The map's boundaries are credited to their source
+        $this->assertStringContainsString('Batas kecamatan pada peta dari geodatabase batas desa/kelurahan edisi Mei 2021 (Badan Informasi Geospasial, lewat geoportal Kementerian Pertanian)', $html);
     }
 
     #[DataProvider('pagesWithHeader')]

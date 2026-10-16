@@ -5,7 +5,7 @@ import { toast } from "sonner"
 
 import { useKonfirmasi } from "@/components/data/confirm"
 import { Halaman, PengantarHalaman } from "@/components/data/page"
-import { PetaSkematis, type PetakKecamatan } from "@/components/pemetaan/peta-skematis"
+import { PetaKecamatan, type PetakKecamatan } from "@/components/pemetaan/peta-kecamatan"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -47,8 +47,8 @@ import {
 
 /*
  * Pemetaan PKB (D-052): potensi dan kepatuhan pajak kendaraan Kota Kupang
- * dari berkas Data Potensi BPAD. Ringkasan dengan peta skematis per
- * kecamatan dan tabel per kelurahan, serta daftar sasaran penagihan dengan
+ * dari berkas Data Potensi BPAD. Ringkasan dengan peta batas kecamatan,
+ * tabel per kecamatan dan kelurahan, serta daftar sasaran penagihan dengan
  * identitas wajib pajak (keputusan pemilik). Impor baru menggantikan data
  * sebelumnya.
  */
@@ -256,7 +256,7 @@ function TabRingkasan() {
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
-          <PetaSkematis petak={petak} dipilih={kecamatan} pilih={setKecamatan} judulSkala={m.label} />
+          <PetaKecamatan petak={petak} dipilih={kecamatan} pilih={setKecamatan} judulSkala={m.label} />
         </CardContent>
       </Card>
 

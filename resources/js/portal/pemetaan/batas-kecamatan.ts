@@ -1,0 +1,25 @@
+/*
+ * Batas enam kecamatan Kota Kupang untuk peta Pemetaan PKB di portal dan
+ * dashboard (D-052). Sumber: geodatabase batas desa/kelurahan edisi Mei 2021
+ * (BIG bersama pemerintah daerah), layanan Batas_Administrasi geoportal
+ * Kementerian Pertanian. Batasnya sudah disederhanakan dan belum mengikuti
+ * batas kota yang definitif. Dibuat oleh `node scripts/batas-kecamatan.mjs`;
+ * jangan diubah dengan tangan.
+ */
+
+/** Ukuran kotak peta (utara di atas) dan letak tulisan Teluk Kupang */
+export const UKURAN_PETA = { lebar: 400, tinggi: 454, laut: [62, 48] } as const
+
+/**
+ * Per kecamatan: jalur SVG dan titik label di bagian terlebarnya; `luar`
+ * untuk kecamatan yang terlalu sempit, tulisannya di laut dengan garis ke
+ * titik label
+ */
+export const BATAS_KECAMATAN: Record<string, { jalur: string; label: [number, number]; luar?: [number, number] }> = {
+  "ALAK": { jalur: "M126 118.4L93.5 145.3L65.7 135.2L22 153.3L8 185.8L15.7 217.4L13.2 239.9L25.7 234.8L54.3 250.2L81.3 282.8L103.9 280.1L123.2 259.7L121.4 272.8L135.7 268.5L115.3 330.5L141.1 374.2L149.9 435.5L174.9 429.9L190.5 436.4L192.9 445L203.1 440.8L218.6 445.7L234.4 433.9L252.6 431.4L230.1 401.7L220.9 366L202.6 353.6L181.2 303.9L150.5 264.4L176.9 228.3L189.5 226.4L183.1 215.5L155.9 206.5L137.1 189L137.7 169.7L150.2 153L140.1 136.2L133.4 140.2Z", label: [80.7, 200.2] },
+  "KELAPA LIMA": { jalur: "M373.6 43.8L367.3 24L354.9 45.3L331.8 50.1L310.2 77.8L269.5 73.3L260 65.8L237.3 68.6L209.9 83.6L219.3 114.9L251.5 104.7L275.1 106L278.6 100.6L293.6 119.2L327.8 120.9L330.1 105.5L360.7 105.7L366.3 95.5L388.2 89L383.3 84.9L392 63.9L383.4 62.6Z", label: [347, 75.5] },
+  "KOTA LAMA": { jalur: "M210.7 86.1L175.8 100.1L166.1 99.7L167.9 94.1L158 105.5L142.5 106.9L126.5 120.1L134.3 141.4L139 132.7L131.3 122.9L174.1 120.5L180.2 112.8L198.1 111.3L213.7 100.4Z", label: [167.9, 110.3], luar: [165, 52] },
+  "KOTA RAJA": { jalur: "M138.6 124.5L131.3 122.9L150.2 153L137.7 169.7L136.4 187.6L155.9 206.5L183.1 215.5L181.9 183.8L202.2 161.5L207.4 168.2L215.6 159.3L203 150.3L195.3 156.8L178.3 135.4L155.1 139.3L147.2 132.4L152.7 124.6Z", label: [159.9, 178.2] },
+  "MAULAFA": { jalur: "M327.3 132.4L318.6 147L291.1 151.9L267.6 171.2L229.3 162.9L220.5 169.7L215.6 160.6L207.4 168.2L202.2 161.5L181.7 184.6L189.3 227.3L176.9 228.3L150.5 264.4L181.2 303.9L202.6 353.6L220.9 366L230.1 401.7L252.6 431.4L260.9 426.6L283.5 324.9L262.3 317.2L239.6 300.9L237.9 292.2L269.8 277.9L283.5 267.6L284.6 258.6L346.7 286L356.7 279.6L357.1 270.1L342.9 266.7L322.5 234.6L318.6 209.6L290.7 204.1L284.3 210.5L278.2 201.4L268.1 200.7L303.4 184.1L309.7 170.7L329.5 169.7L338.6 177.5L376.3 146.4L324.1 144.8Z", label: [236.8, 238.9] },
+  "OEBOBO": { jalur: "M218.4 112.7L213.7 100.4L174.1 120.5L145.6 123.2L152.7 124.6L147.2 132.4L155.1 139.3L178.3 135.4L195.3 156.8L203 150.3L220.5 169.7L229.3 162.9L266.6 171.4L291.1 151.9L318.6 147L327.9 132.4L327.8 120.9L293.6 119.2L278.6 100.6L275.1 106Z", label: [259.5, 138.2] },
+}

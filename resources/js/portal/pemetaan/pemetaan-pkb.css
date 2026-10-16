@@ -40,17 +40,21 @@
 .pm-bagian__kepala { display: grid; gap: 4px; }
 .pm-bagian__judul { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
 
-/* Peta skematis */
+/* Peta kecamatan (batas dari geoportal, batas-kecamatan.ts) */
 .pm-peta { display: grid; gap: 16px; container-type: inline-size; }
-.pm-peta__svg { width: 100%; max-width: 620px; height: auto; }
-.pm-peta__laut { font-size: 9px; fill: var(--text-2); }
+.pm-peta__svg { width: 100%; max-width: 480px; height: auto; }
+.pm-peta__laut { font-size: 11px; font-style: italic; fill: var(--text-2); }
 .pm-peta__petak { cursor: pointer; outline: none; }
-.pm-peta__petak rect { stroke: var(--line-2); stroke-width: 1; transition: stroke-width var(--dur-1) var(--ease); }
-.pm-peta__petak rect.is-aktif { stroke: var(--ink); stroke-width: 3; }
-.pm-peta__petak:focus-visible rect { stroke: var(--accent); stroke-width: 3; }
+/* Garis batas sewarna latar menutupi celah kecil batas yang disederhanakan */
+.pm-peta__petak path { stroke: var(--surface); stroke-width: 1.5; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.pm-peta__petak path.is-aktif { stroke: var(--ink); stroke-width: 2.5; }
+.pm-peta__petak:focus-visible path { stroke: var(--accent); stroke-width: 3; }
+.pm-peta__label { pointer-events: none; }
+/* Tulisan bertepi latar agar tetap terbaca di atas warna apa pun dan saat melewati batas */
+.pm-peta__nama, .pm-peta__nilai { paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; }
 .pm-peta__nama { font-size: 12px; font-weight: 600; fill: var(--ink); }
 .pm-peta__nilai { font-size: 11px; fill: var(--text-2); }
-.pm-peta__nama.is-gelap, .pm-peta__nilai.is-gelap { fill: #fff; }
+.pm-peta__garis { stroke: var(--ink); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .pm-peta__legenda { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
 .pm-peta__rentang { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
 /* Peta mengecil bersama kartunya: di kartu sempit (ponsel) hurufnya dibesarkan agar tetap ±11–12 px */

@@ -1,10 +1,12 @@
 import { cn } from "@/lib/utils"
 
+import { BATAS_KECAMATAN, UKURAN_PETA } from "../../../portal/pemetaan/batas-kecamatan"
+
 /*
- * Peta skematis Kota Kupang (D-052): enam kecamatan sebagai petak yang
- * letaknya kira-kira mengikuti peta (laut di utara, Alak di barat, Kelapa
- * Lima di timur laut, Maulafa di selatan). Bukan batas wilayah sebenarnya;
- * diganti peta batas resmi bila berkasnya tersedia (keputusan pemilik).
+ * Peta kecamatan Kota Kupang (D-052) dengan batas dari geoportal
+ * (portal/pemetaan/batas-kecamatan.ts, yang juga dipakai peta portal).
+ * Batasnya disederhanakan dan belum mengikuti batas kota yang definitif;
+ * batas kelurahan menyusul bila berkas resminya ada.
  */
 
 export interface PetakKecamatan {
@@ -12,21 +14,11 @@ export interface PetakKecamatan {
   nama: string
   /** Nilai 0–1 yang menentukan kepekatan warna */
   skala: number
-  /** Teks nilai di dalam petak */
+  /** Teks nilai pada label kecamatan */
   label: string
 }
 
-/** Letak petak dalam kotak 400 × 300, utara di atas */
-const LETAK: Record<string, { x: number; y: number; w: number; h: number }> = {
-  ALAK: { x: 8, y: 52, w: 112, h: 176 },
-  "KOTA LAMA": { x: 128, y: 30, w: 118, h: 72 },
-  "KELAPA LIMA": { x: 254, y: 20, w: 138, h: 92 },
-  "KOTA RAJA": { x: 128, y: 110, w: 100, h: 82 },
-  OEBOBO: { x: 236, y: 120, w: 156, h: 72 },
-  MAULAFA: { x: 128, y: 200, w: 264, h: 92 },
-}
-
-export function PetaSkematis({
+export function PetaKecamatan({
   petak,
   dipilih,
   pilih,
@@ -37,15 +29,18 @@ export function PetaSkematis({
   pilih: (kunci: string | null) => void
   judulSkala: string
 }) {
+  // Kecamatan yang dipilih digambar terakhir agar garis tepinya tidak tertutup tetangganya
+  const peta = petak.filter((p) => BATAS_KECAMATAN[p.kunci]).sort((a, b) => Number(a.kunci === dipilih) - Number(b.kunci === dipilih))
+  // Tulisan bertepi latar agar tetap terbaca di atas warna apa pun dan saat melewati batas
+  const tulisan = "stroke-card [stroke-width:3px] [stroke-linejoin:round] [paint-order:stroke]"
+
   return (
     <figure className="grid gap-2">
-      <svg viewBox="0 0 400 300" className="w-full max-w-xl" role="group" aria-label="Peta skematis kecamatan Kota Kupang">
-        <text x="200" y="12" textAnchor="middle" className="fill-muted-foreground text-[9px]">
-          Teluk Kupang (utara)
+      <svg viewBox={`0 0 ${UKURAN_PETA.lebar} ${UKURAN_PETA.tinggi}`} className="w-full max-w-md" role="group" aria-label="Peta kecamatan Kota Kupang">
+        <text x={UKURAN_PETA.laut[0]} y={UKURAN_PETA.laut[1]} textAnchor="middle" className="fill-muted-foreground text-[11px] italic">
+          Teluk Kupang
         </text>
-        {petak.map((p) => {
-          const l = LETAK[p.kunci]
-          if (!l) return null
+        {peta.map((p) => {
           const aktif = dipilih === p.kunci
           return (
             <g
@@ -54,7 +49,7 @@ export function PetaSkematis({
               tabIndex={0}
               aria-pressed={aktif}
               aria-label={`${p.nama}: ${p.label}`}
-              className="cursor-pointer outline-none focus-visible:[&>rect]:stroke-ring"
+              className="cursor-pointer outline-none focus-visible:[&>path]:stroke-ring focus-visible:[&>path]:[stroke-width:3]"
               onClick={() => pilih(aktif ? null : p.kunci)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
@@ -63,19 +58,24 @@ export function PetaSkematis({
                 }
               }}
             >
-              <rect
-                x={l.x}
-                y={l.y}
-                width={l.w}
-                height={l.h}
-                rx={10}
+              <path
+                d={BATAS_KECAMATAN[p.kunci].jalur}
                 style={{ fill: `color-mix(in oklab, var(--destructive) ${Math.round(8 + p.skala * 62)}%, var(--card))` }}
-                className={cn("stroke-border transition-[stroke-width]", aktif ? "stroke-foreground [stroke-width:3]" : "[stroke-width:1]")}
+                className={cn("[stroke-linejoin:round] [vector-effect:non-scaling-stroke]", aktif ? "stroke-foreground [stroke-width:2.5]" : "stroke-card [stroke-width:1.5]")}
               />
-              <text x={l.x + l.w / 2} y={l.y + l.h / 2 - 4} textAnchor="middle" className={cn("text-[12px] font-semibold", p.skala > 0.55 ? "fill-white" : "fill-foreground")}>
+            </g>
+          )
+        })}
+        {peta.map((p) => {
+          const { label, luar } = BATAS_KECAMATAN[p.kunci]
+          const [x, y] = luar ?? label
+          return (
+            <g key={p.kunci} aria-hidden="true" className="pointer-events-none">
+              {luar && <line x1={luar[0]} y1={luar[1] + 17} x2={label[0]} y2={label[1]} className="stroke-foreground [stroke-width:1] [vector-effect:non-scaling-stroke]" />}
+              <text x={x} y={y} dy="-0.3em" textAnchor="middle" className={cn("fill-foreground text-[12px] font-semibold", tulisan)}>
                 {p.nama}
               </text>
-              <text x={l.x + l.w / 2} y={l.y + l.h / 2 + 13} textAnchor="middle" className={cn("text-[11px]", p.skala > 0.55 ? "fill-white" : "fill-muted-foreground")}>
+              <text x={x} y={y} dy="1.1em" textAnchor="middle" className={cn("fill-muted-foreground text-[11px]", tulisan)}>
                 {p.label}
               </text>
             </g>
@@ -83,14 +83,19 @@ export function PetaSkematis({
         })}
       </svg>
       <figcaption className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        <span>{judulSkala}: terendah</span>
-        <span
-          aria-hidden="true"
-          className="h-2 w-24 rounded-full"
-          style={{ background: "linear-gradient(to right, color-mix(in oklab, var(--destructive) 8%, var(--card)), color-mix(in oklab, var(--destructive) 70%, var(--card)))" }}
-        />
-        <span>tertinggi di antara kecamatan.</span>
-        <span>Peta skematis: letak kecamatan disederhanakan, bukan batas wilayah sebenarnya. Pilih kecamatan untuk melihat kelurahannya.</span>
+        <span>{judulSkala} per kecamatan:</span>
+        <span className="inline-flex items-center gap-2 whitespace-nowrap">
+          terendah
+          <span
+            aria-hidden="true"
+            className="h-2 w-24 rounded-full"
+            style={{ background: "linear-gradient(to right, color-mix(in oklab, var(--destructive) 8%, var(--card)), color-mix(in oklab, var(--destructive) 70%, var(--card)))" }}
+          />
+          tertinggi
+        </span>
+        <span>
+          Batas kecamatan: geodatabase batas desa/kelurahan edisi Mei 2021 (BIG, lewat geoportal Kementerian Pertanian), disederhanakan dan belum mengikuti batas kota yang definitif. Pilih kecamatan untuk melihat kelurahannya.
+        </span>
       </figcaption>
     </figure>
   )
