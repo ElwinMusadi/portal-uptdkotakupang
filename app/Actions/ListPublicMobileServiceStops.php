@@ -5,6 +5,7 @@ namespace App\Actions;
 use App\Enums\ServicePointKind;
 use App\Exceptions\PublicContentUnavailableException;
 use App\Models\MobileServiceStop;
+use App\Models\ServiceBoardOrder;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -26,7 +27,8 @@ class ListPublicMobileServiceStops
     /**
      * Build the public schedule of service outside the office (D-043) from
      * the active entries, without internal fields: "jadwal" lists what is
-     * served on each date from today (WITA) to the Sunday of next week,
+     * served on each date from today (WITA) to the Sunday of next week, by
+     * time, each with its place on that date's homepage board (D-053),
      * "gerai" the fixed outlets that have not closed and "sementara" the
      * temporary counters that have not ended. A source that cannot be read
      * fails the request instead of returning an empty schedule.
@@ -49,6 +51,12 @@ class ListPublicMobileServiceStops
                 ->orderBy('selesai')
                 ->orderBy('id')
                 ->get();
+            $boardOrders = ServiceBoardOrder::query()
+                ->whereDate('tanggal', '>=', $today->toDateString())
+                ->whereDate('tanggal', '<=', $until->toDateString())
+                ->get()
+                ->mapWithKeys(fn (ServiceBoardOrder $order): array => [$order->tanggal => array_flip($order->urutan)])
+                ->all();
         } catch (QueryException $exception) {
             throw new PublicContentUnavailableException('The schedule of service outside the office could not be read.', previous: $exception);
         }
@@ -56,7 +64,7 @@ class ListPublicMobileServiceStops
         return [
             'dari' => $today->toDateString(),
             'sampai' => $until->toDateString(),
-            'jadwal' => $this->dates($entries, $today, $until),
+            'jadwal' => $this->dates($entries, $boardOrders, $today, $until),
             'gerai' => $this->ranges($entries, ServicePointKind::Gerai),
             'sementara' => $this->ranges($entries, ServicePointKind::Sementara),
         ];
@@ -66,29 +74,55 @@ class ListPublicMobileServiceStops
      * Every entry on every date it is served between the two days.
      *
      * @param  Collection<int, MobileServiceStop>  $entries
+     * @param  array<string, array<string, int>>  $boardOrders  each date's position of the listed entry IDs
      * @return list<array<string, mixed>>
      */
-    private function dates(Collection $entries, Carbon $from, Carbon $until): array
+    private function dates(Collection $entries, array $boardOrders, Carbon $from, Carbon $until): array
     {
         $served = [];
 
         for ($date = $from->copy(); $date->lte($until); $date->addDay()) {
+            $positions = $boardOrders[$date->toDateString()] ?? [];
+            $day = [];
+
             foreach ($entries as $entry) {
                 if ($entry->occursOn($date)) {
-                    $served[] = [
+                    $day[] = [
                         'tanggal' => $date->toDateString(),
                         'jenis' => $entry->jenis->value,
                         'nama' => $entry->name(),
                         ...$this->details($entry),
+                        'urutanPapan' => $positions[$entry->id] ?? null,
                     ];
                 }
             }
+
+            $served = [...$served, ...$this->ranked($day)];
         }
 
         usort($served, fn (array $a, array $b): int => [$a['tanggal'], $a['mulai'], $a['selesai'], self::KIND_ORDER[$a['jenis']], $a['nama'], $a['lokasi']]
             <=> [$b['tanggal'], $b['mulai'], $b['selesai'], self::KIND_ORDER[$b['jenis']], $b['nama'], $b['lokasi']]);
 
         return $served;
+    }
+
+    /**
+     * Number one date's listed entries 1, 2, 3… in their board order, so a
+     * listed entry that is not shown leaves no gap; the others stay null.
+     *
+     * @param  list<array<string, mixed>>  $day
+     * @return list<array<string, mixed>>
+     */
+    private function ranked(array $day): array
+    {
+        $positions = array_values(array_filter(array_column($day, 'urutanPapan'), fn (?int $position): bool => $position !== null));
+        sort($positions);
+        $ranks = array_flip($positions);
+
+        return array_map(fn (array $item): array => [
+            ...$item,
+            'urutanPapan' => $item['urutanPapan'] === null ? null : $ranks[$item['urutanPapan']] + 1,
+        ], $day);
     }
 
     /**

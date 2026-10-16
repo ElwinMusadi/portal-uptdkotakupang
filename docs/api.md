@@ -41,6 +41,8 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `POST` | `/api/koleksi/keliling/hapus` | Administrator, pengelola Layanan Luar Kantor | tersedia |
 | `POST` | `/api/koleksi/keliling/salin-minggu` | Administrator, pengelola Layanan Luar Kantor | tersedia |
 | `POST` | `/api/koleksi/keliling/salin-hari` | Administrator, pengelola Layanan Luar Kantor | tersedia |
+| `GET` | `/api/koleksi/keliling/urutan-papan` | Administrator, pengelola Layanan Luar Kantor, pengelola Jadwal Pemutakhiran | tersedia |
+| `PUT` | `/api/koleksi/keliling/urutan-papan/{tanggal}` | Administrator, pengelola Layanan Luar Kantor | tersedia |
 | `GET`, `POST` | `/api/koleksi/lokasi` | Administrator, pengelola Layanan Luar Kantor | tersedia |
 | `GET`, `PATCH` | `/api/koleksi/lokasi/{id}` | Administrator, pengelola Layanan Luar Kantor | tersedia |
 | `POST` | `/api/koleksi/lokasi/hapus` | Administrator, pengelola Layanan Luar Kantor | tersedia |
@@ -214,7 +216,7 @@ Kode: `app/Http/Controllers/Dashboard/`, `app/Http/Requests/Dashboard/`, `app/Po
 
 ## Layanan Luar Kantor di dashboard
 
-Dipakai halaman *Layanan Luar Kantor* di dashboard ([D-013](decisions.md#d-013--2026-10-13--samsat-keliling-tersimpan-di-server-batas-laju-api-publik-300), [D-043](decisions.md#d-043--2026-10-15--layanan-luar-kantor-tiga-unit-samsat-keliling-gerai-tetap-dan-loket-sementara)): Samsat Keliling per tanggal, gerai tetap, dan loket sementara dalam satu koleksi. Tamu mendapat `401`; pegawai yang tidak mengelola modul `keliling` mendapat `403` `{"message": "Modul Layanan Luar Kantor belum ditugaskan kepada Anda."}`. Pengelola Jadwal Pemutakhiran boleh memakai `GET /api/koleksi/keliling` saja.
+Dipakai halaman *Layanan Luar Kantor* di dashboard ([D-013](decisions.md#d-013--2026-10-13--samsat-keliling-tersimpan-di-server-batas-laju-api-publik-300), [D-043](decisions.md#d-043--2026-10-15--layanan-luar-kantor-tiga-unit-samsat-keliling-gerai-tetap-dan-loket-sementara)): Samsat Keliling per tanggal, gerai tetap, dan loket sementara dalam satu koleksi. Tamu mendapat `401`; pegawai yang tidak mengelola modul `keliling` mendapat `403` `{"message": "Modul Layanan Luar Kantor belum ditugaskan kepada Anda."}`. Pengelola Jadwal Pemutakhiran boleh memakai `GET /api/koleksi/keliling` dan `GET /api/koleksi/keliling/urutan-papan` saja.
 
 Data jadwal:
 
@@ -230,6 +232,8 @@ Data jadwal:
 | `PATCH /api/koleksi/keliling/{id}` | sebagian dari isian | `200` data jadwal. Jadwal diperiksa utuh: isian yang dikirim di atas isian yang tersimpan. |
 | `POST /api/koleksi/keliling/hapus` | `{"ids": ["…"]}` | `204`. ID yang sudah tidak ada dilewati. |
 | `POST /api/koleksi/keliling/salin-hari` | `{"dari": "2026-10-19", "ke": ["2026-10-20", "2026-10-21"]}` | `200` daftar salinan ([D-044](decisions.md#d-044--2026-10-15--daftar-lokasi-dan-salin-jadwal-per-hari)): semua jadwal Samsat Keliling bertanggal `dari` disalin ke setiap tanggal `ke` (urut tanggal) dengan `aktif` sama seperti jadwal asalnya. Jadwal yang sudah ada di sana untuk unit, tanggal, jam mulai, dan lokasi yang sama dilewati; `[]` bila tidak ada yang disalin. `422` bila `dari` atau salah satu `ke` bukan tanggal, `ke` kosong, berulang, sama dengan `dari`, atau lebih dari 14 tanggal. |
+| `GET /api/koleksi/keliling/urutan-papan` | — | `200` `[{"tanggal": "2026-10-17", "urutan": ["01m4…", "01m5…"]}]`: urutan papan Beranda ([D-053](decisions.md#d-053--2026-10-16--urutan-di-luar-kantor-hari-ini-di-papan-beranda)) mulai hari ini (WITA), urut tanggal. Tanggal tanpa urutan tidak tercantum. |
+| `PUT /api/koleksi/keliling/urutan-papan/{tanggal}` | `{"ids": ["…"]}` | `200` `{"tanggal", "urutan"}`: entri yang disebut tampil lebih dulu di papan Beranda pada tanggal itu, sesuai urutan daftar; entri lain hari itu menyusul urut jam. Daftar kosong menghapus urutan tanggal itu (kembali urut jam). Jadwalnya sendiri tidak berubah, dan halaman Jadwal tetap urut jam. `422` bila `tanggal` bukan `YYYY-MM-DD` atau sebelum hari ini (WITA); `ids` tidak dikirim, bukan daftar, lebih dari 200, berulang, atau bukan ULID; atau ada entri yang sudah tidak ada atau tidak dilayani pada tanggal itu (yang belum aktif boleh). |
 | `POST /api/koleksi/keliling/salin-minggu` | `{"dari": "2026-10-12"}` (Senin) | `200` daftar salinan: jadwal Samsat Keliling bertanggal Senin–Minggu itu disalin ke hari yang sama minggu berikutnya dengan `aktif` `false`. Jadwal yang sudah ada di sana untuk unit, tanggal, jam mulai, dan lokasi yang sama dilewati; `[]` bila tidak ada yang disalin. `422` bila `dari` bukan tanggal Senin. |
 
 Aturan isian (`422` dengan pesan per isian):
@@ -239,7 +243,7 @@ Aturan isian (`422` dengan pesan per isian):
 - **gerai**: `nama` (maks. 120) dan `hari` (daftar 0–6, 0 = Minggu, tanpa pengulangan) wajib; `tanggalMulai` dan `tanggalSelesai` boleh `null`. `unit` selalu `null`.
 - **sementara**: `nama`, `hari`, `tanggalMulai`, dan `tanggalSelesai` wajib; selesai tidak sebelum mulai, rentangnya kurang dari 366 hari, dan minimal satu hari terpilih jatuh di antaranya. `unit` selalu `null`.
 
-Log aktivitas memakai aksi `menambahkan`, `memperbarui`, `menghapus`, dan `menyalin`, dengan target seperti "Samsat Keliling 01 · Sabtu, 2026-10-17 · CFD Eltari", "Samsat Corner · Lippo Plaza Kupang", "3 jadwal Samsat Keliling ke minggu 2026-10-19", atau "4 jadwal Samsat Keliling dari 2026-10-19".
+Log aktivitas memakai aksi `menambahkan`, `memperbarui`, `menghapus`, `menyalin`, dan `mengubah urutan`, dengan target seperti "Samsat Keliling 01 · Sabtu, 2026-10-17 · CFD Eltari", "Samsat Corner · Lippo Plaza Kupang", "3 jadwal Samsat Keliling ke minggu 2026-10-19", "4 jadwal Samsat Keliling dari 2026-10-19", "3 entri papan Beranda 2026-10-17", atau "papan Beranda 2026-10-17 kembali urut jam".
 
 Lokasi yang dikirim saat menambah jadwal, atau saat lokasinya diubah, masuk daftar lokasi bila belum ada (tanpa membedakan huruf besar dan kecil), dengan kecamatan jadwal itu dan log "menambahkan Lokasi …" ([D-044](decisions.md#d-044--2026-10-15--daftar-lokasi-dan-salin-jadwal-per-hari)).
 
@@ -975,7 +979,7 @@ Jadwal layanan di luar kantor untuk portal publik ([D-043](decisions.md#d-043--2
 {
   "dari": "2026-10-15", "sampai": "2026-10-25",
   "jadwal": [
-    { "tanggal": "2026-10-17", "jenis": "keliling", "nama": "Samsat Keliling 01", "mulai": "06:00", "selesai": "09:00", "lokasi": "CFD Eltari", "kecamatan": "Kec. Oebobo", "layanan": "Pajak tahunan", "catatan": "" }
+    { "tanggal": "2026-10-17", "jenis": "keliling", "nama": "Samsat Keliling 01", "mulai": "06:00", "selesai": "09:00", "lokasi": "CFD Eltari", "kecamatan": "Kec. Oebobo", "layanan": "Pajak tahunan", "catatan": "", "urutanPapan": null }
   ],
   "gerai": [
     { "nama": "Samsat Corner", "tanggalMulai": null, "tanggalSelesai": null, "hari": [1, 2, 3, 4, 5], "mulai": "10:00", "selesai": "17:00", "lokasi": "Lippo Plaza Kupang", "kecamatan": "Kec. Oebobo", "layanan": "Pajak tahunan", "catatan": "" }
@@ -988,7 +992,7 @@ Jadwal layanan di luar kantor untuk portal publik ([D-043](decisions.md#d-043--2
 
 | Hal | Perilaku |
 |---|---|
-| Berhasil | `200`, jadwal `aktif` saja. `dari` adalah hari ini (WITA) dan `sampai` Minggu pekan depan. `jadwal` berisi setiap jenis pada setiap tanggal ia melayani di rentang itu, urut tanggal, jam mulai, jam selesai, jenis (Samsat Keliling, loket sementara, gerai), dan nama; `nama` Samsat Keliling berbentuk "Samsat Keliling 01". `gerai` dan `sementara` berisi gerai dan loket yang belum berakhir beserta hari dan tanggalnya. Daftar kosong bila tidak ada. Tanpa ID, `aktif`, `urutan`, atau waktu simpan. Teks dikirim persis seperti tersimpan dan wajib ditampilkan sebagai teks polos. |
+| Berhasil | `200`, jadwal `aktif` saja. `dari` adalah hari ini (WITA) dan `sampai` Minggu pekan depan. `jadwal` berisi setiap jenis pada setiap tanggal ia melayani di rentang itu, urut tanggal, jam mulai, jam selesai, jenis (Samsat Keliling, loket sementara, gerai), dan nama; `nama` Samsat Keliling berbentuk "Samsat Keliling 01". `urutanPapan` adalah tempatnya di papan Beranda pada tanggal itu (1 = paling atas) menurut urutan dari dashboard ([D-053](decisions.md#d-053--2026-10-16--urutan-di-luar-kantor-hari-ini-di-papan-beranda)), bernomor 1, 2, 3… di antara yang tampil, atau `null` bila tidak diurutkan; urutan `jadwal` sendiri tetap urut jam. `gerai` dan `sementara` berisi gerai dan loket yang belum berakhir beserta hari dan tanggalnya. Daftar kosong bila tidak ada. Tanpa ID, `aktif`, `urutan`, atau waktu simpan. Teks dikirim persis seperti tersimpan dan wajib ditampilkan sebagai teks polos. |
 | Galat | `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah batas laju yang sama dengan `GET /api/public/faq`; `503` bila tabel tidak bisa dibaca, tidak pernah daftar kosong sebagai gantinya. |
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Exceptions\PublicContentUnavailableException;
 use App\Models\MobileServiceStop;
+use App\Models\ServiceBoardOrder;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -55,6 +56,7 @@ class PublicMobileServiceStopControllerTest extends TestCase
                 'kecamatan' => 'Kec. Oebobo',
                 'layanan' => 'Pajak tahunan',
                 'catatan' => 'Bawa STNK.',
+                'urutanPapan' => null,
             ])
             ->assertJsonPath('gerai', [[
                 'nama' => 'Samsat Corner',
@@ -102,6 +104,35 @@ class PublicMobileServiceStopControllerTest extends TestCase
         );
     }
 
+    public function test_numbers_each_dates_board_order_without_changing_the_time_order(): void
+    {
+        // Wednesday 14 October 2026 in Kupang
+        $this->travelTo(Carbon::parse('2026-10-14 10:00:00', 'Asia/Makassar'));
+        $outlet = MobileServiceStop::factory()->outlet('Mall Pelayanan Publik', [1, 2, 3, 4, 5])->create(['mulai' => '08:30', 'lokasi' => 'MPP']);
+        $first = MobileServiceStop::factory()->on('2026-10-15', '01')->create(['mulai' => '09:00', 'lokasi' => 'Bundaran PU']);
+        $second = MobileServiceStop::factory()->on('2026-10-15', '02')->create(['mulai' => '10:00', 'lokasi' => 'San Pedro']);
+        $off = MobileServiceStop::factory()->on('2026-10-15', '03')->inactive()->create(['mulai' => '07:00', 'lokasi' => 'Belum aktif']);
+        // Thursday: the switched-off stop leaves no gap and the unlisted stop stays unnumbered
+        ServiceBoardOrder::factory()->of('2026-10-15', [$off, $second, $outlet])->create();
+        // Friday: listed entries that are not served that day are passed over
+        ServiceBoardOrder::factory()->of('2026-10-16', [$first, $second, $outlet])->create();
+        // Yesterday's order is no longer read
+        ServiceBoardOrder::factory()->of('2026-10-13', [$outlet])->create();
+
+        $response = $this->getJson('/api/public/keliling');
+
+        $response->assertOk();
+        $this->assertSame([
+            '2026-10-14 MPP -',
+            '2026-10-15 MPP 2', '2026-10-15 Bundaran PU -', '2026-10-15 San Pedro 1',
+            '2026-10-16 MPP 1',
+            '2026-10-19 MPP -',
+        ], array_slice(array_map(
+            fn (array $served): string => "{$served['tanggal']} {$served['lokasi']} ".($served['urutanPapan'] ?? '-'),
+            $response->json('jadwal'),
+        ), 0, 6));
+    }
+
     #[TestWith(['2026-10-18 23:30:00', '2026-10-18', '2026-10-25'])]
     #[TestWith(['2026-10-19 00:30:00', '2026-10-19', '2026-11-01'])]
     #[TestWith(['2026-10-24 12:00:00', '2026-10-24', '2026-11-01'])]
@@ -143,11 +174,13 @@ class PublicMobileServiceStopControllerTest extends TestCase
         $response->assertUnprocessable()->assertJsonValidationErrors(['query' => 'Parameter kueri tidak didukung.']);
     }
 
-    public function test_returns_503_instead_of_an_empty_schedule_when_the_source_cannot_be_read(): void
+    #[TestWith(['mobile_service_stops'])]
+    #[TestWith(['service_board_orders'])]
+    public function test_returns_503_instead_of_an_empty_schedule_when_the_source_cannot_be_read(string $table): void
     {
-        DB::table('mobile_service_stops')->exists();
-        DB::beforeExecuting(function (string $query): void {
-            if (preg_match('/\bmobile_service_stops\b/', $query) === 1) {
+        DB::table($table)->exists();
+        DB::beforeExecuting(function (string $query) use ($table): void {
+            if (preg_match("/\b{$table}\b/", $query) === 1) {
                 throw new QueryException(DB::getName(), $query, [], new PDOException('SQLSTATE[HY000] [2002] Connection refused'));
             }
         });

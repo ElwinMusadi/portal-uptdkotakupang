@@ -1764,6 +1764,39 @@
     }).join("");
   }
 
+  // Papan beranda: lebih dulu urutan yang diatur di dashboard untuk tanggal itu
+  // (urutanPapan, D-053), sisanya urut jam. Di layar lebar daftar mengikuti
+  // tinggi kartu di sebelah kirinya; lokasi yang tidak muat diringkas menjadi
+  // baris "+N Lokasi lain hari ini". Di layar sempit tampil 4 lokasi pertama.
+  const PAPAN_LAYAR_LEBAR = "(min-width: 981px)";
+  const PAPAN_BARIS_SEMPIT = 4;
+  const papanDipantau = new WeakMap();
+  const posisiPapan = (s) => (Number.isInteger(s.urutanPapan) && s.urutanPapan > 0 ? s.urutanPapan : Number.MAX_SAFE_INTEGER);
+  const barisPapan = (s) => `<li><span class="board__time mono">${esc(rentang(s))}</span><span><strong>${esc(s.lokasi)}</strong><small>${esc(s.nama)} · ${esc(s.kecamatan)}</small></span></li>`;
+  const barisLainPapan = (n) => `<li><span class="board__time mono">+${n}</span><span><strong>Lokasi lain hari ini</strong><small>Lihat di halaman Jadwal.</small></span></li>`;
+
+  function isiPapanLuar(ul, daftar) {
+    const pas = matchMedia(PAPAN_LAYAR_LEBAR).matches;
+    const tulis = (n) => {
+      ul.innerHTML = daftar.slice(0, n).map(barisPapan).join("") + (daftar.length > n ? barisLainPapan(daftar.length - n) : "");
+    };
+    let n = pas ? daftar.length : Math.min(daftar.length, PAPAN_BARIS_SEMPIT);
+    tulis(n);
+    while (pas && n > 1 && ul.scrollHeight > ul.clientHeight + 1) tulis(--n);
+  }
+
+  // Pas ulang bila ukuran kartu berubah: isi papan di kiri selesai dimuat,
+  // huruf selesai dimuat, atau lebar layar berubah.
+  function pantauPapan(ul, isi) {
+    const sudah = papanDipantau.has(ul);
+    papanDipantau.set(ul, isi);
+    if (sudah) return;
+    const ulang = () => papanDipantau.get(ul)();
+    if ("ResizeObserver" in window) new ResizeObserver(ulang).observe(ul.closest(".tile") ?? ul);
+    window.addEventListener("resize", ulang);
+    document.fonts?.ready.then(ulang);
+  }
+
   function initKeliling() {
     const counts = $$("[data-keliling-count]");
     const todays = $$("[data-keliling-today]");
@@ -1778,12 +1811,13 @@
       const today = data.jadwal.filter((s) => s.tanggal === hariIni);
       const berikut = data.jadwal.find((s) => s.tanggal > hariIni);
       counts.forEach((el) => (el.textContent = today.length ? `${today.length} titik` : "Tidak ada hari ini"));
+      const urutPapan = [...today].sort((a, b) => posisiPapan(a) - posisiPapan(b));
       todays.forEach((ul) => {
-        const lebih = today.length - 4;
-        ul.innerHTML = today.length
-          ? today.slice(0, 4).map((s) => `<li><span class="board__time mono">${esc(rentang(s))}</span><span><strong>${esc(s.lokasi)}</strong><small>${esc(s.nama)} · ${esc(s.kecamatan)}</small></span></li>`).join("")
-            + (lebih > 0 ? `<li><span class="board__time mono">+${lebih}</span><span><strong>Lokasi lain hari ini</strong><small>Lihat di halaman Jadwal.</small></span></li>` : "")
-          : `<li><span class="board__time mono">${HARI[t.wd]}</span><span><strong>Tidak ada layanan di luar kantor hari ini.</strong><small>${berikut ? `Jadwal berikutnya ${HARI[tglIso(berikut.tanggal).wd]}, ${tglTeks(berikut.tanggal)}.` : "Belum ada jadwal."}</small></span></li>`;
+        const isi = today.length
+          ? () => isiPapanLuar(ul, urutPapan)
+          : () => (ul.innerHTML = `<li><span class="board__time mono">${HARI[t.wd]}</span><span><strong>Tidak ada layanan di luar kantor hari ini.</strong><small>${berikut ? `Jadwal berikutnya ${HARI[tglIso(berikut.tanggal).wd]}, ${tglTeks(berikut.tanggal)}.` : "Belum ada jadwal."}</small></span></li>`);
+        isi();
+        pantauPapan(ul, isi);
       });
       if (week) week.innerHTML = agendaKeliling(data.jadwal, hariIni);
       if (geraiEl) geraiEl.innerHTML = daftarGerai(data.gerai, hariIni);

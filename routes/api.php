@@ -51,6 +51,7 @@ use App\Http\Controllers\Dashboard\RevenueReportController;
 use App\Http\Controllers\Dashboard\ScheduleAdjustmentController;
 use App\Http\Controllers\Dashboard\ScheduleAdjustmentDeletionController;
 use App\Http\Controllers\Dashboard\ServiceBoardController;
+use App\Http\Controllers\Dashboard\ServiceBoardOrderController;
 use App\Http\Controllers\Dashboard\ServiceController;
 use App\Http\Controllers\Dashboard\ServiceDeletionController;
 use App\Http\Controllers\Dashboard\ServiceLocationController;
@@ -168,7 +169,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
      * counters (MobileServiceStopPolicy, D-043). The dashboard sorts them by
      * date and time, so there is no reorder endpoint; salin-minggu copies a
      * week of Samsat Keliling stops to the next week and salin-hari one day's
-     * stops to other days (D-044).
+     * stops to other days (D-044). urutan-papan keeps, per date, the order of
+     * the entries on the homepage board only (D-053).
      */
     Route::prefix('koleksi/keliling')->name('koleksi.keliling.')->whereUlid('stop')->group(function (): void {
         Route::get('/', [MobileServiceStopController::class, 'index'])->can('viewAny', MobileServiceStop::class)->name('index');
@@ -176,6 +178,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('/hapus', [MobileServiceStopDeletionController::class, 'store'])->can('deleteAny', MobileServiceStop::class)->name('hapus');
         Route::post('/salin-minggu', MobileServiceStopCopyController::class)->can('create', MobileServiceStop::class)->name('salin-minggu');
         Route::post('/salin-hari', MobileServiceStopDayCopyController::class)->can('create', MobileServiceStop::class)->name('salin-hari');
+        Route::get('/urutan-papan', [ServiceBoardOrderController::class, 'index'])->can('viewAny', MobileServiceStop::class)->name('urutan-papan.index');
+        Route::put('/urutan-papan/{tanggal}', [ServiceBoardOrderController::class, 'update'])->can('reorder', MobileServiceStop::class)->name('urutan-papan.update');
         Route::get('/{stop}', [MobileServiceStopController::class, 'show'])->can('view', 'stop')->name('show');
         Route::patch('/{stop}', [MobileServiceStopController::class, 'update'])->can('update', 'stop')->name('update');
     });

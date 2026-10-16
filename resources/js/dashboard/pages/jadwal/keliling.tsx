@@ -1,5 +1,17 @@
 import * as React from "react"
-import { IconCheck, IconCopy, IconMapPin, IconPlus, IconRefresh, IconSelector, IconServer } from "@tabler/icons-react"
+import {
+  IconArrowDown,
+  IconArrowUp,
+  IconCheck,
+  IconClockHour4,
+  IconCopy,
+  IconListNumbers,
+  IconMapPin,
+  IconPlus,
+  IconRefresh,
+  IconSelector,
+  IconServer,
+} from "@tabler/icons-react"
 import { useQueryClient } from "@tanstack/react-query"
 import type { Control, UseFormReturn } from "react-hook-form"
 import { useSearchParams } from "react-router"
@@ -44,6 +56,7 @@ import { mintaServer } from "@/lib/api/http"
 import { hariIniIso, jamTitik, tanggal } from "@/lib/format"
 import { HARI_LABEL, JENIS_LAYANAN_LUAR, namaLayananLuar } from "@/lib/meta"
 import { laporGalat, qk, useKoleksi, useUbahEntri } from "@/lib/queries"
+import { susunPapan, urutJam, useSimpanUrutanPapan, useUrutanPapan } from "@/lib/urutan-papan"
 import { cn } from "@/lib/utils"
 import * as v from "@/lib/validasi"
 
@@ -424,14 +437,138 @@ function DialogSalinHari({
   )
 }
 
+/**
+ * Urutan layanan luar kantor di papan Beranda pada satu tanggal (D-053): semua
+ * jenis yang dilayani hari itu, termasuk yang belum aktif. Bila urutannya sama
+ * dengan urut jam, tanggal itu dikembalikan ke urut jam.
+ */
+function DialogUrutanPapan({
+  tanggal: iso,
+  semua,
+  urutan,
+  tutup,
+}: {
+  tanggal: string | null
+  semua: JadwalKeliling[]
+  urutan: string[]
+  tutup: () => void
+}) {
+  const entri = React.useMemo(() => (iso ? susunPapan(semua, iso, urutan) : []), [iso, semua, urutan])
+  const [daftar, setDaftar] = React.useState(() => entri.map((j) => j.id))
+  const simpan = useSimpanUrutanPapan()
+  const perId = new Map(entri.map((j) => [j.id, j]))
+  const baris = daftar.flatMap((id) => perId.get(id) ?? [])
+  const urutJamId = [...entri].sort(urutJam).map((j) => j.id)
+  const samaJam = baris.length === urutJamId.length && baris.every((j, i) => j.id === urutJamId[i])
+
+  const geser = (i: number, arah: -1 | 1) => {
+    const x = baris.map((j) => j.id)
+    ;[x[i], x[i + arah]] = [x[i + arah], x[i]]
+    setDaftar(x)
+  }
+
+  const kirim = () => {
+    if (!iso) return
+    simpan.mutate(
+      { tanggal: iso, ids: samaJam ? [] : baris.map((j) => j.id) },
+      {
+        onSuccess: () => {
+          toast.success(samaJam ? "Papan kembali urut jam" : "Urutan papan disimpan", {
+            description: `${HARI_LABEL[hariDari(iso)]}, ${tanggal(iso)}`,
+          })
+          tutup()
+        },
+        onError: (e) => laporGalat(e, "Urutan gagal disimpan"),
+      }
+    )
+  }
+
+  return (
+    <Dialog open={!!iso} onOpenChange={(o) => !o && tutup()}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Urutan papan {iso && `${HARI_LABEL[hariDari(iso)]}, ${tanggal(iso)}`}</DialogTitle>
+          <DialogDescription>
+            Urutan “Di luar kantor hari ini” di papan Beranda. Papan menampilkan dari atas sebanyak yang muat; sisanya
+            diringkas. Halaman Jadwal tetap urut jam, dan entri yang ditambahkan nanti tampil di bawah.
+          </DialogDescription>
+        </DialogHeader>
+        <ol className="grid gap-1.5" aria-label="Urutan di papan Beranda">
+          {baris.map((j, i) => (
+            <li
+              key={j.id}
+              className={cn("flex items-center gap-2 rounded-lg border py-2 pr-1.5 pl-3 text-sm", !j.aktif && "text-muted-foreground")}
+            >
+              <span className="w-5 shrink-0 font-medium tabular-nums">{i + 1}</span>
+              <span className="grid min-w-0 flex-1 gap-0.5">
+                <span className="flex flex-wrap items-center gap-1.5">
+                  <span className="font-medium">{j.lokasi}</span>
+                  {!j.aktif && (
+                    <Badge variant="outline" className="text-muted-foreground">
+                      Nonaktif
+                    </Badge>
+                  )}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  <span className="tabular-nums">{jam(j)}</span> · {namaLayananLuar(j)}
+                  {j.jenis !== "keliling" && ` · ${JENIS_LAYANAN_LUAR[j.jenis]}`}
+                </span>
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8"
+                onClick={() => geser(i, -1)}
+                disabled={i === 0}
+                aria-label={`Naikkan ${j.lokasi}, ${jam(j)}`}
+              >
+                <IconArrowUp />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8"
+                onClick={() => geser(i, 1)}
+                disabled={i === baris.length - 1}
+                aria-label={`Turunkan ${j.lokasi}, ${jam(j)}`}
+              >
+                <IconArrowDown />
+              </Button>
+            </li>
+          ))}
+        </ol>
+        <DialogFooter className="sm:justify-between">
+          <Button variant="ghost" onClick={() => setDaftar(urutJamId)} disabled={samaJam}>
+            <IconClockHour4 />
+            Urut jam
+          </Button>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row">
+            <Button variant="outline" onClick={tutup}>
+              Batal
+            </Button>
+            <Button onClick={kirim} disabled={simpan.isPending}>
+              <IconCheck />
+              Simpan urutan
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 /** Samsat Keliling per tanggal dalam satu minggu, Senin–Minggu, termasuk yang belum aktif */
-function PratinjauMinggu({ data }: { data: JadwalKeliling[] }) {
+function PratinjauMinggu({ data, semua }: { data: JadwalKeliling[]; semua: JadwalKeliling[] }) {
   const hariIni = hariIniIso()
   const [senin, setSenin] = React.useState(() => seninDari(hariIni))
   const [menyalin, setMenyalin] = React.useState(false)
   const [sumberSalin, setSumberSalin] = React.useState<string | null>(null)
+  const [tanggalUrut, setTanggalUrut] = React.useState<string | null>(null)
   const qc = useQueryClient()
   const bisaSalin = diServer("keliling")
+  // Urutan papan juga hanya tersimpan di server
+  const { data: urutanPapan } = useUrutanPapan(bisaSalin)
+  const urutanPada = (iso: string) => urutanPapan?.find((u) => u.tanggal === iso)?.urutan ?? []
   const mingguIni = seninDari(hariIni)
 
   const salin = async () => {
@@ -489,6 +626,8 @@ function PratinjauMinggu({ data }: { data: JadwalKeliling[] }) {
             const titik = data
               .filter((x) => x.jenis === "keliling" && x.tanggalMulai === iso)
               .sort((a, b) => a.mulai.localeCompare(b.mulai) || (a.unit ?? "").localeCompare(b.unit ?? ""))
+            const diPapan = susunPapan(semua, iso).length
+            const diatur = urutanPada(iso).length > 0
             return (
               <li
                 key={iso}
@@ -517,6 +656,18 @@ function PratinjauMinggu({ data }: { data: JadwalKeliling[] }) {
                         <IconCopy />
                       </Button>
                     )}
+                    {bisaSalin && iso >= hariIni && diPapan > 1 && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn("size-7", diatur && "text-brand")}
+                        onClick={() => setTanggalUrut(iso)}
+                        aria-label={`Atur urutan papan Beranda ${HARI_LABEL[hariDari(iso)]}, ${tanggal(iso)}`}
+                        title="Atur urutan papan Beranda"
+                      >
+                        <IconListNumbers />
+                      </Button>
+                    )}
                   </span>
                 </p>
                 {titik.length === 0 ? (
@@ -541,11 +692,19 @@ function PratinjauMinggu({ data }: { data: JadwalKeliling[] }) {
                     ))}
                   </ul>
                 )}
+                {diatur && iso >= hariIni && <p className="mt-2 text-xs text-brand">Urutan papan Beranda diatur.</p>}
               </li>
             )
           })}
         </ol>
         <DialogSalinHari key={sumberSalin ?? ""} sumber={sumberSalin} senin={senin} data={data} tutup={() => setSumberSalin(null)} />
+        <DialogUrutanPapan
+          key={tanggalUrut ?? ""}
+          tanggal={tanggalUrut}
+          semua={semua}
+          urutan={tanggalUrut ? urutanPada(tanggalUrut) : []}
+          tutup={() => setTanggalUrut(null)}
+        />
       </CardContent>
     </Card>
   )
@@ -879,7 +1038,7 @@ export default function HalamanLayananLuarKantor() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="keliling" className="grid gap-4">
-            {data && <PratinjauMinggu data={perJenis.keliling} />}
+            {data && <PratinjauMinggu data={perJenis.keliling} semua={data} />}
             <DataTable
               data={data && perJenis.keliling}
               memuat={isLoading}

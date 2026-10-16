@@ -53,6 +53,15 @@ class MobileServiceStopPolicy
     }
 
     /**
+     * Determine whether the user can order a date's entries on the homepage
+     * board (D-053).
+     */
+    public function reorder(User $user): Response
+    {
+        return $this->managesKeliling($user);
+    }
+
+    /**
      * Determine whether the user can delete stops.
      */
     public function deleteAny(User $user): Response

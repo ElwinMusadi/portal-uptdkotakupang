@@ -739,3 +739,14 @@ Pemilik meminta fitur **Pemetaan Pajak Kendaraan Bermotor (PKB) Kota Kupang**: p
 | Kecamatan | Ditentukan dari **kelurahan menurut daftar resmi** 6 kecamatan dan 51 kelurahan Kota Kupang, karena kolom KECAMATAN di berkas mencatat beberapa kecamatan untuk kelurahan yang sama (99,3% baris tetap cocok; selisih terbesar Bakunase II). Baris tanpa kelurahan yang dikenal dihitung sebagai "Tanpa kelurahan". |
 | Kepatuhan | Dikelompokkan dari kolom KEPATUHAN: **Taat**, **Jatuh tempo hari ini**, **Terlambat < 1 tahun**, **Menunggak ≥ 1 tahun** (lama dari kolom TAHUN TUNGGAK; 4 berarti 4 tahun atau lebih), Lainnya. **Tagihan** = pokok dan denda berjalan ditambah pokok dan denda tunggakan, untuk kendaraan yang belum taat. Roda: sepeda motor = roda dua, jenis berakhiran R3 = roda tiga, lainnya roda empat atau lebih. |
 | Impor | Berkas dibaca **di peramban** lalu dikirim per 1.000 baris, agar berkas besar (data setahun) tidak terbentur batas unggah dan memori server; impor yang tidak selesai dibuang saat impor berikutnya dimulai. Saat selesai, kendaraan dihitung sekali ke tabel ringkasan agar peta dan tabel tetap cepat. |
+
+## D-053 · 2026-10-16 · Urutan "Di luar kantor hari ini" di papan Beranda
+
+Pemilik ingin kartu papan layanan di beranda setinggi isinya, tanpa ruang kosong di bawahnya, dan bisa menentukan layanan luar kantor mana yang tampil paling atas, kedua, dan seterusnya.
+
+| Hal | Keputusan |
+|---|---|
+| Tinggi kartu | Di layar lebar (di atas 980 px) kartu Nomor antrean, Perkiraan waktu tunggu, dan Pengumuman setinggi isinya (permintaan pemilik); dua kartu pada baris yang sama tetap sama tinggi. Kartu *Di luar kantor hari ini* mengikuti tinggi dua baris di kirinya dan menampilkan dari atas sebanyak yang muat; sisanya diringkas menjadi "+N Lokasi lain hari ini". Di layar 980 px ke bawah tetap 4 lokasi pertama. |
+| Tempat mengatur | **Per tanggal di halaman Layanan Luar Kantor** (pemilik): tombol *Atur urutan papan* di kartu hari (hari ini dan sesudahnya, bila ada dua layanan atau lebih) pada pratinjau minggu. Daftarnya memuat semua jenis yang dilayani hari itu (Samsat Keliling, gerai, loket sementara), termasuk yang belum aktif, dengan tombol naik dan turun. Diatur pengelola Layanan Luar Kantor dan Administrator. |
+| Aturan urutan | Urutan disimpan per tanggal (tabel `service_board_orders`). Tanggal yang belum diatur tetap urut jam; entri yang ditambahkan sesudah diatur tampil di bawah, urut jam. Urutan yang sama dengan urut jam disimpan sebagai "kembali urut jam". Salin hari dan salin minggu tidak menyalin urutan. |
+| Cakupan | **Hanya papan Beranda** (pemilik); halaman Jadwal tetap urut jam. `GET /api/public/keliling` memberi `urutanPapan` pada setiap jadwal tanpa mengubah urutan `jadwal`. |
