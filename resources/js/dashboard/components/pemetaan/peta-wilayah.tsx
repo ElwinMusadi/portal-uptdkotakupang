@@ -9,8 +9,10 @@ import { kotakTampilan, labelTerpasang, useLebar } from "../../../portal/pemetaa
  * Peta wilayah Kota Kupang (D-052) dengan batas Desa/Kelurahan BIG 1:10.000
  * edisi 2022 (portal/pemetaan/batas-wilayah.ts, juga dipakai peta portal):
  * enam kecamatan, atau kelurahan kecamatan yang dipilih (peta diperbesar ke
- * kecamatan itu, kecamatan lain redup dan bisa dipilih). Tulisan diukur dari
- * lebar peta yang tampil (`--px`) dan label yang akan saling menimpa dilewati.
+ * kecamatan itu, kecamatan lain redup dan bisa dipilih). Peta setinggi 600 px
+ * (paling tinggi 75% layar) dengan lebar mengikuti bentuk tampilan (`--rasio`),
+ * sedikitnya 448 px, seperti di portal. Tulisan diukur dari lebar peta yang
+ * tampil (`--px`) dan label yang akan saling menimpa dilewati.
  */
 
 export interface PetakWilayah {
@@ -91,8 +93,8 @@ export function PetaWilayah({
       <svg
         ref={refPeta}
         viewBox={`${tampil.x} ${tampil.y} ${tampil.w} ${tampil.h}`}
-        className="w-full max-w-md"
-        style={{ "--px": px } as CSSProperties}
+        className="w-full max-w-[max(28rem,min(600px,75svh)*var(--rasio))]"
+        style={{ "--px": px, "--rasio": tampil.w / tampil.h } as CSSProperties}
         role="group"
         aria-label={aktif ? `Peta kelurahan di ${aktif.nama}` : "Peta kecamatan Kota Kupang"}
       >

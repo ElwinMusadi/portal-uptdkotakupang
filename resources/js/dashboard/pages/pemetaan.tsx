@@ -428,9 +428,9 @@ function TabelWilayah({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Wilayah</TableHead>
+            <TableHead className="align-bottom">Wilayah</TableHead>
             {kolom.map((k) => (
-              <TableHead key={k} className="text-right">
+              <TableHead key={k} className="text-right align-bottom whitespace-normal">
                 {KOLOM_WILAYAH[k]}
               </TableHead>
             ))}
@@ -675,7 +675,7 @@ function SelSasaran({ kolom, kendaraan: k }: { kolom: KolomSasaran; kendaraan: K
   switch (kolom) {
     case "pemilik":
       return (
-        <TableCell className="min-w-56">
+        <TableCell className="min-w-48 whitespace-normal">
           <span className="block font-medium">{k.nama}</span>
           <span className="block text-xs text-muted-foreground">
             {k.alamat}
@@ -696,7 +696,7 @@ function SelSasaran({ kolom, kendaraan: k }: { kolom: KolomSasaran; kendaraan: K
       return <TableCell className="whitespace-nowrap">{KECAMATAN.find((x) => x.kunci === k.kecamatan)?.nama ?? "Tanpa kelurahan"}</TableCell>
     case "kepatuhan":
       return (
-        <TableCell className="min-w-40">
+        <TableCell className="min-w-40 whitespace-normal">
           <span className="block">{k.kepatuhan}</span>
           {k.sdNotice && <span className="block text-xs text-muted-foreground">Berlaku s.d. {tanggal(k.sdNotice)}</span>}
         </TableCell>
@@ -710,7 +710,7 @@ function SelSasaran({ kolom, kendaraan: k }: { kolom: KolomSasaran; kendaraan: K
     case "tagihan":
       return <TableCell className="text-right whitespace-nowrap tabular-nums">{k.tagihan ? rupiah(k.tagihan) : "—"}</TableCell>
     case "kunjungan":
-      return <TableCell className="min-w-40">{k.hasilKunjungan || "—"}</TableCell>
+      return <TableCell className="min-w-40 whitespace-normal">{k.hasilKunjungan || "—"}</TableCell>
   }
 }
 
