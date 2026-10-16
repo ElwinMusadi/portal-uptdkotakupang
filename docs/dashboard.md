@@ -82,6 +82,7 @@ resources/js/dashboard/
 | Pesan & Pengaduan | `#/pesan` | koleksi `pesan` | `kontak.html#masukan` |
 | Statistik Layanan | `#/statistik` | pengaturan `statistik` | `index.html#transparansi` |
 | Laporan Penerimaan | `#/penerimaan` | server (`/api/penerimaan/…`) dari berkas STS | `penerimaan.html` (impor yang dinyalakan Administrator) |
+| Pemetaan PKB | `#/pemetaan` | server (`/api/pemetaan/…`) dari berkas Data Potensi | — (halaman portal menyusul, D-052) |
 | Berita & Pengumuman | `#/berita` | koleksi `berita` | `informasi.html`, `berita-detail.html` |
 | Dokumentasi Kegiatan | `#/dokumentasi` | koleksi `dokumentasi` | `dokumentasi.html` |
 | Regulasi & Unduhan | `#/unduhan` | koleksi `dokumen` | `unduhan.html` |
@@ -272,6 +273,14 @@ Halaman *Papan Layanan* (`#/papan`, `pages/papan.tsx`) tersimpan di server sejak
 
 - Server mengisi waktu *diperbarui* saat isi papan berubah; menyimpan isi yang sama tidak mengubahnya.
 - Beranda menampilkan isi terakhir setiap hari sampai diubah ([D-050](decisions.md#d-050--2026-10-15--papan-layanan-berlaku-setiap-hari)), dengan label "Diperbarui hari ini" pada hari selain hari penyimpanan. Selama loket tutup menurut Jam Pelayanan, semua loket tampil Tutup dan waktu tunggu tidak ditampilkan. Papan cukup disimpan bila ada perubahan.
+
+## Pemetaan PKB
+
+Halaman *Pemetaan PKB* (`#/pemetaan`, `pages/pemetaan.tsx`, modul `pemetaan`, [D-052](decisions.md#d-052--2026-10-16--pemetaan-pkb-dari-berkas-data-potensi)) memetakan potensi dan kepatuhan PKB Kota Kupang dari berkas Data Potensi BPAD. Kontraknya di [`api.md`](api.md#pemetaan-pkb-di-dashboard).
+
+- **Impor Data Potensi** membuka panel samping: pilih berkas .xls; peramban memeriksanya (susunan 43 kolom, banyaknya kendaraan, tanggal penetapan) tanpa mengirim apa pun, lalu *Impor* mengirimnya per 1.000 baris dengan bilah kemajuan (`lib/pemetaan.ts`, `bacaBerkasPotensi` membaca berkas sedikit demi sedikit). Impor yang selesai menggantikan data sebelumnya; *Batalkan* menghentikannya tanpa mengubah data yang ditampilkan. Administrator bisa *Hapus data*.
+- **Peta & ringkasan**: angka utama (objek pajak per roda, taat, belum bayar < 1 tahun, menunggak ≥ 1 tahun, potensi pokok PKB, tagihan belum terbayar); peta skematis enam kecamatan (`components/pemetaan/peta-skematis.tsx`) yang diwarnai menurut *Menunggak ≥ 1 tahun*, *Belum taat*, atau *Tagihan*, dari nilai terendah sampai tertinggi; tabel per kecamatan dan per kelurahan (memilih kecamatan di peta atau tabel menyaring kelurahannya); kepatuhan, lama tunggakan, jenis kendaraan, dan hasil kunjungan lapangan. Bila data memuat lebih dari satu bulan jatuh tempo, ringkasan bisa disaring per bulan.
+- **Sasaran penagihan**: peringatan data pribadi, saringan (nomor polisi atau nama, kecamatan, kelurahan, kepatuhan, lama tunggakan, roda, bulan), dan tabel 200 kendaraan dengan tagihan terbesar (nomor polisi, pemilik dan alamat, telepon, kendaraan, kepatuhan, tagihan). Nomor polisi membuka lembar samping dengan semua kolom berkas, termasuk KTP, mesin, rangka, dan kunjungan lapangan.
 
 ## Antrean Online
 

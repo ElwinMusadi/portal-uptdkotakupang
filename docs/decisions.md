@@ -720,3 +720,17 @@ Pemilik meminta Sistem Antrean Online (Queue Management System) di bagian Layana
 | Halaman lacak (Irisan 3) | Menampilkan jam selesai setiap tahap dan banyaknya nomor yang menunggu di depan pada loket pemanggil (semua layanan dihitung bersama, sesuai satu loket per tahap); tetap tanpa nama petugas. |
 
 Belum diputuskan: akun petugas non-UPTD (D-007 mewajibkan NIP), antrean prioritas, penjelasan di Kebijakan Privasi, dan waktu deploy (rencana §9).
+
+## D-052 · 2026-10-16 · Pemetaan PKB dari berkas Data Potensi
+
+Pemilik meminta fitur **Pemetaan Pajak Kendaraan Bermotor (PKB) Kota Kupang**: pendataan, analisis, dan visualisasi potensi serta kepatuhan pembayaran PKB per wilayah, untuk mengetahui potensi pendapatan, memetakan tunggakan, serta membantu target PAD dan strategi penagihan. Sumbernya berkas **Data Potensi** dari sistem BPAD (contoh awal: jatuh tempo Oktober, tanggal penetapan 16/10/2026, 28.725 kendaraan plat putih Kota Kupang, 43 kolom termasuk identitas pemilik). Data dikelola dan ditampilkan di dashboard, dan menyusul di portal publik. **Irisan 1 dibangun**: modul dashboard, impor, peta skematis, ringkasan, dan sasaran penagihan. Irisan 2 (portal) menyusul.
+
+| Hal | Keputusan |
+|---|---|
+| Data yang disimpan | **Dashboard menyimpan semua kolom termasuk identitas** (nama, KTP, telepon, alamat, nomor polisi, mesin, rangka) untuk sasaran penagihan; **portal publik hanya angka gabungan** per kecamatan dan kelurahan (pemilik). KTP dan telepon disimpan terenkripsi; hanya Administrator dan pegawai bermodul `pemetaan` yang melihatnya, dan hanya Administrator yang menghapus data. |
+| Periode | **Impor baru menggantikan data lama**, tanpa riwayat (pemilik). Data berikutnya berupa data master setahun (Januari–Desember); ringkasan bisa disaring per bulan jatuh tempo (dari kolom SD NOTICE). |
+| Peta | **Peta skematis dulu, peta batas resmi menyusul** (pemilik): enam kecamatan sebagai petak yang letaknya mengikuti peta, diwarnai menurut ukuran yang dipilih. OpenStreetMap tidak memuat batas kecamatan/kelurahan Kota Kupang; peta batas sungguhan dibuat bila ada berkas resmi (SHP/GeoJSON dari BIG, BPS, atau Bappeda). |
+| Portal (Irisan 2) | **Kecamatan dan kelurahan** (pemilik): jumlah kendaraan per jenis dan status kepatuhan, serta rupiah potensi dan tunggakan; kelompok di bawah 3 kendaraan disamarkan, dan baru tampil setelah Administrator menyalakannya (seperti D-048). |
+| Kecamatan | Ditentukan dari **kelurahan menurut daftar resmi** 6 kecamatan dan 51 kelurahan Kota Kupang, karena kolom KECAMATAN di berkas mencatat beberapa kecamatan untuk kelurahan yang sama (99,3% baris tetap cocok; selisih terbesar Bakunase II). Baris tanpa kelurahan yang dikenal dihitung sebagai "Tanpa kelurahan". |
+| Kepatuhan | Dikelompokkan dari kolom KEPATUHAN: **Taat**, **Jatuh tempo hari ini**, **Terlambat < 1 tahun**, **Menunggak ≥ 1 tahun** (lama dari kolom TAHUN TUNGGAK; 4 berarti 4 tahun atau lebih), Lainnya. **Tagihan** = pokok dan denda berjalan ditambah pokok dan denda tunggakan, untuk kendaraan yang belum taat. Roda: sepeda motor = roda dua, jenis berakhiran R3 = roda tiga, lainnya roda empat atau lebih. |
+| Impor | Berkas dibaca **di peramban** lalu dikirim per 1.000 baris, agar berkas besar (data setahun) tidak terbentur batas unggah dan memori server; impor yang tidak selesai dibuang saat impor berikutnya dimulai. Saat selesai, kendaraan dihitung sekali ke tabel ringkasan agar peta dan tabel tetap cepat. |

@@ -18,6 +18,7 @@ import {
   IconHome,
   IconInbox,
   IconLayoutBoard,
+  IconMap2,
   IconNews,
   IconPhoto,
   IconReportMoney,
@@ -72,6 +73,7 @@ export const NAV_UTAMA: ItemNav[] = [
   { judul: "Pesan & Pengaduan", url: "/pesan", ikon: IconInbox, portal: "kontak.html#masukan", keterangan: "Pertanyaan, masukan, dan pengaduan warga", modul: ["pesan"] },
   { judul: "Statistik Layanan", url: "/statistik", ikon: IconChartBar, portal: "index.html#transparansi", keterangan: "Dasbor transparansi di beranda", modul: ["statistik"] },
   { judul: "Laporan Penerimaan", url: "/penerimaan", ikon: IconReportMoney, portal: "penerimaan.html", keterangan: "Penerimaan harian dan bulanan per loket dari berkas STS", modul: ["penerimaan"] },
+  { judul: "Pemetaan PKB", url: "/pemetaan", ikon: IconMap2, keterangan: "Potensi, kepatuhan, dan sasaran penagihan PKB per wilayah", modul: ["pemetaan"] },
 ]
 
 export const NAV_GRUP: GrupNav[] = [

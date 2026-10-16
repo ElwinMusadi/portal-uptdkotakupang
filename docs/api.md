@@ -52,6 +52,8 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET`, `POST` | `/api/penerimaan/impor` | Administrator, pengelola Laporan Penerimaan | tersedia |
 | `POST` | `/api/penerimaan/impor/pratinjau` | Administrator, pengelola Laporan Penerimaan | tersedia |
 | `PATCH` | `/api/penerimaan/impor/{id}` | Administrator | tersedia |
+| `GET`, `POST` | `/api/pemetaan/impor`, `/api/pemetaan/impor/{id}/{baris\|selesai}`, `/api/pemetaan/ringkasan`, `/api/pemetaan/kendaraan`, `/api/pemetaan/kendaraan/{id}` | Administrator, pengelola Pemetaan PKB | tersedia |
+| `DELETE` | `/api/pemetaan/impor` | Administrator | tersedia |
 | `POST` | `/api/penerimaan/impor/hapus` | Administrator, pengelola Laporan Penerimaan | tersedia |
 | `GET` | `/api/antrean/layanan` | Administrator, pengelola Antrean Online | tersedia |
 | `PUT` | `/api/antrean/layanan/{id}` | Administrator | tersedia |
@@ -420,6 +422,23 @@ Transaksi yang sama dikenali dari sidik HMAC-SHA256 (dengan `APP_KEY`) atas nomo
 | `revenue_transactions` | `id`, `revenue_import_id` (terhapus bersama impornya), `loket`, `tanggal`, `jenis_daftar`, `jenis_kendaraan`, `kepemilikan`, `merk`, `warna_plat`, `upt_asal`, `kecamatan`, `kelurahan`, `tahun_tunggakan`, dua belas komponen rupiah dan `jumlah` (bilangan bulat), `sidik` (unik); indeks `tanggal, loket` |
 
 Kode: `app/Actions/ReadStsFile.php`, `app/Actions/ImportRevenue.php`, `app/Actions/BuildRevenueReport.php`, `app/Actions/ListRevenueCounters.php`, `app/Http/Controllers/Dashboard/Revenue*`, `app/Http/Requests/Dashboard/*Revenue*`, `app/Http/Resources/RevenueImportResource.php`, `app/Models/RevenueImport.php`, `app/Models/RevenueTransaction.php`, `app/Policies/RevenueImportPolicy.php`. Tes: `tests/Feature/RevenueImportControllerTest.php`, `tests/Feature/RevenueReportControllerTest.php`, dengan berkas STS buatan dari `tests/Support/StsReport.php`.
+
+## Pemetaan PKB di dashboard
+
+Modul `pemetaan` ([D-052](decisions.md#d-052--2026-10-16--pemetaan-pkb-dari-berkas-data-potensi)), halaman `#/pemetaan`. Kebijakan `PotentialImportPolicy`: membaca (termasuk identitas wajib pajak) dan mengimpor untuk Administrator dan pengelola modul ("Modul Pemetaan PKB belum ditugaskan kepada Anda."); menghapus data khusus Administrator ("Hanya Administrator yang dapat menghapus data potensi PKB.").
+
+Berkas Data Potensi (tabel HTML berakhiran .xls, 43 kolom: NOPOL … PETUGAS DTD) dibaca di peramban dan dikirim per bagian:
+
+| Permintaan | Isi | Hasil |
+|---|---|---|
+| `GET /api/pemetaan/impor` | — | `200` `{impor}`: impor yang sedang ditampilkan (yang selesai paling akhir) `{id, berkas, jumlah, diterima, tanggalPenetapan, diimporOleh, dimulai, selesai}`, atau `null`. |
+| `POST /api/pemetaan/impor` | `{"berkas", "kolom": [43 judul kolom], "jumlah"}` | `201` `{impor, barisPerBagian: 1000}`. Impor lain yang belum selesai dibuang. `422` bila judul kolom tidak persis sama ("Berkas ini bukan Data Potensi dari sistem BPAD: susunan kolomnya tidak dikenali.") atau `jumlah` di luar 1–2.000.000. |
+| `POST /api/pemetaan/impor/{id}/baris` | `{"mulai": letak baris pertama (0 untuk baris pertama berkas), "baris": [[43 teks], …]}`, maks. 1.000 baris | `200` `{diterima, jumlah}`. Bagian harus berurutan ("Bagian berkas tidak berurutan: berikutnya baris N."), tidak melebihi `jumlah`, dan setiap baris berisi 43 teks ("Baris N tidak berisi 43 kolom seperti berkas Data Potensi.", "Baris N tidak bisa dibaca."). Angka bertitik ribuan dibaca sebagai rupiah; tanggal hanya `YYYY-MM-DD`; teks yang terlalu panjang dipotong. KTP dan telepon dienkripsi. |
+| `POST /api/pemetaan/impor/{id}/selesai` | — | `200` impor. Ditolak bila belum semua baris diterima ("Baru N dari M baris yang diterima.") atau sudah selesai. Kendaraan dihitung ke tabel ringkasan, impor menggantikan data sebelumnya (dihapus beserta kendaraannya), dan dicatat di log aktivitas ("mengimpor Data potensi PKB penetapan 16 Okt 2026 (28.725 kendaraan)"). |
+| `DELETE /api/pemetaan/impor` | — | `204`; data yang ditampilkan dihapus seluruhnya (log "menghapus"). `404` bila belum ada. |
+| `GET /api/pemetaan/ringkasan?bulan=` | bulan jatuh tempo 1–12, opsional | `200` `{impor, bulanDipilih, jumlah, kecamatan: [{kunci, nama, …angka, kelurahan: [{nama, …angka}]}], tunggakan: [{tahun, kendaraan, pokokTunggak, dendaTunggak}], jenis: [{jenis, roda, kendaraan}], kunjungan: [{hasil, kendaraan}], bulan: [{bulan, kendaraan}]}`; angka = `{kendaraan, roda: {r2, r3, r4, lain}, kelompok: {taat, jatuh-tempo, terlambat, menunggak, lainnya}, pokokPajak, dendaBerjalan, pokokTunggak, dendaTunggak, tagihan}`. Kecamatan menurut daftar resmi kelurahan, urut resmi; `kunci` kosong ("Tanpa kelurahan") terakhir. `kunjungan` = bagian sebelum catatan petugas pada kolom STS KENDARAAN DTD. `{impor: null}` sebelum impor pertama. |
+| `GET /api/pemetaan/kendaraan` | opsional: `q` (sebagian nomor polisi atau nama), `kecamatan` (atau `tanpa`), `kelurahan`, `kelompok`, `roda` (`r2`/`r3`/`r4`), `tahun` (tahun tunggakan), `bulan` | `200` `{jumlah, kendaraan}`: banyaknya yang cocok dan maks. 200 kendaraan dengan tagihan terbesar dulu, dengan nama, alamat, telepon, jenis, kepatuhan, dan rupiahnya (tanpa KTP). |
+| `GET /api/pemetaan/kendaraan/{id}` | — | `200` semua kolom satu kendaraan, termasuk KTP, mesin, rangka, dan kunjungan lapangan. `404` untuk kendaraan dari impor yang tidak ditampilkan. |
 
 ## Antrean Online di dashboard
 

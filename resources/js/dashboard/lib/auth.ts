@@ -19,6 +19,7 @@ export const SEMUA_MODUL = [
   "pesan",
   "statistik",
   "penerimaan",
+  "pemetaan",
   "berita",
   "dokumentasi",
   "dokumen",

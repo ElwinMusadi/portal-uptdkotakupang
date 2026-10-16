@@ -30,6 +30,9 @@ use App\Http\Controllers\Dashboard\OrganizationUnitController;
 use App\Http\Controllers\Dashboard\OrganizationUnitDeletionController;
 use App\Http\Controllers\Dashboard\OrganizationUnitOrderController;
 use App\Http\Controllers\Dashboard\OwnAccountController;
+use App\Http\Controllers\Dashboard\PotentialImportController;
+use App\Http\Controllers\Dashboard\PotentialSummaryController;
+use App\Http\Controllers\Dashboard\PotentialVehicleController;
 use App\Http\Controllers\Dashboard\ProfileController;
 use App\Http\Controllers\Dashboard\QueueArchiveController;
 use App\Http\Controllers\Dashboard\QueueCounterController;
@@ -93,6 +96,7 @@ use App\Models\FieldActivity;
 use App\Models\Message;
 use App\Models\MobileServiceStop;
 use App\Models\OrganizationUnit;
+use App\Models\PotentialImport;
 use App\Models\QueueCounter;
 use App\Models\QueueDisplay;
 use App\Models\QueueService;
@@ -489,6 +493,27 @@ Route::middleware('auth:sanctum')->group(function (): void {
             ->can('manage', QueueDisplay::class)
             ->whereUlid('queueDisplay')
             ->name('layar.destroy');
+    });
+
+    /*
+     * Pemetaan PKB (D-052): BPAD's potential-tax file imported in parts, the
+     * summary for the map, and the vehicles with their owners for collection
+     * (PotentialImportPolicy; deleting the data is for administrators).
+     */
+    Route::prefix('pemetaan')->name('pemetaan.')->group(function (): void {
+        Route::get('/impor', [PotentialImportController::class, 'show'])->can('viewAny', PotentialImport::class)->name('impor.show');
+        Route::post('/impor', [PotentialImportController::class, 'store'])->can('create', PotentialImport::class)->name('impor.store');
+        Route::delete('/impor', [PotentialImportController::class, 'destroy'])->can('delete', PotentialImport::class)->name('impor.destroy');
+        Route::whereUlid('potentialImport')->group(function (): void {
+            Route::post('/impor/{potentialImport}/baris', [PotentialImportController::class, 'rows'])->can('create', PotentialImport::class)->name('impor.baris');
+            Route::post('/impor/{potentialImport}/selesai', [PotentialImportController::class, 'finish'])->can('create', PotentialImport::class)->name('impor.selesai');
+        });
+        Route::get('/ringkasan', PotentialSummaryController::class)->can('viewAny', PotentialImport::class)->name('ringkasan');
+        Route::get('/kendaraan', [PotentialVehicleController::class, 'index'])->can('viewAny', PotentialImport::class)->name('kendaraan.index');
+        Route::get('/kendaraan/{potentialVehicle}', [PotentialVehicleController::class, 'show'])
+            ->can('viewAny', PotentialImport::class)
+            ->whereNumber('potentialVehicle')
+            ->name('kendaraan.show');
     });
 
     // Vehicle data for the Kalkulator PKB from the private NJKB API (D-041)

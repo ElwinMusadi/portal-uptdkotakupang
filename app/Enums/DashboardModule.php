@@ -15,6 +15,8 @@ enum DashboardModule: string
     case Statistik = 'statistik';
     /** Laporan Penerimaan: revenue imported from BPAD's STS files (D-047). */
     case Penerimaan = 'penerimaan';
+    /** Pemetaan PKB: the vehicles due for tax and their compliance (D-052). */
+    case Pemetaan = 'pemetaan';
     case Berita = 'berita';
     case Dokumentasi = 'dokumentasi';
     case Dokumen = 'dokumen';
@@ -44,6 +46,7 @@ enum DashboardModule: string
             self::Pesan => 'Pesan & Pengaduan',
             self::Statistik => 'Statistik Layanan',
             self::Penerimaan => 'Laporan Penerimaan',
+            self::Pemetaan => 'Pemetaan PKB',
             self::Berita => 'Berita & Pengumuman',
             self::Dokumentasi => 'Dokumentasi Kegiatan',
             self::Dokumen => 'Regulasi & Unduhan',
