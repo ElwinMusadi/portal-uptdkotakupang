@@ -96,6 +96,19 @@
 /* ================= 5 · Jembatan mitra ================= */
 .mitra { padding-block: 8px 0; }
 .mitra .eyebrow { margin-bottom: 18px; }
+/* Lencana mitra lebih besar di layar lebar (permintaan pemilik); lencana lain tetap */
+@media (min-width: 1024px) {
+  .mitra .eyebrow { margin-bottom: 22px; }
+  .mitra .badges { gap: 12px; }
+  .mitra .badge { gap: 12px; padding: 8px 20px 8px 8px; font-size: 16px; }
+  .mitra .badge__dot { width: 40px; height: 40px; font-size: 13px; }
+  .mitra .badge__dot--logo { padding: 4px; }
+}
+@media (min-width: 1280px) {
+  .mitra .badges { gap: 14px; }
+  .mitra .badge { gap: 14px; padding: 9px 24px 9px 9px; font-size: 17px; }
+  .mitra .badge__dot { width: 46px; height: 46px; font-size: 14px; }
+}
 
 /* ================= 6 · Transparansi ================= */
 .dash { display: grid; gap: 10px; }
