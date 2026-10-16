@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Switch } from "@/components/ui/switch"
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
@@ -34,6 +35,7 @@ import {
   useImporPotensi,
   useRingkasanPemetaan,
   useSasaranPenagihan,
+  useTampilPotensi,
   type AngkaPotensi,
   type ImporPotensi,
   type Kelompok,
@@ -65,6 +67,7 @@ const belumBayar = (a: AngkaPotensi) => a.kelompok["jatuh-tempo"] + a.kelompok.t
 export default function HalamanPemetaan() {
   const impor = useImporPotensi()
   const hapus = useHapusPotensi()
+  const tampil = useTampilPotensi()
   const konfirmasi = useKonfirmasi()
   const [unggah, setUnggah] = React.useState(false)
   const administrator = sesi().peran === "administrator"
@@ -84,6 +87,24 @@ export default function HalamanPemetaan() {
       toast.success("Data potensi PKB dihapus")
     } catch (e) {
       toast.error("Data gagal dihapus", { description: (e as Error).message })
+    }
+  }
+
+  const ubahTampil = async (nyala: boolean) => {
+    if (nyala) {
+      const ya = await konfirmasi({
+        judul: "Tampilkan pemetaan PKB di portal?",
+        deskripsi:
+          "Jumlah kendaraan, kepatuhan, dan rupiah per kecamatan dan kelurahan tampil untuk umum di halaman Pemetaan PKB, tanpa identitas wajib pajak. Angka yang menggambarkan kurang dari 3 kendaraan disamarkan. Pastikan datanya sudah diperiksa.",
+        label: "Tampilkan",
+      })
+      if (!ya) return
+    }
+    try {
+      await tampil.mutateAsync(nyala)
+      toast.success(nyala ? "Pemetaan tampil di portal" : "Pemetaan disembunyikan dari portal")
+    } catch (e) {
+      toast.error("Tampilan di portal gagal diubah", { description: (e as Error).message })
     }
   }
 
@@ -116,10 +137,22 @@ export default function HalamanPemetaan() {
         </Card>
       ) : (
         <>
-          <p className="text-sm text-muted-foreground">
-            Data penetapan {tanggal(data.tanggalPenetapan)} · {angka(data.jumlah)} kendaraan · diimpor {tanggalJam(data.selesai)}
-            {data.diimporOleh && ` oleh ${data.diimporOleh}`}
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground">
+              Data penetapan {tanggal(data.tanggalPenetapan)} · {angka(data.jumlah)} kendaraan · diimpor {tanggalJam(data.selesai)}
+              {data.diimporOleh && ` oleh ${data.diimporOleh}`}
+            </p>
+            {administrator ? (
+              <div className="flex items-center gap-2">
+                <Switch id="pemetaan-tampil" checked={data.tampil} disabled={tampil.isPending} onCheckedChange={(v) => void ubahTampil(v)} />
+                <Label htmlFor="pemetaan-tampil" className="text-sm">
+                  Tampil di portal
+                </Label>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">{data.tampil ? "Tampil di portal" : "Belum tampil di portal"}</p>
+            )}
+          </div>
           <Tabs defaultValue="ringkasan" className="gap-4">
             <TabsList>
               <TabsTrigger value="ringkasan">Peta &amp; ringkasan</TabsTrigger>

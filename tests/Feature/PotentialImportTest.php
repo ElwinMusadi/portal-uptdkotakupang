@@ -55,7 +55,7 @@ class PotentialImportTest extends TestCase
 
     public function test_imports_a_file_in_parts_and_replaces_the_data_before_it(): void
     {
-        $older = PotentialImport::factory()->create(['jumlah' => 1, 'diterima' => 1, 'selesai_pada' => '2026-10-01 00:00:00']);
+        $older = PotentialImport::factory()->create(['jumlah' => 1, 'diterima' => 1, 'selesai_pada' => '2026-10-01 00:00:00', 'tampil' => true]);
         PotentialVehicle::factory()->for($older, 'import')->create();
         $this->actingAs($this->employee)->getJson('/api/pemetaan/impor')->assertOk()->assertJsonPath('impor.id', $older->id);
 
@@ -64,6 +64,7 @@ class PotentialImportTest extends TestCase
             ->assertJsonPath('impor.diterima', 0)
             ->assertJsonPath('impor.selesai', null)
             ->assertJsonPath('impor.diimporOleh', 'Petugas Pemetaan')
+            ->assertJsonPath('impor.tampil', false)
             ->assertJsonPath('barisPerBagian', 1000);
         $id = $started->json('impor.id');
 
@@ -78,7 +79,9 @@ class PotentialImportTest extends TestCase
             ->assertOk()
             ->assertJsonPath('id', $id)
             ->assertJsonPath('tanggalPenetapan', '2026-10-16')
-            ->assertJsonPath('selesai', '2026-10-16T03:00:00+00:00');
+            ->assertJsonPath('selesai', '2026-10-16T03:00:00+00:00')
+            ->assertJsonPath('tampil', false);
+        $this->getJson('/api/public/pemetaan')->assertExactJson(['tersedia' => false]);
 
         $this->assertModelMissing($older);
         $this->assertSame(['DH1234AB', 'DH2B', 'DH3C'], PotentialVehicle::query()->orderBy('urut')->pluck('nopol')->all());
@@ -176,6 +179,29 @@ class PotentialImportTest extends TestCase
         $this->assertSame(0, PotentialVehicle::query()->count());
         $this->assertSame(['menghapus', 'Data potensi PKB penetapan 16 Okt 2026 (2 kendaraan)'], [Activity::query()->sole()->action, Activity::query()->sole()->target]);
         $this->actingAs($administrator)->getJson('/api/pemetaan/impor')->assertExactJson(['impor' => null]);
+    }
+
+    public function test_administrators_show_the_data_on_the_portal_and_take_it_off(): void
+    {
+        $administrator = User::factory()->administrator()->create();
+        $this->actingAs($administrator)->patchJson('/api/pemetaan/impor', ['tampil' => true])->assertNotFound();
+        $current = PotentialImport::factory()->create(['jumlah' => 2]);
+        $unfinished = PotentialImport::factory()->unfinished()->create();
+
+        $this->actingAs($this->employee)->patchJson('/api/pemetaan/impor', ['tampil' => true])
+            ->assertForbidden()
+            ->assertExactJson(['message' => 'Hanya Administrator yang dapat menampilkan pemetaan PKB di portal.']);
+        $this->actingAs($administrator)->patchJson('/api/pemetaan/impor')->assertUnprocessable()->assertJsonValidationErrors(['tampil' => 'Pilih apakah pemetaan tampil di portal.']);
+        $this->actingAs($administrator)->patchJson('/api/pemetaan/impor', ['tampil' => 'ya'])->assertUnprocessable()->assertJsonValidationErrors(['tampil' => 'Pilih apakah pemetaan tampil di portal.']);
+        $this->actingAs($administrator)->patchJson('/api/pemetaan/impor', ['tampil' => true])->assertOk()->assertJsonPath('id', $current->id)->assertJsonPath('tampil', true);
+        $this->assertFalse($unfinished->fresh()->tampil);
+        $this->actingAs($administrator)->patchJson('/api/pemetaan/impor', ['tampil' => true])->assertOk();
+        $this->actingAs($administrator)->patchJson('/api/pemetaan/impor', ['tampil' => false])->assertOk()->assertJsonPath('tampil', false);
+
+        $this->assertSame(
+            [['menampilkan', 'Data potensi PKB penetapan 16 Okt 2026 (2 kendaraan) di portal'], ['menyembunyikan', 'Data potensi PKB penetapan 16 Okt 2026 (2 kendaraan) dari portal']],
+            Activity::query()->oldest('id')->get()->map(fn (Activity $activity): array => [$activity->action, $activity->target])->all(),
+        );
     }
 
     private function start(int $rows): TestResponse

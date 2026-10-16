@@ -16,11 +16,13 @@ use Illuminate\Support\Carbon;
  * An import of BPAD's potential-tax file for Pemetaan PKB (D-052). Its rows
  * arrive in parts; once all arrived the import is finished and replaces the
  * data before it, so Pemetaan PKB always shows the latest finished import.
+ * Its figures appear on the public portal once an Administrator turns
+ * "tampil" on (D-052 slice 2).
  *
  * @property ?Carbon $tanggal_penetapan
  * @property ?Carbon $selesai_pada
  */
-#[Fillable(['berkas', 'jumlah', 'diterima', 'tanggal_penetapan', 'diimpor_oleh', 'selesai_pada'])]
+#[Fillable(['berkas', 'jumlah', 'diterima', 'tanggal_penetapan', 'diimpor_oleh', 'selesai_pada', 'tampil'])]
 class PotentialImport extends Model
 {
     /** @use HasFactory<PotentialImportFactory> */
@@ -33,6 +35,7 @@ class PotentialImport extends Model
      */
     protected $attributes = [
         'diterima' => 0,
+        'tampil' => false,
     ];
 
     /**
@@ -47,6 +50,7 @@ class PotentialImport extends Model
             'diterima' => 'integer',
             'tanggal_penetapan' => 'date',
             'selesai_pada' => 'datetime',
+            'tampil' => 'boolean',
         ];
     }
 

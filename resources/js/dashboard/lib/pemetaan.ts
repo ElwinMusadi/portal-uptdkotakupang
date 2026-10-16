@@ -53,6 +53,8 @@ export interface ImporPotensi {
   diimporOleh: string | null
   dimulai: string | null
   selesai: string | null
+  /** Angka gabungannya tampil di portal (dinyalakan Administrator) */
+  tampil: boolean
 }
 
 /** Angka satu wilayah: jumlah kendaraan per roda dan kepatuhan, dan rupiahnya */
@@ -185,6 +187,15 @@ export function useDetailKendaraan(id: number | null) {
     queryKey: [...KUNCI, "detail", id],
     queryFn: () => mintaServer<KendaraanLengkap>(`/api/pemetaan/kendaraan/${id}`, "GET"),
     enabled: id !== null,
+  })
+}
+
+/** Tampilkan angka gabungan di portal atau sembunyikan; khusus Administrator */
+export function useTampilPotensi() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (tampil: boolean) => mintaServer<ImporPotensi>("/api/pemetaan/impor", "PATCH", { tampil }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: KUNCI }),
   })
 }
 

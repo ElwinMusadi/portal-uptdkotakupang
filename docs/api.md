@@ -431,7 +431,8 @@ Berkas Data Potensi (tabel HTML berakhiran .xls, 43 kolom: NOPOL … PETUGAS DTD
 
 | Permintaan | Isi | Hasil |
 |---|---|---|
-| `GET /api/pemetaan/impor` | — | `200` `{impor}`: impor yang sedang ditampilkan (yang selesai paling akhir) `{id, berkas, jumlah, diterima, tanggalPenetapan, diimporOleh, dimulai, selesai}`, atau `null`. |
+| `GET /api/pemetaan/impor` | — | `200` `{impor}`: impor yang sedang ditampilkan (yang selesai paling akhir) `{id, berkas, jumlah, diterima, tanggalPenetapan, diimporOleh, dimulai, selesai, tampil}`, atau `null`. `tampil`: angka gabungannya tampil di portal. |
+| `PATCH /api/pemetaan/impor` | `{"tampil": true\|false}` | `200` impor. Khusus Administrator ("Hanya Administrator yang dapat menampilkan pemetaan PKB di portal."); `422` "Pilih apakah pemetaan tampil di portal." bila bukan boolean; `404` "Belum ada data potensi PKB.". Hanya mengubah impor yang sedang ditampilkan; dicatat di log aktivitas ("menampilkan … di portal", "menyembunyikan … dari portal") hanya bila berubah. Impor baru selalu mulai `tampil: false`. |
 | `POST /api/pemetaan/impor` | `{"berkas", "kolom": [43 judul kolom], "jumlah"}` | `201` `{impor, barisPerBagian: 1000}`. Impor lain yang belum selesai dibuang. `422` bila judul kolom tidak persis sama ("Berkas ini bukan Data Potensi dari sistem BPAD: susunan kolomnya tidak dikenali.") atau `jumlah` di luar 1–2.000.000. |
 | `POST /api/pemetaan/impor/{id}/baris` | `{"mulai": letak baris pertama (0 untuk baris pertama berkas), "baris": [[43 teks], …]}`, maks. 1.000 baris | `200` `{diterima, jumlah}`. Bagian harus berurutan ("Bagian berkas tidak berurutan: berikutnya baris N."), tidak melebihi `jumlah`, dan setiap baris berisi 43 teks ("Baris N tidak berisi 43 kolom seperti berkas Data Potensi.", "Baris N tidak bisa dibaca."). Angka bertitik ribuan dibaca sebagai rupiah; tanggal hanya `YYYY-MM-DD`; teks yang terlalu panjang dipotong. KTP dan telepon dienkripsi. |
 | `POST /api/pemetaan/impor/{id}/selesai` | — | `200` impor. Ditolak bila belum semua baris diterima ("Baru N dari M baris yang diterima.") atau sudah selesai. Kendaraan dihitung ke tabel ringkasan, impor menggantikan data sebelumnya (dihapus beserta kendaraannya), dan dicatat di log aktivitas ("mengimpor Data potensi PKB penetapan 16 Okt 2026 (28.725 kendaraan)"). |
@@ -1089,6 +1090,42 @@ Parameter, opsional dan salah satu saja: `tanggal` (`YYYY-MM-DD`) untuk laporan 
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 
 Kode: `app/Http/Controllers/PublicRevenueReportController.php`, `app/Http/Requests/ShowPublicRevenueReportRequest.php`, `app/Actions/BuildPublicRevenueReport.php`, `app/Actions/BuildRevenueReport.php` (`published()`, `totals()`, `comparison()`, `breakdown()`, `days()`). Tes: `tests/Feature/PublicRevenueReportTest.php`.
+
+## `GET /api/public/pemetaan`
+
+Halaman *Pemetaan PKB* portal (`/pemetaan`, `resources/js/portal/pemetaan/pemetaan-pkb.tsx`, [D-052](decisions.md#d-052--2026-10-16--pemetaan-pkb-dari-berkas-data-potensi)). Angka gabungan seluruh data potensi yang sedang ditampilkan, per kota, kecamatan, dan kelurahan, hanya setelah Administrator menyalakan "Tampil di portal". Tidak ada nama, nomor polisi, alamat, atau identitas lain. Tanpa parameter.
+
+```json
+{
+  "tersedia": true,
+  "tanggalPenetapan": "2026-10-16",
+  "diperbarui": "2026-10-16T03:16:00+00:00",
+  "minimum": 3,
+  "kota": { "kendaraan": 1200, "rodaDua": 1000, "rodaTiga": 5, "rodaEmpat": 195, "taat": 500, "belumBayar": 200, "menunggak": 500, "potensi": 600000000, "tagihan": 900000000, "tunggakan": 550000000 },
+  "kecamatan": [
+    {
+      "kunci": "ALAK", "nama": "Alak",
+      "kendaraan": 300, "rodaDua": 260, "rodaTigaLebih": 40, "taat": 120, "belumBayar": 60, "menunggak": 120,
+      "potensi": 150000000, "tagihan": 220000000, "tunggakan": 130000000,
+      "kelurahan": [
+        { "nama": "NAIONI", "kendaraan": 12, "rodaDua": null, "rodaTigaLebih": null, "taat": 6, "belumBayar": null, "menunggak": null, "potensi": 6000000, "tagihan": 9000000, "tunggakan": null },
+        { "nama": "…" }
+      ]
+    },
+    { "kunci": "", "nama": "Tanpa kelurahan", "kendaraan": 40, "…": 0, "kelurahan": [] }
+  ]
+}
+```
+
+| Hal | Perilaku |
+|---|---|
+| Angka | Kota: `rodaTiga` dan `rodaEmpat` terpisah; kecamatan dan kelurahan: `rodaTigaLebih` (roda tiga dan roda empat atau lebih). `belumBayar` = jatuh tempo dan terlambat kurang dari setahun; `menunggak` = menunggak setahun atau lebih. `potensi` = pokok PKB, `tagihan` = tagihan kendaraan yang belum taat, `tunggakan` = pokok dan denda tunggakan. Kecamatan urut daftar resmi; "Tanpa kelurahan" (`kunci` kosong) terakhir dan tanpa rincian kelurahan. |
+| Penyamaran | Angka yang disamarkan bernilai `null`. Angka yang menggambarkan 1–2 kendaraan disamarkan, beserta angka lain yang diperlukan agar tidak bisa dihitung balik dari total mana pun, satu per satu maupun digabung (aturan lengkap di D-052). |
+| Belum tampil | `200` `{"tersedia": false}`, juga sebelum impor pertama. |
+| Galat | `422` `query` "Parameter kueri tidak didukung." untuk parameter apa pun; `429` setelah batas API publik. |
+| Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
+
+Kode: `app/Http/Controllers/PublicPotentialMapController.php`, `app/Actions/BuildPublicPotentialMap.php` (dari tabel ringkasan `BuildPotentialSummary`). Tes: `tests/Feature/PublicPotentialMapTest.php`.
 
 ## `GET /api/public/antrean/{kode}`
 

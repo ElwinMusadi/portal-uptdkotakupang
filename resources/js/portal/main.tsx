@@ -10,6 +10,7 @@ const KOMPONEN: Record<string, () => Promise<{ pasang: (el: HTMLElement) => void
   "judul-pembuka": () => import("./beranda/judul-pembuka"),
   "lambang-pembuka": () => import("./beranda/lambang-pembuka"),
   "laporan-penerimaan": () => import("./penerimaan/laporan-penerimaan"),
+  "pemetaan-pkb": () => import("./pemetaan/pemetaan-pkb"),
   "lacak-antrean": () => import("./antrean/lacak-antrean"),
   "layar-antrean": () => import("./antrean/layar-antrean"),
 }

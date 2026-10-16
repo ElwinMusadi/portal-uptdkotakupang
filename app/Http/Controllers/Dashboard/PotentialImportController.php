@@ -3,19 +3,23 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Actions\ImportPotentialVehicles;
+use App\Actions\RecordActivity;
+use App\Enums\DashboardModule;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dashboard\AddPotentialRowsRequest;
 use App\Http\Requests\Dashboard\StartPotentialImportRequest;
+use App\Http\Requests\Dashboard\UpdatePotentialImportRequest;
 use App\Http\Resources\PotentialImportResource;
 use App\Models\PotentialImport;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Importing BPAD's potential-tax file for Pemetaan PKB (D-052): the data
- * shown now, starting an import, its parts, finishing it, and deleting the
- * data (administrators).
+ * shown now, starting an import, its parts, finishing it, showing it on the
+ * portal and deleting the data (administrators).
  */
 class PotentialImportController extends Controller
 {
@@ -58,6 +62,32 @@ class PotentialImportController extends Controller
     public function finish(Request $request, PotentialImport $potentialImport, ImportPotentialVehicles $import): PotentialImportResource
     {
         return PotentialImportResource::make($import->finish($potentialImport, $request->user())->load('importer'));
+    }
+
+    /**
+     * Show the figures of the data shown now on the public portal or take
+     * them off (D-052 slice 2). Saving the same choice again changes and
+     * logs nothing.
+     */
+    public function update(UpdatePotentialImportRequest $request, ImportPotentialVehicles $import, RecordActivity $recordActivity): PotentialImportResource
+    {
+        $current = PotentialImport::current();
+        abort_if($current === null, 404, 'Belum ada data potensi PKB.');
+        $show = $request->boolean('tampil');
+
+        if ($current->tampil !== $show) {
+            DB::transaction(function () use ($request, $current, $import, $recordActivity, $show): void {
+                $current->update(['tampil' => $show]);
+                $recordActivity->handle(
+                    $request->user(),
+                    DashboardModule::Pemetaan,
+                    $show ? 'menampilkan' : 'menyembunyikan',
+                    $import->title($current).($show ? ' di portal' : ' dari portal'),
+                );
+            });
+        }
+
+        return PotentialImportResource::make($current->load('importer'));
     }
 
     /**

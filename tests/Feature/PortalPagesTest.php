@@ -29,6 +29,7 @@ class PortalPagesTest extends TestCase
             'dokumentasi' => ['/dokumentasi', 'dokumentasi'],
             'unduhan' => ['/unduhan', 'unduhan'],
             'penerimaan' => ['/penerimaan', 'penerimaan'],
+            'pemetaan' => ['/pemetaan', 'pemetaan'],
             'kontak' => ['/kontak', 'kontak'],
             'login' => ['/login', 'login'],
             'dashboard pegawai' => ['/dashboard-pegawai', 'dashboard-pegawai'],
@@ -311,6 +312,35 @@ class PortalPagesTest extends TestCase
 
         $this->assertSame(1, preg_match('/<section[^>]*\bid="transparansi"[^>]*>.*?<\/section>/s', $html, $section));
         $this->assertMatchesRegularExpression('#<a class="link-arrow" href="penerimaan\.html"\s*>Lihat laporan penerimaan<svg#', $section[0]);
+    }
+
+    public function test_leaves_the_tax_potential_map_to_its_component_and_the_public_api(): void
+    {
+        $html = $this->get('/pemetaan')->assertOk()->getContent();
+
+        $this->assertStringContainsString('<div class="pemetaan" data-react="pemetaan-pkb">', $html);
+        $this->assertStringContainsString('<p class="center muted" role="status" style="padding:48px 0">Memuat pemetaan PKB…</p>', $html);
+        $this->assertStringContainsString('<script type="module" src="skrip/portal"></script>', $html);
+        // The masking rule is stated on the page, whatever the component shows (D-052)
+        $this->assertStringContainsString('Angka yang menggambarkan kurang dari 3 kendaraan disamarkan, bersama angka terkecil lain bila angkanya masih dapat dihitung dari total.', $html);
+    }
+
+    #[DataProvider('pagesWithHeader')]
+    public function test_links_the_tax_potential_map_from_the_information_menu(string $uri, string $view): void
+    {
+        $html = $this->get($uri)->assertOk()->getContent();
+
+        $current = $view === 'pemetaan' ? ' aria-current="page"' : '';
+        $this->assertStringContainsString("<a class=\"nav__menu-link\" data-nav=\"pemetaan\"{$current} href=\"pemetaan.html\">", $html);
+        $this->assertStringContainsString("<a data-nav=\"pemetaan\"{$current} href=\"pemetaan.html\">Pemetaan PKB</a>", $html);
+    }
+
+    public function test_links_the_tax_potential_map_from_the_homepage_transparency_section(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+
+        $this->assertSame(1, preg_match('/<section[^>]*\bid="transparansi"[^>]*>.*?<\/section>/s', $html, $section));
+        $this->assertMatchesRegularExpression('#<a class="link-arrow" href="pemetaan\.html"\s*>Lihat pemetaan PKB per wilayah<svg#', $section[0]);
     }
 
     public function test_leaves_the_news_to_the_public_api(): void

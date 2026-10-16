@@ -16,7 +16,7 @@ class PotentialImportResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @return array{id: string, berkas: string, jumlah: int, diterima: int, tanggalPenetapan: ?string, diimporOleh: ?string, dimulai: ?string, selesai: ?string}
+     * @return array{id: string, berkas: string, jumlah: int, diterima: int, tanggalPenetapan: ?string, diimporOleh: ?string, dimulai: ?string, selesai: ?string, tampil: bool}
      */
     public function toArray(Request $request): array
     {
@@ -29,6 +29,7 @@ class PotentialImportResource extends JsonResource
             'diimporOleh' => $this->importer?->name,
             'dimulai' => $this->created_at?->toIso8601String(),
             'selesai' => $this->selesai_pada?->toIso8601String(),
+            'tampil' => $this->tampil,
         ];
     }
 }

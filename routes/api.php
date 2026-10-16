@@ -76,6 +76,7 @@ use App\Http\Controllers\PublicMessageController;
 use App\Http\Controllers\PublicMobileServiceStopController;
 use App\Http\Controllers\PublicOpeningHoursController;
 use App\Http\Controllers\PublicOrganizationController;
+use App\Http\Controllers\PublicPotentialMapController;
 use App\Http\Controllers\PublicProfileController;
 use App\Http\Controllers\PublicQueueTicketController;
 use App\Http\Controllers\PublicRevenueReportController;
@@ -504,6 +505,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/impor', [PotentialImportController::class, 'show'])->can('viewAny', PotentialImport::class)->name('impor.show');
         Route::post('/impor', [PotentialImportController::class, 'store'])->can('create', PotentialImport::class)->name('impor.store');
         Route::delete('/impor', [PotentialImportController::class, 'destroy'])->can('delete', PotentialImport::class)->name('impor.destroy');
+        // Slice 2: shown on the portal only once an Administrator has checked it
+        Route::patch('/impor', [PotentialImportController::class, 'update'])->can('publish', PotentialImport::class)->name('impor.update');
         Route::whereUlid('potentialImport')->group(function (): void {
             Route::post('/impor/{potentialImport}/baris', [PotentialImportController::class, 'rows'])->can('create', PotentialImport::class)->name('impor.baris');
             Route::post('/impor/{potentialImport}/selesai', [PotentialImportController::class, 'finish'])->can('create', PotentialImport::class)->name('impor.selesai');
@@ -554,6 +557,8 @@ Route::prefix('public')
             ->name('halaman.show');
         // Laporan Penerimaan: the imports shown on the portal, small groups masked (D-048)
         Route::get('/penerimaan', PublicRevenueReportController::class)->middleware('throttle:public-penerimaan')->name('penerimaan.show');
+        // Pemetaan PKB: figures per kecamatan and kelurahan without identities, small groups hidden (D-052)
+        Route::get('/pemetaan', PublicPotentialMapController::class)->name('pemetaan.show');
         // Antrean Online: the taxpayer's tracking page behind a ticket's QR, by its random code only (D-051)
         Route::get('/antrean/{kode}', PublicQueueTicketController::class)->where('kode', QueueTicket::TRACKING_CODE_PATTERN)->name('antrean.show');
         // The contact form; also limited to 5 messages per hour per address (D-016).

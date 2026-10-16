@@ -40,6 +40,17 @@ class PotentialImportPolicy
             : Response::deny('Hanya Administrator yang dapat menghapus data potensi PKB.');
     }
 
+    /**
+     * Determine whether the user can show the figures on the public portal
+     * or take them off: Administrators only, once the data is checked.
+     */
+    public function publish(User $user): Response
+    {
+        return $user->isAdministrator()
+            ? Response::allow()
+            : Response::deny('Hanya Administrator yang dapat menampilkan pemetaan PKB di portal.');
+    }
+
     private function managesMapping(User $user): Response
     {
         return in_array(DashboardModule::Pemetaan->value, $user->managedModules(), true)
