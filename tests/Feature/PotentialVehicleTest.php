@@ -66,6 +66,34 @@ class PotentialVehicleTest extends TestCase
         $this->list(['bulan' => 3])->assertJsonPath('kendaraan.*.id', [$march->id]);
     }
 
+    public function test_narrows_to_every_vehicle_that_still_owes_tax(): void
+    {
+        $this->vehicle(['tagihan' => 0]);
+        $due = $this->vehicle(['kelompok' => TaxCompliance::JatuhTempo, 'tagihan' => 300000]);
+        $late = $this->vehicle(['kelompok' => TaxCompliance::Terlambat, 'tagihan' => 400000]);
+        $arrears = PotentialVehicle::factory()->for($this->current, 'import')->inArrears(2)->create();
+        $arrearsWithoutAmount = PotentialVehicle::factory()->for($this->current, 'import')->inArrears(4, owed: 0)->create(['tagihan' => 0]);
+        $other = $this->vehicle(['kelompok' => TaxCompliance::Lainnya, 'tagihan' => 100000]);
+
+        $this->list(['kelompok' => 'belum-taat'])
+            ->assertJsonPath('jumlah', 5)
+            ->assertJsonPath('kendaraan.*.id', [$arrears->id, $late->id, $due->id, $other->id, $arrearsWithoutAmount->id]);
+    }
+
+    public function test_matches_the_wildcards_typed_in_the_search_as_themselves(): void
+    {
+        $percent = $this->vehicle(['nama' => 'Toko 100% Jaya']);
+        $this->vehicle(['nama' => 'Toko 1000 Jaya']);
+        $underscore = $this->vehicle(['nama' => 'Ina_Lado']);
+        $this->vehicle(['nama' => 'InaXLado']);
+        $exclamation = $this->vehicle(['nama' => 'Seru!Bersama']);
+
+        $this->list(['q' => '100%'])->assertJsonPath('kendaraan.*.id', [$percent->id]);
+        $this->list(['q' => 'a_l'])->assertJsonPath('kendaraan.*.id', [$underscore->id]);
+        $this->list(['q' => 'u!b'])->assertJsonPath('kendaraan.*.id', [$exclamation->id]);
+        $this->list(['q' => '%'])->assertJsonPath('kendaraan.*.id', [$percent->id]);
+    }
+
     public function test_refuses_wrong_filters(): void
     {
         $this->list(['kecamatan' => 'KUPANG TENGAH'])->assertUnprocessable()->assertJsonValidationErrors(['kecamatan' => 'Kecamatan ini tidak ada di Kota Kupang.']);

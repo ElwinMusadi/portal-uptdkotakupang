@@ -146,13 +146,17 @@ export interface SaringanSasaran {
   q: string
   kecamatan: string
   kelurahan: string
-  kelompok: Kelompok | ""
+  kelompok: Kelompok | typeof BELUM_TAAT | ""
   roda: Roda | ""
   tahun: string
   bulan: string
 }
 
-export const SARINGAN_SASARAN: SaringanSasaran = { q: "", kecamatan: "", kelurahan: "", kelompok: "", roda: "", tahun: "", bulan: "" }
+/** Saringan kepatuhan untuk semua kendaraan yang belum taat (semua selain Taat) */
+export const BELUM_TAAT = "belum-taat"
+
+/** Daftar sasaran mulai dari kendaraan yang belum taat; "Semua status" tetap bisa dipilih */
+export const SARINGAN_SASARAN: SaringanSasaran = { q: "", kecamatan: "", kelurahan: "", kelompok: BELUM_TAAT, roda: "", tahun: "", bulan: "" }
 
 /** Kendaraan terbanyak dalam satu pencarian sasaran, sama dengan batas server */
 export const BATAS_SASARAN = 200

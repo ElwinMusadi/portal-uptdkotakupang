@@ -11,8 +11,8 @@ use Illuminate\Validation\Rule;
 /**
  * A search of the vehicles of Pemetaan PKB for collection (D-052): part of
  * the plate number or the owner's name, the kecamatan and kelurahan, the
- * compliance group, the wheel class, the years in arrears and the due month,
- * each optional.
+ * compliance group or every group that still owes tax, the wheel class, the
+ * years in arrears and the due month, each optional.
  */
 class ListPotentialVehiclesRequest extends FormRequest
 {
@@ -21,6 +21,12 @@ class ListPotentialVehiclesRequest extends FormRequest
      * Kota Kupang's list.
      */
     public const string UNPLACED = 'tanpa';
+
+    /**
+     * The compliance filter for every vehicle that still owes tax (all but
+     * Taat), which the dashboard list starts with.
+     */
+    public const string OWING = 'belum-taat';
 
     /**
      * Determine if the user is authorized to make this request; the route
@@ -42,7 +48,7 @@ class ListPotentialVehiclesRequest extends FormRequest
             'q' => ['sometimes', 'nullable', 'string', 'max:100'],
             'kecamatan' => ['sometimes', Rule::in([...array_column(Kecamatan::cases(), 'value'), self::UNPLACED])],
             'kelurahan' => ['sometimes', 'string', 'max:80'],
-            'kelompok' => ['sometimes', Rule::enum(TaxCompliance::class)],
+            'kelompok' => ['sometimes', Rule::in([...array_column(TaxCompliance::cases(), 'value'), self::OWING])],
             'roda' => ['sometimes', Rule::enum(VehicleWheels::class)],
             'tahun' => ['sometimes', 'integer', 'between:0,99'],
             'bulan' => ['sometimes', 'integer', 'between:1,12'],

@@ -30,6 +30,7 @@ import { sesi } from "@/lib/auth"
 import { angka, rupiah, tanggal, tanggalJam, ukuranBerkas } from "@/lib/format"
 import {
   BATAS_SASARAN,
+  BELUM_TAAT,
   imporBerkasPotensi,
   KECAMATAN,
   KOLOM_BAWAAN,
@@ -527,8 +528,8 @@ function TabSasaran() {
                 pilihan={[...KECAMATAN.map((k) => ({ nilai: k.kunci, label: k.nama })), { nilai: "tanpa", label: "Tanpa kelurahan" }]} />
               <PilihSaringan id="sasaran-kelurahan" label="Kelurahan" nilai={isian.kelurahan} ubah={(v) => ubah("kelurahan", v)} semua="Semua kelurahan"
                 pilihan={kelurahan.map((l) => ({ nilai: l, label: namaWilayah(l) }))} />
-              <PilihSaringan id="sasaran-kelompok" label="Kepatuhan" nilai={isian.kelompok} ubah={(v) => ubah("kelompok", v as Kelompok | "")} semua="Semua status"
-                pilihan={(Object.keys(LABEL_KELOMPOK) as Kelompok[]).map((k) => ({ nilai: k, label: LABEL_KELOMPOK[k] }))} />
+              <PilihSaringan id="sasaran-kelompok" label="Kepatuhan" nilai={isian.kelompok} ubah={(v) => ubah("kelompok", v as SaringanSasaran["kelompok"])} semua="Semua status"
+                pilihan={[{ nilai: BELUM_TAAT, label: "Belum taat" }, ...(Object.keys(LABEL_KELOMPOK) as Kelompok[]).map((k) => ({ nilai: k, label: LABEL_KELOMPOK[k] }))]} />
               <PilihSaringan id="sasaran-tahun" label="Lama tunggakan" nilai={isian.tahun} ubah={(v) => ubah("tahun", v)} semua="Semua"
                 pilihan={[0, 1, 2, 3, 4].map((t) => ({ nilai: String(t), label: t === 0 ? "Tidak menunggak" : `${t} tahun` }))} />
               <PilihSaringan id="sasaran-roda" label="Roda" nilai={isian.roda} ubah={(v) => ubah("roda", v as Roda | "")} semua="Semua"
@@ -570,11 +571,13 @@ function TabSasaran() {
               />
             </CardAction>
           )}
-          <CardDescription>
-            {sasaran.data && sasaran.data.jumlah > BATAS_SASARAN
-              ? `Menampilkan ${BATAS_SASARAN} kendaraan dengan tagihan terbesar. Persempit pencarian untuk melihat yang lain.`
-              : "Tagihan terbesar dulu. Pilih kendaraan untuk melihat semua datanya."}
-          </CardDescription>
+          {sasaran.data?.jumlah !== 0 && (
+            <CardDescription>
+              {sasaran.data && sasaran.data.jumlah > BATAS_SASARAN
+                ? `Menampilkan ${BATAS_SASARAN} kendaraan dengan tagihan terbesar. Persempit pencarian untuk melihat yang lain.`
+                : "Tagihan terbesar dulu. Pilih kendaraan untuk melihat semua datanya."}
+            </CardDescription>
+          )}
         </CardHeader>
         <CardContent>
           {sasaran.isLoading ? (
@@ -582,7 +585,10 @@ function TabSasaran() {
           ) : sasaran.error ? (
             <p className="text-sm text-destructive">Daftar gagal dimuat: {sasaran.error.message}</p>
           ) : !sasaran.data?.kendaraan.length ? (
-            <p className="text-sm text-muted-foreground">Tidak ada kendaraan yang cocok.</p>
+            <p className="text-sm text-muted-foreground">
+              Tidak ada kendaraan yang cocok.
+              {saringan.kelompok === BELUM_TAAT && " Kendaraan yang sudah taat tidak termasuk; pilih Semua status di Kepatuhan untuk mencarinya."}
+            </p>
           ) : (
             <div className="overflow-x-auto">
               <Table>

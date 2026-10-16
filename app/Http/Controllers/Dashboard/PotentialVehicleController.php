@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Dashboard;
 
+use App\Enums\TaxCompliance;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dashboard\ListPotentialVehiclesRequest;
 use App\Http\Resources\PotentialVehicleResource;
@@ -36,11 +37,13 @@ class PotentialVehicleController extends Controller
         $query = PotentialVehicle::query()
             ->whereBelongsTo($current, 'import')
             ->when($request->validated('q'), fn (Builder $query, string $text) => $query->where(fn (Builder $query) => $query
-                ->where('nopol', 'like', '%'.str_replace(' ', '', $text).'%')
-                ->orWhere('nama', 'like', '%'.$text.'%')))
+                ->whereRaw("nopol like ? escape '!'", [self::containing(str_replace(' ', '', $text))])
+                ->orWhereRaw("nama like ? escape '!'", [self::containing($text)])))
             ->when($request->kecamatan() !== null, fn (Builder $query) => $query->where('kecamatan', $request->kecamatan()))
             ->when($request->validated('kelurahan'), fn (Builder $query, string $kelurahan) => $query->where('kelurahan', $kelurahan))
-            ->when($request->validated('kelompok'), fn (Builder $query, string $group) => $query->where('kelompok', $group))
+            ->when($request->validated('kelompok'), fn (Builder $query, string $group) => $group === ListPotentialVehiclesRequest::OWING
+                ? $query->where('kelompok', '!=', TaxCompliance::Taat)
+                : $query->where('kelompok', $group))
             ->when($request->validated('roda'), fn (Builder $query, string $wheels) => $query->where('roda', $wheels))
             ->when($request->has('tahun'), fn (Builder $query) => $query->where('tahun_tunggak', (int) $request->validated('tahun')))
             ->when($request->validated('bulan'), fn (Builder $query, int|string $month) => $query->where('bulan_jatuh_tempo', (int) $month));
@@ -49,6 +52,15 @@ class PotentialVehicleController extends Controller
             'jumlah' => (clone $query)->count(),
             'kendaraan' => PotentialVehicleResource::collection($query->orderByDesc('tagihan')->orderBy('urut')->limit(self::LISTED)->get()),
         ]);
+    }
+
+    /**
+     * A LIKE pattern for the text anywhere in a column, with its own % and _
+     * matched as themselves ('!' escapes them in MySQL and SQLite alike).
+     */
+    private static function containing(string $text): string
+    {
+        return '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $text).'%';
     }
 
     /**
