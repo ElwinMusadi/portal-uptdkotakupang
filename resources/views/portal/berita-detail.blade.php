@@ -199,8 +199,8 @@
       </div>
     </header>
 
-    <div class="container container--wide">
-      <figure data-berita-foto hidden>
+    <div class="container">
+      <figure class="article-figure" data-berita-foto hidden>
         <div class="ph ph--blue article-media" data-berita-media></div>
         <figcaption class="caption-row"><p data-berita-keterangan></p><p data-berita-kredit></p></figcaption>
       </figure>

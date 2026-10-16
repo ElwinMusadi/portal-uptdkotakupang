@@ -452,7 +452,10 @@
 /* ---------- Artikel ---------- */
 .article-head { max-width: 860px; margin-inline: auto; }
 .article-head .h-display { max-width: 18ch; font-size: clamp(34px, 4.6vw, 58px); }
-.article-media { aspect-ratio: 16 / 8; border-radius: var(--r-xl); }
+/* Sampul selebar isi artikel (kolom info + teks) dan utuh dengan rasio aslinya, agar poster tidak terpotong */
+.article-figure { max-width: calc(200px + 56px + 680px); margin-inline: auto; }
+.article-media { border-radius: var(--r-xl); }
+.article-media > img { position: relative; height: auto; }
 .article-body { display: grid; grid-template-columns: 200px minmax(0, 680px); gap: 56px; justify-content: center; }
 .article-aside { position: sticky; top: 120px; align-self: start; display: grid; gap: 22px; font-size: 13.5px; }
 .article-aside dt { font-size: var(--fs-eyebrow); letter-spacing: var(--track-eyebrow); text-transform: uppercase; color: var(--text-2); }
