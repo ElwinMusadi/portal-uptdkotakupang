@@ -7,7 +7,7 @@
  * dan ditulis "disamarkan". Peta memakai batas BIG (batas-wilayah.ts):
  * kecamatan, lalu kelurahan kecamatan yang dipilih.
  */
-import { useEffect, useState, type CSSProperties } from "react"
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react"
 import { createRoot } from "react-dom/client"
 
 import { labelTanggal } from "../penerimaan/periode"
@@ -260,6 +260,20 @@ const isian = (s: number | null) => (s === null ? "var(--paper-2)" : `color-mix(
  */
 function PetaWilayah({ wilayah, u, pilih, setPilih }: { wilayah: Kecamatan[]; u: (typeof UKURAN)[Ukuran]; pilih: string | null; setPilih: (kunci: string | null) => void }) {
   const [ref, lebar] = useLebar<SVGSVGElement>()
+  const petaRef = useRef<SVGSVGElement | null>(null)
+  const refPeta = useCallback((el: SVGSVGElement | null) => {
+    petaRef.current = el
+    return ref(el)
+  }, [ref])
+  const kembaliRef = useRef<HTMLButtonElement>(null)
+  // Kecamatan yang dipilih tidak lagi berupa tombol di peta: fokus pindah ke "Semua kecamatan", lalu kembali ke kecamatan itu
+  const fokusKe = useRef<string | null>(null)
+  useEffect(() => {
+    const tujuan = fokusKe.current
+    fokusKe.current = null
+    if (tujuan === "") kembaliRef.current?.focus()
+    else if (tujuan) petaRef.current?.querySelector<SVGGElement>(`[data-kunci="${tujuan}"]`)?.focus()
+  }, [pilih])
   const kecamatan = wilayah.filter((k) => BATAS_KECAMATAN[k.kunci])
   const dipilih = kecamatan.find((k) => k.kunci === pilih) ?? null
   const tampil = kotakTampilan(dipilih ? BATAS_KECAMATAN[dipilih.kunci].kotak : undefined)
@@ -279,17 +293,28 @@ function PetaWilayah({ wilayah, u, pilih, setPilih }: { wilayah: Kecamatan[]; u:
     px,
   )
   const adaSamar = dipilih ? kelurahan.some((l) => !l.angka || u.nilai(l.angka) === null) : kecamatan.some((k) => u.nilai(k) === null)
-  const pilihKecamatan = (kunci: string) => setPilih(pilih === kunci ? null : kunci)
+  const pilihKecamatan = (kunci: string) => {
+    fokusKe.current = ""
+    setPilih(pilih === kunci ? null : kunci)
+  }
 
   return (
     <>
       {dipilih && (
-        <button type="button" className="pm-kembali" onClick={() => setPilih(null)}>
+        <button
+          ref={kembaliRef}
+          type="button"
+          className="pm-kembali"
+          onClick={() => {
+            fokusKe.current = pilih
+            setPilih(null)
+          }}
+        >
           ← Semua kecamatan
         </button>
       )}
       <svg
-        ref={ref}
+        ref={refPeta}
         viewBox={`${tampil.x} ${tampil.y} ${tampil.w} ${tampil.h}`}
         className="pm-peta__svg"
         style={{ "--px": px } as CSSProperties}
@@ -306,6 +331,7 @@ function PetaWilayah({ wilayah, u, pilih, setPilih }: { wilayah: Kecamatan[]; u:
           .map((k) => (
             <g
               key={k.kunci}
+              data-kunci={k.kunci}
               role="button"
               tabIndex={0}
               aria-pressed={false}

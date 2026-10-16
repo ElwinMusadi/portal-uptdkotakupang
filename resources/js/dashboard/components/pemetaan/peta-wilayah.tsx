@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react"
+import { useCallback, useEffect, useRef, type CSSProperties } from "react"
 
 import { cn } from "@/lib/utils"
 
@@ -46,6 +46,20 @@ export function PetaWilayah({
   const kecamatan = petak.filter((p) => BATAS_KECAMATAN[p.kunci])
   const aktif = kecamatan.find((p) => p.kunci === dipilih) ?? null
   const [ref, lebar] = useLebar<SVGSVGElement>()
+  const petaRef = useRef<SVGSVGElement | null>(null)
+  const refPeta = useCallback((el: SVGSVGElement | null) => {
+    petaRef.current = el
+    return ref(el)
+  }, [ref])
+  const kembaliRef = useRef<HTMLButtonElement>(null)
+  // Kecamatan yang dipilih tidak lagi berupa tombol di peta: fokus pindah ke "Semua kecamatan", lalu kembali ke kecamatan itu
+  const fokusKe = useRef<string | null>(null)
+  useEffect(() => {
+    const tujuan = fokusKe.current
+    fokusKe.current = null
+    if (tujuan === "") kembaliRef.current?.focus()
+    else if (tujuan) petaRef.current?.querySelector<SVGGElement>(`[data-kunci="${tujuan}"]`)?.focus()
+  }, [dipilih])
   const tampil = kotakTampilan(aktif ? BATAS_KECAMATAN[aktif.kunci].kotak : undefined)
   const px = tampil.w / (lebar ?? 448)
   const batasKelurahan = aktif ? Object.entries(BATAS_KELURAHAN).filter(([, b]) => b.kecamatan === aktif.kunci) : []
@@ -54,17 +68,28 @@ export function PetaWilayah({
     batasKelurahan.map(([kunci, b]) => ({ kunci, titik: b.label, ruang: b.ruang, nama: nama(kunci), nilai: kelurahan.find((k) => k.kunci === kunci)?.label ?? "—" })),
     px,
   )
-  const pilihKecamatan = (kunci: string) => pilih(dipilih === kunci ? null : kunci)
+  const pilihKecamatan = (kunci: string) => {
+    fokusKe.current = ""
+    pilih(dipilih === kunci ? null : kunci)
+  }
 
   return (
     <figure className="grid gap-2">
       {aktif && (
-        <button type="button" className="justify-self-start text-sm text-primary underline underline-offset-4" onClick={() => pilih(null)}>
+        <button
+          ref={kembaliRef}
+          type="button"
+          className="justify-self-start text-sm text-primary underline underline-offset-4"
+          onClick={() => {
+            fokusKe.current = dipilih
+            pilih(null)
+          }}
+        >
           ← Semua kecamatan
         </button>
       )}
       <svg
-        ref={ref}
+        ref={refPeta}
         viewBox={`${tampil.x} ${tampil.y} ${tampil.w} ${tampil.h}`}
         className="w-full max-w-md"
         style={{ "--px": px } as CSSProperties}
@@ -81,6 +106,7 @@ export function PetaWilayah({
           .map((p) => (
             <g
               key={p.kunci}
+              data-kunci={p.kunci}
               role="button"
               tabIndex={0}
               aria-pressed={false}
