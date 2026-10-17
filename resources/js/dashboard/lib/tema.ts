@@ -1,7 +1,18 @@
 import * as React from "react"
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
 
-import type { BagianTema, BagianTemaPortal, HurufTema, IsoDateTime, LatarTema, ModePortal, SkalaTema, SudutTema, Tema } from "@/lib/api"
+import type {
+  BagianTema,
+  BagianTemaPortal,
+  HurufTema,
+  IsoDateTime,
+  LatarTema,
+  ModePortal,
+  SkalaTema,
+  SudutTema,
+  TebalJudul,
+  Tema,
+} from "@/lib/api"
 import { mintaServer } from "@/lib/api/http"
 
 /** Tampilan bawaan PINTU (D-057), sama dengan Setting::DEFAULT_THEME_SECTION di server */
@@ -12,6 +23,7 @@ export const TEMA_BAWAAN: BagianTema = {
   hurufJudul: "sama",
   sudut: "sedang",
   skala: 100,
+  tebalJudul: 600,
 }
 
 /** Bagian portal tampilan bawaan: terang untuk semua pengunjung */
@@ -23,17 +35,40 @@ export const MODE_PORTAL: { nilai: ModePortal; label: string; keterangan: string
   { nilai: "gelap", label: "Gelap", keterangan: "Latar gelap, teks terang", contoh: ["#100F0D", "#EFEEEB"] },
 ]
 
-/** Huruf yang tersedia; Manrope dan Lexend khusus judul (ThemeFont di server) */
-export const HURUF: { nilai: HurufTema; label: string; teks: boolean }[] = [
-  { nilai: "sistem", label: "Huruf sistem perangkat (bawaan)", teks: true },
-  { nilai: "inter", label: "Inter", teks: true },
-  { nilai: "plus-jakarta-sans", label: "Plus Jakarta Sans", teks: true },
-  { nilai: "dm-sans", label: "DM Sans", teks: true },
-  { nilai: "source-sans-3", label: "Source Sans 3", teks: true },
-  { nilai: "ibm-plex-sans", label: "IBM Plex Sans", teks: true },
-  { nilai: "nunito-sans", label: "Nunito Sans", teks: true },
-  { nilai: "manrope", label: "Manrope (khusus judul)", teks: false },
-  { nilai: "lexend", label: "Lexend (khusus judul)", teks: false },
+/**
+ * Huruf yang tersedia; Manrope dan Lexend khusus judul (ThemeFont di server).
+ * judul = ketebalan judul yang disarankan, yaitu yang setebal judul bawaan
+ * (diukur dari tebal batang huruf terhadap Inter 600); maks = ketebalan
+ * terbesar berkas hurufnya bila di bawah 800.
+ */
+export const HURUF: { nilai: HurufTema; label: string; keluarga: string | null; teks: boolean; judul: TebalJudul; maks?: TebalJudul }[] = [
+  { nilai: "sistem", label: "Huruf sistem perangkat (bawaan)", keluarga: null, teks: true, judul: 600 },
+  { nilai: "inter", label: "Inter", keluarga: "Inter", teks: true, judul: 600 },
+  { nilai: "plus-jakarta-sans", label: "Plus Jakarta Sans", keluarga: "Plus Jakarta Sans", teks: true, judul: 700 },
+  { nilai: "dm-sans", label: "DM Sans", keluarga: "DM Sans", teks: true, judul: 600 },
+  { nilai: "source-sans-3", label: "Source Sans 3", keluarga: "Source Sans 3", teks: true, judul: 600 },
+  { nilai: "ibm-plex-sans", label: "IBM Plex Sans", keluarga: "IBM Plex Sans", teks: true, judul: 600, maks: 700 },
+  { nilai: "nunito-sans", label: "Nunito Sans", keluarga: "Nunito Sans", teks: true, judul: 700 },
+  { nilai: "manrope", label: "Manrope (khusus judul)", keluarga: "Manrope", teks: false, judul: 700 },
+  { nilai: "lexend", label: "Lexend (khusus judul)", keluarga: "Lexend", teks: false, judul: 600 },
+]
+
+/** Huruf judul yang dipakai bagian ini: huruf teks bila judulnya "Sama" */
+export function hurufJudulDipakai(bagian: Pick<BagianTema, "hurufTeks" | "hurufJudul">) {
+  const nilai = bagian.hurufJudul === "sama" ? bagian.hurufTeks : bagian.hurufJudul
+  return HURUF.find((h) => h.nilai === nilai) ?? HURUF[0]
+}
+
+/** font-family untuk contoh huruf; huruf sistem memakai tumpukan judul sistem seperti di server */
+export function keluargaHuruf(keluarga: string | null) {
+  const sistem = '-apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+  return keluarga === null ? `"SF Pro Display", ${sistem}` : `"${keluarga}", ${sistem}`
+}
+
+export const TEBAL_JUDUL: { nilai: TebalJudul; label: string }[] = [
+  { nilai: 600, label: "Semi-tebal" },
+  { nilai: 700, label: "Tebal" },
+  { nilai: 800, label: "Ekstra tebal" },
 ]
 
 export const LATAR: { nilai: LatarTema; label: string; keterangan: string; contoh: [string, string] }[] = [
@@ -59,8 +94,11 @@ export interface TemaSiapPakai {
   id: string
   nama: string
   keterangan: string
-  /** Tanpa skala: memilih tema siap pakai tidak mengubah ukuran tampilan */
-  nilai: Omit<BagianTema, "skala">
+  /**
+   * Tanpa skala: memilih tema siap pakai tidak mengubah ukuran tampilan.
+   * Tanpa ketebalan judul: diisi saran untuk huruf judulnya.
+   */
+  nilai: Omit<BagianTema, "skala" | "tebalJudul">
 }
 
 /** Tema siap pakai; tiap pilihan tetap bisa diubah sesudahnya (menjadi "Kustom") */
@@ -98,7 +136,7 @@ export const TEMA_SIAP_PAKAI: TemaSiapPakai[] = [
   },
 ]
 
-/** Tema siap pakai yang sama dengan pilihan sekarang (skala tidak dihitung), bila ada */
+/** Tema siap pakai yang sama dengan pilihan sekarang (skala dan ketebalan judul tidak dihitung), bila ada */
 export function temaSiapPakai(bagian: BagianTema): TemaSiapPakai | undefined {
   return TEMA_SIAP_PAKAI.find(
     (t) =>

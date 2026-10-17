@@ -11,9 +11,9 @@
 
 .ly-atas { display: flex; justify-content: space-between; align-items: flex-end; gap: 2vw; }
 .ly-atas__merek { font-size: 2.2vh; color: var(--night-muted, #9BA0A8); letter-spacing: 0.08em; text-transform: uppercase; }
-.ly-atas__judul { font-family: var(--font-display); font-size: 4.5vh; font-weight: 600; letter-spacing: -0.02em; }
+.ly-atas__judul { font-family: var(--font-display); font-size: 4.5vh; font-weight: var(--fw-display, 600); letter-spacing: -0.02em; }
 .ly-atas__waktu { text-align: right; font-size: 2.2vh; color: var(--night-muted, #9BA0A8); }
-.ly-atas__jam { font-family: var(--font-display); font-size: 5vh; font-weight: 600; color: #fff; font-variant-numeric: tabular-nums; }
+.ly-atas__jam { font-family: var(--font-display); font-size: 5vh; font-weight: var(--fw-display, 600); color: #fff; font-variant-numeric: tabular-nums; }
 
 .ly-isi { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; gap: 2.5vh 2vw; min-height: 0; }
 .ly-label { font-size: 2.2vh; color: var(--night-muted, #9BA0A8); letter-spacing: 0.06em; text-transform: uppercase; }
@@ -25,10 +25,10 @@
 .ly-utama > p { line-height: 1.15; }
 .ly-utama.is-baru { animation: ly-kedip 1s ease-in-out 3; }
 @keyframes ly-kedip { 50% { background: var(--night-accent-dim, #23345F); } }
-.ly-utama__nomor { font-family: var(--font-display); font-size: 17vh; font-weight: 700; line-height: 0.95; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.ly-utama__nomor { font-family: var(--font-display); font-size: 17vh; font-weight: max(700, var(--fw-display, 600)); line-height: 0.95; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
 .ly-utama__tgl { font-size: 5vh; font-weight: 600; color: var(--night-muted, #9BA0A8); }
 .ly-utama__nopol { font-size: 6vh; font-weight: 600; letter-spacing: 0.06em; }
-.ly-utama__loket { font-family: var(--font-display); font-size: 6vh; font-weight: 600; color: var(--night-accent, #7FA4FF); }
+.ly-utama__loket { font-family: var(--font-display); font-size: 6vh; font-weight: var(--fw-display, 600); color: var(--night-accent, #7FA4FF); }
 .ly-utama__layanan { font-size: 2.8vh; color: var(--night-muted, #9BA0A8); }
 
 .ly-samping { grid-row: span 2; display: grid; align-content: start; gap: 2.5vh; min-height: 0; }
@@ -36,13 +36,13 @@
 .ly-loket, .ly-menunggu { display: grid; gap: 1.2vh; }
 .ly-loket li, .ly-menunggu li { display: flex; justify-content: space-between; align-items: baseline; gap: 1vw; font-size: 2.8vh; }
 .ly-loket__nama { color: var(--night-muted, #9BA0A8); }
-.ly-loket__nomor { font-family: var(--font-display); font-size: 5vh; font-weight: 700; font-variant-numeric: tabular-nums; }
-.ly-menunggu__jumlah { font-family: var(--font-display); font-size: 4vh; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ly-loket__nomor { font-family: var(--font-display); font-size: 5vh; font-weight: max(700, var(--fw-display, 600)); font-variant-numeric: tabular-nums; }
+.ly-menunggu__jumlah { font-family: var(--font-display); font-size: 4vh; font-weight: max(700, var(--fw-display, 600)); font-variant-numeric: tabular-nums; }
 
 .ly-riwayat { display: grid; gap: 1.5vh; padding: 2.5vh 2vw; border-radius: calc(2.5vh * var(--r-scale, 1)); background: var(--night-2, #17181B); }
 .ly-riwayat__daftar { display: grid; gap: 1vh; }
 .ly-riwayat__daftar li { display: grid; grid-template-columns: 1.2fr 1.4fr 2fr auto; gap: 1.5vw; align-items: baseline; font-size: 2.6vh; line-height: 1.2; color: var(--night-muted, #9BA0A8); }
-.ly-riwayat__nomor { font-family: var(--font-display); font-size: 3vh; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
+.ly-riwayat__nomor { font-family: var(--font-display); font-size: 3vh; font-weight: max(700, var(--fw-display, 600)); color: #fff; font-variant-numeric: tabular-nums; }
 .ly-riwayat__nopol { color: #fff; letter-spacing: 0.04em; }
 .ly-riwayat__jam { font-variant-numeric: tabular-nums; }
 .ly-kosong { font-size: 3vh; color: var(--night-muted, #9BA0A8); }
@@ -56,7 +56,7 @@
 
 .ly--pesan { place-items: center; grid-template-rows: 1fr; }
 .ly-pesan { display: grid; gap: 2vh; max-width: 70ch; text-align: center; font-size: 2.6vh; color: var(--night-muted, #9BA0A8); }
-.ly-pesan__judul { font-family: var(--font-display); font-size: 4.5vh; font-weight: 600; color: #fff; }
+.ly-pesan__judul { font-family: var(--font-display); font-size: 4.5vh; font-weight: var(--fw-display, 600); color: #fff; }
 .ly-pesan .ly-tombol { justify-self: center; }
 
 /* Di TV seluruh isi muat satu layar tanpa gulir */

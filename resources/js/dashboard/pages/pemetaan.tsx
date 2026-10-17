@@ -842,7 +842,7 @@ function SheetKendaraan({ id, tutup }: { id: number | null; tutup: () => void })
           ) : (
             bagian.map(([judul, isi]) => (
               <section key={judul} className="grid gap-2">
-                <h3 className="text-sm font-semibold">{judul}</h3>
+                <h3 className="text-sm font-heading font-(--fw-heading)">{judul}</h3>
                 <dl className="grid grid-cols-[minmax(0,10rem)_minmax(0,1fr)] gap-x-4 gap-y-1.5 text-sm">
                   {isi.map(([label, nilai]) => (
                     <React.Fragment key={label}>

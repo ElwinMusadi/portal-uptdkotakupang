@@ -43,7 +43,7 @@ export function PratinjauPortal({ variabel, skala }: { variabel: Record<string, 
 
       <div className="grid gap-2">
         <p className="text-[11px] tracking-[0.12em] text-(--p-text-2) uppercase">UPTD Pendapatan Daerah · Kota Kupang</p>
-        <p className="font-(family-name:--p-font-display) text-2xl leading-tight font-semibold tracking-tight">
+        <p className="font-(family-name:--p-font-display) text-2xl leading-tight font-(--p-fw-display) tracking-tight">
           Semua informasi Samsat.
           <span className="block text-(--p-gray)">Lewat satu pintu.</span>
         </p>
@@ -60,7 +60,7 @@ export function PratinjauPortal({ variabel, skala }: { variabel: Record<string, 
 
       <div className="grid gap-3 rounded-[calc(24px*var(--p-r-scale))] border border-(--p-line) bg-(--p-surface) p-4">
         <div className="flex items-center justify-between gap-2">
-          <p className="font-(family-name:--p-font-display) text-[15px] font-semibold">Perpanjangan STNK</p>
+          <p className="font-(family-name:--p-font-display) text-[15px] font-(--p-fw-display)">Perpanjangan STNK</p>
           <span className="rounded-full bg-(--p-accent-soft) px-2.5 py-0.5 text-xs font-medium text-(--p-accent-ink)">Baru</span>
         </div>
         <p className="text-xs text-(--p-text-2)">Bawa KTP asli dan STNK lama ke loket pendaftaran.</p>
@@ -78,7 +78,7 @@ export function PratinjauPortal({ variabel, skala }: { variabel: Record<string, 
         <div className="flex items-end justify-between gap-3">
           <div className="grid gap-1">
             <p className="text-xs text-(--p-night-muted)">Transaksi bulan ini</p>
-            <p className="font-(family-name:--p-font-display) text-2xl font-semibold text-(--p-night-accent) tabular-nums">
+            <p className="font-(family-name:--p-font-display) text-2xl font-(--p-fw-display) text-(--p-night-accent) tabular-nums">
               7.638
             </p>
           </div>

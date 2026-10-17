@@ -48,12 +48,12 @@ function PratinjauPapan({ p }: { p: PapanLayanan }) {
       <div className="mt-3 grid gap-2 sm:grid-cols-2">
         <div className="rounded-lg bg-night-2 p-3">
           <p className="text-xs text-night-muted">Nomor antrean dilayani</p>
-          <p className="mt-1 font-display text-3xl font-semibold tracking-tight tabular-nums">{p.nomorAntrean || "—"}</p>
+          <p className="mt-1 font-display text-3xl font-(--fw-heading) tracking-tight tabular-nums">{p.nomorAntrean || "—"}</p>
           <p className="mt-1 text-xs text-night-muted">{p.layananAntrean}</p>
         </div>
         <div className="rounded-lg bg-night-2 p-3">
           <p className="text-xs text-night-muted">Perkiraan waktu tunggu</p>
-          <p className="mt-1 font-display text-3xl font-semibold tracking-tight tabular-nums">
+          <p className="mt-1 font-display text-3xl font-(--fw-heading) tracking-tight tabular-nums">
             {Number.isFinite(p.waktuTunggu) ? p.waktuTunggu : "—"}
             <span className="ml-1 text-base font-normal text-night-muted">menit</span>
           </p>

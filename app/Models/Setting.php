@@ -306,9 +306,10 @@ class Setting extends Model
 
     /**
      * One part of the theme as the built-in PINTU look: blue accent, warm
-     * background, system fonts, medium corners, 100% scale.
+     * background, system fonts, medium corners, 100% scale, semibold
+     * headings.
      *
-     * @var array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int}
+     * @var array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int}
      */
     public const array DEFAULT_THEME_SECTION = [
         'aksen' => '#2B63F6',
@@ -317,6 +318,7 @@ class Setting extends Model
         'hurufJudul' => 'sama',
         'sudut' => 'sedang',
         'skala' => 100,
+        'tebalJudul' => 600,
     ];
 
     /**
@@ -324,7 +326,7 @@ class Setting extends Model
      * plus the portal's mode, light for every visitor. The dashboard's dark
      * mode stays each employee's choice.
      *
-     * @var array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, mode: string}
+     * @var array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, mode: string}
      */
     public const array DEFAULT_PORTAL_THEME = [...self::DEFAULT_THEME_SECTION, 'mode' => 'terang'];
 
@@ -342,6 +344,14 @@ class Setting extends Model
      * @var list<int>
      */
     public const array THEME_SCALES = [90, 100, 110, 120];
+
+    /**
+     * The weights a theme part may set its headings in (D-057): semibold,
+     * bold and extra bold, always heavier than the text's 400.
+     *
+     * @var list<int>
+     */
+    public const array THEME_HEADING_WEIGHTS = [600, 700, 800];
 
     public const string POTENTIAL_MAP = 'pemetaan';
 
@@ -456,7 +466,7 @@ class Setting extends Model
      * built-in look until they are first saved. A setting added later, such
      * as the scale, takes its built-in value in a document saved before it.
      *
-     * @return array{portal: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, mode: string}, dashboard: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int}}
+     * @return array{portal: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, mode: string}, dashboard: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int}}
      */
     public static function theme(): array
     {

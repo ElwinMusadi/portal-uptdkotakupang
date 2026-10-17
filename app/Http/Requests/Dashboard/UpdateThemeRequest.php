@@ -52,6 +52,7 @@ class UpdateThemeRequest extends FormRequest
                 "{$section}.hurufJudul" => ['required', 'string', Rule::in(['sama', ...array_column(ThemeFont::cases(), 'value')])],
                 "{$section}.sudut" => ['required', 'string', Rule::in(array_column(ThemeCorners::cases(), 'value'))],
                 "{$section}.skala" => ['required', 'integer', Rule::in(Setting::THEME_SCALES)],
+                "{$section}.tebalJudul" => ['required', 'integer', Rule::in(Setting::THEME_HEADING_WEIGHTS)],
             ];
         }
 
@@ -91,6 +92,7 @@ class UpdateThemeRequest extends FormRequest
                 "{$section}.hurufJudul" => "huruf judul {$name}",
                 "{$section}.sudut" => "kelengkungan sudut {$name}",
                 "{$section}.skala" => "skala tampilan {$name}",
+                "{$section}.tebalJudul" => "ketebalan judul {$name}",
             ];
         }
 
@@ -103,7 +105,7 @@ class UpdateThemeRequest extends FormRequest
      * The validated document, with the accents in capitals. Only the portal
      * has a mode: the dashboard's dark mode is each employee's choice.
      *
-     * @return array{portal: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, mode: string}, dashboard: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int}}
+     * @return array{portal: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, mode: string}, dashboard: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int}}
      */
     public function theme(): array
     {
@@ -114,6 +116,7 @@ class UpdateThemeRequest extends FormRequest
             'hurufJudul' => $this->string("{$name}.hurufJudul")->value(),
             'sudut' => $this->string("{$name}.sudut")->value(),
             'skala' => $this->integer("{$name}.skala"),
+            'tebalJudul' => $this->integer("{$name}.tebalJudul"),
         ];
 
         return [

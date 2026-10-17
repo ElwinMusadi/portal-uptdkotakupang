@@ -44,7 +44,7 @@ class ThemeControllerTest extends TestCase
 
     public function test_saves_both_parts_with_the_accent_in_capitals_and_without_unknown_keys(): void
     {
-        $theme = $this->theme(['aksen' => '#2f7d4f', 'latar' => 'sejuk', 'hurufTeks' => 'inter', 'hurufJudul' => 'lexend', 'sudut' => 'tegas', 'mode' => 'gelap'], ['hurufTeks' => 'dm-sans']);
+        $theme = $this->theme(['aksen' => '#2f7d4f', 'latar' => 'sejuk', 'hurufTeks' => 'inter', 'hurufJudul' => 'lexend', 'sudut' => 'tegas', 'tebalJudul' => 800, 'mode' => 'gelap'], ['hurufTeks' => 'dm-sans', 'tebalJudul' => 700]);
         $theme['portal']['css'] = 'body { display: none }';
         $theme['dashboard']['mode'] = 'gelap';
         $theme['logo'] = 'merah';
@@ -52,8 +52,8 @@ class ThemeControllerTest extends TestCase
         $response = $this->actingAs(User::factory()->administrator()->create())->putJson('/api/pengaturan/tema', $theme);
 
         $expected = [
-            'portal' => ['aksen' => '#2F7D4F', 'latar' => 'sejuk', 'hurufTeks' => 'inter', 'hurufJudul' => 'lexend', 'sudut' => 'tegas', 'skala' => 100, 'mode' => 'gelap'],
-            'dashboard' => [...Setting::DEFAULT_THEME_SECTION, 'hurufTeks' => 'dm-sans'],
+            'portal' => ['aksen' => '#2F7D4F', 'latar' => 'sejuk', 'hurufTeks' => 'inter', 'hurufJudul' => 'lexend', 'sudut' => 'tegas', 'skala' => 100, 'tebalJudul' => 800, 'mode' => 'gelap'],
+            'dashboard' => [...Setting::DEFAULT_THEME_SECTION, 'hurufTeks' => 'dm-sans', 'tebalJudul' => 700],
         ];
         $response->assertOk()->assertExactJson($expected);
         $this->assertSame($expected, Setting::query()->find(Setting::THEME)->value);
@@ -77,6 +77,10 @@ class ThemeControllerTest extends TestCase
     #[TestWith([['mode' => 'otomatis'], 'portal.mode', 'Mode tampilan portal tidak tersedia.'])]
     #[TestWith([['mode' => null], 'portal.mode', 'Mode tampilan portal wajib diisi.'])]
     #[TestWith([['skala' => 'besar'], 'portal.skala', 'Skala tampilan portal tidak valid.'])]
+    #[TestWith([['tebalJudul' => 400], 'portal.tebalJudul', 'Ketebalan judul portal tidak tersedia.'])]
+    #[TestWith([['tebalJudul' => 650], 'portal.tebalJudul', 'Ketebalan judul portal tidak tersedia.'])]
+    #[TestWith([['tebalJudul' => 'tebal'], 'portal.tebalJudul', 'Ketebalan judul portal tidak valid.'])]
+    #[TestWith([['tebalJudul' => null], 'portal.tebalJudul', 'Ketebalan judul portal wajib diisi.'])]
     public function test_rejects_values_outside_the_lists(array $portal, string $field, string $message): void
     {
         $response = $this->actingAs(User::factory()->administrator()->create())->putJson('/api/pengaturan/tema', $this->theme($portal));

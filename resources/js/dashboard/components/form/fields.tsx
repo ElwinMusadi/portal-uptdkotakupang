@@ -189,11 +189,14 @@ export function FieldPilih<T extends FieldValues>({
   opsi,
   placeholder = "Pilih…",
   angka,
+  onPilih,
 }: PropsDasar<T> & {
   opsi: { nilai: string; label: string }[]
   placeholder?: string
   /** Simpan nilai sebagai angka (mis. hari 0–6) */
   angka?: boolean
+  /** Dipanggil sesudah pengguna memilih, mis. untuk mengisi isian lain yang bergantung padanya */
+  onPilih?: (nilai: string) => void
 }) {
   return (
     <FormField
@@ -203,7 +206,10 @@ export function FieldPilih<T extends FieldValues>({
         <FormItem className={className}>
           <Label label={label} wajib={wajib} />
           <Select
-            onValueChange={(v) => field.onChange(angka ? Number(v) : v)}
+            onValueChange={(v) => {
+              field.onChange(angka ? Number(v) : v)
+              onPilih?.(v)
+            }}
             value={field.value == null ? "" : String(field.value)}
           >
             <FormControl>

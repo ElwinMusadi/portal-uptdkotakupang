@@ -305,7 +305,7 @@ function SheetRiwayat({ id, tutup }: { id: string | null; tutup: () => void }) {
                 <span className="sr-only">(tab baru)</span>
               </a>
               <section className="grid gap-3" aria-labelledby="arsip-riwayat">
-                <h3 id="arsip-riwayat" className="text-sm font-semibold">
+                <h3 id="arsip-riwayat" className="text-sm font-heading font-(--fw-heading)">
                   Riwayat
                 </h3>
                 <ol className="grid gap-3 border-l pl-4" role="list">

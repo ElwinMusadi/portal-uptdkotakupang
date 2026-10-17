@@ -101,7 +101,7 @@ class ThemeVariablesTest extends TestCase
         $this->assertSame(ThemePalette::rgba($portal['--accent'], 0.25), $portal['--accent-halo']);
         $this->assertArrayNotHasKey('--night', $portal);
         $this->assertFalse(ThemeVariables::isDark($this->section()));
-        $this->assertFalse(ThemeVariables::isDark(['aksen' => '#2B63F6', 'latar' => 'hangat', 'hurufTeks' => 'sistem', 'hurufJudul' => 'sama', 'sudut' => 'sedang', 'skala' => 100]));
+        $this->assertFalse(ThemeVariables::isDark(['aksen' => '#2B63F6', 'latar' => 'hangat', 'hurufTeks' => 'sistem', 'hurufJudul' => 'sama', 'sudut' => 'sedang', 'skala' => 100, 'tebalJudul' => 600]));
     }
 
     #[TestWith(['netral'])]
@@ -199,11 +199,26 @@ class ThemeVariablesTest extends TestCase
 
         $headingsOnly = $this->section(['hurufJudul' => 'manrope']);
         $this->assertSame(['--font-display'], array_keys(ThemeVariables::portal($headingsOnly)));
-        $this->assertSame(['--font-display'], array_keys(ThemeVariables::dashboard($headingsOnly)['both']));
+        $dashboard = ThemeVariables::dashboard($headingsOnly)['both'];
+        $this->assertSame(['--font-display', '--font-heading'], array_keys($dashboard));
+        $this->assertSame($dashboard['--font-display'], $dashboard['--font-heading']);
 
         $systemHeadings = $this->section(['hurufTeks' => 'inter', 'hurufJudul' => 'sistem']);
         $this->assertSame(['--font-sans'], array_keys(ThemeVariables::portal($systemHeadings)));
+        $this->assertSame(ThemeVariables::SYSTEM_DISPLAY_FONT, ThemeVariables::dashboard($systemHeadings)['both']['--font-heading']);
+        $this->assertArrayNotHasKey('--font-heading', ThemeVariables::dashboard($same)['both']);
         $this->assertSame(['inter'], array_column(ThemeVariables::fontFaces($systemHeadings), 'value'));
+    }
+
+    #[TestWith([700])]
+    #[TestWith([800])]
+    public function test_sets_the_heading_weight_of_the_portal_and_the_dashboard(int $weight): void
+    {
+        $section = $this->section(['tebalJudul' => $weight]);
+
+        $this->assertSame(['--fw-display' => (string) $weight], ThemeVariables::portal($section));
+        $this->assertSame(['--fw-heading' => (string) $weight], ThemeVariables::dashboard($section)['both']);
+        $this->assertSame((string) $weight, ThemeVariables::portalPreview($section)['--fw-display']);
     }
 
     #[TestWith(['tegas', '0.5', '0.3125rem'])]
@@ -221,22 +236,23 @@ class ThemeVariablesTest extends TestCase
         $preview = ThemeVariables::portalPreview($this->section(['latar' => 'sejuk']));
 
         $this->assertSame(
-            [...array_keys(ThemeVariables::PORTAL_BACKGROUND), ...array_keys(ThemeVariables::PORTAL_TEXT), ...array_keys(ThemeVariables::PORTAL_ACCENT), '--font-sans', '--font-display', '--r-scale'],
+            [...array_keys(ThemeVariables::PORTAL_BACKGROUND), ...array_keys(ThemeVariables::PORTAL_TEXT), ...array_keys(ThemeVariables::PORTAL_ACCENT), '--font-sans', '--font-display', '--fw-display', '--r-scale'],
             array_keys($preview),
         );
         $this->assertSame(ThemeBackground::Sejuk->shade('#F7F6F2'), $preview['--paper']);
         $this->assertSame('#2B63F6', $preview['--accent']);
         $this->assertSame(ThemeVariables::SYSTEM_TEXT_FONT, $preview['--font-sans']);
+        $this->assertSame('600', $preview['--fw-display']);
     }
 
     /**
      * A theme section, the built-in look unless overridden.
      *
      * @param  array<string, string|int>  $overrides
-     * @return array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int}
+     * @return array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int}
      */
     private function section(array $overrides = []): array
     {
-        return [...['aksen' => '#2B63F6', 'latar' => 'hangat', 'hurufTeks' => 'sistem', 'hurufJudul' => 'sama', 'sudut' => 'sedang', 'skala' => 100], ...$overrides];
+        return [...['aksen' => '#2B63F6', 'latar' => 'hangat', 'hurufTeks' => 'sistem', 'hurufJudul' => 'sama', 'sudut' => 'sedang', 'skala' => 100, 'tebalJudul' => 600], ...$overrides];
     }
 }

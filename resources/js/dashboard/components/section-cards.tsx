@@ -105,7 +105,7 @@ export function SectionCards() {
           <Card className="@container/card">
             <CardHeader>
               <CardDescription>Menunggu persetujuan</CardDescription>
-              <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+              <CardTitle className="text-2xl tabular-nums @[250px]/card:text-3xl">
                 <Link to="/alur" className="hover:underline">
                   {angka(m.menunggu)}
                   <span className="sr-only"> konten menunggu persetujuan, buka alur publikasi</span>
@@ -129,7 +129,7 @@ export function SectionCards() {
           <Card className="@container/card">
             <CardHeader>
               <CardDescription>Terbit 30 hari terakhir</CardDescription>
-              <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+              <CardTitle className="text-2xl tabular-nums @[250px]/card:text-3xl">
                 {angka(m.terbit30)}
               </CardTitle>
               <CardAction>
@@ -154,7 +154,7 @@ export function SectionCards() {
         <Card className="@container/card">
           <CardHeader>
             <CardDescription>Pesan belum selesai</CardDescription>
-            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+            <CardTitle className="text-2xl tabular-nums @[250px]/card:text-3xl">
               <Link to="/pesan" className="hover:underline">
                 {angka(m.terbuka)}
                 <span className="sr-only"> pesan belum selesai, buka kotak pesan</span>
@@ -179,7 +179,7 @@ export function SectionCards() {
         <Card className="@container/card">
           <CardHeader>
             <CardDescription>Jatuh tempo pemutakhiran</CardDescription>
-            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+            <CardTitle className="text-2xl tabular-nums @[250px]/card:text-3xl">
               {bukaPemutakhiran ? (
                 <Link to="/pemutakhiran" className="hover:underline">
                   {angka(m.jatuhTempo)}

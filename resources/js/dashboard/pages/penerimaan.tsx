@@ -607,7 +607,7 @@ function BadgePerubahan({ nilai }: { nilai: number | null }) {
 function AngkaBerlencana({ nilai, lencana, className }: { nilai: string; lencana?: React.ReactNode; className?: string }) {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-      <CardTitle className={cn("font-semibold tabular-nums", className)}>{nilai}</CardTitle>
+      <CardTitle className={cn("tabular-nums", className)}>{nilai}</CardTitle>
       {lencana}
     </div>
   )
@@ -729,7 +729,7 @@ function PerLoket({ laporan, adaSaringan }: { laporan: LaporanPenerimaan; adaSar
 
   return (
     <section aria-labelledby="judul-per-loket" className="grid gap-3">
-      <h2 id="judul-per-loket" className="text-base font-semibold">
+      <h2 id="judul-per-loket" className="text-base font-heading font-(--fw-heading)">
         Per loket
       </h2>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -1157,7 +1157,7 @@ function RiwayatImpor({
   return (
     <section aria-labelledby="judul-riwayat-impor" className="flex min-w-0 flex-col gap-3">
       <div className="grid gap-1">
-        <h2 id="judul-riwayat-impor" className="text-base font-semibold">
+        <h2 id="judul-riwayat-impor" className="text-base font-heading font-(--fw-heading)">
           Riwayat impor
         </h2>
         <p className="max-w-2xl text-sm text-muted-foreground">

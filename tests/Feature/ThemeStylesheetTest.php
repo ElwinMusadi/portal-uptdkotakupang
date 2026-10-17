@@ -112,6 +112,17 @@ class ThemeStylesheetTest extends TestCase
         $this->assertStringNotContainsString('{', $this->get('/tema-dashboard.css')->getContent());
     }
 
+    public function test_sets_the_heading_weight_and_gives_the_dashboard_titles_the_heading_font(): void
+    {
+        $this->saveTheme(['tebalJudul' => 800], ['hurufJudul' => 'plus-jakarta-sans', 'tebalJudul' => 700]);
+
+        $this->assertStringEndsWith("\n:root {\n  --fw-display: 800;\n}\n", $this->get('/tema-portal.css')->assertOk()->getContent());
+        $dashboard = $this->get('/tema-dashboard.css')->assertOk()->getContent();
+        $this->assertStringContainsString("\nhtml:root {\n  --font-display: \"Plus Jakarta Sans\", ", $dashboard);
+        $this->assertStringContainsString("\n  --font-heading: \"Plus Jakarta Sans\", ", $dashboard);
+        $this->assertStringEndsWith("\n  --fw-heading: 700;\n}\n", $dashboard);
+    }
+
     public function test_serves_only_a_comment_for_a_saved_theme_equal_to_the_built_in_look(): void
     {
         $this->saveTheme(['aksen' => '#2b63f6']);
@@ -139,11 +150,12 @@ class ThemeStylesheetTest extends TestCase
         }
         $this->assertSame(ThemeVariables::SYSTEM_TEXT_FONT, $portal['--font-sans']);
         $this->assertSame(ThemeVariables::SYSTEM_DISPLAY_FONT, $portal['--font-display']);
+        $this->assertSame((string) ThemeVariables::DEFAULT_HEADING_WEIGHT, $portal['--fw-display']);
 
         $index = (string) file_get_contents(resource_path('js/dashboard/index.css'));
         $light = $this->declarations(substr($index, strpos($index, "\n:root {")));
         $dark = $this->declarations(substr($index, strpos($index, "\n.dark {")));
-        foreach ([...ThemeVariables::DASHBOARD_BACKGROUND, ...ThemeVariables::DASHBOARD_LIGHT_ACCENT, '--radius' => ThemeVariables::DASHBOARD_RADIUS] as $name => $value) {
+        foreach ([...ThemeVariables::DASHBOARD_BACKGROUND, ...ThemeVariables::DASHBOARD_LIGHT_ACCENT, '--radius' => ThemeVariables::DASHBOARD_RADIUS, '--fw-heading' => (string) ThemeVariables::DEFAULT_HEADING_WEIGHT] as $name => $value) {
             $this->assertSame($value, $light[$name], $name);
         }
         foreach (ThemeVariables::DASHBOARD_DARK_ACCENT as $name => $value) {
@@ -152,6 +164,7 @@ class ThemeStylesheetTest extends TestCase
         $fonts = $this->declarations(substr($index, strpos($index, "\n@theme {")));
         $this->assertSame(ThemeVariables::SYSTEM_TEXT_FONT, $fonts['--font-sans']);
         $this->assertSame(ThemeVariables::SYSTEM_DISPLAY_FONT, $fonts['--font-display']);
+        $this->assertSame('var(--font-sans)', $fonts['--font-heading']);
     }
 
     public function test_hosts_every_font_with_its_licence(): void

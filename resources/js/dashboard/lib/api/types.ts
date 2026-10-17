@@ -344,6 +344,8 @@ export type LatarTema = "hangat" | "netral" | "sejuk"
 export type SudutTema = "tegas" | "sedang" | "membulat"
 /** Skala tampilan dalam persen: zoom halaman portal, ukuran huruf dasar dashboard */
 export type SkalaTema = 90 | 100 | 110 | 120
+/** Ketebalan judul: semi-tebal (bawaan), tebal, ekstra tebal; teks tetap 400 */
+export type TebalJudul = 600 | 700 | 800
 
 /** Satu bagian tema: portal atau dashboard */
 export interface BagianTema {
@@ -355,6 +357,7 @@ export interface BagianTema {
   hurufJudul: HurufTema | "sama"
   sudut: SudutTema
   skala: SkalaTema
+  tebalJudul: TebalJudul
 }
 
 /** Mode portal untuk semua pengunjung (D-057); mode gelap dashboard tetap pilihan tiap pegawai */

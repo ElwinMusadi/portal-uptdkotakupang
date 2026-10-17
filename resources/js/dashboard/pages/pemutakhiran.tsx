@@ -139,7 +139,7 @@ export default function HalamanPemutakhiran() {
           <Card key={judul as string} className="gap-1 bg-gradient-to-t from-primary/5 to-card py-4 shadow-xs">
             <CardHeader className="px-4">
               <CardDescription>{judul}</CardDescription>
-              <CardTitle className="text-2xl font-semibold tabular-nums">{n}</CardTitle>
+              <CardTitle className="text-2xl tabular-nums">{n}</CardTitle>
               <p className="text-xs text-muted-foreground">{ket}</p>
             </CardHeader>
           </Card>

@@ -13,7 +13,7 @@ use App\Enums\ThemeFont;
  * setting differs from it, and colours derived from another accent are
  * computed in OKLCH and kept readable (ThemePalette).
  *
- * @phpstan-type ThemeSection array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, mode?: string}
+ * @phpstan-type ThemeSection array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, mode?: string}
  */
 final class ThemeVariables
 {
@@ -21,6 +21,12 @@ final class ThemeVariables
      * The built-in accent, PINTU blue.
      */
     public const string DEFAULT_ACCENT = '#2B63F6';
+
+    /**
+     * The built-in weight of the headings: the portal's --fw-display
+     * (tokens.css) and the dashboard's --fw-heading (index.css).
+     */
+    public const int DEFAULT_HEADING_WEIGHT = 600;
 
     /**
      * The portal's background and line colours (tokens.css), in the warm
@@ -223,6 +229,10 @@ final class ThemeVariables
 
         $variables += self::fonts($section);
 
+        if ($section['tebalJudul'] !== self::DEFAULT_HEADING_WEIGHT) {
+            $variables['--fw-display'] = (string) $section['tebalJudul'];
+        }
+
         $corners = ThemeCorners::from($section['sudut']);
         if ($corners !== ThemeCorners::Sedang) {
             $variables['--r-scale'] = self::number($corners->factor());
@@ -283,7 +293,12 @@ final class ThemeVariables
             self::PORTAL_BACKGROUND,
             self::PORTAL_TEXT,
             self::PORTAL_ACCENT,
-            ['--font-sans' => self::SYSTEM_TEXT_FONT, '--font-display' => self::SYSTEM_DISPLAY_FONT, '--r-scale' => '1'],
+            [
+                '--font-sans' => self::SYSTEM_TEXT_FONT,
+                '--font-display' => self::SYSTEM_DISPLAY_FONT,
+                '--fw-display' => (string) self::DEFAULT_HEADING_WEIGHT,
+                '--r-scale' => '1',
+            ],
             self::portal($section),
         );
 
@@ -292,7 +307,9 @@ final class ThemeVariables
 
     /**
      * The dashboard variables the section changes, by where they apply: both
-     * modes, light mode only, and dark mode only.
+     * modes, light mode only, and dark mode only. The card, dialog and sheet
+     * titles take --font-heading, the text font until the section names its
+     * own heading font, and --fw-heading.
      *
      * @param  ThemeSection  $section
      * @return array{both: array<string, string>, light: array<string, string>, dark: array<string, string>}
@@ -302,6 +319,12 @@ final class ThemeVariables
         $background = ThemeBackground::from($section['latar']);
         $backgroundColours = $background->shades(self::DASHBOARD_BACKGROUND);
         $both = self::fonts($section);
+        if ($section['hurufJudul'] !== 'sama') {
+            $both['--font-heading'] = $both['--font-display'] ?? self::SYSTEM_DISPLAY_FONT;
+        }
+        if ($section['tebalJudul'] !== self::DEFAULT_HEADING_WEIGHT) {
+            $both['--fw-heading'] = (string) $section['tebalJudul'];
+        }
         $light = $background === ThemeBackground::Hangat ? [] : $backgroundColours;
         $dark = [];
 

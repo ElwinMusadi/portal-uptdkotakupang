@@ -189,9 +189,9 @@
 .canvas__note { margin-top: 14px; }
 .bento { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: minmax(118px, auto); gap: 10px; color: #fff; }
 .bento .tile { display: flex; flex-direction: column; box-shadow: 0 0 0 1px rgba(255,255,255,.02) inset; }
-.bento__input { width: 100%; background: transparent; border: 0; border-bottom: 1px dashed var(--night-line); color: #fff; font-size: clamp(28px, 3vw, 38px); font-weight: 600; letter-spacing: -0.03em; padding: 0 0 4px; }
+.bento__input { width: 100%; background: transparent; border: 0; border-bottom: 1px dashed var(--night-line); color: #fff; font-size: clamp(28px, 3vw, 38px); font-weight: var(--fw-display); letter-spacing: -0.03em; padding: 0 0 4px; }
 .bento__input:focus { outline: none; border-bottom-color: var(--night-accent); }
-.bento__total-val { font-size: clamp(32px, 3.6vw, 46px); font-weight: 600; letter-spacing: -0.035em; line-height: 1.05; margin-top: 14px; white-space: nowrap; }
+.bento__total-val { font-size: clamp(32px, 3.6vw, 46px); font-weight: var(--fw-display); letter-spacing: -0.035em; line-height: 1.05; margin-top: 14px; white-space: nowrap; }
 .cek__form { grid-auto-rows: auto; }
 .cek__isian, .cek__kendaraan, .cek__opsi { grid-column: span 2; }
 .cek__isian { min-height: 118px; }
@@ -203,7 +203,7 @@
 .cek__pesan.is-galat { color: var(--danger); }
 .cek__hasil { margin-top: 10px; }
 .cek__hasil[hidden] { display: none; }
-.cek__nama { font-size: clamp(20px, 2vw, 26px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; margin-top: 10px; overflow-wrap: anywhere; }
+.cek__nama { font-size: clamp(20px, 2vw, 26px); font-weight: var(--fw-display); letter-spacing: -0.02em; line-height: 1.15; margin-top: 10px; overflow-wrap: anywhere; }
 .cek__data { display: grid; gap: 6px; margin-top: auto; padding-top: 16px; font-size: 13px; }
 .cek__data div { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--night-line); }
 .cek__data dt { color: var(--night-muted); }
@@ -237,7 +237,7 @@
 
 /* ================= 10 · Kartu harga/biaya ================= */
 .price { padding: clamp(24px, 3.4vw, 40px); max-width: 480px; justify-self: end; width: 100%; }
-.price__fig { font-size: clamp(96px, 13vw, 168px); font-weight: 600; letter-spacing: -0.06em; line-height: .9; margin-top: 20px; display: flex; align-items: flex-start; }
+.price__fig { font-size: clamp(96px, 13vw, 168px); font-weight: var(--fw-display); letter-spacing: -0.06em; line-height: .9; margin-top: 20px; display: flex; align-items: flex-start; }
 .price__fig sup { font-size: 22px; font-weight: 550; letter-spacing: 0; margin: 14px 8px 0 0; color: var(--text-2); }
 .price__was { margin-top: 14px; font-size: 14px; color: var(--text-2); display: flex; gap: 14px; }
 .price__was s { text-decoration-thickness: 1px; }
@@ -415,7 +415,7 @@
 .status-card .live-dot.is-closed::after { display: none; }
 .status-card strong { font-size: 18px; font-weight: 600; display: block; }
 .status-card span { font-size: 13.5px; color: var(--night-muted); }
-.status-card__cd { font-family: var(--font-display); font-variant-numeric: tabular-nums; font-size: clamp(24px, 3vw, 34px); font-weight: 600; letter-spacing: -0.02em; text-align: right; }
+.status-card__cd { font-family: var(--font-display); font-variant-numeric: tabular-nums; font-size: clamp(24px, 3vw, 34px); font-weight: var(--fw-display); letter-spacing: -0.02em; text-align: right; }
 .status-card__cd small { display: block; font-family: var(--font-sans); font-size: 12px; color: var(--night-muted); letter-spacing: 0; }
 @media (max-width: 640px) { .status-card { grid-template-columns: auto 1fr; } .status-card__cd { grid-column: 1 / -1; text-align: left; } }
 

@@ -27,7 +27,9 @@ import {
   akhiriPratinjauPortal,
   buatTautanPratinjau,
   HURUF,
+  hurufJudulDipakai,
   hurufPratinjauPortal,
+  keluargaHuruf,
   LATAR,
   MODE_PORTAL,
   muatUlangTemaDashboard,
@@ -36,6 +38,7 @@ import {
   rasio,
   SKALA,
   SUDUT,
+  TEBAL_JUDUL,
   TEMA_BAWAAN,
   TEMA_BAWAAN_PORTAL,
   TEMA_SIAP_PAKAI,
@@ -55,6 +58,7 @@ const skemaBagian = z.object({
   hurufJudul: z.enum(["sama", ...HURUF.map((h) => h.nilai)] as [string, ...string[]]),
   sudut: z.enum(["tegas", "sedang", "membulat"]),
   skala: z.union([z.literal(90), z.literal(100), z.literal(110), z.literal(120)]),
+  tebalJudul: z.union([z.literal(600), z.literal(700), z.literal(800)]),
 })
 const skemaTema = z.object({ portal: skemaBagian.extend({ mode: z.enum(["terang", "gelap"]) }), dashboard: skemaBagian })
 
@@ -234,6 +238,10 @@ function FormBagian({
   const atur = (baru: Partial<BagianTemaPortal>) =>
     form.setValue(bagian, { ...nilai, ...baru } as BagianTemaPortal, { shouldDirty: true, shouldValidate: true })
   const disesuaikan = POLA_WARNA.test(nilai.aksen) && aksenJadi !== undefined && aksenJadi.toUpperCase() !== nilai.aksen.toUpperCase()
+  const judul = hurufJudulDipakai(nilai)
+  // Huruf judul yang berganti mendapat ketebalan yang disarankan untuknya; sesudahnya tetap bisa diubah
+  const sarankanTebal = () =>
+    form.setValue(`${bagian}.tebalJudul`, hurufJudulDipakai(form.getValues(bagian)).judul, { shouldDirty: true, shouldValidate: true })
 
   return (
     <>
@@ -247,7 +255,7 @@ function FormBagian({
               key={t.id}
               type="button"
               aria-pressed={cocok?.id === t.id}
-              onClick={() => atur(t.nilai)}
+              onClick={() => atur({ ...t.nilai, tebalJudul: hurufJudulDipakai(t.nilai).judul })}
               className="grid gap-1 rounded-lg border p-3 text-left transition-colors hover:bg-muted/50 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-60 aria-pressed:border-ring aria-pressed:bg-muted/50"
             >
               <span className="flex items-center gap-2 text-sm font-medium">
@@ -404,9 +412,73 @@ function FormBagian({
         deskripsi="Huruf sistem memakai huruf bawaan perangkat pengunjung. Huruf lain disimpan di situs sendiri (lisensi SIL Open Font License) dan hanya diunduh bila dipakai."
       >
         <Baris>
-          <FieldPilih control={form.control} name={`${bagian}.hurufTeks`} label="Huruf teks" opsi={OPSI_HURUF_TEKS} />
-          <FieldPilih control={form.control} name={`${bagian}.hurufJudul`} label="Huruf judul" opsi={OPSI_HURUF_JUDUL} />
+          <FieldPilih
+            control={form.control}
+            name={`${bagian}.hurufTeks`}
+            label="Huruf teks"
+            opsi={OPSI_HURUF_TEKS}
+            onPilih={() => nilai.hurufJudul === "sama" && sarankanTebal()}
+          />
+          <FieldPilih
+            control={form.control}
+            name={`${bagian}.hurufJudul`}
+            label="Huruf judul"
+            opsi={OPSI_HURUF_JUDUL}
+            onPilih={sarankanTebal}
+          />
         </Baris>
+        <FormField
+          control={form.control}
+          name={`${bagian}.tebalJudul`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Ketebalan judul</FormLabel>
+              <FormControl>
+                <RadioGroup
+                  value={String(field.value)}
+                  onValueChange={(v) => field.onChange(Number(v))}
+                  className="grid gap-2 sm:grid-cols-3"
+                >
+                  {TEBAL_JUDUL.map((t) => (
+                    <Label
+                      key={t.nilai}
+                      htmlFor={`${id}-${bagian}-tebal-${t.nilai}`}
+                      className="gap-3 rounded-lg border p-3 font-normal has-[[data-state=checked]]:border-ring has-[[data-state=checked]]:bg-muted/50 has-[:disabled]:opacity-60"
+                    >
+                      <RadioGroupItem
+                        value={String(t.nilai)}
+                        id={`${id}-${bagian}-tebal-${t.nilai}`}
+                        disabled={judul.maks !== undefined && t.nilai > judul.maks}
+                      />
+                      <span
+                        aria-hidden="true"
+                        className="w-9 shrink-0 text-xl leading-none"
+                        style={{ fontFamily: keluargaHuruf(judul.keluarga), fontWeight: t.nilai }}
+                      >
+                        Aa
+                      </span>
+                      <span className="grid gap-0.5">
+                        <span className="font-medium">{t.label}</span>
+                        <span className="text-xs text-muted-foreground tabular-nums">
+                          {t.nilai}
+                          {t.nilai === judul.judul && " · disarankan"}
+                        </span>
+                      </span>
+                    </Label>
+                  ))}
+                </RadioGroup>
+              </FormControl>
+              <FormDescription>
+                {bagian === "portal"
+                  ? "Judul dan angka besar yang memakai huruf judul. "
+                  : "Judul kartu, dialog, dan lembar samping, serta angka besar. "}
+                Saat huruf judul diganti, ketebalan diisi saran untuk huruf itu. Teks tetap biasa (400).
+                {judul.maks !== undefined && ` ${judul.keluarga} paling tebal ${judul.maks}.`}
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </Bagian>
 
       <Bagian judul="Kelengkungan sudut" deskripsi="Sudut kartu, kotak, dan isian. Tombol berbentuk kapsul tetap kapsul.">
@@ -581,6 +653,6 @@ function RingkasanBagian({ judul, bagian }: { judul: string; bagian: BagianTema 
 
 /** Bagian portal tanpa mode, untuk disalin ke dashboard yang mode gelapnya pilihan tiap pegawai */
 function tanpaMode(portal: BagianTemaPortal): BagianTema {
-  const { aksen, latar, hurufTeks, hurufJudul, sudut, skala } = portal
-  return { aksen, latar, hurufTeks, hurufJudul, sudut, skala }
+  const { aksen, latar, hurufTeks, hurufJudul, sudut, skala, tebalJudul } = portal
+  return { aksen, latar, hurufTeks, hurufJudul, sudut, skala, tebalJudul }
 }

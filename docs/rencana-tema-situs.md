@@ -1,6 +1,6 @@
 # Rencana Implementasi — Tema Portal dan Dashboard
 
-**Status:** rencana dengan keputusan awal pemilik (17 Oktober 2026, [D-057](decisions.md#d-057--2026-10-17--tema-portal-dan-dashboard-rencana-dan-keputusan-awal)). **Keempat irisan selesai** pada 17 Oktober 2026: Irisan 1 (fondasi), Irisan 2 (warna, latar, huruf, sudut, tab Tampilan), Irisan 3 (skala, pratinjau di portal, riwayat), dan Irisan 4 (mode gelap portal yang ditetapkan Administrator, warna bilah peramban mengikuti latar). Hasilnya di §5.1–§5.4.
+**Status:** rencana dengan keputusan awal pemilik (17 Oktober 2026, [D-057](decisions.md#d-057--2026-10-17--tema-portal-dan-dashboard-rencana-dan-keputusan-awal)). **Keempat irisan selesai** pada 17 Oktober 2026: Irisan 1 (fondasi), Irisan 2 (warna, latar, huruf, sudut, tab Tampilan), Irisan 3 (skala, pratinjau di portal, riwayat), dan Irisan 4 (mode gelap portal yang ditetapkan Administrator, warna bilah peramban mengikuti latar). Hasilnya di §5.1–§5.4. **Irisan 5 (ketebalan judul)**, atas permintaan pemilik pada hari yang sama, juga selesai (§5.5).
 **Sumber:** permintaan pemilik pada 17 Oktober 2026: Administrator dapat mengatur tema (jenis huruf, warna utama, skala tampilan, dan pengaturan tampilan lain yang lazim) dari menu Pengaturan di dashboard, agar tampilan tidak itu-itu saja.
 
 ---
@@ -43,7 +43,8 @@ Di luar lingkup rencana awal: mode gelap untuk portal publik (kemudian dibangun 
 | Warna utama (aksen) | Pemilih warna bebas (hex) atau swatch tema. | Server menurunkan warna lain dari warna ini (§4.3); warna yang terlalu terang atau terlalu gelap disesuaikan otomatis agar tetap terbaca. |
 | Nuansa latar | *Hangat* (krem seperti sekarang), *Netral* (abu-putih), *Sejuk* (kebiruan). | Portal: `--paper*`, `--line*`, dan sedikit nuansa panel gelap `--night*`. Dashboard: latar, kartu, dan sidebar mode terang. |
 | Huruf teks | *Sistem (bawaan)*, Inter, Plus Jakarta Sans, DM Sans, Source Sans 3, IBM Plex Sans, Nunito Sans. | Berlisensi OFL dan disimpan di situs sendiri (`public/assets/fonts/`, keputusan pemilik). Hanya huruf yang dipilih yang diunduh pengunjung. |
-| Huruf judul | Sama dengan huruf teks, atau pilihan terpisah dari daftar yang sama ditambah Manrope dan Lexend. | Dipakai `--font-display` (judul besar, angka). |
+| Huruf judul | Sama dengan huruf teks, atau pilihan terpisah dari daftar yang sama ditambah Manrope dan Lexend. | Dipakai `--font-display` (judul besar, angka); di dashboard juga judul kartu, dialog, dan lembar samping (Irisan 5). |
+| Ketebalan judul | *Semi-tebal* (600, bawaan), *Tebal* (700), *Ekstra tebal* (800). | Irisan 5. Saat huruf judul diganti, ketebalan diisi saran untuk huruf itu; teks tetap 400. |
 | Skala tampilan | 90%, 100% (bawaan), 110%, 120%. | Portal lewat `zoom`, dashboard lewat ukuran huruf dasar (§4.5). |
 | Kelengkungan sudut | *Tegas* (×0,5), *Sedang* (×1, bawaan), *Membulat* (×1,35). | Tombol kapsul tetap kapsul. |
 | Kembali ke bawaan | Tombol *Kembalikan tampilan bawaan PINTU* per bagian. | Bisa dibatalkan dengan memulihkan tema sebelumnya dari riwayat (§4.6). |
@@ -60,12 +61,12 @@ Dokumen pengaturan `tema` di tabel `settings` (pola yang sama dengan `situs`, `s
 
 ```json
 {
-  "portal":    { "aksen": "#2B63F6", "latar": "hangat", "hurufTeks": "sistem", "hurufJudul": "sama", "sudut": "sedang", "skala": 100, "mode": "terang" },
-  "dashboard": { "aksen": "#2B63F6", "latar": "hangat", "hurufTeks": "sistem", "hurufJudul": "sama", "sudut": "sedang", "skala": 100 }
+  "portal":    { "aksen": "#2B63F6", "latar": "hangat", "hurufTeks": "sistem", "hurufJudul": "sama", "sudut": "sedang", "skala": 100, "tebalJudul": 600, "mode": "terang" },
+  "dashboard": { "aksen": "#2B63F6", "latar": "hangat", "hurufTeks": "sistem", "hurufJudul": "sama", "sudut": "sedang", "skala": 100, "tebalJudul": 600 }
 }
 ```
 
-Semua nilai dari daftar tertutup kecuali `aksen` (hex `#RRGGBB` yang divalidasi, disimpan dengan huruf kapital). Tidak ada teks bebas yang masuk ke CSS, sehingga tidak ada celah menyisipkan CSS. `hurufJudul` `sama` berarti mengikuti huruf teks. Tema siap pakai tidak disimpan: dashboard mencocokkan pilihan dengan daftarnya ("Kustom" bila tidak cocok). `skala` (90, 100, 110, 120) ditambahkan di Irisan 3; dokumen yang tersimpan sebelumnya dibaca dengan skala 100 (`Setting::theme()` melengkapi kunci yang belum ada dengan nilai bawaan). `mode` (`terang`, `gelap`; Irisan 4) hanya ada di bagian portal, dibaca `terang` untuk dokumen lama.
+Semua nilai dari daftar tertutup kecuali `aksen` (hex `#RRGGBB` yang divalidasi, disimpan dengan huruf kapital). Tidak ada teks bebas yang masuk ke CSS, sehingga tidak ada celah menyisipkan CSS. `hurufJudul` `sama` berarti mengikuti huruf teks. Tema siap pakai tidak disimpan: dashboard mencocokkan pilihan dengan daftarnya ("Kustom" bila tidak cocok). `skala` (90, 100, 110, 120) ditambahkan di Irisan 3; dokumen yang tersimpan sebelumnya dibaca dengan skala 100 (`Setting::theme()` melengkapi kunci yang belum ada dengan nilai bawaan). `mode` (`terang`, `gelap`; Irisan 4) hanya ada di bagian portal, dibaca `terang` untuk dokumen lama. `tebalJudul` (600, 700, 800; Irisan 5) ada di kedua bagian, dibaca 600 untuk dokumen lama.
 
 ### 4.2 Dua stylesheet tema
 
@@ -134,6 +135,7 @@ Aksen bawaan PINTU (`#2B63F6`) tidak diturunkan: warna rancangan tangan di `toke
 | **2. Warna, latar, huruf, sudut** | Dokumen `tema`, `ThemePalette` (turunan dan kontras), tema siap pakai, huruf self-hosted, tab Tampilan dengan sub-tab Portal dan Dashboard, pratinjau langsung, tombol kembali ke bawaan, *Samakan dengan portal*, log aktivitas. | Tema portal dan dashboard bisa diganti dan langsung berlaku. |
 | **3. Skala dan pratinjau** | Skala portal (`zoom`) dan dashboard (ukuran huruf dasar), tautan pratinjau portal sebelum disimpan, riwayat lima tema. | Ukuran tampilan bisa diatur; tema portal bisa dicoba sebelum dipakai. |
 | **4. Mode gelap portal** | Mode Terang/Gelap portal yang ditetapkan Administrator untuk semua pengunjung (keputusan pemilik); `meta theme-color` mengikuti latar portal. | Portal bisa dibuat gelap; bilah peramban di ponsel ikut warna latar. |
+| **5. Ketebalan judul** | Pilihan *Ketebalan judul* (Semi-tebal 600, Tebal 700, Ekstra tebal 800) per bagian dengan saran per huruf; judul kartu dan dialog dashboard ikut huruf dan ketebalan judul (keputusan pemilik). | Judul bisa dibuat lebih tebal, mis. Plus Jakarta Sans Tebal. |
 
 Setiap irisan diperiksa seperti biasa: tes fitur dan unit, uji mutasi, typecheck/lint/build, dan pemeriksaan di browser (375, 768, 1280 px) di portal dan dashboard.
 
@@ -181,6 +183,19 @@ Setiap irisan diperiksa seperti biasa: tes fitur dan unit, uji mutasi, typecheck
 | Dashboard | Pilihan *Mode tampilan* di bagian Portal; contoh portal ikut gelap (`--p-chrome`, `--p-on-ink`); daftar *Keterbacaan* memakai pasangan mode gelap; tema siap pakai tidak mengubah mode; *Samakan dengan portal* tidak menyalin mode. |
 | Pemeriksaan | Tes unit (sepuluh aksen × tiga latar × dua mode: semua pasangan teks ≥ 4,5:1) dan fitur; uji mutasi 16 dari 20 mati, tiga setara, satu celah (transparansi `--accent-halo` gelap) dites. Browser: pemindai kontras otomatis (setiap teks terlihat terhadap latar efektifnya) di 18 halaman portal termasuk komponen React, Login, dan 404 dalam mode gelap: satu temuan (kapsul *Tonton Video* putih dengan teks `--ink`) diperbaiki, lalu 0 kekurangan; label peta Pemetaan memakai lingkar gelap; perbandingan gaya terhitung mode terang dengan rekaman sebelum Irisan 1 di delapan halaman: 0 beda warna, sudut, dan huruf selain tombol kategori aktif di beranda yang mengikuti data; `theme-color` `#100F0D` (gelap) dan `#F7F6F2` (terang); tab Tampilan: mode, contoh, kontras, tema siap pakai, *Samakan*, *Kembalikan*, *Batalkan*. |
 
+### 5.5 Hasil Irisan 5: ketebalan judul (17 Oktober 2026)
+
+| Bagian | Yang dibuat |
+|---|---|
+| Latar belakang | Pemilik menyukai Plus Jakarta Sans sebagai huruf judul, tetapi judulnya terasa kurang tebal. Tebal batang huruf diukur di browser dengan Inter 600 sebagai rujukan (dekat dengan SF Pro Display Semibold, judul bawaan): Plus Jakarta Sans 600 = 88%, 700 = 102%, 800 = 117%. Judul portal memakai satu ketebalan tetap (`--fw-display: 600`). Berkas huruf variabel yang di-host sudah memuat semua ketebalan, jadi tidak ada unduhan tambahan. |
+| Keputusan pemilik | Tiga tingkat ketebalan judul tanpa Light/Regular. Di dashboard, judul kartu, dialog, dan lembar samping ikut huruf dan ketebalan judul (sekarang hanya ±8 angka dan judul besar yang memakai huruf judul). Ketebalan teks tetap 400. |
+| Data | `tebalJudul` (600, 700, 800; `Setting::THEME_HEADING_WEIGHTS`) di kedua bagian dokumen `tema`; dokumen dan riwayat lama dibaca 600, sama dengan tampilan sekarang. `ThemeVariables::DEFAULT_HEADING_WEIGHT` = 600. |
+| Saran per huruf | Saat huruf judul (atau huruf teks bila judul *Sama*) diganti di tab Tampilan, ketebalan diisi saran yang setebal judul bawaan: Plus Jakarta Sans, Nunito Sans, dan Manrope → Tebal (700); huruf sistem, Inter, DM Sans, Source Sans 3, IBM Plex Sans, dan Lexend → Semi-tebal (600). Tema siap pakai mengisi saran untuk hurufnya. IBM Plex Sans paling tebal 700, jadi *Ekstra tebal* tidak tersedia untuknya. Saran dan batas itu ada di `HURUF` (`lib/tema.ts`). Mengganti huruf teks tidak mengubah ketebalan bila judul memakai huruf sendiri. |
+| Portal | `--fw-display` diatur tema. Elemen berhuruf judul yang masih menulis ketebalan langsung (angka kartu dan harga, nama hasil cek pajak, hitung mundur kartu status, judul layar TV) diarahkan ke `--fw-display`; angka besar layar TV memakai `max(700, var(--fw-display, 600))`. Kutipan (`.prose blockquote`, 500), "Rp" kecil di angka harga (550), contoh *Metrik* di Design System (gaya inline 600, mendokumentasikan nilai bawaan), dan judul kecil berhuruf teks tetap. |
+| Dashboard | `--font-heading: var(--font-sans)` di `@theme` dan `--fw-heading: 600` di `:root` (`index.css`, juga dipakai Absensi). `CardTitle`, `DialogTitle`, `SheetTitle`, `AlertDialogTitle`, judul bagian halaman (`h1`–`h3` yang semibold), dan angka di kartu memakai `font-heading font-(--fw-heading)`; elemen `font-display` (angka kalkulator, papan, ringkasan) memakai `font-(--fw-heading)`. Judul kecil di header (500) dan judul kartu yang sengaja `font-medium` tetap. Tema mengisi `--font-heading` (huruf judul, atau tumpukan judul sistem untuk *Huruf sistem*) bila huruf judul bukan *Sama*, dan `--fw-heading` bila bukan 600. |
+| Tab Tampilan | Pilihan *Ketebalan judul* di bagian Huruf: contoh "Aa" dalam huruf judul pada tiap ketebalan, tanda *disarankan*, dan keterangan batas huruf; `FieldPilih` mendapat `onPilih` untuk mengisi saran. Contoh portal memakai `--p-fw-display`; pratinjau dashboard langsung ikut; *Samakan dengan portal* ikut menyalin ketebalan. |
+| Pemeriksaan | Tes fitur dan unit (validasi, dokumen dan riwayat lama, variabel, stylesheet; seluruh rangkaian 1457 tes lulus); uji mutasi 17 dari 17 mati; typecheck/lint/build. Browser (lewat DOM, Vite dev pemilik berjalan, aset build disuntikkan; tema tersimpan pemilik di DB dev tidak diubah): gaya huruf terhitung (keluarga, ketebalan, ukuran, jarak) direkam sebelum perubahan lalu dibandingkan. Portal 17 halaman dan 2 komponen React: 0 beda. Dashboard 36 halaman: satu-satunya beda adalah keluarga huruf judul kartu dan dialog yang kini mengikuti huruf judul tema tersimpan (Plus Jakarta Sans), ketebalan dan ukuran tetap. Tanpa tema (tampilan bawaan): 89 judul di 16 halaman berhuruf teks dengan ketebalan 600, kecuali dua judul kartu yang sengaja 500. Ketebalan 800 disuntikkan: semua elemen berhuruf judul di 8 halaman portal ikut, kecuali dua pengecualian yang disengaja di atas; 78 judul di 15 halaman dashboard ikut; dengan Plus Jakarta Sans 800 di 375 px tidak ada halaman portal (9) atau dashboard (15) yang melebar; `max()` layar TV terhitung 700 dan 800. Tab Tampilan: Plus Jakarta Sans → Tebal 700 (disarankan), IBM Plex Sans → 600 dengan Ekstra tebal nonaktif dan keterangannya, tema siap pakai Tenun → 600, huruf teks diganti saat judul Lexend → ketebalan tetap, judul *Sama* + Nunito Sans → 700 lalu Inter → 600, contoh portal dan pratinjau dashboard ikut, *Samakan dengan portal*, *Batalkan*; tidak ada yang disimpan. |
+
 ---
 
 ## 6. Pengujian
@@ -201,6 +216,7 @@ Setiap irisan diperiksa seperti biasa: tes fitur dan unit, uji mutasi, typecheck
 | Logo | **Tetap biru PINTU** di header, footer, dan favicon, apa pun warna temanya. |
 | Mode gelap portal (Irisan 4) | **Ditetapkan Administrator** untuk semua pengunjung, terang atau gelap, apa pun pengaturan perangkatnya; tanpa tombol di portal. Mode gelap dashboard tetap pilihan tiap pegawai. |
 | Huruf | **Daftar terkurasi yang di-host sendiri** (berlisensi OFL), bukan Google Fonts. |
+| Ketebalan judul (Irisan 5) | **Tiga tingkat** (Semi-tebal 600, Tebal 700, Ekstra tebal 800) per bagian, tanpa Light/Regular agar judul selalu lebih tebal dari teks, dengan saran per huruf. **Judul kartu dan dialog dashboard ikut** huruf dan ketebalan judul (tampilan bawaan tetap). **Ketebalan teks tetap 400** untuk semua huruf. |
 | Mengikuti saran (bisa diubah pemilik) | Warna: tema siap pakai ditambah warna bebas dengan penyesuaian kontras otomatis. Pratinjau: langsung di dashboard, ditambah pratinjau portal sebelum disimpan (Irisan 3). Hanya Administrator yang menyimpan. |
 
 ---
@@ -223,6 +239,7 @@ Setiap irisan diperiksa seperti biasa: tes fitur dan unit, uji mutasi, typecheck
 
 - Baru: `app/Support/ThemePalette.php`, controller dan request tema, rute `tema-portal.css` dan `tema-dashboard.css`, `public/assets/fonts/`, tab Tampilan di `resources/js/dashboard/pages/pengaturan.tsx`, tes unit dan fitur.
 - Dibuat di Irisan 1: `app/Http/Controllers/ThemeStylesheetController.php`, rute `tema.portal` dan `tema.dashboard` di `routes/web.php`, `tests/Feature/ThemeStylesheetTest.php`.
+- Diubah di Irisan 5: `Setting`, `UpdateThemeRequest`, `ThemeVariables`, `public/assets/css/{tokens,components,pages}.css`, `resources/js/portal/antrean/layar-antrean.css`, `resources/js/dashboard/index.css`, komponen judul shadcn (`card`, `dialog`, `sheet`, `alert-dialog`), `FieldPilih`, tab Tampilan dan contoh portal, `lib/tema.ts`, beberapa halaman dashboard (judul bagian dan angka besar).
 - Diubah di Irisan 4: `public/assets/css/{tokens,base,components,pages}.css` (`--on-ink`, `--chrome`), `public/assets/js/main.js` (`initWarnaBilah`), `ThemeVariables`, `BuildThemeStylesheet`, `Setting`, `UpdateThemeRequest`, `ThemeRevisionResource`, tab Tampilan dan contoh portal.
 - Dibuat di Irisan 3: `app/Support/ThemePreview.php`, `app/Actions/SaveTheme.php`, `app/Models/ThemeRevision.php` dan factory-nya, migrasi `create_theme_revisions_table`, `app/Http/Resources/ThemeRevisionResource.php`, `app/Http/Controllers/Dashboard/{ThemeRevisionController,ThemePreviewLinkController}.php`, `app/Http/Controllers/ThemePreviewPageController.php`, `tests/Feature/{ThemeRevisionTest,ThemePreviewLinkTest}.php`.
 - Dibuat di Irisan 2: `app/Support/{ThemePalette,ThemeVariables}.php`, `app/Enums/{ThemeFont,ThemeBackground,ThemeCorners}.php`, `app/Actions/BuildThemeStylesheet.php`, `app/Http/Controllers/Dashboard/{ThemeController,ThemePreviewController}.php`, `app/Http/Requests/Dashboard/UpdateThemeRequest.php`, `public/assets/fonts/`, `resources/js/dashboard/lib/tema.ts`, `resources/js/dashboard/components/tema/`, `tests/Unit/Support/`, `tests/Feature/ThemeControllerTest.php`.

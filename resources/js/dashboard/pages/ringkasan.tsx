@@ -70,7 +70,7 @@ function Sapaan() {
   return (
     <div className="px-4 lg:px-6">
       <p className="text-sm text-muted-foreground">{tanggal(new Date(), "lengkap")}</p>
-      <h2 className="mt-1 font-display text-2xl font-semibold tracking-tight">
+      <h2 className="mt-1 font-display text-2xl font-(--fw-heading) tracking-tight">
         Selamat datang, {sesi().nama}.{" "}
         {tindakan !== undefined && bolehModul(...MODUL_ALUR) && (
           <span className="text-muted-foreground">

@@ -69,7 +69,7 @@
   --font-display: "SF Pro Display", -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-sans: "SF Pro Text", -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: var(--font-sans);          /* angka tabular (tnum), bukan font monospace */
-  --fw-display: 600;                      /* semibold untuk semua headline */
+  --fw-display: 600;                      /* semibold untuk semua headline dan angka berhuruf judul; tema: 600–800 */
 
   --fs-hero: clamp(36px, 4.6vw + 22px, 80px); /* H1 beranda: 36px di 320, 80px di ≥ 1260 */
   --fs-display: clamp(36px, 5.2vw, 64px); /* H1 halaman turunan */

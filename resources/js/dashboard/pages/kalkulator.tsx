@@ -620,7 +620,7 @@ function Kalkulator() {
         <CardHeader>
           <CardDescription>Estimasi total bayar</CardDescription>
           <CardTitle>
-            <output aria-live="polite" className="font-display text-4xl font-semibold tracking-tight tabular-nums">
+            <output aria-live="polite" className="font-display text-4xl font-(--fw-heading) tracking-tight tabular-nums">
               {hasil ? rupiah(hasil.total) : "—"}
             </output>
           </CardTitle>

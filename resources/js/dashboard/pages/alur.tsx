@@ -145,7 +145,7 @@ export default function HalamanAlur() {
               className="flex flex-col gap-3 rounded-xl border bg-muted/30 p-3"
             >
               <header className="grid gap-0.5 px-1">
-                <h2 id={`kolom-${status}`} className="flex items-center gap-2 text-sm font-semibold">
+                <h2 id={`kolom-${status}`} className="flex items-center gap-2 text-sm font-heading font-(--fw-heading)">
                   <Ikon className={cn("size-4", status === "terbit" ? "text-success" : "text-muted-foreground")} aria-hidden="true" />
                   {String(i + 1).padStart(2, "0")} · {STATUS_ALUR[status].label}
                   <Badge variant="secondary" className="ml-auto tabular-nums">
@@ -175,7 +175,7 @@ export default function HalamanAlur() {
 
       {arsip && (
         <section aria-labelledby="kolom-arsip" className="grid gap-3 rounded-xl border bg-muted/30 p-3">
-          <h2 id="kolom-arsip" className="px-1 text-sm font-semibold">
+          <h2 id="kolom-arsip" className="px-1 text-sm font-heading font-(--fw-heading)">
             Diarsipkan · tidak tayang di portal
           </h2>
           <ol className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">

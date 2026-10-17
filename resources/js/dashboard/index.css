@@ -11,10 +11,13 @@
  * Tema dari Pengaturan (D-057) menimpa variabel :root dan .dark di bawah
  * serta huruf berikut lewat tema-dashboard.css, yang dimuat sesudah CSS ini.
  * Huruf sengaja di luar @theme inline agar kelas font-* membaca variabelnya.
+ * --font-heading (judul kartu, dialog, dan lembar samping) mengikuti huruf
+ * teks sampai tema memilih huruf judul sendiri; ketebalannya --fw-heading.
  */
 @theme {
   --font-sans: "SF Pro Text", -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-display: "SF Pro Display", -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-heading: var(--font-sans);
 }
 
 @theme inline {
@@ -71,6 +74,7 @@
 
 :root {
   --radius: 0.625rem;
+  --fw-heading: 600;
   --background: #ffffff;
   --foreground: #0f1319;
   --card: #ffffff;

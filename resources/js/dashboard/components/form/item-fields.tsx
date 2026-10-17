@@ -72,7 +72,7 @@ export function FieldJudul2Nada<T extends FieldValues>({
         <FieldTeks control={control} name={lanjutan} label="Lanjutan (nada abu-abu)" />
       </div>
       {(nilaiJudul || nilaiLanjutan) && (
-        <p className="rounded-md bg-muted/50 px-3 py-2 font-display text-xl leading-tight font-semibold tracking-tight">
+        <p className="rounded-md bg-muted/50 px-3 py-2 font-display text-xl leading-tight font-(--fw-heading) tracking-tight">
           <span className="sr-only">Pratinjau judul: </span>
           {nilaiJudul} <span className="text-muted-foreground">{nilaiLanjutan}</span>
         </p>

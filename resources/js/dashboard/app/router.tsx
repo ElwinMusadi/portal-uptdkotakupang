@@ -34,7 +34,7 @@ function GalatRute() {
   return (
     <div className="flex min-h-svh items-center justify-center p-6">
       <div className="grid max-w-md gap-3 text-center">
-        <h1 className="text-xl font-semibold">Halaman gagal ditampilkan</h1>
+        <h1 className="text-xl font-heading font-(--fw-heading)">Halaman gagal ditampilkan</h1>
         <p className="text-sm text-muted-foreground">
           {muatUlang
             ? "Dashboard baru saja diperbarui. Muat ulang halaman untuk memakai versi terbaru."

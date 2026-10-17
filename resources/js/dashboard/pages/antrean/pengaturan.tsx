@@ -69,7 +69,7 @@ function BagianLayanan() {
   const layanan = useLayananAntrean()
   return (
     <section className="grid gap-3" aria-labelledby="antrean-judul-layanan">
-      <h2 id="antrean-judul-layanan" className="text-lg font-semibold">
+      <h2 id="antrean-judul-layanan" className="text-lg font-heading font-(--fw-heading)">
         Layanan
       </h2>
       {layanan.isLoading ? (
