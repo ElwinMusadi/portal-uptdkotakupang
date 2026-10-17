@@ -44,15 +44,16 @@ class ThemeControllerTest extends TestCase
 
     public function test_saves_both_parts_with_the_accent_in_capitals_and_without_unknown_keys(): void
     {
-        $theme = $this->theme(['aksen' => '#2f7d4f', 'latar' => 'sejuk', 'hurufTeks' => 'inter', 'hurufJudul' => 'lexend', 'sudut' => 'tegas', 'tebalJudul' => 800, 'gelap' => '#0f1b3d', 'mode' => 'gelap'], ['hurufTeks' => 'nunito-sans', 'tebalJudul' => 700]);
+        $theme = $this->theme(['aksen' => '#2f7d4f', 'latar' => 'sejuk', 'hurufTeks' => 'inter', 'hurufJudul' => 'lexend', 'sudut' => 'tegas', 'tebalJudul' => 800, 'gelap' => '#0f1b3d', 'panel' => '#0c1839', 'mode' => 'gelap'], ['hurufTeks' => 'nunito-sans', 'tebalJudul' => 700]);
         $theme['portal']['css'] = 'body { display: none }';
         $theme['dashboard']['mode'] = 'gelap';
+        $theme['dashboard']['panel'] = '#000000';
         $theme['logo'] = 'merah';
 
         $response = $this->actingAs(User::factory()->administrator()->create())->putJson('/api/pengaturan/tema', $theme);
 
         $expected = [
-            'portal' => ['aksen' => '#2F7D4F', 'latar' => 'sejuk', 'hurufTeks' => 'inter', 'hurufJudul' => 'lexend', 'sudut' => 'tegas', 'skala' => 100, 'tebalJudul' => 800, 'gelap' => '#0F1B3D', 'mode' => 'gelap'],
+            'portal' => ['aksen' => '#2F7D4F', 'latar' => 'sejuk', 'hurufTeks' => 'inter', 'hurufJudul' => 'lexend', 'sudut' => 'tegas', 'skala' => 100, 'tebalJudul' => 800, 'gelap' => '#0F1B3D', 'panel' => '#0C1839', 'mode' => 'gelap'],
             'dashboard' => [...Setting::DEFAULT_THEME_SECTION, 'hurufTeks' => 'nunito-sans', 'tebalJudul' => 700],
         ];
         $response->assertOk()->assertExactJson($expected);
@@ -82,6 +83,8 @@ class ThemeControllerTest extends TestCase
     #[TestWith([['gelap' => '#0F1B3'], 'portal.gelap', 'Warna gelap portal harus berupa kode warna #RRGGBB.'])]
     #[TestWith([['gelap' => 'hitam'], 'portal.gelap', 'Warna gelap portal harus berupa kode warna #RRGGBB.'])]
     #[TestWith([['gelap' => null], 'portal.gelap', 'Warna gelap portal wajib diisi.'])]
+    #[TestWith([['panel' => '#0A0A0'], 'portal.panel', 'Warna panel gelap portal harus berupa kode warna #RRGGBB.'])]
+    #[TestWith([['panel' => null], 'portal.panel', 'Warna panel gelap portal wajib diisi.'])]
     #[TestWith([['tebalJudul' => 650], 'portal.tebalJudul', 'Ketebalan judul portal tidak tersedia.'])]
     #[TestWith([['tebalJudul' => 'tebal'], 'portal.tebalJudul', 'Ketebalan judul portal tidak valid.'])]
     #[TestWith([['tebalJudul' => null], 'portal.tebalJudul', 'Ketebalan judul portal wajib diisi.'])]
@@ -105,7 +108,7 @@ class ThemeControllerTest extends TestCase
 
     public function test_previews_an_unsaved_theme_without_saving_it(): void
     {
-        $theme = $this->theme(['aksen' => '#2F7D4F', 'hurufTeks' => 'inter', 'gelap' => '#2B63F6'], ['aksen' => '#F2C46B', 'sudut' => 'membulat', 'gelap' => '#9F1239']);
+        $theme = $this->theme(['aksen' => '#2F7D4F', 'hurufTeks' => 'inter', 'gelap' => '#2B63F6', 'panel' => '#2B63F6'], ['aksen' => '#F2C46B', 'sudut' => 'membulat', 'gelap' => '#9F1239']);
 
         $response = $this->actingAs(User::factory()->administrator()->create())->postJson('/api/pengaturan/tema/pratinjau', $theme);
 
@@ -115,6 +118,8 @@ class ThemeControllerTest extends TestCase
             ->assertJsonPath('portal.variabel.--r-scale', '1')
             ->assertJsonPath('portal.kontras.0.pasangan', 'Teks putih pada tombol aksen')
             ->assertJsonPath('portal.gelap', '#082163')
+            ->assertJsonPath('portal.panel', '#010F51')
+            ->assertJsonPath('portal.variabel.--night', '#010F51')
             ->assertJsonPath('portal.variabel.--ink-fill', '#082163')
             ->assertJsonPath('dashboard.aksen', '#936A00')
             ->assertJsonPath('dashboard.gelap', '#520018')

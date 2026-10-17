@@ -134,6 +134,17 @@ class ThemeStylesheetTest extends TestCase
         $this->assertStringEndsWith("\nhtml:root:not(.dark) {\n  --primary: #0F1B3D;\n}\n", $this->get('/tema-dashboard.css')->getContent());
     }
 
+    public function test_colours_the_portal_dark_panels(): void
+    {
+        $this->saveTheme(['panel' => '#0C1839']);
+
+        $portal = $this->get('/tema-portal.css')->assertOk()->getContent();
+        $this->assertStringContainsString("\n:root {\n  --night: #0C1839;\n  --night-2: ", $portal);
+        $this->assertStringContainsString("\n  --night-accent: ", $portal);
+        $this->assertStringNotContainsString('--chrome', $portal);
+        $this->assertStringNotContainsString('{', $this->get('/tema-dashboard.css')->getContent());
+    }
+
     public function test_serves_only_a_comment_for_a_saved_theme_equal_to_the_built_in_look(): void
     {
         $this->saveTheme(['aksen' => '#2b63f6']);
@@ -164,7 +175,11 @@ class ThemeStylesheetTest extends TestCase
         $this->assertSame((string) ThemeVariables::DEFAULT_HEADING_WEIGHT, $portal['--fw-display']);
         $this->assertSame(ThemeVariables::DEFAULT_DARK, $portal['--chrome']);
         $this->assertSame('var(--ink)', $portal['--ink-fill']);
-        $this->assertSame('var(--night-2)', $portal['--chrome-2']);
+        $this->assertSame('#17181B', $portal['--chrome-2']);
+        $this->assertSame(ThemeVariables::PORTAL_PANEL['--night-line'], $portal['--chrome-line']);
+        foreach (ThemeVariables::PORTAL_PANEL as $name => $value) {
+            $this->assertSame($value, $portal[$name], $name);
+        }
 
         $index = (string) file_get_contents(resource_path('js/dashboard/index.css'));
         $light = $this->declarations(substr($index, strpos($index, "\n:root {")));

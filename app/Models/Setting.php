@@ -324,12 +324,12 @@ class Setting extends Model
 
     /**
      * The portal part of the theme as the built-in look: the dashboard part
-     * plus the portal's mode, light for every visitor. The dashboard's dark
-     * mode stays each employee's choice.
+     * plus the portal's dark panels, near black, and its mode, light for
+     * every visitor. The dashboard's dark mode stays each employee's choice.
      *
-     * @var array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, gelap: string, mode: string}
+     * @var array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, gelap: string, panel: string, mode: string}
      */
-    public const array DEFAULT_PORTAL_THEME = [...self::DEFAULT_THEME_SECTION, 'mode' => 'terang'];
+    public const array DEFAULT_PORTAL_THEME = [...self::DEFAULT_THEME_SECTION, 'panel' => '#0A0A0C', 'mode' => 'terang'];
 
     /**
      * The modes the administrator sets the portal to (D-057): light or dark
@@ -467,7 +467,7 @@ class Setting extends Model
      * built-in look until they are first saved. A setting added later, such
      * as the scale, takes its built-in value in a document saved before it.
      *
-     * @return array{portal: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, gelap: string, mode: string}, dashboard: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, gelap: string}}
+     * @return array{portal: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, gelap: string, panel: string, mode: string}, dashboard: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, gelap: string}}
      */
     public static function theme(): array
     {

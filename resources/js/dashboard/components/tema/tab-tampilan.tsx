@@ -34,6 +34,7 @@ import {
   LATAR,
   MODE_PORTAL,
   muatUlangTemaDashboard,
+  PANEL,
   POLA_WARNA,
   pratinjauDashboard,
   rasio,
@@ -62,7 +63,13 @@ const skemaBagian = z.object({
   tebalJudul: z.union([z.literal(600), z.literal(700), z.literal(800)]),
   gelap: z.string().regex(POLA_WARNA, "Tulis kode warna #RRGGBB, mis. #0F1319."),
 })
-const skemaTema = z.object({ portal: skemaBagian.extend({ mode: z.enum(["terang", "gelap"]) }), dashboard: skemaBagian })
+const skemaTema = z.object({
+  portal: skemaBagian.extend({
+    panel: z.string().regex(POLA_WARNA, "Tulis kode warna #RRGGBB, mis. #0A0A0C."),
+    mode: z.enum(["terang", "gelap"]),
+  }),
+  dashboard: skemaBagian,
+})
 
 const OPSI_HURUF_TEKS = HURUF.filter((h) => h.teks).map((h) => ({ nilai: h.nilai, label: h.label }))
 const OPSI_HURUF_JUDUL = [
@@ -168,6 +175,7 @@ function IsiTampilan({ form, admin }: { form: UseFormReturn<Tema>; admin: boolea
               keterangan="Berlaku untuk semua pengunjung di semua halaman portal, halaman 404, Login Pegawai, Aktivasi, dan layar TV antrean."
               aksenJadi={pratinjau?.portal.variabel["--accent"]}
               gelapJadi={pratinjau?.portal.gelap}
+              panelJadi={pratinjau?.portal.panel}
               kontras={pratinjau?.portal.kontras}
               admin={admin}
             />
@@ -226,6 +234,7 @@ function FormBagian({
   keterangan,
   aksenJadi,
   gelapJadi,
+  panelJadi,
   kontras,
   admin,
 }: {
@@ -235,6 +244,7 @@ function FormBagian({
   keterangan: string
   aksenJadi?: string
   gelapJadi?: string
+  panelJadi?: string
   kontras?: Kontras[]
   admin: boolean
 }) {
@@ -334,6 +344,37 @@ function FormBagian({
           })}
         </div>
       </Bagian>
+
+      {bagian === "portal" && (
+        <Bagian
+          judul="Warna panel gelap"
+          deskripsi="Latar papan layanan, dasbor layanan, kotak cek pajak, media, dan layar TV antrean. Kotak di dalam panel dibuat sedikit lebih terang; teks putih, teks abu, dan aksen di atasnya dijaga tetap terbaca."
+        >
+          <FieldWarna form={form} name="portal.panel" jadi={panelJadi} alasan="agar tetap gelap dan teks di atasnya terbaca." />
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Contoh warna panel gelap">
+            {PANEL.map((p) => {
+              const portal = nilai as BagianTemaPortal
+              const warna = p.nilai === "aksen" ? portal.aksen : p.nilai === "gelap" ? portal.gelap : p.nilai
+              const bisa = POLA_WARNA.test(warna)
+              return (
+                <Button
+                  key={p.label}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={!bisa}
+                  aria-pressed={bisa && portal.panel.toUpperCase() === warna.toUpperCase()}
+                  onClick={() => atur({ panel: warna.toUpperCase() })}
+                  className="aria-pressed:border-ring aria-pressed:bg-muted/50"
+                >
+                  <span aria-hidden="true" className="size-3.5 rounded-full border border-black/10" style={{ background: warna }} />
+                  {p.label}
+                </Button>
+              )
+            })}
+          </div>
+        </Bagian>
+      )}
 
       {bagian === "portal" && (
         <Bagian
@@ -604,7 +645,7 @@ function FieldWarna({
   alasan,
 }: {
   form: UseFormReturn<Tema>
-  name: `${NamaBagian}.aksen` | `${NamaBagian}.gelap`
+  name: `${NamaBagian}.aksen` | `${NamaBagian}.gelap` | "portal.panel"
   /** Warna yang dipakai sesudah disesuaikan server */
   jadi?: string
   alasan: string

@@ -119,11 +119,12 @@ class ThemeVariablesTest extends TestCase
         $section = $this->section(['gelap' => '#0F1B3D']);
 
         $portal = ThemeVariables::portal($section);
-        $this->assertSame(['--ink-fill', '--ink-hover', '--chrome', '--chrome-2'], array_keys($portal));
+        $this->assertSame(['--ink-fill', '--ink-hover', '--chrome', '--chrome-2', '--chrome-line'], array_keys($portal));
         $this->assertSame('#0F1B3D', $portal['--ink-fill']);
         $this->assertSame('#0F1B3D', $portal['--chrome']);
         $this->assertGreaterThan(ThemePalette::oklch('#0F1B3D')[0], ThemePalette::oklch($portal['--ink-hover'])[0]);
         $this->assertGreaterThan(ThemePalette::oklch('#0F1B3D')[0], ThemePalette::oklch($portal['--chrome-2'])[0]);
+        $this->assertGreaterThan(ThemePalette::oklch($portal['--chrome-2'])[0], ThemePalette::oklch($portal['--chrome-line'])[0]);
         $this->assertSame(['both' => [], 'light' => ['--primary' => '#0F1B3D'], 'dark' => []], ThemeVariables::dashboard($section));
         $this->assertSame('#0F1B3D', ThemeVariables::portalPreview($section)['--ink-fill']);
         $this->assertSame([], ThemeVariables::portal($this->section(['gelap' => '#0f1319'])));
@@ -134,6 +135,7 @@ class ThemeVariablesTest extends TestCase
         $this->assertGreaterThanOrEqual(ThemePalette::oklch(ThemeVariables::PORTAL_DARK['--chrome'])[0] - 0.0005, ThemePalette::oklch($dark['--chrome'])[0]);
         $this->assertEqualsWithDelta(ThemePalette::oklch('#0F1B3D')[2], ThemePalette::oklch($dark['--chrome'])[2], 6);
         $this->assertGreaterThan(ThemePalette::oklch($dark['--chrome'])[0], ThemePalette::oklch($dark['--chrome-2'])[0]);
+        $this->assertGreaterThan(ThemePalette::oklch($dark['--chrome-2'])[0], ThemePalette::oklch($dark['--chrome-line'])[0]);
         $this->assertSame('#EFEEEB', ThemeVariables::portalPreview($this->section(['gelap' => '#0F1B3D', 'mode' => 'gelap']))['--ink-fill']);
 
         $pairs = array_column(ThemeVariables::portalContrasts($section), 'rasio', 'pasangan');
@@ -144,6 +146,71 @@ class ThemeVariablesTest extends TestCase
         $this->assertSame(round(ThemePalette::contrast('#9BA0A8', $dark['--chrome']), 2), $darkPairs['Teks abu pada navigasi gelap']);
         $this->assertSame(round(ThemePalette::contrast('#7FA4FF', $dark['--chrome']), 2), $darkPairs['Aksen pada navigasi gelap']);
         $this->assertSame(round(ThemePalette::contrast('#FFFFFF', '#0F1B3D'), 2), array_column(ThemeVariables::dashboardContrasts($section), 'rasio', 'pasangan')['Teks putih pada tombol utama']);
+    }
+
+    #[DataProvider('accents')]
+    public function test_keeps_every_panel_colour_dark_and_readable(string $panel): void
+    {
+        foreach (['#2B63F6', '#F2C46B', '#0B1533', '#00FF66'] as $accent) {
+            foreach (['terang', 'gelap'] as $mode) {
+                $section = $this->section(['aksen' => $accent, 'panel' => $panel, 'mode' => $mode]);
+
+                foreach (ThemeVariables::portalContrasts($section) as $pair) {
+                    $this->assertGreaterThanOrEqual(ThemePalette::MIN_CONTRAST, $pair['rasio'], "{$panel} {$accent} {$mode}: {$pair['pasangan']}");
+                }
+                $colours = ThemeVariables::portalPreview($section);
+                foreach (['--night', '--night-2', '--night-3', '--night-hover'] as $surface) {
+                    $this->assertGreaterThanOrEqual(ThemePalette::MIN_CONTRAST, ThemePalette::contrast('#FFFFFF', $colours[$surface]), "{$panel}: putih pada {$surface}");
+                    $this->assertGreaterThanOrEqual(ThemePalette::MIN_CONTRAST, ThemePalette::contrast($colours['--night-accent'], $colours[$surface === '--night-hover' ? '--night-3' : $surface]), "{$panel} {$accent}: aksen pada {$surface}");
+                }
+            }
+        }
+        $this->assertLessThanOrEqual(0.225, ThemePalette::oklch(ThemeVariables::portalPanel($this->section(['panel' => $panel]))['--night'])[0], $panel);
+    }
+
+    public function test_colours_the_dark_panels_in_both_modes_but_not_the_navigation(): void
+    {
+        $section = $this->section(['panel' => '#0C1839']);
+
+        $portal = ThemeVariables::portal($section);
+        $this->assertSame([...array_keys(ThemeVariables::PORTAL_PANEL), '--night-accent', '--night-accent-soft', '--night-accent-ring'], array_keys($portal));
+        $this->assertSame('#0C1839', $portal['--night']);
+        foreach (['--night-2', '--night-3', '--night-line'] as $name) {
+            $this->assertGreaterThan(ThemePalette::oklch('#0C1839')[0], ThemePalette::oklch($portal[$name])[0], $name);
+            $this->assertEqualsWithDelta(ThemePalette::oklch('#0C1839')[2], ThemePalette::oklch($portal[$name])[2], 8, $name);
+        }
+        $this->assertSame(ThemePalette::rgba($portal['--night-accent'], 0.1), $portal['--night-accent-soft']);
+        $this->assertSame(ThemePalette::rgba($portal['--night-accent'], 0.35), $portal['--night-accent-ring']);
+        $this->assertArrayNotHasKey('--chrome', $portal);
+        $this->assertSame(ThemeVariables::PORTAL_PANEL, ThemeVariables::portalPanel($this->section(['panel' => '#0a0a0c'])));
+        $this->assertSame([], ThemeVariables::portal($this->section(['panel' => '#0a0a0c'])));
+
+        $dark = ThemeVariables::portal($this->section(['panel' => '#0C1839', 'mode' => 'gelap']));
+        $this->assertSame($portal['--night-3'], $dark['--night-3']);
+        $this->assertSame($portal['--night-accent'], $dark['--night-accent']);
+
+        $pairs = array_column(ThemeVariables::portalContrasts($section), 'rasio', 'pasangan');
+        $this->assertSame(round(ThemePalette::contrast($portal['--night-accent'], $portal['--night-2']), 2), $pairs['Aksen pada panel gelap']);
+        $this->assertSame(round(ThemePalette::contrast('#9BA0A8', $portal['--night-3']), 2), $pairs['Teks abu pada panel gelap']);
+        $this->assertSame('#0C1839', ThemeVariables::portalPreview($section)['--night']);
+        $this->assertSame('#0A0A0C', ThemeVariables::portalPreview($this->section())['--night']);
+        $darkPairs = array_column(ThemeVariables::portalContrasts($this->section(['panel' => '#0C1839', 'mode' => 'gelap'])), 'rasio', 'pasangan');
+        $this->assertSame(round(ThemePalette::contrast('#9BA0A8', $portal['--night-3']), 2), $darkPairs['Teks abu pada panel gelap']);
+
+        // A deep colour of its own is kept as chosen, beyond the chroma of the lighter boxes
+        $this->assertSame('#150050', ThemeVariables::portalPanel($this->section(['panel' => '#150050']))['--night']);
+
+        $green = ThemeVariables::portal($this->section(['aksen' => '#2F7D4F', 'panel' => '#0C1839']));
+        $this->assertEqualsWithDelta(ThemePalette::oklch('#2F7D4F')[2], ThemePalette::oklch($green['--night-accent'])[2], 8);
+    }
+
+    public function test_keeps_the_navigation_readable_with_the_accent_of_other_panels(): void
+    {
+        $section = $this->section(['panel' => '#2B63F6', 'gelap' => '#2B63F6']);
+
+        $portal = ThemeVariables::portal($section);
+        $this->assertGreaterThanOrEqual(ThemePalette::MIN_CONTRAST, ThemePalette::contrast($portal['--night-accent'], $portal['--chrome']));
+        $this->assertSame($portal['--chrome'], ThemeVariables::portalDark($section));
     }
 
     public function test_deepens_a_light_dark_to_a_dark_shade(): void
@@ -303,7 +370,7 @@ class ThemeVariablesTest extends TestCase
         $preview = ThemeVariables::portalPreview($this->section(['latar' => 'sejuk']));
 
         $this->assertSame(
-            [...array_keys(ThemeVariables::PORTAL_BACKGROUND), ...array_keys(ThemeVariables::PORTAL_TEXT), ...array_keys(ThemeVariables::PORTAL_ACCENT), '--font-sans', '--font-display', '--fw-display', '--r-scale', '--ink-fill', '--chrome-2'],
+            [...array_keys(ThemeVariables::PORTAL_BACKGROUND), ...array_keys(ThemeVariables::PORTAL_TEXT), ...array_keys(ThemeVariables::PORTAL_ACCENT), ...array_keys(ThemeVariables::PORTAL_PANEL), '--font-sans', '--font-display', '--fw-display', '--r-scale', '--ink-fill', '--chrome-2'],
             array_keys($preview),
         );
         $this->assertSame(ThemeBackground::Sejuk->shade('#F7F6F2'), $preview['--paper']);

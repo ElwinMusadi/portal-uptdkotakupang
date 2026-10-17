@@ -13,7 +13,7 @@ use App\Enums\ThemeFont;
  * setting differs from it, and colours derived from another accent are
  * computed in OKLCH and kept readable (ThemePalette).
  *
- * @phpstan-type ThemeSection array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, gelap: string, mode?: string}
+ * @phpstan-type ThemeSection array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, gelap: string, panel?: string, mode?: string}
  */
 final class ThemeVariables
 {
@@ -39,6 +39,45 @@ final class ThemeVariables
      * also sits on the navigation and the dark cards.
      */
     private const string NIGHT_MUTED = '#9BA0A8';
+
+    /**
+     * The built-in colour of the portal's dark panels (Irisan 7), --night.
+     */
+    public const string DEFAULT_PANEL = '#0A0A0C';
+
+    /**
+     * The portal's dark panels (tokens.css): the panel, its boxes, the boxes
+     * on hover and the inputs, its lines, and dark buttons on hover.
+     *
+     * @var array<string, string>
+     */
+    public const array PORTAL_PANEL = [
+        '--night' => '#0A0A0C',
+        '--night-2' => '#17181B',
+        '--night-3' => '#202125',
+        '--night-line' => '#2A2B30',
+        '--night-hover' => '#2A2B31',
+    ];
+
+    /**
+     * How much lighter than --night each panel colour is (OKLCH lightness),
+     * as in the built-in panels.
+     *
+     * @var array<string, float>
+     */
+    private const array PANEL_STEPS = [
+        '--night' => 0,
+        '--night-2' => 0.0635,
+        '--night-3' => 0.1027,
+        '--night-line' => 0.1444,
+        '--night-hover' => 0.1444,
+    ];
+
+    /**
+     * How light a chosen panel colour may be (OKLCH lightness), so the
+     * boxes on it stay dark too; the built-in one is 0.15.
+     */
+    private const float PANEL_MAX_LIGHTNESS = 0.22;
 
     /**
      * The built-in weight of the headings: the portal's --fw-display
@@ -239,6 +278,9 @@ final class ThemeVariables
         $backgroundColours = $background->shades(self::PORTAL_BACKGROUND);
 
         $accent = self::hasDefaultAccent($section) ? self::PORTAL_ACCENT : self::portalAccent($section['aksen'], $backgroundColours);
+        // Panels of another colour, in both modes, with the accent made readable on them
+        $panel = self::hasDefaultPanel($section) ? [] : [...self::portalPanel($section), ...self::panelAccent($section)];
+        $accent = [...$accent, ...$panel];
 
         if (self::isDark($section)) {
             $dark = $background->shades(self::PORTAL_DARK);
@@ -252,7 +294,7 @@ final class ThemeVariables
                     ThemePalette::tone($section['gelap'], max(min($lightness, self::DARK_MAX_LIGHTNESS), $chromeLightness), 1, 0.12),
                     ['#FFFFFF', self::NIGHT_MUTED, $accent['--night-accent']],
                 );
-                $variables = [...$variables, '--chrome' => $chrome, '--chrome-2' => self::lighter($chrome, 0.05)];
+                $variables = [...$variables, '--chrome' => $chrome, '--chrome-2' => self::lighter($chrome, 0.05), '--chrome-line' => self::lighter($chrome, 0.105)];
             }
         } else {
             $variables = $background === ThemeBackground::Hangat ? [] : $backgroundColours;
@@ -260,6 +302,7 @@ final class ThemeVariables
             if (! self::hasDefaultAccent($section)) {
                 $variables += $accent;
             }
+            $variables += $panel;
 
             if (! self::hasDefaultDark($section)) {
                 $fill = self::portalDark($section);
@@ -268,6 +311,7 @@ final class ThemeVariables
                     '--ink-hover' => ThemePalette::darkenedFor(self::lighter($fill, 0.08), ['#FFFFFF']),
                     '--chrome' => $fill,
                     '--chrome-2' => self::lighter($fill, 0.05),
+                    '--chrome-line' => self::lighter($fill, 0.105),
                 ];
             }
         }
@@ -328,11 +372,42 @@ final class ThemeVariables
             return self::DEFAULT_DARK;
         }
 
-        $nightAccent = self::hasDefaultAccent($section)
-            ? self::PORTAL_ACCENT['--night-accent']
-            : self::onDark($section['aksen'], self::PORTAL_NIGHT);
+        $nightAccent = match (true) {
+            ! self::hasDefaultPanel($section) => self::panelAccent($section)['--night-accent'],
+            self::hasDefaultAccent($section) => self::PORTAL_ACCENT['--night-accent'],
+            default => self::onDark($section['aksen'], self::PORTAL_NIGHT),
+        };
 
         return ThemePalette::darkenedFor(self::deepened($section['gelap']), ['#FFFFFF', self::NIGHT_MUTED, $nightAccent]);
+    }
+
+    /**
+     * The portal's dark panels (Irisan 7): the section's panel colour kept
+     * dark (no lighter than PANEL_MAX_LIGHTNESS, in its hue), the boxes on
+     * it lighter by the built-in steps, each readable under white and the
+     * panels' grey text; or the built-in panels.
+     *
+     * @param  ThemeSection  $section
+     * @return array<string, string>
+     */
+    public static function portalPanel(array $section): array
+    {
+        if (self::hasDefaultPanel($section)) {
+            return self::PORTAL_PANEL;
+        }
+
+        $colour = $section['panel'] ?? self::DEFAULT_PANEL;
+        [$lightness] = ThemePalette::oklch($colour);
+        $base = min($lightness, self::PANEL_MAX_LIGHTNESS);
+        $panel = [];
+
+        foreach (self::PANEL_STEPS as $name => $step) {
+            $shade = $step === 0 && $lightness <= self::PANEL_MAX_LIGHTNESS ? $colour : ThemePalette::tone($colour, $base + $step, 1, 0.12);
+            // White and grey text sit on the panel and its boxes; the lines and the hover of dark buttons carry none of it
+            $panel[$name] = in_array($name, ['--night', '--night-2', '--night-3'], true) ? ThemePalette::darkenedFor($shade, ['#FFFFFF', self::NIGHT_MUTED]) : $shade;
+        }
+
+        return $panel;
     }
 
     /**
@@ -371,6 +446,7 @@ final class ThemeVariables
             self::PORTAL_BACKGROUND,
             self::PORTAL_TEXT,
             self::PORTAL_ACCENT,
+            self::PORTAL_PANEL,
             [
                 '--font-sans' => self::SYSTEM_TEXT_FONT,
                 '--font-display' => self::SYSTEM_DISPLAY_FONT,
@@ -462,7 +538,8 @@ final class ThemeVariables
                 'Tautan kecil pada kartu' => [$colours['--accent-ink'], $colours['--surface']],
                 'Tautan kecil pada kotak abu' => [$colours['--accent-ink'], $colours['--paper-2']],
                 'Teks pada tombol terpilih' => [$colours['--on-ink'], $colours['--ink']],
-                'Aksen pada panel gelap' => [$colours['--night-accent'], self::PORTAL_NIGHT[1]],
+                'Aksen pada panel gelap' => [$colours['--night-accent'], $colours['--night-2']],
+                'Teks abu pada panel gelap' => [self::NIGHT_MUTED, $colours['--night-3']],
                 'Teks abu pada navigasi gelap' => [self::NIGHT_MUTED, $colours['--chrome']],
                 'Aksen pada navigasi gelap' => [$colours['--night-accent'], $colours['--chrome']],
             ]);
@@ -473,7 +550,8 @@ final class ThemeVariables
             'Aksen pada latar halaman' => [$colours['--accent'], $colours['--paper']],
             'Tautan kecil pada latar halaman' => [$colours['--accent-ink'], $colours['--paper']],
             'Tautan kecil pada kotak abu' => [$colours['--accent-ink'], $colours['--paper-2']],
-            'Aksen pada panel gelap' => [$colours['--night-accent'], self::PORTAL_NIGHT[1]],
+            'Aksen pada panel gelap' => [$colours['--night-accent'], $colours['--night-2']],
+            'Teks abu pada panel gelap' => [self::NIGHT_MUTED, $colours['--night-3']],
             'Teks pendukung pada latar halaman' => ['#646A72', $colours['--paper']],
             'Teks putih pada tombol gelap' => ['#FFFFFF', $colours['--ink-fill']],
             'Teks abu pada navigasi gelap' => [self::NIGHT_MUTED, $colours['--chrome']],
@@ -657,6 +735,36 @@ final class ThemeVariables
     private static function hasDefaultDark(array $section): bool
     {
         return strtoupper($section['gelap']) === self::DEFAULT_DARK;
+    }
+
+    /**
+     * @param  ThemeSection  $section
+     */
+    private static function hasDefaultPanel(array $section): bool
+    {
+        return strtoupper($section['panel'] ?? self::DEFAULT_PANEL) === self::DEFAULT_PANEL;
+    }
+
+    /**
+     * The accent on panels of another colour, readable on the panel and its
+     * boxes, with its transparent fill and ring.
+     *
+     * @param  ThemeSection  $section
+     * @return array<string, string>
+     */
+    private static function panelAccent(array $section): array
+    {
+        $panel = self::portalPanel($section);
+        $night = self::onDark(
+            self::hasDefaultAccent($section) ? self::DEFAULT_ACCENT : $section['aksen'],
+            [$panel['--night'], $panel['--night-2'], $panel['--night-3']],
+        );
+
+        return [
+            '--night-accent' => $night,
+            '--night-accent-soft' => ThemePalette::rgba($night, 0.1),
+            '--night-accent-ring' => ThemePalette::rgba($night, 0.35),
+        ];
     }
 
     /**

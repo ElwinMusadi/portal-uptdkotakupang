@@ -2,8 +2,6 @@ import type * as React from "react"
 
 /** Warna portal yang tidak diatur tema (tokens.css), untuk melengkapi contoh */
 const TETAP: Record<string, string> = {
-  "--night": "#0A0A0C",
-  "--night-2": "#17181B",
   "--night-muted": "#9BA0A8",
   "--night-faint": "#5C6068",
   "--logo-leaf-night": "#7FA4FF",

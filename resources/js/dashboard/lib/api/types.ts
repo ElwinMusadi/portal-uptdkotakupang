@@ -366,6 +366,8 @@ export interface BagianTema {
 export type ModePortal = "terang" | "gelap"
 
 export interface BagianTemaPortal extends BagianTema {
+  /** Warna panel gelap #RRGGBB: papan layanan, dasbor layanan, kotak cek pajak, media, layar TV */
+  panel: string
   mode: ModePortal
 }
 
