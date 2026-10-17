@@ -514,6 +514,8 @@ export interface Kontak {
   email: string
   mediaSosial: { id: Id; platform: string; akun: string; url: string }[]
   mapsUrl: string
+  /** Lintang, bujur kantor untuk peta Google di halaman Kontak (D-063); kosong = peta ilustrasi */
+  titikPeta: string
   catatanLokasi: string
   janjiBalasan: string
   kanalPengaduan: { id: Id; nama: string; deskripsi: string; tautanLabel: string; tautanUrl: string }[]

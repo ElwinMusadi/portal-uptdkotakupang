@@ -545,19 +545,21 @@ Dipakai halaman *Kontak & Kanal* di dashboard ([D-019](decisions.md#d-019--2026-
   "namaKantor": "Kantor Bersama Samsat Kota Kupang", "alamat": "Jl. …", "kota": "Kota Kupang", "provinsi": "Nusa Tenggara Timur",
   "telepon": "(0380) 821 234", "whatsapp": "0812-3456-7890", "whatsappCatatan": "Hanya pesan teks, hari kerja", "email": "…@….go.id",
   "mediaSosial": [{ "id": "…", "platform": "Instagram", "akun": "@…", "url": "https://instagram.com/…" }],
-  "mapsUrl": "https://maps.google.com/?q=…", "catatanLokasi": "…", "janjiBalasan": "Kami membalas paling lambat tiga hari kerja.",
+  "mapsUrl": "https://maps.google.com/?q=…", "titikPeta": "-10.172878287411304, 123.60848636621598", "catatanLokasi": "…", "janjiBalasan": "Kami membalas paling lambat tiga hari kerja.",
   "kanalPengaduan": [{ "id": "…", "nama": "SP4N-LAPOR!", "deskripsi": "…", "tautanLabel": "Buka lapor.go.id", "tautanUrl": "https://www.lapor.go.id" }]
 }
 ```
 
 | Alamat | Permintaan | Respons |
 |---|---|---|
-| `GET /api/pengaturan/kontak` | — | `200` dokumen di atas. Sebelum pertama kali disimpan: semua isian kosong dan kedua daftar `[]`. |
+| `GET /api/pengaturan/kontak` | — | `200` dokumen di atas. Sebelum pertama kali disimpan: semua isian kosong dan kedua daftar `[]`, kecuali `titikPeta` yang berisi titik kantor ([D-063](decisions.md#d-063--2026-10-17--peta-google-di-halaman-kontak)); dokumen yang disimpan sebelum D-063 juga dibaca dengan titik itu. |
 | `PUT /api/pengaturan/kontak` | dokumen lengkap | `200` dokumen tersimpan; isian opsional yang kosong disimpan sebagai `""`. Isi yang sama dengan yang tersimpan tidak dicatat. `422` bila nama kantor (maks. 120 karakter) atau alamat (maks. 200) kosong, telepon kurang dari 6 angka atau berisi huruf, WhatsApp kurang dari 9 angka, surel tidak valid, lebih dari 8 akun media sosial atau 8 kanal, butir tanpa platform, akun, atau nama kanal, ID butir ganda, tautan selain `http(s)://`, `mailto:`, `tel:`, `#…`, atau halaman portal `*.html`, tautan berisi spasi, atau teks berisi karakter kontrol. |
 
 Penyimpanan tercatat di log aktivitas sebagai "memperbarui Kontak & Kanal".
 
-Kode: `app/Http/Controllers/Dashboard/ContactController.php`, `app/Http/Requests/Dashboard/UpdateContactRequest.php`, `app/Rules/PortalLink.php`, `app/Actions/SaveSetting.php`, `app/Models/Setting.php`. Tes: `tests/Feature/ContactControllerTest.php`.
+`titikPeta` ([D-063](decisions.md#d-063--2026-10-17--peta-google-di-halaman-kontak)): lintang, bujur dalam derajat desimal (maks. 60 karakter, lintang ±90, bujur ±180; `422` "Tulis titik peta sebagai lintang, bujur, mis. -10.172878, 123.608486."), disimpan sebagai `lintang, bujur`; `""` mematikan peta Google; bila tidak dikirim, titik yang tersimpan dipertahankan.
+
+Kode: `app/Http/Controllers/Dashboard/ContactController.php`, `app/Http/Requests/Dashboard/UpdateContactRequest.php`, `app/Rules/MapPoint.php`, `app/Rules/PortalLink.php`, `app/Actions/SaveSetting.php`, `app/Models/Setting.php`. Tes: `tests/Feature/ContactControllerTest.php`.
 
 ## Visi & Misi di dashboard
 
@@ -1282,7 +1284,7 @@ Alamat, kontak, dan kanal pengaduan untuk footer semua halaman dan halaman Konta
 
 | Hal | Perilaku |
 |---|---|
-| Berhasil | `200`. Bila `diperbarui` `null`, semua isian kosong dan portal menyatakan alamat, nomor kontak, dan kanal pengaduan belum tersedia. Teks wajib ditampilkan sebagai teks polos; tautan hanya dipasang bila skemanya diizinkan. |
+| Berhasil | `200`. Bila `diperbarui` `null`, semua isian kosong dan portal menyatakan alamat, nomor kontak, dan kanal pengaduan belum tersedia. Teks wajib ditampilkan sebagai teks polos; tautan hanya dipasang bila skemanya diizinkan. `titikPeta` selalu terisi titik kantor kecuali dikosongkan di dashboard; halaman Kontak memasang peta Google di titik itu ([D-063](decisions.md#d-063--2026-10-17--peta-google-di-halaman-kontak)). |
 | Galat | `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah batas laju yang sama dengan `GET /api/public/faq`; `503` bila data tidak bisa dibaca, tidak pernah kontak kosong sebagai gantinya. |
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 

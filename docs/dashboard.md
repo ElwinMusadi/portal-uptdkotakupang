@@ -326,6 +326,7 @@ Halaman *Kontak & Kanal* (`#/kontak`, `pages/kontak.tsx`) tersimpan di server se
 
 - Isinya langsung tampil di footer semua halaman portal dan di halaman Kontak & Pengaduan (`GET /api/public/kontak`). Baris yang tidak diisi tidak ditampilkan.
 - Tautan hanya boleh berupa alamat lengkap (`https://…`), `mailto:`, `tel:`, jangkar `#…`, atau halaman portal seperti `jadwal.html`; server menolak yang lain.
+- *Titik peta* (lintang, bujur, diisi awal dengan titik kantor) menempatkan peta Google di halaman Kontak & Pengaduan ([D-063](decisions.md#d-063--2026-10-17--peta-google-di-halaman-kontak)); dikosongkan, halaman memakai peta ilustrasi. Bila *Tautan Google Maps* kosong, tombol *Buka di Google Maps* membuka titik ini.
 - Sebelum disimpan pertama kali, portal menyatakan alamat, nomor kontak, dan kanal pengaduan belum tersedia. Kontak contoh dari penyimpanan peramban tidak dipindahkan.
 
 ## Visi & Misi

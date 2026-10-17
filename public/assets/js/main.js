@@ -652,11 +652,21 @@
     return d.startsWith("+") ? d : d.startsWith("0") ? `+62${d.slice(1)}` : d.startsWith("62") ? `+${d}` : d;
   };
 
+  // Titik peta "-10.1728, 123.6084" menjadi [lintang, bujur]; null bila kosong atau di luar jangkauan (D-063)
+  const koordinatPeta = (teks) => {
+    const m = String(teks ?? "").match(/^\s*(-?\d{1,2}(?:\.\d+)?)\s*,\s*(-?\d{1,3}(?:\.\d+)?)\s*$/);
+    if (!m) return null;
+    const titik = [Number(m[1]), Number(m[2])];
+    return Math.abs(titik[0]) <= 90 && Math.abs(titik[1]) <= 180 ? titik : null;
+  };
+  const petunjukArah = (titik) => `https://www.google.com/maps/search/?api=1&query=${titik.join(",")}`;
+
   async function muatKontak() {
     const k = await ambilJson("/api/public/kontak");
     const teks = (x) => typeof x === "string";
     const isian = ["namaKantor", "alamat", "kota", "provinsi", "telepon", "whatsapp", "whatsappCatatan", "email", "mapsUrl", "catatanLokasi", "janjiBalasan"];
     if (!isian.every((f) => teks(k?.[f])) || !Array.isArray(k.mediaSosial) || !Array.isArray(k.kanalPengaduan)) throw new Error("Respons tidak dikenal");
+    if (!teks(k.titikPeta)) k.titikPeta = "";
     k.mediaSosial = k.mediaSosial.filter((a) => teks(a?.platform) && teks(a.akun) && teks(a.url));
     k.kanalPengaduan = k.kanalPengaduan.filter((c) => ["nama", "deskripsi", "tautanLabel", "tautanUrl"].every((f) => teks(c?.[f])));
     return k;
@@ -678,7 +688,10 @@
     const hubungi = $$("[data-kontak-hubungi]");
     const baris = $("[data-kontak-alamat-baris]");
     const kanal = $("[data-kontak-kanal]");
-    if (!(alamatFooter.length || hubungi.length || baris || kanal)) return;
+    const wadahPeta = $("[data-kontak-peta-wadah]");
+    const keteranganPeta = $("[data-kontak-peta-keterangan]");
+    if (!(alamatFooter.length || hubungi.length || baris || kanal || wadahPeta)) return;
+    const keteranganIlustrasi = keteranganPeta?.textContent ?? "";
     const nama = $("[data-kontak-nama]");
     const namaBawaan = nama?.textContent ?? "";
     const item = (k) => $(`[data-kontak-${k}]`);
@@ -691,6 +704,33 @@
       if (url) a.href = url; else a.removeAttribute("href");
     };
     const lainnya = { peta: item("peta"), lokasi: item("lokasi"), janji: item("janji") };
+
+    // Peta Google di titik kantor (D-063), dimuat saat bagian peta mendekati layar. Tanpa titik, atau bila
+    // kontak gagal dimuat, peta ilustrasi tetap tampil. Posisi bingkai ditulis langsung agar tetap benar
+    // walau peramban masih memakai pages.css lama.
+    const pasangPeta = (titik) => {
+      if (!wadahPeta) return;
+      let bingkai = $("iframe.map__google", wadahPeta);
+      if (!titik) {
+        bingkai?.remove();
+        wadahPeta.classList.remove("map--google");
+        if (keteranganPeta) keteranganPeta.textContent = keteranganIlustrasi;
+        return;
+      }
+      const src = `https://www.google.com/maps?q=${titik.join(",")}&z=17&hl=id&output=embed`;
+      if (!bingkai) {
+        bingkai = document.createElement("iframe");
+        bingkai.className = "map__google";
+        bingkai.title = "Peta lokasi kantor di Google Maps";
+        bingkai.loading = "lazy";
+        bingkai.referrerPolicy = "no-referrer-when-downgrade";
+        bingkai.style.cssText = "position:absolute;inset:0;width:100%;height:100%;border:0";
+        wadahPeta.prepend(bingkai);
+      }
+      if (bingkai.getAttribute("src") !== src) bingkai.src = src;
+      wadahPeta.classList.add("map--google");
+      if (keteranganPeta) keteranganPeta.textContent = "Peta dari Google Maps. Gunakan tautan untuk petunjuk arah.";
+    };
 
     // Keadaan tanpa data: sebelum disimpan, selama dimuat ulang, atau bila gagal
     const kosongkan = (pesanFooter, pesanKontak, pesanKanal, tombol) => {
@@ -743,7 +783,9 @@
         }));
         sosial.hidden = !k.mediaSosial.length;
       }
-      const peta = tautanAman(k.mapsUrl);
+      // Tanpa tautan Google Maps, tombol "Buka di Google Maps" membuka titik peta
+      const titik = koordinatPeta(k.titikPeta);
+      const peta = tautanAman(k.mapsUrl) || (titik ? petunjukArah(titik) : "");
       if (lainnya.peta) {
         lainnya.peta.hidden = !peta;
         if (peta) lainnya.peta.href = peta;
@@ -767,8 +809,13 @@
     const muat = async (fokus) => {
       try {
         const k = await muatKontak();
+        const titik = koordinatPeta(k.titikPeta);
+        pasangPeta(titik);
         if (typeof k.diperbarui === "string") tampilkan(k);
-        else kosongkan("Alamat belum tersedia.", "Alamat dan nomor kontak belum tersedia.", "Daftar kanal pengaduan belum tersedia. Anda tetap dapat mengirim pesan lewat formulir di atas.");
+        else {
+          kosongkan("Alamat belum tersedia.", "Alamat dan nomor kontak belum tersedia.", "Daftar kanal pengaduan belum tersedia. Anda tetap dapat mengirim pesan lewat formulir di atas.");
+          if (titik && lainnya.peta) { lainnya.peta.href = petunjukArah(titik); lainnya.peta.hidden = false; }
+        }
       } catch {
         const retry = document.createElement("button");
         retry.type = "button";

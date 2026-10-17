@@ -15,7 +15,7 @@ class ShowPublicContact
      * are not available yet instead of placeholders. A source that cannot be
      * read fails the request instead of showing no contact details.
      *
-     * @return array{namaKantor: string, alamat: string, kota: string, provinsi: string, telepon: string, whatsapp: string, whatsappCatatan: string, email: string, mediaSosial: list<array{platform: string, akun: string, url: string}>, mapsUrl: string, catatanLokasi: string, janjiBalasan: string, kanalPengaduan: list<array{nama: string, deskripsi: string, tautanLabel: string, tautanUrl: string}>, diperbarui: ?string}
+     * @return array{namaKantor: string, alamat: string, kota: string, provinsi: string, telepon: string, whatsapp: string, whatsappCatatan: string, email: string, mediaSosial: list<array{platform: string, akun: string, url: string}>, mapsUrl: string, titikPeta: string, catatanLokasi: string, janjiBalasan: string, kanalPengaduan: list<array{nama: string, deskripsi: string, tautanLabel: string, tautanUrl: string}>, diperbarui: ?string}
      *
      * @throws PublicContentUnavailableException
      */
@@ -27,7 +27,7 @@ class ShowPublicContact
             throw new PublicContentUnavailableException('The contact details could not be read.', previous: $exception);
         }
 
-        $contact = $setting?->value ?? Setting::UNSAVED_CONTACT;
+        $contact = Setting::upgradeContact($setting?->value ?? Setting::UNSAVED_CONTACT);
 
         return [
             'namaKantor' => $contact['namaKantor'],
@@ -44,6 +44,7 @@ class ShowPublicContact
                 'url' => $account['url'],
             ], $contact['mediaSosial']),
             'mapsUrl' => $contact['mapsUrl'],
+            'titikPeta' => $contact['titikPeta'],
             'catatanLokasi' => $contact['catatanLokasi'],
             'janjiBalasan' => $contact['janjiBalasan'],
             'kanalPengaduan' => array_map(fn (array $channel): array => [

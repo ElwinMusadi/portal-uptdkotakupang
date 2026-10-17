@@ -1281,6 +1281,7 @@ function pengaturan(sekarang: Date): Pengaturan {
       email: "uptd.kotakupang@example.go.id",
       mediaSosial: [{ id: id(), platform: "Instagram", akun: "@samsatkotakupang", url: "" }],
       mapsUrl: "https://maps.google.com/?q=Samsat+Kota+Kupang",
+      titikPeta: "-10.172878287411304, 123.60848636621598",
       catatanLokasi: "Parkir tersedia di halaman kantor",
       janjiBalasan: "Kami membalas paling lambat tiga hari kerja.",
       kanalPengaduan: [

@@ -43,6 +43,10 @@ const schema = z.object({
     )
     .max(8, "Maksimal 8 akun media sosial."),
   mapsUrl: v.tautan.max(500, maks(500)),
+  titikPeta: v.teks
+    .trim()
+    .max(60, maks(60))
+    .refine((t) => t === "" || titikPetaSah(t), "Tulis titik peta sebagai lintang, bujur, mis. -10.172878, 123.608486."),
   catatanLokasi: v.teks.max(120, maks(120)),
   janjiBalasan: v.teks.max(200, maks(200)),
   kanalPengaduan: z
@@ -57,6 +61,12 @@ const schema = z.object({
     )
     .max(8, "Maksimal 8 kanal pengaduan."),
 })
+
+/** Lintang dan bujur dalam derajat desimal, seperti yang disalin dari Google Maps (D-063) */
+function titikPetaSah(t: string): boolean {
+  const m = t.match(/^(-?\d{1,2}(?:\.\d+)?)\s*,\s*(-?\d{1,3}(?:\.\d+)?)$/)
+  return !!m && Math.abs(Number(m[1])) <= 90 && Math.abs(Number(m[2])) <= 180
+}
 
 export default function HalamanKontak() {
   return (
@@ -86,7 +96,15 @@ export default function HalamanKontak() {
                 name="mapsUrl"
                 label="Tautan Google Maps"
                 type="url"
-                deskripsi="Dipakai tombol “Buka di Google Maps” dan petunjuk arah."
+                deskripsi="Dipakai tombol “Buka di Google Maps” dan petunjuk arah. Bila kosong, tombol memakai titik peta."
+              />
+              <FieldTeks
+                control={form.control}
+                name="titikPeta"
+                label="Titik peta"
+                inputMode="decimal"
+                placeholder="-10.172878, 123.608486"
+                deskripsi="Lintang, bujur kantor untuk peta Google di halaman Kontak & Pengaduan. Di Google Maps, klik kanan titik kantor lalu klik koordinatnya untuk menyalin. Kosongkan untuk memakai peta ilustrasi."
               />
               <FieldTeks control={form.control} name="catatanLokasi" label="Catatan lokasi" placeholder="Mis. Parkir tersedia di halaman kantor" />
             </Bagian>

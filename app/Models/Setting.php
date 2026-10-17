@@ -48,10 +48,16 @@ class Setting extends Model
     public const string CONTACT = 'kontak';
 
     /**
+     * The office on the Kontak page's map (D-063), as latitude and longitude:
+     * the point the owner gave for Samsat Kota Kupang.
+     */
+    public const string OFFICE_MAP_POINT = '-10.172878287411304, 123.60848636621598';
+
+    /**
      * The contact document until it is first saved: empty, so the portal
      * shows no placeholder address or number.
      *
-     * @var array{namaKantor: string, alamat: string, kota: string, provinsi: string, telepon: string, whatsapp: string, whatsappCatatan: string, email: string, mediaSosial: list<array{id: string, platform: string, akun: string, url: string}>, mapsUrl: string, catatanLokasi: string, janjiBalasan: string, kanalPengaduan: list<array{id: string, nama: string, deskripsi: string, tautanLabel: string, tautanUrl: string}>}
+     * @var array{namaKantor: string, alamat: string, kota: string, provinsi: string, telepon: string, whatsapp: string, whatsappCatatan: string, email: string, mediaSosial: list<array{id: string, platform: string, akun: string, url: string}>, mapsUrl: string, titikPeta: string, catatanLokasi: string, janjiBalasan: string, kanalPengaduan: list<array{id: string, nama: string, deskripsi: string, tautanLabel: string, tautanUrl: string}>}
      */
     public const array UNSAVED_CONTACT = [
         'namaKantor' => '',
@@ -64,6 +70,7 @@ class Setting extends Model
         'email' => '',
         'mediaSosial' => [],
         'mapsUrl' => '',
+        'titikPeta' => self::OFFICE_MAP_POINT,
         'catatanLokasi' => '',
         'janjiBalasan' => '',
         'kanalPengaduan' => [],
@@ -433,11 +440,24 @@ class Setting extends Model
     /**
      * The contact document as the dashboard edits it.
      *
-     * @return array{namaKantor: string, alamat: string, kota: string, provinsi: string, telepon: string, whatsapp: string, whatsappCatatan: string, email: string, mediaSosial: list<array{id: string, platform: string, akun: string, url: string}>, mapsUrl: string, catatanLokasi: string, janjiBalasan: string, kanalPengaduan: list<array{id: string, nama: string, deskripsi: string, tautanLabel: string, tautanUrl: string}>}
+     * @return array{namaKantor: string, alamat: string, kota: string, provinsi: string, telepon: string, whatsapp: string, whatsappCatatan: string, email: string, mediaSosial: list<array{id: string, platform: string, akun: string, url: string}>, mapsUrl: string, titikPeta: string, catatanLokasi: string, janjiBalasan: string, kanalPengaduan: list<array{id: string, nama: string, deskripsi: string, tautanLabel: string, tautanUrl: string}>}
      */
     public static function contact(): array
     {
-        return self::query()->find(self::CONTACT)?->value ?? self::UNSAVED_CONTACT;
+        return self::upgradeContact(self::query()->find(self::CONTACT)?->value ?? self::UNSAVED_CONTACT);
+    }
+
+    /**
+     * A contact document saved before it had a map point (D-063) reads with
+     * the office's point, so the Kontak page shows the map without the
+     * document being saved again.
+     *
+     * @param  array<string, mixed>  $contact
+     * @return array{namaKantor: string, alamat: string, kota: string, provinsi: string, telepon: string, whatsapp: string, whatsappCatatan: string, email: string, mediaSosial: list<array{id: string, platform: string, akun: string, url: string}>, mapsUrl: string, titikPeta: string, catatanLokasi: string, janjiBalasan: string, kanalPengaduan: list<array{id: string, nama: string, deskripsi: string, tautanLabel: string, tautanUrl: string}>}
+     */
+    public static function upgradeContact(array $contact): array
+    {
+        return $contact + ['titikPeta' => self::OFFICE_MAP_POINT];
     }
 
     /**

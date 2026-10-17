@@ -230,7 +230,8 @@
       </ul>
     </div>
     <div data-reveal>
-      <div class="map">
+      <!-- Peta Google di titik kantor dari Kontak & Kanal dipasang main.js (D-063); peta ilustrasi bila titiknya kosong -->
+      <div class="map" data-kontak-peta-wadah>
         <svg viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Peta ilustrasi Kota Kupang">
           <rect width="800" height="500" fill="#ECE9E1"/>
           <path d="M0 0H800V96C700 70 640 130 540 112 430 92 380 150 280 128 170 104 90 150 0 120Z" fill="#D9E3EF"/>
@@ -255,7 +256,7 @@
         <div class="map__pin"><span>Samsat Kota Kupang</span><i aria-hidden="true"></i></div>
         <a class="btn btn--light btn--sm map__open" target="_blank" rel="noopener" data-kontak-peta hidden><svg class="i" aria-hidden="true"><use href="#i-external"/></svg>Buka di Google Maps</a>
       </div>
-      <div class="caption-row"><p>Peta ilustrasi. Gunakan tautan untuk petunjuk arah.</p><p data-kontak-lokasi></p></div>
+      <div class="caption-row"><p data-kontak-peta-keterangan>Peta ilustrasi. Gunakan tautan untuk petunjuk arah.</p><p data-kontak-lokasi></p></div>
     </div>
   </section>
 

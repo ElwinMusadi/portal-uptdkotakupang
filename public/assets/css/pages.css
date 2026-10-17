@@ -544,6 +544,10 @@
 .map__pin span { background: var(--chrome, #0F1319); color: #fff; font-size: 12.5px; font-weight: 550; padding: 6px 12px; border-radius: var(--r-pill); white-space: nowrap; box-shadow: var(--shadow-soft); }
 .map__pin i { width: 14px; height: 14px; border-radius: 50%; background: var(--accent); border: 3px solid #fff; box-shadow: 0 0 0 6px var(--accent-halo, rgba(43, 99, 246, .18)); }
 .map__open { position: absolute; right: 14px; bottom: 14px; }
+/* Peta Google di titik kantor (D-063): menggantikan gambar dan penanda ilustrasi */
+.map__google { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.map--google > svg, .map--google .map__pin { display: none; }
+.map--google .map__open { top: 14px; bottom: auto; } /* kontrol dan atribusi Google ada di bawah */
 .form-card { padding: clamp(22px, 3vw, 36px); }
 .form-alert { display: none; margin-top: 18px; padding: 12px 14px; border-radius: var(--r-sm); background: var(--danger-soft); color: var(--danger); font-size: 13.5px; gap: 10px; align-items: flex-start; }
 .form-alert.is-on { display: flex; }

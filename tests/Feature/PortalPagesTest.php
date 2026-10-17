@@ -237,6 +237,15 @@ class PortalPagesTest extends TestCase
         $this->assertStringContainsString('<span data-kontak-alamat-baris>Memuat alamat…</span>', $html);
     }
 
+    public function test_keeps_the_illustrated_map_until_the_script_places_the_google_map_at_the_office(): void
+    {
+        $html = $this->get('/kontak')->assertOk()->getContent();
+
+        $this->assertStringContainsString('<div class="map" data-kontak-peta-wadah>', $html);
+        $this->assertStringContainsString('<p data-kontak-peta-keterangan>Peta ilustrasi. Gunakan tautan untuk petunjuk arah.</p>', $html);
+        $this->assertStringNotContainsString('<iframe', $html);
+    }
+
     public function test_leaves_the_vision_missions_values_and_pledge_to_the_public_api(): void
     {
         $html = $this->get('/visi-misi')->assertOk()->getContent();

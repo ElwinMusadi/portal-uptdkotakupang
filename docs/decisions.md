@@ -874,3 +874,13 @@ Pemilik meminta kedua draf D-061 diterbitkan.
 | Penerbitan | Migrasi menerbitkan *Balik nama di dalam Kota Kupang* dan *Mutasi masuk dari luar daerah* bila masih draf (pemilik), dengan langkah "menerbitkan atas keputusan pemilik" di riwayat alurnya; layanan yang sudah dipindahkan petugas ke tahap lain dibiarkan. Keduanya tampil di halaman Layanan, panduan, dan pencarian, di urutan terakhir daftar (urutannya bisa diubah Administrator). |
 | Persyaratan | Masih rancangan D-061 yang belum dicocokkan dengan papan persyaratan loket; petugas bisa mengubahnya dari Dashboard › Persyaratan Layanan. Halaman Layanan menulis tanggal terbit terakhir sebagai "diverifikasi petugas", jadi pencocokan itu tetap perlu dilakukan. |
 | Pembatalan | Membatalkan migrasi mengembalikan ke draf hanya layanan yang langkah terakhirnya masih penerbitan oleh migrasi ini. |
+
+## D-063 · 2026-10-17 · Peta Google di halaman Kontak
+
+Pemilik ingin peta ilustrasi di halaman Kontak & Pengaduan diganti peta asli Google Maps di titik -10.172878287411304, 123.60848636621598.
+
+| Hal | Keputusan |
+|---|---|
+| Pemuatan | **Langsung saat terlihat** (pemilik): `main.js` memasang peta sematan Google Maps (`https://www.google.com/maps?q=lintang,bujur&z=17&hl=id&output=embed`, tanpa kunci API) dengan `loading="lazy"`, jadi peta dimuat saat bagiannya mendekati layar. Saat itu peramban pengunjung terhubung ke Google; Kebijakan Privasi sebaiknya menyebutnya. Peta ilustrasi tetap tampil bila titik peta kosong, bila kontak gagal dimuat, atau tanpa JavaScript. |
+| Titik peta | **Diatur di Dashboard › Kontak & Kanal** (pemilik): isian *Titik peta* (lintang, bujur dalam derajat desimal seperti yang disalin dari Google Maps), diisi awal dengan titik di atas. Dokumen kontak yang disimpan sebelumnya dibaca dengan titik itu; isian yang dikosongkan mematikan peta Google; dashboard lama yang tidak mengirim isian ini tidak mengubahnya. Server menolak titik di luar lintang ±90 atau bujur ±180 dan menyeragamkan penulisannya (`lintang, bujur`). |
+| Tombol dan keterangan | *Buka di Google Maps* tetap memakai *Tautan Google Maps*; bila kosong, tombol membuka titik peta. Saat peta Google tampil, tombol pindah ke kanan atas agar kontrol dan atribusi Google di bawah tidak tertutup, penanda ilustrasi disembunyikan, dan keterangannya menjadi "Peta dari Google Maps. Gunakan tautan untuk petunjuk arah." |

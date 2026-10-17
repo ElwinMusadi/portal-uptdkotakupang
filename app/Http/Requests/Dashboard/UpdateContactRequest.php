@@ -2,14 +2,16 @@
 
 namespace App\Http\Requests\Dashboard;
 
+use App\Models\Setting;
+use App\Rules\MapPoint;
 use App\Rules\PlainText;
 use App\Rules\PortalLink;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * The complete contact document: the office and its address, phone,
- * WhatsApp and email, social media accounts, the map link, the reply promise
- * and the official complaint channels.
+ * WhatsApp and email, social media accounts, the map link and point, the
+ * reply promise and the official complaint channels.
  */
 class UpdateContactRequest extends FormRequest
 {
@@ -45,6 +47,7 @@ class UpdateContactRequest extends FormRequest
             'mediaSosial.*.akun' => ['required', 'string', 'max:60', new PlainText('Akun')],
             'mediaSosial.*.url' => ['nullable', 'string', 'max:300', new PortalLink('Tautan akun')],
             'mapsUrl' => ['nullable', 'string', 'max:500', new PortalLink('Tautan Google Maps')],
+            'titikPeta' => ['nullable', 'string', 'max:60', new MapPoint],
             'catatanLokasi' => ['nullable', 'string', 'max:120', new PlainText('Catatan lokasi')],
             'janjiBalasan' => ['nullable', 'string', 'max:200', new PlainText('Janji waktu balasan')],
             'kanalPengaduan' => ['present', 'list', 'max:8'],
@@ -103,6 +106,8 @@ class UpdateContactRequest extends FormRequest
             'mediaSosial.*.url.max' => 'Tautan akun maksimal :max karakter.',
             'mapsUrl.string' => 'Tautan Google Maps tidak valid.',
             'mapsUrl.max' => 'Tautan Google Maps maksimal :max karakter.',
+            'titikPeta.string' => 'Titik peta tidak valid.',
+            'titikPeta.max' => 'Titik peta maksimal :max karakter.',
             'catatanLokasi.string' => 'Catatan lokasi tidak valid.',
             'catatanLokasi.max' => 'Catatan lokasi maksimal :max karakter.',
             'janjiBalasan.string' => 'Janji waktu balasan tidak valid.',
@@ -130,9 +135,10 @@ class UpdateContactRequest extends FormRequest
 
     /**
      * The contact document as it is stored, with empty optional fields as
-     * empty strings.
+     * empty strings. A map point left out (a dashboard from before D-063)
+     * keeps the stored one; an empty one turns the Google map off.
      *
-     * @return array{namaKantor: string, alamat: string, kota: string, provinsi: string, telepon: string, whatsapp: string, whatsappCatatan: string, email: string, mediaSosial: list<array{id: string, platform: string, akun: string, url: string}>, mapsUrl: string, catatanLokasi: string, janjiBalasan: string, kanalPengaduan: list<array{id: string, nama: string, deskripsi: string, tautanLabel: string, tautanUrl: string}>}
+     * @return array{namaKantor: string, alamat: string, kota: string, provinsi: string, telepon: string, whatsapp: string, whatsappCatatan: string, email: string, mediaSosial: list<array{id: string, platform: string, akun: string, url: string}>, mapsUrl: string, titikPeta: string, catatanLokasi: string, janjiBalasan: string, kanalPengaduan: list<array{id: string, nama: string, deskripsi: string, tautanLabel: string, tautanUrl: string}>}
      */
     public function contact(): array
     {
@@ -152,6 +158,11 @@ class UpdateContactRequest extends FormRequest
                 'url' => $account['url'] ?? '',
             ], $this->validated('mediaSosial')),
             'mapsUrl' => $this->validated('mapsUrl') ?? '',
+            'titikPeta' => match (true) {
+                ! $this->has('titikPeta') => Setting::contact()['titikPeta'],
+                filled($this->validated('titikPeta')) => MapPoint::normalize($this->validated('titikPeta')),
+                default => '',
+            },
             'catatanLokasi' => $this->validated('catatanLokasi') ?? '',
             'janjiBalasan' => $this->validated('janjiBalasan') ?? '',
             'kanalPengaduan' => array_map(fn (array $channel): array => [

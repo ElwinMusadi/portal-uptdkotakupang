@@ -31,6 +31,7 @@ class PublicContactControllerTest extends TestCase
             'email' => '',
             'mediaSosial' => [],
             'mapsUrl' => '',
+            'titikPeta' => '-10.172878287411304, 123.60848636621598',
             'catatanLokasi' => '',
             'janjiBalasan' => '',
             'kanalPengaduan' => [],
@@ -64,7 +65,15 @@ class PublicContactControllerTest extends TestCase
             ->assertJsonPath('telepon', '(0380) 821 234')
             ->assertJsonPath('mediaSosial', [['platform' => 'Instagram', 'akun' => '@samsatkotakupang', 'url' => '']])
             ->assertJsonPath('kanalPengaduan', [['nama' => 'SP4N-LAPOR!', 'deskripsi' => 'Sistem pengaduan nasional.', 'tautanLabel' => 'Buka lapor.go.id', 'tautanUrl' => 'https://www.lapor.go.id']])
+            ->assertJsonPath('titikPeta', '-10.172878287411304, 123.60848636621598')
             ->assertJsonPath('diperbarui', '2026-10-13T08:00:00+00:00');
+    }
+
+    public function test_returns_no_map_point_once_it_is_saved_empty(): void
+    {
+        (new Setting)->forceFill(['name' => Setting::CONTACT, 'value' => ['titikPeta' => ''] + Setting::UNSAVED_CONTACT])->save();
+
+        $this->getJson('/api/public/kontak')->assertOk()->assertJsonPath('titikPeta', '');
     }
 
     public function test_starts_no_session_forbids_caching_and_rejects_query_parameters(): void

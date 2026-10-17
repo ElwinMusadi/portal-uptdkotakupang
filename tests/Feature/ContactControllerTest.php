@@ -47,6 +47,7 @@ class ContactControllerTest extends TestCase
             'email' => '',
             'mediaSosial' => [],
             'mapsUrl' => '',
+            'titikPeta' => '-10.172878287411304, 123.60848636621598',
             'catatanLokasi' => '',
             'janjiBalasan' => '',
             'kanalPengaduan' => [],
@@ -75,6 +76,32 @@ class ContactControllerTest extends TestCase
             'action' => 'memperbarui',
             'target' => 'Kontak & Kanal',
         ]);
+    }
+
+    public function test_saves_the_map_point_written_one_way_and_keeps_it_when_left_out(): void
+    {
+        $employee = $this->kontakEmployee();
+
+        $this->actingAs($employee)->putJson('/api/pengaturan/kontak', ['titikPeta' => ' -10.1728 ,123.6084 '] + $this->contact())
+            ->assertOk()
+            ->assertJsonPath('titikPeta', '-10.1728, 123.6084');
+        $this->actingAs($employee)->putJson('/api/pengaturan/kontak', $this->contact())->assertOk()->assertJsonPath('titikPeta', '-10.1728, 123.6084');
+        $this->actingAs($employee)->putJson('/api/pengaturan/kontak', ['titikPeta' => ''] + $this->contact())->assertOk()->assertJsonPath('titikPeta', '');
+
+        $this->assertSame('', Setting::contact()['titikPeta']);
+    }
+
+    #[TestWith(['Samsat Kota Kupang'])]
+    #[TestWith(['-91, 123.6'])]
+    #[TestWith(['-10.17, 181'])]
+    #[TestWith(['-10.17; 123.6'])]
+    #[TestWith(['-10.17'])]
+    public function test_rejects_a_map_point_that_is_not_latitude_and_longitude(string $point): void
+    {
+        $response = $this->actingAs($this->kontakEmployee())->putJson('/api/pengaturan/kontak', ['titikPeta' => $point] + $this->contact());
+
+        $response->assertUnprocessable()->assertJsonValidationErrors(['titikPeta' => 'Tulis titik peta sebagai lintang, bujur, mis. -10.172878, 123.608486.']);
+        $this->assertDatabaseCount('settings', 0);
     }
 
     public function test_logs_nothing_when_the_same_document_is_saved_again(): void
