@@ -112,6 +112,21 @@ final class ThemePalette
     }
 
     /**
+     * The colour a browser shows for $top at $alpha over $bottom, mixed per
+     * sRGB channel: text at 72% on the navbar, a glass navbar over the page.
+     */
+    public static function blend(string $top, string $bottom, float $alpha): string
+    {
+        $mixed = array_map(
+            fn (int $over, int $under): int => (int) round($over * $alpha + $under * (1 - $alpha)),
+            self::channels($top, scale: 255),
+            self::channels($bottom, scale: 255),
+        );
+
+        return vsprintf('#%02X%02X%02X', $mixed);
+    }
+
+    /**
      * The colour with transparency, written like the portal's tokens:
      * "rgba(43, 99, 246, .18)".
      */

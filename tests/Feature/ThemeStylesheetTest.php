@@ -145,6 +145,28 @@ class ThemeStylesheetTest extends TestCase
         $this->assertStringNotContainsString('{', $this->get('/tema-dashboard.css')->getContent());
     }
 
+    public function test_serves_a_light_navbar_with_the_dark_logo_and_a_glass_navbar_shaped_like_the_notch(): void
+    {
+        $this->saveTheme(['navbar' => '#FFFFFF']);
+
+        $light = $this->get('/tema-portal.css')->assertOk()->getContent();
+        $this->assertStringContainsString("  --nav-surface: #FFFFFF;\n  --nav-tint: 15, 19, 25;\n", $light);
+        $this->assertStringEndsWith("}\n.nav__logo { content: url(\"/assets/img/logo-pintu-nav.png\"); }\n", $light);
+        $this->assertFileExists(public_path('assets/img/logo-pintu-nav.png'));
+        $this->assertStringNotContainsString('backdrop-filter', $light);
+
+        $this->saveTheme(['kaca' => 'sedang']);
+
+        $glass = $this->get('/tema-portal.css')->assertOk()->getContent();
+        $this->assertStringContainsString("  --nav-blur: 18px;\n", $glass);
+        $this->assertStringContainsString(".nav { background: transparent; }\n.nav::after { display: none; }\n.nav::before {\n", $glass);
+        $this->assertStringContainsString('  backdrop-filter: blur(var(--nav-blur)) saturate(1.4);', $glass);
+        $this->assertStringContainsString('  mask: var(--nav-glass-shape);', $glass);
+        $this->assertStringContainsString(".nav__menu, .mobile-menu {\n", $glass);
+        $this->assertStringNotContainsString('logo-pintu-nav.png', $glass);
+        $this->assertStringNotContainsString('{', $this->get('/tema-dashboard.css')->getContent());
+    }
+
     public function test_serves_only_a_comment_for_a_saved_theme_equal_to_the_built_in_look(): void
     {
         $this->saveTheme(['aksen' => '#2b63f6']);
@@ -177,6 +199,10 @@ class ThemeStylesheetTest extends TestCase
         $this->assertSame('var(--ink)', $portal['--ink-fill']);
         $this->assertSame('#17181B', $portal['--chrome-2']);
         $this->assertSame(ThemeVariables::PORTAL_PANEL['--night-line'], $portal['--chrome-line']);
+        $this->assertSame('var(--chrome)', $portal['--nav-surface']);
+        $this->assertSame('255, 255, 255', $portal['--nav-tint']);
+        $this->assertSame('#FFFFFF', $portal['--nav-cta']);
+        $this->assertSame('var(--chrome)', $portal['--nav-cta-text']);
         foreach (ThemeVariables::PORTAL_PANEL as $name => $value) {
             $this->assertSame($value, $portal[$name], $name);
         }

@@ -11,8 +11,8 @@ use Illuminate\Validation\Rule;
 
 /**
  * The complete theme document (D-057): the portal part and the dashboard
- * part, each from closed lists except the accent, the dark and the
- * portal's panel colour, "#RRGGBB" colours. No free text reaches the generated stylesheets. Also the unsaved
+ * part, each from closed lists except the accent, the dark, and the
+ * portal's panel and navbar colours, "#RRGGBB" colours. No free text reaches the generated stylesheets. Also the unsaved
  * theme of a preview or a portal preview link.
  */
 class UpdateThemeRequest extends FormRequest
@@ -58,6 +58,8 @@ class UpdateThemeRequest extends FormRequest
         }
 
         $rules['portal.panel'] = ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}\z/'];
+        $rules['portal.navbar'] = ['required', 'string', 'regex:/^(gelap|#[0-9A-Fa-f]{6})\z/'];
+        $rules['portal.kaca'] = ['required', 'string', Rule::in(Setting::THEME_GLASS)];
         $rules['portal.mode'] = ['required', 'string', Rule::in(Setting::THEME_MODES)];
 
         return $rules;
@@ -100,6 +102,8 @@ class UpdateThemeRequest extends FormRequest
         }
 
         $attributes['portal.panel'] = 'warna panel gelap portal';
+        $attributes['portal.navbar'] = 'warna navbar portal';
+        $attributes['portal.kaca'] = 'efek glass navbar portal';
         $attributes['portal.mode'] = 'mode tampilan portal';
 
         return $attributes;
@@ -107,10 +111,10 @@ class UpdateThemeRequest extends FormRequest
 
     /**
      * The validated document, with the colours in capitals. Only the portal
-     * has dark panels and a mode: the dashboard's dark mode is each
-     * employee's choice.
+     * has dark panels, a navbar and a mode: the dashboard's dark mode is
+     * each employee's choice.
      *
-     * @return array{portal: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, gelap: string, panel: string, mode: string}, dashboard: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, gelap: string}}
+     * @return array{portal: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, gelap: string, panel: string, navbar: string, kaca: string, mode: string}, dashboard: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, gelap: string}}
      */
     public function theme(): array
     {
@@ -129,6 +133,9 @@ class UpdateThemeRequest extends FormRequest
             'portal' => [
                 ...$section('portal'),
                 'panel' => $this->string('portal.panel')->upper()->value(),
+                // "gelap" follows the dark of the buttons and navigation
+                'navbar' => $this->string('portal.navbar')->value() === 'gelap' ? 'gelap' : $this->string('portal.navbar')->upper()->value(),
+                'kaca' => $this->string('portal.kaca')->value(),
                 'mode' => $this->string('portal.mode')->value(),
             ],
             'dashboard' => $section('dashboard'),

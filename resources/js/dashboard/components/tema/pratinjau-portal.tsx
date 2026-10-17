@@ -15,7 +15,8 @@ const BATANG = [38, 52, 44, 70, 86, 61]
  * awalan --p- karena namanya (mis. --accent) juga dipakai dashboard. Skala
  * diterapkan dengan zoom, seperti di portal; mode gelap lewat variabelnya,
  * dengan --chrome untuk permukaan yang tetap gelap dan --on-ink untuk teks
- * di atas tombol yang dibalik. Tombol gelap memakai --ink-fill (warna gelap).
+ * di atas tombol yang dibalik. Tombol gelap memakai --ink-fill (warna gelap);
+ * navbar memakai --nav-surface dan teks --nav-tint (warna navbar).
  */
 export function PratinjauPortal({ variabel, skala }: { variabel: Record<string, string>; skala: number }) {
   const gaya = Object.fromEntries(
@@ -31,12 +32,12 @@ export function PratinjauPortal({ variabel, skala }: { variabel: Record<string, 
       role="img"
       className="grid gap-4 overflow-hidden rounded-xl border bg-(--p-paper) p-4 font-(family-name:--p-font-sans) text-(--p-ink)"
     >
-      <div className="flex items-center justify-between rounded-full bg-(--p-chrome) py-2 pr-2 pl-4 text-xs text-white">
+      <div className="flex items-center justify-between rounded-full bg-(--p-nav-surface) py-2 pr-2 pl-4 text-xs text-[rgb(var(--p-nav-tint))]">
         <span className="flex items-center gap-2 font-semibold tracking-[0.08em]">
           <span aria-hidden="true" className="size-3 rotate-45 rounded-[3px] bg-(--p-logo-leaf-night)" />
           PINTU
         </span>
-        <span className="rounded-full bg-white px-3 py-1 text-(--p-chrome)">Masuk</span>
+        <span className="rounded-full bg-(--p-nav-cta) px-3 py-1 text-(--p-nav-cta-text)">Masuk</span>
       </div>
 
       <div className="grid gap-2">

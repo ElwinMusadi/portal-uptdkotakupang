@@ -80,6 +80,21 @@ final class ThemeVariables
     private const float PANEL_MAX_LIGHTNESS = 0.22;
 
     /**
+     * The levels of the portal navbar's glass (Irisan 8): how much of the
+     * navbar's colour covers the page behind it, and how far that page is
+     * blurred. The cover rises when the links would not read over a white
+     * or a black page.
+     *
+     * @var array<string, array{float, int}>
+     */
+    private const array NAVBAR_GLASS = ['halus' => [0.9, 12], 'sedang' => [0.8, 18], 'kuat' => [0.68, 26]];
+
+    /**
+     * How strong the navbar's links are: its text at 72% (components.css).
+     */
+    private const float NAVBAR_LINK = 0.72;
+
+    /**
      * The built-in weight of the headings: the portal's --fw-display
      * (tokens.css) and the dashboard's --fw-heading (index.css).
      */
@@ -296,6 +311,8 @@ final class ThemeVariables
                 );
                 $variables = [...$variables, '--chrome' => $chrome, '--chrome-2' => self::lighter($chrome, 0.05), '--chrome-line' => self::lighter($chrome, 0.105)];
             }
+            // Light buttons stay light on hover: the dark mode's --surface-hover is dark
+            $variables['--light-hover'] = $backgroundColours['--surface-hover'];
         } else {
             $variables = $background === ThemeBackground::Hangat ? [] : $backgroundColours;
 
@@ -315,6 +332,9 @@ final class ThemeVariables
                 ];
             }
         }
+
+        $chrome = $variables['--chrome'] ?? self::DEFAULT_DARK;
+        $variables += self::portalNavbar($section, $chrome, self::isDark($section) ? $chrome : ($variables['--ink-fill'] ?? self::DEFAULT_DARK));
 
         $variables += self::fonts($section);
 
@@ -458,6 +478,11 @@ final class ThemeVariables
         // Without a dark of their own, the fills are --ink and the boxes on the navigation --night-2
         $variables['--ink-fill'] ??= $variables['--ink'];
         $variables['--chrome-2'] ??= self::PORTAL_NIGHT[1];
+        // The navbar follows the dark of the buttons and navigation until it has a colour of its own
+        $variables['--nav-surface'] ??= $variables['--chrome'];
+        $variables['--nav-tint'] ??= '255, 255, 255';
+        $variables['--nav-cta'] ??= '#FFFFFF';
+        $variables['--nav-cta-text'] ??= $variables['--chrome'];
 
         return array_filter($variables, fn (string $name): bool => str_starts_with($name, '--'), ARRAY_FILTER_USE_KEY);
     }
@@ -529,9 +554,10 @@ final class ThemeVariables
     public static function portalContrasts(array $section): array
     {
         $colours = self::portalPreview($section);
+        $navbar = self::navbarContrasts($section, $colours['--chrome']);
 
         if (self::isDark($section)) {
-            return self::contrasts([
+            return self::contrasts([...[
                 'Teks pada latar halaman' => [$colours['--ink'], $colours['--paper']],
                 'Teks pendukung pada latar halaman' => [$colours['--text-2'], $colours['--paper']],
                 'Aksen pada latar halaman' => [$colours['--accent'], $colours['--paper']],
@@ -542,10 +568,10 @@ final class ThemeVariables
                 'Teks abu pada panel gelap' => [self::NIGHT_MUTED, $colours['--night-3']],
                 'Teks abu pada navigasi gelap' => [self::NIGHT_MUTED, $colours['--chrome']],
                 'Aksen pada navigasi gelap' => [$colours['--night-accent'], $colours['--chrome']],
-            ]);
+            ], ...$navbar]);
         }
 
-        return self::contrasts([
+        return self::contrasts([...[
             'Teks putih pada tombol aksen' => ['#FFFFFF', $colours['--accent']],
             'Aksen pada latar halaman' => [$colours['--accent'], $colours['--paper']],
             'Tautan kecil pada latar halaman' => [$colours['--accent-ink'], $colours['--paper']],
@@ -556,7 +582,37 @@ final class ThemeVariables
             'Teks putih pada tombol gelap' => ['#FFFFFF', $colours['--ink-fill']],
             'Teks abu pada navigasi gelap' => [self::NIGHT_MUTED, $colours['--chrome']],
             'Aksen pada navigasi gelap' => [$colours['--night-accent'], $colours['--chrome']],
-        ]);
+        ], ...$navbar]);
+    }
+
+    /**
+     * The navbar's colour pairs, each on the page colour it reads worst on
+     * (with glass: the navbar over a white or a black page); none while the
+     * navbar is built in.
+     *
+     * @param  ThemeSection  $section
+     * @return array<string, array{string, string}>
+     */
+    private static function navbarContrasts(array $section, string $chrome): array
+    {
+        $navbar = self::navbarParts($section, $chrome);
+
+        if ($navbar === null) {
+            return [];
+        }
+
+        $worst = function (callable $colourOn) use ($navbar): array {
+            $pairs = array_map(fn (string $backdrop): array => [$colourOn($backdrop), $backdrop], $navbar['backdrops']);
+            usort($pairs, fn (array $a, array $b): int => ThemePalette::contrast(...$a) <=> ThemePalette::contrast(...$b));
+
+            return $pairs[0];
+        };
+
+        return [
+            'Tautan navbar' => $worst(fn (string $backdrop): string => ThemePalette::blend($navbar['text'], $backdrop, self::NAVBAR_LINK)),
+            'Teks redup menu navbar' => $worst(fn (): string => $navbar['muted']),
+            'Aksen navbar' => $worst(fn (): string => $navbar['accent']),
+        ];
     }
 
     /**
@@ -735,6 +791,176 @@ final class ThemeVariables
     private static function hasDefaultDark(array $section): bool
     {
         return strtoupper($section['gelap']) === self::DEFAULT_DARK;
+    }
+
+    /**
+     * The navbar, its menus and the mobile menu (Irisan 8) in the navbar's
+     * own colour or, built in, the dark of the buttons and navigation: text
+     * in white or ink, whichever reads better, a dark logo and dark buttons
+     * on a light navbar, and the glass at its level. Nothing while both the
+     * colour and the glass are built in.
+     *
+     * @param  ThemeSection  $section
+     * @return array<string, string>
+     */
+    private static function portalNavbar(array $section, string $chrome, string $darkButton): array
+    {
+        $navbar = self::navbarParts($section, $chrome);
+
+        if ($navbar === null) {
+            return [];
+        }
+
+        ['base' => $base, 'ink' => $ink, 'text' => $text, 'alpha' => $alpha, 'backdrops' => $backdrops] = $navbar;
+        [$lightness] = ThemePalette::oklch($base);
+        $shade = fn (float $step): string => ThemePalette::tone($base, $ink ? $lightness - $step : $lightness + $step, 1, 0.4);
+
+        $variables = [
+            '--nav-surface' => $alpha === null ? $base : ThemePalette::rgba($base, $alpha),
+            '--nav-tint' => $ink ? '15, 19, 25' : '255, 255, 255',
+            '--nav-muted' => $navbar['muted'],
+            '--nav-accent' => $navbar['accent'],
+            '--nav-2' => $shade(0.05),
+            '--nav-line' => $shade(0.105),
+        ];
+        if ($ink) {
+            $variables += [
+                '--nav-cta' => $darkButton,
+                '--nav-cta-text' => '#FFFFFF',
+                '--nav-cta-hover' => ThemePalette::darkenedFor(self::lighter($darkButton, 0.08), ['#FFFFFF']),
+            ];
+        }
+        if ($alpha !== null) {
+            $variables['--nav-blur'] = self::NAVBAR_GLASS[$section['kaca'] ?? 'mati'][1].'px';
+        }
+
+        return $variables;
+    }
+
+    /**
+     * The navbar's own colour, darkened or lightened until its links read,
+     * or null while it follows the dark of the buttons and navigation.
+     *
+     * @param  ThemeSection  $section
+     */
+    public static function navbarColour(array $section): ?string
+    {
+        $navbar = $section['navbar'] ?? 'gelap';
+
+        if ($navbar === 'gelap') {
+            return null;
+        }
+
+        $colour = strtoupper($navbar);
+        $ink = self::prefersInk($colour);
+        $text = $ink ? self::PORTAL_TEXT['--ink'] : '#FFFFFF';
+
+        for ($tries = 0; $tries < 100 && ! self::readsOn(ThemePalette::blend($text, $colour, self::NAVBAR_LINK), [$colour]); $tries++) {
+            [$lightness] = ThemePalette::oklch($colour);
+            $colour = ThemePalette::tone($colour, $ink ? min(1, $lightness + 0.01) : max(0, $lightness - 0.01), 1, 0.4);
+        }
+
+        return $colour;
+    }
+
+    /**
+     * How much of the page a glass navbar covers once its links read, from
+     * 0 to 1; null without glass.
+     *
+     * @param  ThemeSection  $section
+     */
+    public static function navbarGlassCover(array $section): ?float
+    {
+        return self::navbarParts($section, self::portalPreview($section)['--chrome'])['alpha'] ?? null;
+    }
+
+    /**
+     * What the navbar is made of: its colour, whether ink text reads better
+     * than white, its glass cover (null without glass), the page colours its
+     * text may sit on (the colour, or the glass over a white and a black
+     * page), and the dimmed text and accent readable on all of them.
+     *
+     * @param  ThemeSection  $section
+     * @return array{base: string, ink: bool, text: string, alpha: float|null, backdrops: list<string>, muted: string, accent: string}|null
+     */
+    private static function navbarParts(array $section, string $chrome): ?array
+    {
+        $glass = self::NAVBAR_GLASS[$section['kaca'] ?? 'mati'] ?? null;
+        $base = self::navbarColour($section);
+
+        if ($base === null && $glass === null) {
+            return null;
+        }
+
+        $base ??= $chrome;
+        $ink = self::prefersInk($base);
+        $text = $ink ? self::PORTAL_TEXT['--ink'] : '#FFFFFF';
+        $alpha = $glass[0] ?? null;
+        $backdrops = fn (?float $cover): array => $cover === null
+            ? [$base]
+            : [ThemePalette::blend($base, '#FFFFFF', $cover), ThemePalette::blend($base, '#000000', $cover)];
+
+        // Up to no glass at all, where the colour itself reads
+        while ($alpha !== null && $alpha < 1 && ! self::linksRead($text, $backdrops($alpha))) {
+            $alpha = min(1, $alpha + 0.02);
+        }
+        $on = $backdrops($alpha);
+
+        $mutedShare = 0.6;
+        while ($mutedShare < 1 && ! self::readsOn(ThemePalette::blend($text, $base, $mutedShare), $on)) {
+            $mutedShare += 0.04;
+        }
+        $accent = self::hasDefaultAccent($section) ? self::DEFAULT_ACCENT : $section['aksen'];
+
+        return [
+            'base' => $base,
+            'ink' => $ink,
+            'text' => $text,
+            'alpha' => $alpha,
+            'backdrops' => $on,
+            'muted' => ThemePalette::blend($text, $base, min($mutedShare, 1)),
+            'accent' => $ink ? ThemePalette::darkenedFor($accent, $on) : self::onDark($accent, $on),
+        ];
+    }
+
+    /**
+     * Whether ink text reads better on the colour than white.
+     */
+    private static function prefersInk(string $colour): bool
+    {
+        return ThemePalette::contrast(self::PORTAL_TEXT['--ink'], $colour) > ThemePalette::contrast('#FFFFFF', $colour);
+    }
+
+    /**
+     * Whether the navbar's links (its text at 72%) read on every backdrop.
+     *
+     * @param  list<string>  $backdrops
+     */
+    private static function linksRead(string $text, array $backdrops): bool
+    {
+        foreach ($backdrops as $backdrop) {
+            if (! self::readsOn(ThemePalette::blend($text, $backdrop, self::NAVBAR_LINK), [$backdrop])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Whether the colour reads on every background (WCAG AA).
+     *
+     * @param  list<string>  $backgrounds
+     */
+    private static function readsOn(string $colour, array $backgrounds): bool
+    {
+        foreach ($backgrounds as $background) {
+            if (ThemePalette::contrast($colour, $background) < ThemePalette::MIN_CONTRAST) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

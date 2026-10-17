@@ -365,9 +365,15 @@ export interface BagianTema {
 /** Mode portal untuk semua pengunjung (D-057); mode gelap dashboard tetap pilihan tiap pegawai */
 export type ModePortal = "terang" | "gelap"
 
+/** Efek glass navbar portal: mati atau seberapa kuat */
+export type KacaNavbar = "mati" | "halus" | "sedang" | "kuat"
+
 export interface BagianTemaPortal extends BagianTema {
   /** Warna panel gelap #RRGGBB: papan layanan, dasbor layanan, kotak cek pajak, media, layar TV */
   panel: string
+  /** "gelap" = mengikuti warna gelap, atau #RRGGBB; navbar terang membuat teks, logo, dan tombolnya gelap */
+  navbar: string
+  kaca: KacaNavbar
   mode: ModePortal
 }
 

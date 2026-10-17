@@ -85,6 +85,13 @@ class ThemePaletteTest extends TestCase
         $this->assertEqualsWithDelta(0.0, ThemePalette::oklch(ThemePalette::tone('#808080', 0.5, 1, 0.2))[1], 0.001);
     }
 
+    public function test_blends_a_colour_over_another_like_a_browser(): void
+    {
+        $this->assertSame('#BCBDBF', ThemePalette::blend('#FFFFFF', '#0F1319', 0.72));
+        $this->assertSame('#0F1319', ThemePalette::blend('#0F1319', '#FFFFFF', 1));
+        $this->assertSame('#FFFFFF', ThemePalette::blend('#0F1319', '#FFFFFF', 0));
+    }
+
     public function test_writes_a_transparent_colour_like_the_portal_tokens(): void
     {
         $this->assertSame('rgba(43, 99, 246, .18)', ThemePalette::rgba('#2B63F6', 0.18));

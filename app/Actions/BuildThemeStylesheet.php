@@ -30,6 +30,47 @@ class BuildThemeStylesheet
         CSS;
 
     /**
+     * The logo of a light navbar (Irisan 8): the dark one.
+     */
+    private const string LIGHT_NAVBAR_RULES = <<<'CSS'
+        .nav__logo { content: url("/assets/img/logo-pintu-nav.png"); }
+
+        CSS;
+
+    /**
+     * The navbar's glass (Irisan 8). The glass sits in .nav::before, shaped
+     * like the notch with its two hollows by a mask, rather than on .nav
+     * itself: an element with a backdrop filter keeps the menus inside it
+     * from blurring the page. The menus and the mobile menu get their own.
+     */
+    private const string NAVBAR_GLASS_RULES = <<<'CSS'
+        .nav { background: transparent; }
+        .nav::after { display: none; }
+        .nav::before {
+          left: calc(-1 * var(--nav-lekuk)); right: auto; top: 0;
+          width: calc(100% + 2 * var(--nav-lekuk)); height: 100%;
+          z-index: -1;
+          background: var(--nav-surface);
+          -webkit-backdrop-filter: blur(var(--nav-blur)) saturate(1.4);
+          backdrop-filter: blur(var(--nav-blur)) saturate(1.4);
+          --nav-glass-shape:
+            radial-gradient(circle at 0 100%, transparent calc(var(--nav-lekuk) - .5px), #000 var(--nav-lekuk)) left top / calc(var(--nav-lekuk) + 1px) var(--nav-lekuk) no-repeat,
+            radial-gradient(circle at 100% 100%, transparent calc(var(--nav-lekuk) - .5px), #000 var(--nav-lekuk)) right top / calc(var(--nav-lekuk) + 1px) var(--nav-lekuk) no-repeat,
+            linear-gradient(#000 0 0) center top / calc(100% - 2 * var(--nav-lekuk)) calc(100% - var(--nav-r) + 1px) no-repeat,
+            linear-gradient(#000 0 0) center bottom / calc(100% - 2 * var(--nav-lekuk) - 2 * var(--nav-r) + 2px) var(--nav-r) no-repeat,
+            radial-gradient(circle at 100% 0, #000 calc(var(--nav-r) - .5px), transparent var(--nav-r)) left var(--nav-lekuk) bottom 0 / var(--nav-r) var(--nav-r) no-repeat,
+            radial-gradient(circle at 0 0, #000 calc(var(--nav-r) - .5px), transparent var(--nav-r)) right var(--nav-lekuk) bottom 0 / var(--nav-r) var(--nav-r) no-repeat;
+          -webkit-mask: var(--nav-glass-shape);
+          mask: var(--nav-glass-shape);
+        }
+        .nav__menu, .mobile-menu {
+          -webkit-backdrop-filter: blur(var(--nav-blur)) saturate(1.4);
+          backdrop-filter: blur(var(--nav-blur)) saturate(1.4);
+        }
+
+        CSS;
+
+    /**
      * The badge a portal preview link adds to every portal page, so the
      * administrator does not mistake the unsaved theme for the saved one.
      */
@@ -75,7 +116,9 @@ class BuildThemeStylesheet
             .$this->fonts($section)
             .$this->block(':root', $variables)
             .$this->block(self::SCALED_PAGES, $zoom)
-            .(ThemeVariables::isDark($section) ? self::DARK_RULES : '');
+            .(ThemeVariables::isDark($section) ? self::DARK_RULES : '')
+            .(($variables['--nav-tint'] ?? null) === '15, 19, 25' ? self::LIGHT_NAVBAR_RULES : '')
+            .(isset($variables['--nav-blur']) ? self::NAVBAR_GLASS_RULES : '');
     }
 
     /**

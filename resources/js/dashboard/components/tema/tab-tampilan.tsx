@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
+import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { BagianTema, BagianTemaPortal, Tema } from "@/lib/api"
 import { sesi } from "@/lib/auth"
@@ -30,10 +31,12 @@ import {
   HURUF,
   hurufJudulDipakai,
   hurufPratinjauPortal,
+  KACA,
   keluargaHuruf,
   LATAR,
   MODE_PORTAL,
   muatUlangTemaDashboard,
+  NAVBAR,
   PANEL,
   POLA_WARNA,
   pratinjauDashboard,
@@ -66,6 +69,8 @@ const skemaBagian = z.object({
 const skemaTema = z.object({
   portal: skemaBagian.extend({
     panel: z.string().regex(POLA_WARNA, "Tulis kode warna #RRGGBB, mis. #0A0A0C."),
+    navbar: z.union([z.literal("gelap"), z.string().regex(POLA_WARNA, "Tulis kode warna #RRGGBB, mis. #FFFFFF.")]),
+    kaca: z.enum(["mati", "halus", "sedang", "kuat"]),
     mode: z.enum(["terang", "gelap"]),
   }),
   dashboard: skemaBagian,
@@ -176,6 +181,8 @@ function IsiTampilan({ form, admin }: { form: UseFormReturn<Tema>; admin: boolea
               aksenJadi={pratinjau?.portal.variabel["--accent"]}
               gelapJadi={pratinjau?.portal.gelap}
               panelJadi={pratinjau?.portal.panel}
+              navbarJadi={pratinjau?.portal.navbar ?? undefined}
+              tutupanKaca={pratinjau?.portal.tutupanKaca ?? undefined}
               kontras={pratinjau?.portal.kontras}
               admin={admin}
             />
@@ -235,6 +242,8 @@ function FormBagian({
   aksenJadi,
   gelapJadi,
   panelJadi,
+  navbarJadi,
+  tutupanKaca,
   kontras,
   admin,
 }: {
@@ -245,6 +254,8 @@ function FormBagian({
   aksenJadi?: string
   gelapJadi?: string
   panelJadi?: string
+  navbarJadi?: string
+  tutupanKaca?: number
   kontras?: Kontras[]
   admin: boolean
 }) {
@@ -375,6 +386,8 @@ function FormBagian({
           </div>
         </Bagian>
       )}
+
+      {bagian === "portal" && <BagianNavbar id={id} form={form} jadi={navbarJadi} tutupan={tutupanKaca} />}
 
       {bagian === "portal" && (
         <Bagian
@@ -637,6 +650,125 @@ function FormBagian({
   )
 }
 
+/** Navbar portal: mengikuti warna gelap atau warna sendiri, dan efek glass bertingkat */
+function BagianNavbar({ id, form, jadi, tutupan }: { id: string; form: UseFormReturn<Tema>; jadi?: string; tutupan?: number }) {
+  const portal = useWatch({ control: form.control, name: "portal" })
+  const sendiri = portal.navbar !== "gelap"
+  const atur = (baru: Partial<BagianTemaPortal>) =>
+    form.setValue("portal", { ...portal, ...baru }, { shouldDirty: true, shouldValidate: true })
+
+  return (
+    <Bagian
+      judul="Navbar"
+      deskripsi="Bilah navigasi di atas, menu turunnya, dan menu ponsel. Bila warnanya terang, teks, ikon, logo, dan tombolnya berganti ke versi gelap."
+    >
+      <RadioGroup
+        value={sendiri ? "sendiri" : "gelap"}
+        onValueChange={(v) => atur({ navbar: v === "gelap" ? "gelap" : "#FFFFFF" })}
+        className="grid gap-2 sm:grid-cols-2"
+        aria-label="Warna navbar"
+      >
+        {[
+          { nilai: "gelap", label: "Ikuti warna gelap", keterangan: "Sama dengan tombol dan kartu gelap (bawaan)" },
+          { nilai: "sendiri", label: "Warna sendiri", keterangan: "Termasuk terang, mis. putih atau warna utama" },
+        ].map((p) => (
+          <Label
+            key={p.nilai}
+            htmlFor={`${id}-navbar-${p.nilai}`}
+            className="gap-3 rounded-lg border p-3 font-normal has-[[data-state=checked]]:border-ring has-[[data-state=checked]]:bg-muted/50"
+          >
+            <RadioGroupItem value={p.nilai} id={`${id}-navbar-${p.nilai}`} />
+            <span className="grid gap-0.5">
+              <span className="font-medium">{p.label}</span>
+              <span className="text-xs text-muted-foreground">{p.keterangan}</span>
+            </span>
+          </Label>
+        ))}
+      </RadioGroup>
+      {sendiri && (
+        <>
+          <FieldWarna form={form} name="portal.navbar" jadi={jadi} alasan="agar tautan navbar tetap terbaca." />
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Contoh warna navbar">
+            {NAVBAR.map((n) => {
+              const warna = n.nilai === "aksen" ? portal.aksen : n.nilai
+              const bisa = POLA_WARNA.test(warna)
+              return (
+                <Button
+                  key={n.label}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={!bisa}
+                  aria-pressed={bisa && portal.navbar.toUpperCase() === warna.toUpperCase()}
+                  onClick={() => atur({ navbar: warna.toUpperCase() })}
+                  className="aria-pressed:border-ring aria-pressed:bg-muted/50"
+                >
+                  <span aria-hidden="true" className="size-3.5 rounded-full border border-black/10" style={{ background: warna }} />
+                  {n.label}
+                </Button>
+              )
+            })}
+          </div>
+        </>
+      )}
+      <div className="grid gap-3 rounded-lg border p-3">
+        <div className="flex items-center justify-between gap-4">
+          <div className="grid gap-1">
+            <Label htmlFor={`${id}-kaca`}>Efek glass</Label>
+            <p className="text-xs text-muted-foreground">
+              Navbar dan menunya tembus pandang dengan blur, sehingga isi halaman samar terlihat saat digulir. Tutupannya dinaikkan
+              otomatis bila tautan navbar kurang terbaca di atas latar terang atau gelap.
+            </p>
+          </div>
+          <Switch
+            id={`${id}-kaca`}
+            checked={portal.kaca !== "mati"}
+            onCheckedChange={(nyala) => atur({ kaca: nyala ? "sedang" : "mati" })}
+          />
+        </div>
+        {portal.kaca !== "mati" && (
+          <RadioGroup
+            value={portal.kaca}
+            onValueChange={(v) => atur({ kaca: v as BagianTemaPortal["kaca"] })}
+            className="grid gap-2 sm:grid-cols-3"
+            aria-label="Kekuatan efek glass"
+          >
+            {KACA.map((k) => (
+              <Label
+                key={k.nilai}
+                htmlFor={`${id}-kaca-${k.nilai}`}
+                className="gap-3 rounded-lg border p-3 font-normal has-[[data-state=checked]]:border-ring has-[[data-state=checked]]:bg-muted/50"
+              >
+                <RadioGroupItem value={k.nilai} id={`${id}-kaca-${k.nilai}`} />
+                <span className="grid gap-0.5">
+                  <span className="font-medium">{k.label}</span>
+                  <span className="text-xs text-muted-foreground">{k.keterangan}</span>
+                </span>
+              </Label>
+            ))}
+          </RadioGroup>
+        )}
+        {portal.kaca !== "mati" && tutupan !== undefined && <KeteranganKaca kaca={portal.kaca} tutupan={tutupan} />}
+      </div>
+    </Bagian>
+  )
+}
+
+/** Tutupan glass yang dipakai, bila server menaikkannya agar tautan navbar terbaca */
+function KeteranganKaca({ kaca, tutupan }: { kaca: BagianTemaPortal["kaca"]; tutupan: number }) {
+  const tingkat = KACA.find((k) => k.nilai === kaca)
+  if (!tingkat || tutupan <= tingkat.tutupan + 0.001) return null
+  const persen = Math.round(tutupan * 100)
+  return (
+    <p className="flex items-start gap-2 text-xs text-muted-foreground">
+      <IconInfoCircle className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+      {persen >= 99
+        ? "Dengan warna navbar ini efek glass tidak terlihat: tautannya hanya terbaca di atas warna penuh. Warna yang lebih terang atau lebih gelap memberi efek glass."
+        : `Tutupan navbar dinaikkan ke ${persen}% agar tautannya tetap terbaca di atas latar terang maupun gelap.`}
+    </p>
+  )
+}
+
 /** Pemilih warna dan kode #RRGGBB, dengan keterangan bila server menyesuaikan warnanya */
 function FieldWarna({
   form,
@@ -645,7 +777,7 @@ function FieldWarna({
   alasan,
 }: {
   form: UseFormReturn<Tema>
-  name: `${NamaBagian}.aksen` | `${NamaBagian}.gelap` | "portal.panel"
+  name: `${NamaBagian}.aksen` | `${NamaBagian}.gelap` | "portal.panel" | "portal.navbar"
   /** Warna yang dipakai sesudah disesuaikan server */
   jadi?: string
   alasan: string

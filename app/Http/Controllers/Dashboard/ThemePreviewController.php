@@ -16,7 +16,7 @@ class ThemePreviewController extends Controller
      * and font rules for the portal sample (the portal's variable names are
      * also the dashboard's, so its stylesheet cannot be applied there), the
      * dashboard's accent as adjusted and its stylesheet, each part's dark and
-     * the portal's panels as adjusted, and the contrast of the colour pairs that carry text. Nothing
+     * the portal's panels and navbar as adjusted, and the contrast of the colour pairs that carry text. Nothing
      * is saved.
      */
     public function __invoke(UpdateThemeRequest $request, BuildThemeStylesheet $buildStylesheet): JsonResponse
@@ -29,6 +29,8 @@ class ThemePreviewController extends Controller
                 'huruf' => $buildStylesheet->fonts($portal),
                 'gelap' => ThemeVariables::portalDark($portal),
                 'panel' => ThemeVariables::portalPanel($portal)['--night'],
+                'navbar' => ThemeVariables::navbarColour($portal),
+                'tutupanKaca' => ThemeVariables::navbarGlassCover($portal),
                 'kontras' => ThemeVariables::portalContrasts($portal),
             ],
             'dashboard' => [

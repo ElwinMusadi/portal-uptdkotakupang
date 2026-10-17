@@ -213,6 +213,87 @@ class ThemeVariablesTest extends TestCase
         $this->assertSame($portal['--chrome'], ThemeVariables::portalDark($section));
     }
 
+    #[DataProvider('accents')]
+    public function test_keeps_the_navbar_readable_in_every_colour_and_glass(string $navbar): void
+    {
+        foreach (['mati', 'halus', 'sedang', 'kuat'] as $glass) {
+            foreach (['terang', 'gelap'] as $mode) {
+                $section = $this->section(['aksen' => '#2B63F6', 'navbar' => $navbar, 'kaca' => $glass, 'mode' => $mode]);
+                $pairs = array_column(ThemeVariables::portalContrasts($section), 'rasio', 'pasangan');
+
+                foreach (['Tautan navbar', 'Teks redup menu navbar', 'Aksen navbar'] as $pair) {
+                    $this->assertGreaterThanOrEqual(ThemePalette::MIN_CONTRAST, $pairs[$pair], "{$navbar} {$glass} {$mode}: {$pair}");
+                }
+            }
+        }
+    }
+
+    public function test_turns_the_text_logo_and_buttons_of_a_light_navbar_dark(): void
+    {
+        $portal = ThemeVariables::portal($this->section(['navbar' => '#ffffff']));
+
+        $this->assertSame('#FFFFFF', $portal['--nav-surface']);
+        $this->assertSame('15, 19, 25', $portal['--nav-tint']);
+        $this->assertSame('#0F1319', $portal['--nav-cta']);
+        $this->assertSame('#FFFFFF', $portal['--nav-cta-text']);
+        $this->assertGreaterThan(ThemePalette::oklch('#0F1319')[0], ThemePalette::oklch($portal['--nav-cta-hover'])[0]);
+        $this->assertSame('#EEEEEE', $portal['--nav-2']);
+        $this->assertSame('#DCDCDC', $portal['--nav-line']);
+        $this->assertLessThan(ThemePalette::oklch($portal['--nav-2'])[0], ThemePalette::oklch($portal['--nav-line'])[0]);
+        $this->assertArrayNotHasKey('--nav-blur', $portal);
+        $this->assertArrayNotHasKey('--chrome', $portal);
+
+        // A light navbar takes the buttons' dark, or in the dark mode the dark that stays dark
+        $this->assertSame('#0F1B3D', ThemeVariables::portal($this->section(['navbar' => '#FFFFFF', 'gelap' => '#0F1B3D']))['--nav-cta']);
+        $dark = ThemeVariables::portal($this->section(['navbar' => '#FFFFFF', 'mode' => 'gelap']));
+        $this->assertSame($dark['--chrome'], $dark['--nav-cta']);
+
+        $blue = ThemeVariables::portal($this->section(['navbar' => '#2B63F6']));
+        $this->assertSame('255, 255, 255', $blue['--nav-tint']);
+        $this->assertArrayNotHasKey('--nav-cta', $blue);
+        $this->assertSame('#0D45D2', ThemeVariables::navbarColour($this->section(['navbar' => '#2B63F6'])));
+        $this->assertEqualsWithDelta(ThemePalette::oklch('#2B63F6')[2], ThemePalette::oklch($blue['--nav-2'])[2], 6);
+        $this->assertNull(ThemeVariables::navbarColour($this->section()));
+        // Built in, the sample's navbar button keeps the dark of the buttons and navigation as its text
+        $this->assertSame('#0F1B3D', ThemeVariables::portalPreview($this->section(['gelap' => '#0F1B3D']))['--nav-cta-text']);
+        $this->assertSame('#FFFFFF', ThemeVariables::navbarColour($this->section(['navbar' => '#FFFFFF'])));
+    }
+
+    public function test_covers_the_page_behind_a_glass_navbar_only_as_far_as_its_links_read(): void
+    {
+        $halus = ThemeVariables::portal($this->section(['navbar' => '#FFFFFF', 'kaca' => 'halus']));
+        $this->assertSame('rgba(255, 255, 255, .9)', $halus['--nav-surface']);
+        $this->assertSame('12px', $halus['--nav-blur']);
+        $this->assertSame('18px', ThemeVariables::portal($this->section(['navbar' => '#FFFFFF', 'kaca' => 'sedang']))['--nav-blur']);
+        $this->assertSame(0.9, ThemeVariables::navbarGlassCover($this->section(['navbar' => '#FFFFFF', 'kaca' => 'halus'])));
+        $this->assertNull(ThemeVariables::navbarGlassCover($this->section(['navbar' => '#FFFFFF'])));
+        // A mid-tone colour reads only when solid
+        $this->assertSame(1.0, ThemeVariables::navbarGlassCover($this->section(['navbar' => '#2B63F6', 'kaca' => 'kuat'])));
+
+        // Black at .68 over a white page would leave its links at 4.0:1: the cover rises to what reads
+        $kuat = ThemeVariables::portal($this->section(['kaca' => 'kuat']));
+        $this->assertSame('26px', $kuat['--nav-blur']);
+        $this->assertMatchesRegularExpression('/^rgba\(15, 19, 25, \.(\d+)\)$/', $kuat['--nav-surface']);
+        preg_match('/\.(\d+)\)$/', $kuat['--nav-surface'], $cover);
+        $this->assertGreaterThan(0.68, (float) ('0.'.$cover[1]));
+        $this->assertLessThan(0.9, (float) ('0.'.$cover[1]));
+
+        // Each navbar pair is measured on the page colour it reads worst on: here the navbar over a white page
+        $pairs = array_column(ThemeVariables::portalContrasts($this->section(['kaca' => 'kuat'])), 'rasio', 'pasangan');
+        $overWhite = ThemePalette::blend('#0F1319', '#FFFFFF', (float) ('0.'.$cover[1]));
+        $this->assertSame(round(ThemePalette::contrast(ThemePalette::blend('#FFFFFF', $overWhite, 0.72), $overWhite), 2), $pairs['Tautan navbar']);
+
+        // Without a colour of its own the glass navbar takes the dark of the buttons and navigation
+        $this->assertStringStartsWith('rgba(15, 27, 61, ', ThemeVariables::portal($this->section(['kaca' => 'sedang', 'gelap' => '#0F1B3D']))['--nav-surface']);
+    }
+
+    public function test_keeps_light_buttons_light_on_hover_in_the_dark_mode(): void
+    {
+        $this->assertSame('#ECEAE4', ThemeVariables::portal($this->section(['mode' => 'gelap']))['--light-hover']);
+        $this->assertSame(ThemeBackground::Sejuk->shade('#ECEAE4'), ThemeVariables::portal($this->section(['mode' => 'gelap', 'latar' => 'sejuk']))['--light-hover']);
+        $this->assertArrayNotHasKey('--light-hover', ThemeVariables::portal($this->section(['latar' => 'sejuk'])));
+    }
+
     public function test_deepens_a_light_dark_to_a_dark_shade(): void
     {
         $this->assertSame('#082163', ThemeVariables::portalDark($this->section(['gelap' => '#2B63F6'])));
@@ -370,7 +451,7 @@ class ThemeVariablesTest extends TestCase
         $preview = ThemeVariables::portalPreview($this->section(['latar' => 'sejuk']));
 
         $this->assertSame(
-            [...array_keys(ThemeVariables::PORTAL_BACKGROUND), ...array_keys(ThemeVariables::PORTAL_TEXT), ...array_keys(ThemeVariables::PORTAL_ACCENT), ...array_keys(ThemeVariables::PORTAL_PANEL), '--font-sans', '--font-display', '--fw-display', '--r-scale', '--ink-fill', '--chrome-2'],
+            [...array_keys(ThemeVariables::PORTAL_BACKGROUND), ...array_keys(ThemeVariables::PORTAL_TEXT), ...array_keys(ThemeVariables::PORTAL_ACCENT), ...array_keys(ThemeVariables::PORTAL_PANEL), '--font-sans', '--font-display', '--fw-display', '--r-scale', '--ink-fill', '--chrome-2', '--nav-surface', '--nav-tint', '--nav-cta', '--nav-cta-text'],
             array_keys($preview),
         );
         $this->assertSame(ThemeBackground::Sejuk->shade('#F7F6F2'), $preview['--paper']);

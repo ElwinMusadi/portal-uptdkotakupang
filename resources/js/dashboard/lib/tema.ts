@@ -6,6 +6,7 @@ import type {
   BagianTemaPortal,
   HurufTema,
   IsoDateTime,
+  KacaNavbar,
   LatarTema,
   ModePortal,
   SkalaTema,
@@ -28,7 +29,7 @@ export const TEMA_BAWAAN: BagianTema = {
 }
 
 /** Bagian portal tampilan bawaan: panel gelap hampir hitam, terang untuk semua pengunjung */
-export const TEMA_BAWAAN_PORTAL: BagianTemaPortal = { ...TEMA_BAWAAN, panel: "#0A0A0C", mode: "terang" }
+export const TEMA_BAWAAN_PORTAL: BagianTemaPortal = { ...TEMA_BAWAAN, panel: "#0A0A0C", navbar: "gelap", kaca: "mati", mode: "terang" }
 
 /** contoh = [latar, teks] tiap mode, sama dengan tokens.css dan mode gelap di ThemeVariables */
 export const MODE_PORTAL: { nilai: ModePortal; label: string; keterangan: string; contoh: [string, string] }[] = [
@@ -94,6 +95,23 @@ export const PANEL: { nilai: string; label: string }[] = [
   { nilai: "#042017", label: "Hijau tua" },
   { nilai: "#25170F", label: "Cokelat kopi" },
   { nilai: "#1F1135", label: "Ungu terong" },
+]
+
+/** Contoh warna navbar; "aksen" memakai warna utama saat ini */
+export const NAVBAR: { nilai: string; label: string }[] = [
+  { nilai: "#FFFFFF", label: "Putih" },
+  { nilai: "#F7F6F2", label: "Kertas" },
+  { nilai: "aksen", label: "Warna utama" },
+  { nilai: "#0F1B3D", label: "Biru malam" },
+  { nilai: "#0E2A20", label: "Hijau tua" },
+  { nilai: "#0F1319", label: "Hitam" },
+]
+
+/** Tingkat efek glass navbar; server menaikkan tutupannya bila tautan navbar kurang terbaca */
+export const KACA: { nilai: Exclude<KacaNavbar, "mati">; label: string; keterangan: string; tutupan: number }[] = [
+  { nilai: "halus", label: "Halus", keterangan: "Sedikit tembus pandang", tutupan: 0.9 },
+  { nilai: "sedang", label: "Sedang", keterangan: "Tembus pandang dengan blur", tutupan: 0.8 },
+  { nilai: "kuat", label: "Kuat", keterangan: "Paling tembus pandang", tutupan: 0.68 },
 ]
 
 export const TEBAL_JUDUL: { nilai: TebalJudul; label: string }[] = [
@@ -209,6 +227,10 @@ export interface PratinjauTema {
     gelap: string
     /** Warna panel gelap (--night) sesudah disesuaikan */
     panel: string
+    /** Warna navbar sendiri sesudah disesuaikan; null bila mengikuti warna gelap */
+    navbar: string | null
+    /** Tutupan navbar glass yang dipakai (0–1) sesudah dinaikkan agar tautan terbaca; null tanpa glass */
+    tutupanKaca: number | null
     kontras: Kontras[]
   }
   /** aksen = warna merek dashboard dan gelap = tombol utama, sesudah disesuaikan agar terbaca */
@@ -229,7 +251,8 @@ export function usePratinjauTema(tema: Tema, aktif: boolean) {
     queryFn: () => mintaServer<PratinjauTema>("/api/pengaturan/tema/pratinjau", "POST", isi),
     enabled:
       aktif &&
-      [isi.portal.aksen, isi.portal.gelap, isi.portal.panel, isi.dashboard.aksen, isi.dashboard.gelap].every((w) => POLA_WARNA.test(w)),
+      [isi.portal.aksen, isi.portal.gelap, isi.portal.panel, isi.dashboard.aksen, isi.dashboard.gelap].every((w) => POLA_WARNA.test(w)) &&
+      (isi.portal.navbar === "gelap" || POLA_WARNA.test(isi.portal.navbar)),
     placeholderData: keepPreviousData,
     staleTime: Infinity,
     retry: false,

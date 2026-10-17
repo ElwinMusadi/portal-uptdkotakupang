@@ -29,6 +29,15 @@
   --ink-fill: var(--ink);    /* isian gelap: tombol gelap dan pilihan terpilih (warna gelap tema) */
   --chrome-2: #17181B;       /* kotak di atas --chrome: ikon menu navigasi, avatar kepala bagan */
   --chrome-line: #2A2B30;    /* garis di atas --chrome: pemisah pita dan menu ponsel */
+  /* Navbar, menu turunnya, dan menu ponsel (warna navbar tema; bawaan mengikuti --chrome) */
+  --nav-surface: var(--chrome);
+  --nav-tint: 255, 255, 255; /* warna teks navbar sebagai R, G, B: rgba(var(--nav-tint), a) */
+  --nav-muted: var(--night-muted);
+  --nav-accent: var(--night-accent);
+  --nav-2: var(--chrome-2);
+  --nav-line: var(--chrome-line);
+  --nav-cta: #FFFFFF;        /* tombol di navbar dan menu ponsel */
+  --nav-cta-text: var(--chrome);
   --map: #ECE9E1;            /* latar kotak peta */
 
   /* ---------- Aksen: hanya untuk tautan, status aktif, garis bawah ---------- */
