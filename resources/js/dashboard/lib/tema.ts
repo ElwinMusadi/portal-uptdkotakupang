@@ -36,7 +36,9 @@ export const MODE_PORTAL: { nilai: ModePortal; label: string; keterangan: string
 ]
 
 /**
- * Huruf yang tersedia; Manrope dan Lexend khusus judul (ThemeFont di server).
+ * Huruf yang tersedia; DM Sans, Manrope, dan Lexend khusus judul (ThemeFont di
+ * server): huruf teks perlu angka berlebar sama untuk tabel, dan berkas DM Sans
+ * serta Lexend tidak memilikinya.
  * judul = ketebalan judul yang disarankan, yaitu yang setebal judul bawaan
  * (diukur dari tebal batang huruf terhadap Inter 600); maks = ketebalan
  * terbesar berkas hurufnya bila di bawah 800.
@@ -45,10 +47,10 @@ export const HURUF: { nilai: HurufTema; label: string; keluarga: string | null; 
   { nilai: "sistem", label: "Huruf sistem perangkat (bawaan)", keluarga: null, teks: true, judul: 600 },
   { nilai: "inter", label: "Inter", keluarga: "Inter", teks: true, judul: 600 },
   { nilai: "plus-jakarta-sans", label: "Plus Jakarta Sans", keluarga: "Plus Jakarta Sans", teks: true, judul: 700 },
-  { nilai: "dm-sans", label: "DM Sans", keluarga: "DM Sans", teks: true, judul: 600 },
   { nilai: "source-sans-3", label: "Source Sans 3", keluarga: "Source Sans 3", teks: true, judul: 600 },
   { nilai: "ibm-plex-sans", label: "IBM Plex Sans", keluarga: "IBM Plex Sans", teks: true, judul: 600, maks: 700 },
   { nilai: "nunito-sans", label: "Nunito Sans", keluarga: "Nunito Sans", teks: true, judul: 700 },
+  { nilai: "dm-sans", label: "DM Sans (khusus judul)", keluarga: "DM Sans", teks: false, judul: 600 },
   { nilai: "manrope", label: "Manrope (khusus judul)", keluarga: "Manrope", teks: false, judul: 700 },
   { nilai: "lexend", label: "Lexend (khusus judul)", keluarga: "Lexend", teks: false, judul: 600 },
 ]
@@ -119,8 +121,8 @@ export const TEMA_SIAP_PAKAI: TemaSiapPakai[] = [
   {
     id: "senja",
     nama: "Senja",
-    keterangan: "Jingga bata, sudut membulat, DM Sans",
-    nilai: { aksen: "#C2410C", latar: "hangat", hurufTeks: "dm-sans", hurufJudul: "sama", sudut: "membulat" },
+    keterangan: "Jingga bata, sudut membulat, Nunito Sans, judul DM Sans",
+    nilai: { aksen: "#C2410C", latar: "hangat", hurufTeks: "nunito-sans", hurufJudul: "dm-sans", sudut: "membulat" },
   },
   {
     id: "tenun",

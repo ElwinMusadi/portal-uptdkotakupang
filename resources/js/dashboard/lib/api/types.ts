@@ -329,7 +329,7 @@ export type NamaKoleksi = keyof Koleksi
 /* Pengaturan (satu dokumen per halaman)                               */
 /* ------------------------------------------------------------------ */
 
-/** Huruf tema (D-057): huruf sistem atau huruf OFL yang di-host sendiri; Manrope dan Lexend khusus judul */
+/** Huruf tema (D-057): huruf sistem atau huruf OFL yang di-host sendiri; DM Sans, Manrope, dan Lexend khusus judul */
 export type HurufTema =
   | "sistem"
   | "inter"
@@ -352,7 +352,7 @@ export interface BagianTema {
   /** Warna utama #RRGGBB; turunannya dibuat server dan dijaga kontrasnya */
   aksen: string
   latar: LatarTema
-  hurufTeks: Exclude<HurufTema, "manrope" | "lexend">
+  hurufTeks: Exclude<HurufTema, "dm-sans" | "manrope" | "lexend">
   /** "sama" = mengikuti huruf teks */
   hurufJudul: HurufTema | "sama"
   sudut: SudutTema

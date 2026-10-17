@@ -12,10 +12,11 @@ enum ThemeFont: string
     case Sistem = 'sistem';
     case Inter = 'inter';
     case PlusJakartaSans = 'plus-jakarta-sans';
-    case DmSans = 'dm-sans';
     case SourceSans3 = 'source-sans-3';
     case IbmPlexSans = 'ibm-plex-sans';
     case NunitoSans = 'nunito-sans';
+    /** Headings only: its file has no tabular figures */
+    case DmSans = 'dm-sans';
     /** Headings only */
     case Manrope = 'manrope';
     /** Headings only */
@@ -64,10 +65,12 @@ enum ThemeFont: string
 
     /**
      * Whether the font may set body text; the others are for headings only.
+     * Text fonts need tabular figures, which the portal and dashboard tables
+     * use (tabular-nums); the hosted DM Sans and Lexend have none.
      */
     public function forText(): bool
     {
-        return ! in_array($this, [self::Manrope, self::Lexend], true);
+        return ! in_array($this, [self::DmSans, self::Manrope, self::Lexend], true);
     }
 
     /**

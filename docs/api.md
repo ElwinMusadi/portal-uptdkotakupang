@@ -869,7 +869,7 @@ Dipakai tab *Tampilan* di halaman Pengaturan ([D-057](decisions.md#d-057--2026-1
 - `aksen`: `#RRGGBB`, disimpan dengan huruf kapital. Warna turunannya dibuat server dan disesuaikan agar teks tetap terbaca (kontras ≥ 4,5:1); `#2B63F6` memakai warna rancangan tangan PINTU.
 - `latar`: `hangat` (bawaan), `netral`, `sejuk`. `sudut`: `tegas`, `sedang` (bawaan), `membulat`. `skala`: `90`, `100` (bawaan), `110`, `120` (bilangan bulat); dokumen yang disimpan sebelum ada skala dibaca dengan `100`. `tebalJudul` (ketebalan judul): `600` (bawaan), `700`, `800` (bilangan bulat); dokumen lama dibaca `600`.
 - `mode` (hanya bagian `portal`): `terang` (bawaan) atau `gelap`, untuk semua pengunjung; dokumen lama dibaca `terang`. Bagian `dashboard` tidak punya `mode` (mode gelap dashboard pilihan tiap pegawai); kunci itu dibuang bila dikirim.
-- `hurufTeks`: `sistem` (bawaan), `inter`, `plus-jakarta-sans`, `dm-sans`, `source-sans-3`, `ibm-plex-sans`, `nunito-sans`. `hurufJudul`: `sama` (mengikuti huruf teks), `sistem`, salah satu huruf teks, `manrope`, atau `lexend`.
+- `hurufTeks`: `sistem` (bawaan), `inter`, `plus-jakarta-sans`, `source-sans-3`, `ibm-plex-sans`, `nunito-sans` (huruf yang punya angka berlebar sama). `hurufJudul`: `sama` (mengikuti huruf teks), `sistem`, salah satu huruf teks, `dm-sans`, `manrope`, atau `lexend`.
 
 | Alamat | Permintaan | Respons |
 |---|---|---|

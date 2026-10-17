@@ -44,7 +44,7 @@ class ThemeControllerTest extends TestCase
 
     public function test_saves_both_parts_with_the_accent_in_capitals_and_without_unknown_keys(): void
     {
-        $theme = $this->theme(['aksen' => '#2f7d4f', 'latar' => 'sejuk', 'hurufTeks' => 'inter', 'hurufJudul' => 'lexend', 'sudut' => 'tegas', 'tebalJudul' => 800, 'mode' => 'gelap'], ['hurufTeks' => 'dm-sans', 'tebalJudul' => 700]);
+        $theme = $this->theme(['aksen' => '#2f7d4f', 'latar' => 'sejuk', 'hurufTeks' => 'inter', 'hurufJudul' => 'lexend', 'sudut' => 'tegas', 'tebalJudul' => 800, 'mode' => 'gelap'], ['hurufTeks' => 'nunito-sans', 'tebalJudul' => 700]);
         $theme['portal']['css'] = 'body { display: none }';
         $theme['dashboard']['mode'] = 'gelap';
         $theme['logo'] = 'merah';
@@ -53,7 +53,7 @@ class ThemeControllerTest extends TestCase
 
         $expected = [
             'portal' => ['aksen' => '#2F7D4F', 'latar' => 'sejuk', 'hurufTeks' => 'inter', 'hurufJudul' => 'lexend', 'sudut' => 'tegas', 'skala' => 100, 'tebalJudul' => 800, 'mode' => 'gelap'],
-            'dashboard' => [...Setting::DEFAULT_THEME_SECTION, 'hurufTeks' => 'dm-sans', 'tebalJudul' => 700],
+            'dashboard' => [...Setting::DEFAULT_THEME_SECTION, 'hurufTeks' => 'nunito-sans', 'tebalJudul' => 700],
         ];
         $response->assertOk()->assertExactJson($expected);
         $this->assertSame($expected, Setting::query()->find(Setting::THEME)->value);
@@ -69,6 +69,7 @@ class ThemeControllerTest extends TestCase
     #[TestWith([['aksen' => '#2F7D4F;}'], 'portal.aksen', 'Warna utama portal harus berupa kode warna #RRGGBB.'])]
     #[TestWith([['latar' => 'gelap'], 'portal.latar', 'Nuansa latar portal tidak tersedia.'])]
     #[TestWith([['hurufTeks' => 'manrope'], 'portal.hurufTeks', 'Huruf teks portal tidak tersedia.'])]
+    #[TestWith([['hurufTeks' => 'dm-sans'], 'portal.hurufTeks', 'Huruf teks portal tidak tersedia.'])]
     #[TestWith([['hurufTeks' => 'sama'], 'portal.hurufTeks', 'Huruf teks portal tidak tersedia.'])]
     #[TestWith([['hurufJudul' => 'comic-sans'], 'portal.hurufJudul', 'Huruf judul portal tidak tersedia.'])]
     #[TestWith([['sudut' => 'bulat'], 'portal.sudut', 'Kelengkungan sudut portal tidak tersedia.'])]
