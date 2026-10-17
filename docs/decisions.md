@@ -854,3 +854,13 @@ Usulan fitur yang disetujui pemilik di D-058: satu kotak cari untuk seluruh port
 | Teknis | `initCari()` di `public/assets/js/main.js`, bukan komponen React, karena navbar ada di setiap halaman dan sebagian besar halaman tidak memuat React. |
 | Keyboard | Kotak cari berperan *combobox* dengan daftar hasil: panah atas/bawah memilih, Enter membuka, Escape mengosongkan lalu menutup; jumlah hasil diumumkan lewat status. |
 | Belum dibuat | Isi berita lengkap (yang dicari hanya judul dan ringkasan), lokasi jadwal Samsat Keliling, dan halaman hasil tersendiri. |
+
+## D-061 · 2026-10-17 · Balik nama dan mutasi masuk sebagai draf layanan
+
+Pemilik ingin panduan *Layanan apa yang saya perlukan?* (D-059) juga menawarkan balik nama di dalam Kota Kupang dan mutasi masuk dari luar daerah, yang belum ada di data Persyaratan Layanan.
+
+| Hal | Keputusan |
+|---|---|
+| Cara menambah | **Sebagai draf yang diperiksa petugas** (pemilik). Migrasi memasukkan *Balik nama di dalam Kota Kupang* (`balik-nama`) dan *Mutasi masuk dari luar daerah* (`mutasi-masuk`) berstatus Draf di urutan terakhir: Loket 3, wajib cek fisik, tanpa non-tunai dan diwakilkan seperti layanan mutasi yang ada, dengan kalimat situasi untuk panduan. Persyaratannya disusun dari pola layanan mutasi dan belum dicocokkan dengan papan persyaratan loket; petugas memeriksa, mengubah bila perlu, lalu menerbitkannya lewat alur biasa (D-022). Setelah terbit, keduanya tampil di panduan dan daftar layanan. Slug yang sudah dipakai dilewati, dan membatalkan migrasi hanya menghapus yang masih draf. |
+| Rancangan persyaratan | Balik nama: fotokopi KTP pemilik baru (alamat di Kota Kupang) dan pemilik lama, fotokopi STNK dan BPKB (lampirkan yang asli), kuitansi pembelian bermeterai Rp10.000, kendaraan untuk cek fisik, map; catatan tentang hibah atau warisan. Mutasi masuk: berkas mutasi tersegel dari Samsat daerah asal, fotokopi KTP pemilik (alamat di Kota Kupang), fotokopi STNK dan BPKB, kuitansi bermeterai bila ganti pemilik, kendaraan untuk cek fisik, map. |
+| Halaman Layanan | Catatan kaki "Layanan lain (mis. balik nama dalam daerah) dapat ditanyakan di meja informasi." menjadi "Layanan lain dapat ditanyakan di meja informasi." |

@@ -256,7 +256,7 @@
           <p class="muted" role="status" data-layanan-status>Memuat persyaratan layanan…</p>
         </div>
 
-        <p class="micro muted" style="margin-top:20px">Sumber: papan persyaratan loket UPTD<span data-layanan-verifikasi></span>. Layanan lain (mis. balik nama dalam daerah) dapat ditanyakan di meja informasi.</p>
+        <p class="micro muted" style="margin-top:20px">Sumber: papan persyaratan loket UPTD<span data-layanan-verifikasi></span>. Layanan lain dapat ditanyakan di meja informasi.</p>
       </div>
     </div>
   </section>

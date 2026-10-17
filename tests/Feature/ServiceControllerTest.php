@@ -35,24 +35,24 @@ class ServiceControllerTest extends TestCase
         $employee = User::factory()->withModules(DashboardModule::Pemutakhiran)->create();
         $service = Service::query()->firstOrFail();
 
-        $this->actingAs($employee)->getJson('/api/koleksi/layanan')->assertOk()->assertJsonCount(6);
+        $this->actingAs($employee)->getJson('/api/koleksi/layanan')->assertOk()->assertJsonCount(8);
         $this->actingAs($employee)->getJson("/api/koleksi/layanan/{$service->id}")->assertForbidden();
         $this->actingAs($employee)->postJson('/api/koleksi/layanan', $this->service())->assertForbidden();
     }
 
-    public function test_lists_the_initial_published_services_in_portal_order(): void
+    public function test_lists_the_initial_services_in_portal_order_with_the_two_drafts_last(): void
     {
         $response = $this->actingAs($this->layananEmployee())->getJson('/api/koleksi/layanan');
 
         $response->assertOk()
-            ->assertJsonPath('*.slug', ['pajak-tahunan', 'lima-tahun', 'mutasi-tetap', 'mutasi-bbn', 'duplikat', 'badan-hukum'])
-            ->assertJsonPath('*.status', array_fill(0, 6, 'terbit'))
+            ->assertJsonPath('*.slug', ['pajak-tahunan', 'lima-tahun', 'mutasi-tetap', 'mutasi-bbn', 'duplikat', 'badan-hukum', 'balik-nama', 'mutasi-masuk'])
+            ->assertJsonPath('*.status', [...array_fill(0, 6, 'terbit'), 'draf', 'draf'])
             ->assertJsonPath('0.nama', 'Pajak tahunan')
             ->assertJsonPath('0.persyaratan.0', ['id' => 'p1', 'dokumen' => 'Fotokopi STNK dan notis pajak (lampirkan asli)', 'jumlah' => '2 lembar'])
             ->assertJsonPath('0.riwayat.0.oleh', 'PINTU')
             ->assertJsonPath('1.label', ['Kuasa: meterai Rp10.000'])
             ->assertJsonPath('5.jenis', 'tambahan')
-            ->assertJsonPath('*.unggulan', [true, true, true, false, false, false]);
+            ->assertJsonPath('*.unggulan', [true, true, true, false, false, false, false, false]);
         $this->assertNotNull($response->json('0.terbitPada'));
     }
 
@@ -71,7 +71,7 @@ class ServiceControllerTest extends TestCase
             ->assertJsonPath('status', 'draf')
             ->assertJsonPath('terbitPada', null)
             ->assertJsonPath('catatanRevisi', '')
-            ->assertJsonPath('urutan', 6)
+            ->assertJsonPath('urutan', 8)
             ->assertJsonCount(1, 'riwayat')
             ->assertJsonPath('riwayat.0.oleh', $employee->name)
             ->assertJsonPath('riwayat.0.aksi', 'menyiapkan draf')
@@ -111,7 +111,7 @@ class ServiceControllerTest extends TestCase
             'situasi.0' => 'Situasi maksimal 100 karakter.',
             'situasi.1' => 'Situasi berisi karakter kontrol yang tidak diizinkan.',
         ]);
-        $this->assertDatabaseCount('services', 6);
+        $this->assertDatabaseCount('services', 8);
     }
 
     public function test_changes_the_situations_of_a_draft(): void
@@ -144,7 +144,7 @@ class ServiceControllerTest extends TestCase
             'label' => 'Maksimal 6 label.',
             'penyedia' => 'Unit penyedia wajib diisi.',
         ]);
-        $this->assertDatabaseCount('services', 6);
+        $this->assertDatabaseCount('services', 8);
     }
 
     public function test_validates_the_slug_and_requirements(): void
@@ -169,9 +169,9 @@ class ServiceControllerTest extends TestCase
     public function test_changes_a_draft_and_logs_only_real_changes(): void
     {
         $employee = $this->layananEmployee();
-        $service = Service::factory()->create(['slug' => 'balik-nama']);
+        $service = Service::factory()->create(['slug' => 'uji-draf']);
 
-        $this->actingAs($employee)->patchJson("/api/koleksi/layanan/{$service->id}", ['loket' => 'Loket 4', 'slug' => 'balik-nama'])
+        $this->actingAs($employee)->patchJson("/api/koleksi/layanan/{$service->id}", ['loket' => 'Loket 4', 'slug' => 'uji-draf'])
             ->assertOk()
             ->assertJsonPath('loket', 'Loket 4')
             ->assertJsonPath('status', 'draf');

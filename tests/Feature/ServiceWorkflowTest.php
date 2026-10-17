@@ -118,7 +118,7 @@ class ServiceWorkflowTest extends TestCase
             ->assertExactJson(['message' => 'Hanya Administrator yang dapat menghapus layanan.']);
 
         $this->actingAs($administrator)->putJson('/api/koleksi/layanan/urutan', ['ids' => [$ids[5], $ids[0]]])->assertNoContent();
-        $this->assertSame([$ids[5], $ids[0], $ids[1], $ids[2], $ids[3], $ids[4]], Service::query()->orderBy('urutan')->pluck('id')->all());
+        $this->assertSame([$ids[5], $ids[0], $ids[1], $ids[2], $ids[3], $ids[4], $ids[6], $ids[7]], Service::query()->orderBy('urutan')->pluck('id')->all());
         $this->actingAs($administrator)->postJson('/api/koleksi/layanan/hapus', ['ids' => [$ids[0]]])->assertNoContent();
         $this->assertDatabaseMissing('services', ['id' => $ids[0]]);
         $this->assertSame(['mengubah urutan', 'menghapus'], $this->activityActions());
