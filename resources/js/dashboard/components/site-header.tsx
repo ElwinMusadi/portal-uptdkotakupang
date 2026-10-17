@@ -40,7 +40,7 @@ export function SiteHeader() {
           <Button
             variant="outline"
             size="sm"
-            className="hidden w-44 justify-start text-muted-foreground md:flex lg:w-56"
+            className="hidden w-56 justify-start text-muted-foreground lg:flex"
             onClick={() => setOpen(true)}
           >
             <IconSearch />
@@ -50,7 +50,7 @@ export function SiteHeader() {
           <Button
             variant="ghost"
             size="icon"
-            className="size-8 md:hidden"
+            className="size-8 lg:hidden"
             onClick={() => setOpen(true)}
           >
             <IconSearch />

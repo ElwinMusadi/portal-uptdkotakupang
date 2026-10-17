@@ -95,7 +95,7 @@ export function Layout() {
           }
         >
           <AppSidebar variant="inset" />
-          <SidebarInset>
+          <SidebarInset className="min-w-0">
             <SiteHeader />
             {api.sementara && (
               <div className="px-4 pt-4 lg:px-6">

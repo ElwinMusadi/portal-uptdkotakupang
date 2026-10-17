@@ -599,13 +599,14 @@ function PratinjauMinggu({ data, semua }: { data: JadwalKeliling[]; semua: Jadwa
   const label = senin === mingguIni ? "Minggu ini" : senin === geserHari(mingguIni, 7) ? "Minggu depan" : `Minggu ${tanggal(senin)}`
 
   return (
-    <Card className="gap-4">
-      <CardHeader>
+    <Card className="@container/card gap-4">
+      {/* Kartu sempit: tombol pindah ke bawah judul agar keterangan tidak terjepit */}
+      <CardHeader className="@max-3xl/card:has-data-[slot=card-action]:grid-cols-1">
         <CardTitle className="text-base">{label}</CardTitle>
         <CardDescription>
           {tanggal(hari[0])} – {tanggal(hari[6])}. Jadwal nonaktif ditandai dan belum tampil di portal.
         </CardDescription>
-        <CardAction className="flex flex-wrap gap-2">
+        <CardAction className="flex flex-wrap gap-2 @max-3xl/card:col-start-1 @max-3xl/card:row-span-1 @max-3xl/card:row-start-3 @max-3xl/card:justify-self-start">
           <Button variant="outline" size="sm" onClick={() => setSenin(geserHari(senin, -7))}>
             Sebelumnya
           </Button>
@@ -1025,7 +1026,7 @@ export default function HalamanLayananLuarKantor() {
         </Alert>
       ) : (
         <Tabs value={tabLokasi ? "lokasi" : jenis} onValueChange={pilihTab} className="gap-4">
-          <TabsList className="h-auto flex-wrap">
+          <TabsList className="flex-wrap group-data-[orientation=horizontal]/tabs:h-auto *:data-[slot=tabs-trigger]:h-auto">
             {JENIS.map((j) => (
               <TabsTrigger key={j} value={j}>
                 {JENIS_LAYANAN_LUAR[j]}
@@ -1037,7 +1038,7 @@ export default function HalamanLayananLuarKantor() {
               {lokasi && <span className="text-muted-foreground tabular-nums">{lokasi.length}</span>}
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="keliling" className="grid gap-4">
+          <TabsContent value="keliling" className="grid grid-cols-[minmax(0,1fr)] gap-4">
             {data && <PratinjauMinggu data={perJenis.keliling} semua={data} />}
             <DataTable
               data={data && perJenis.keliling}
@@ -1095,7 +1096,7 @@ export default function HalamanLayananLuarKantor() {
               }}
             />
           </TabsContent>
-          <TabsContent value="lokasi" className="grid gap-4">
+          <TabsContent value="lokasi" className="grid grid-cols-[minmax(0,1fr)] gap-4">
             <p className="text-sm text-muted-foreground">
               Daftar pilihan Lokasi saat mengisi jadwal. Lokasi yang diketik di jadwal otomatis masuk daftar ini. Mengubah
               atau menghapus lokasi tidak mengubah jadwal yang sudah tersimpan.
