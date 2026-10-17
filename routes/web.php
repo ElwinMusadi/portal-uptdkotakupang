@@ -3,6 +3,7 @@
 use App\Http\Controllers\ArticlePageController;
 use App\Http\Controllers\Auth\AccountActivationController;
 use App\Http\Controllers\QueueTrackingPageController;
+use App\Http\Controllers\ThemePreviewPageController;
 use App\Http\Controllers\ThemeStylesheetController;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Models\Article;
@@ -80,6 +81,10 @@ Route::withoutMiddleware([
         Route::get('/tema-portal.css', [ThemeStylesheetController::class, 'portal'])->name('tema.portal');
         Route::get('/tema-dashboard.css', [ThemeStylesheetController::class, 'dashboard'])->name('tema.dashboard');
     });
+
+    // A portal preview link from Pengaturan › Tampilan: this browser sees the unsaved portal theme for a while (D-057)
+    Route::get('/pratinjau-tema/selesai', [ThemePreviewPageController::class, 'destroy'])->name('tema.pratinjau.selesai');
+    Route::get('/pratinjau-tema/{token}', [ThemePreviewPageController::class, 'show'])->where('token', '[A-Za-z0-9]{40}')->name('tema.pratinjau');
 });
 
 /*

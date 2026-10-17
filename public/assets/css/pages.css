@@ -569,7 +569,7 @@
 /* Login dan aktivasi selalu tepat setinggi layar dan tidak pernah bergulir. Di
    layar pendek jaraknya dirapatkan, lalu bagian pelengkap disembunyikan
    bertahap; bila kartu tetap tidak muat, main.js mengecilkannya. */
-.auth { height: 100vh; height: 100dvh; overflow: hidden; overflow: clip; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); grid-template-rows: minmax(0, 1fr); }
+.auth { height: calc(100vh / var(--zoom, 1)); height: calc(100dvh / var(--zoom, 1)); overflow: hidden; overflow: clip; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); grid-template-rows: minmax(0, 1fr); }
 .auth__side { padding: clamp(24px, 4vw, 56px); display: flex; flex-direction: column; gap: 40px; overflow: hidden; overflow: clip; }
 .auth__brand { display: inline-flex; align-items: center; gap: 10px; }
 .auth__brand .mark { width: 30px; height: 30px; }

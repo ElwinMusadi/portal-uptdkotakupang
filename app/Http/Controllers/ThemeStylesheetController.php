@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Actions\BuildThemeStylesheet;
 use App\Models\Setting;
+use App\Support\ThemePreview;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class ThemeStylesheetController extends Controller
@@ -12,11 +14,17 @@ class ThemeStylesheetController extends Controller
      * Serve /tema-portal.css, the stylesheet every portal page, the 404,
      * sign-in, activation and TV display pages load after their own (D-057):
      * the portal theme an administrator saved in Pengaturan › Tampilan, or
-     * only a comment while it is the built-in PINTU look.
+     * only a comment while it is the built-in PINTU look. A browser that
+     * opened a portal preview link gets the unsaved theme instead, marked as
+     * a preview.
      */
-    public function portal(BuildThemeStylesheet $buildStylesheet): Response
+    public function portal(Request $request, BuildThemeStylesheet $buildStylesheet): Response
     {
-        return $this->stylesheet($buildStylesheet->portal(Setting::theme()['portal']));
+        $preview = ThemePreview::find($request->cookie(ThemePreview::COOKIE));
+
+        return $this->stylesheet($preview === null
+            ? $buildStylesheet->portal(Setting::theme()['portal'])
+            : $buildStylesheet->portalPreview($preview));
     }
 
     /**

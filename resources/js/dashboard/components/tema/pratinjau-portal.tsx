@@ -18,12 +18,15 @@ const BATANG = [38, 52, 44, 70, 86, 61]
 /**
  * Contoh kecil portal dengan tema yang sedang disunting: tombol, tautan,
  * lencana, kartu, isian, kotak abu, dan panel gelap. Variabel portal diberi
- * awalan --p- karena namanya (mis. --accent) juga dipakai dashboard.
+ * awalan --p- karena namanya (mis. --accent) juga dipakai dashboard. Skala
+ * diterapkan dengan zoom, seperti di portal.
  */
-export function PratinjauPortal({ variabel }: { variabel: Record<string, string> }) {
+export function PratinjauPortal({ variabel, skala }: { variabel: Record<string, string>; skala: number }) {
   const gaya = Object.fromEntries(
     Object.entries({ ...TETAP, ...variabel }).map(([nama, nilai]) => [`--p-${nama.slice(2)}`, nilai])
   ) as React.CSSProperties
+  // Skala portal memakai zoom halaman; contoh ini diperbesar dengan cara yang sama
+  gaya.zoom = skala / 100
 
   return (
     <div

@@ -13,7 +13,7 @@ use App\Enums\ThemeFont;
  * setting differs from it, and colours derived from another accent are
  * computed in OKLCH and kept readable (ThemePalette).
  *
- * @phpstan-type ThemeSection array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string}
+ * @phpstan-type ThemeSection array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int}
  */
 final class ThemeVariables
 {
@@ -159,6 +159,35 @@ final class ThemeVariables
         }
 
         return $variables;
+    }
+
+    /**
+     * The zoom of the portal pages for the section's scale, with --zoom,
+     * which full-height rules divide by (D-057); nothing at 100%.
+     *
+     * @param  ThemeSection  $section
+     * @return array<string, string>
+     */
+    public static function portalZoom(array $section): array
+    {
+        if ($section['skala'] === 100) {
+            return [];
+        }
+
+        $zoom = self::number($section['skala'] / 100);
+
+        return ['zoom' => $zoom, '--zoom' => $zoom];
+    }
+
+    /**
+     * The dashboard's root font size for the section's scale, which every
+     * rem length of the dashboard follows (D-057); null at 100%.
+     *
+     * @param  ThemeSection  $section
+     */
+    public static function dashboardFontSize(array $section): ?string
+    {
+        return $section['skala'] === 100 ? null : "{$section['skala']}%";
     }
 
     /**

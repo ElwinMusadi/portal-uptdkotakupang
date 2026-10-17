@@ -102,6 +102,7 @@
      yang ditambahkan untuk tema selalu dipakai dengan nilai cadangannya, karena
      CSS portal tidak berversi dan tokens.css lama bisa masih tersimpan di peramban. */
   --r-scale: 1;   /* pengali kelengkungan sudut dari tema (D-057) */
+  --zoom: 1;      /* skala tampilan dari tema (D-057): zoom halaman; tinggi selayar dibagi angka ini */
   --r-pill: 999px;
   --r-xl: calc(32px * var(--r-scale, 1));   /* kartu seksi / media */
   --r-lg: calc(24px * var(--r-scale, 1));

@@ -51,7 +51,7 @@ class ThemeControllerTest extends TestCase
         $response = $this->actingAs(User::factory()->administrator()->create())->putJson('/api/pengaturan/tema', $theme);
 
         $expected = [
-            'portal' => ['aksen' => '#2F7D4F', 'latar' => 'sejuk', 'hurufTeks' => 'inter', 'hurufJudul' => 'lexend', 'sudut' => 'tegas'],
+            'portal' => ['aksen' => '#2F7D4F', 'latar' => 'sejuk', 'hurufTeks' => 'inter', 'hurufJudul' => 'lexend', 'sudut' => 'tegas', 'skala' => 100],
             'dashboard' => [...Setting::DEFAULT_THEME_SECTION, 'hurufTeks' => 'dm-sans'],
         ];
         $response->assertOk()->assertExactJson($expected);
@@ -72,6 +72,8 @@ class ThemeControllerTest extends TestCase
     #[TestWith([['hurufJudul' => 'comic-sans'], 'portal.hurufJudul', 'Huruf judul portal tidak tersedia.'])]
     #[TestWith([['sudut' => 'bulat'], 'portal.sudut', 'Kelengkungan sudut portal tidak tersedia.'])]
     #[TestWith([['sudut' => null], 'portal.sudut', 'Kelengkungan sudut portal wajib diisi.'])]
+    #[TestWith([['skala' => 105], 'portal.skala', 'Skala tampilan portal tidak tersedia.'])]
+    #[TestWith([['skala' => 'besar'], 'portal.skala', 'Skala tampilan portal tidak valid.'])]
     public function test_rejects_values_outside_the_lists(array $portal, string $field, string $message): void
     {
         $response = $this->actingAs(User::factory()->administrator()->create())->putJson('/api/pengaturan/tema', $this->theme($portal));

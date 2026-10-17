@@ -1,6 +1,8 @@
 import * as React from "react"
-import { IconAlertTriangle, IconCheck, IconInfoCircle, IconRestore } from "@tabler/icons-react"
+import { useQueryClient } from "@tanstack/react-query"
+import { IconAlertTriangle, IconCheck, IconExternalLink, IconHistory, IconInfoCircle, IconRestore } from "@tabler/icons-react"
 import { useWatch, type UseFormReturn } from "react-hook-form"
+import { toast } from "sonner"
 import { z } from "zod"
 
 import { Bagian, Baris } from "@/components/data/page"
@@ -8,16 +10,22 @@ import { FieldPilih } from "@/components/form/fields"
 import { FormPengaturan } from "@/components/form/settings-form"
 import { PratinjauPortal } from "@/components/tema/pratinjau-portal"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { BagianTema, Tema } from "@/lib/api"
 import { sesi } from "@/lib/auth"
+import { tanggalJam } from "@/lib/format"
+import { laporGalat } from "@/lib/queries"
 import {
+  akhiriPratinjauPortal,
+  buatTautanPratinjau,
   HURUF,
   hurufPratinjauPortal,
   LATAR,
@@ -25,12 +33,15 @@ import {
   POLA_WARNA,
   pratinjauDashboard,
   rasio,
+  SKALA,
   SUDUT,
   TEMA_BAWAAN,
   TEMA_SIAP_PAKAI,
   temaSiapPakai,
   usePratinjauTema,
+  useRiwayatTema,
   type Kontras,
+  type RiwayatTema,
 } from "@/lib/tema"
 import { cn } from "@/lib/utils"
 
@@ -41,6 +52,7 @@ const skemaBagian = z.object({
   hurufTeks: z.enum(HURUF.filter((h) => h.teks).map((h) => h.nilai) as [string, ...string[]]),
   hurufJudul: z.enum(["sama", ...HURUF.map((h) => h.nilai)] as [string, ...string[]]),
   sudut: z.enum(["tegas", "sedang", "membulat"]),
+  skala: z.union([z.literal(90), z.literal(100), z.literal(110), z.literal(120)]),
 })
 const skemaTema = z.object({ portal: skemaBagian, dashboard: skemaBagian })
 
@@ -55,8 +67,15 @@ type NamaBagian = keyof Tema
 /** Pengaturan › Tampilan: tema portal dan dashboard masing-masing, hanya Administrator yang menyimpan (D-057) */
 export function TabTampilan() {
   const admin = sesi().peran === "administrator"
+  const queryClient = useQueryClient()
+  // Sesudah disimpan: dashboard memakai tema baru, pratinjau di portal berakhir, riwayat bertambah
+  const setelahSimpan = React.useCallback(() => {
+    muatUlangTemaDashboard()
+    void akhiriPratinjauPortal()
+    void queryClient.invalidateQueries({ queryKey: ["tema-riwayat"] })
+  }, [queryClient])
   return (
-    <FormPengaturan nama="tema" schema={skemaTema} setelahSimpan={muatUlangTemaDashboard}>
+    <FormPengaturan nama="tema" schema={skemaTema} setelahSimpan={setelahSimpan}>
       {(form) => <IsiTampilan form={form} admin={admin} />}
     </FormPengaturan>
   )
@@ -67,6 +86,32 @@ function IsiTampilan({ form, admin }: { form: UseFormReturn<Tema>; admin: boolea
   const tema = useWatch({ control: form.control }) as Tema
   const { data: pratinjau, error } = usePratinjauTema(tema, admin)
   const [bagian, setBagian] = React.useState<NamaBagian>("portal")
+  const [membuka, setMembuka] = React.useState(false)
+
+  // Tab baru dibuka saat diklik agar tidak dihalangi pemblokir pop-up, lalu diarahkan ke tautan pratinjau
+  const bukaDiPortal = async () => {
+    const jendela = window.open("", "_blank")
+    if (!(await form.trigger())) {
+      jendela?.close()
+      toast.error("Periksa kembali isian yang ditandai merah.")
+      return
+    }
+    setMembuka(true)
+    try {
+      const { tautan } = await buatTautanPratinjau(form.getValues())
+      if (jendela) jendela.location.href = tautan
+      else toast.success("Tautan pratinjau siap.", { action: { label: "Buka", onClick: () => window.open(tautan, "_blank") } })
+    } catch (e) {
+      jendela?.close()
+      laporGalat(e, "Pratinjau gagal dibuat")
+    } finally {
+      setMembuka(false)
+    }
+  }
+  const akhiri = async () => {
+    await akhiriPratinjauPortal()
+    toast.success("Pratinjau di portal diakhiri di peramban ini.")
+  }
 
   // Dashboard ini menjadi pratinjau tema dashboard selama tab ini terbuka; tema tersimpan kembali saat ditinggalkan
   const cssDashboard = pratinjau?.dashboard.css
@@ -121,8 +166,25 @@ function IsiTampilan({ form, admin }: { form: UseFormReturn<Tema>; admin: boolea
           {admin && (
             <div className="grid gap-2 xl:sticky xl:top-4">
               <p className="text-sm font-medium">Contoh portal</p>
-              {pratinjau ? <PratinjauPortal variabel={pratinjau.portal.variabel} /> : <Skeleton className="h-[34rem] rounded-xl" />}
+              {pratinjau ? (
+                <PratinjauPortal variabel={pratinjau.portal.variabel} skala={tema.portal.skala} />
+              ) : (
+                <Skeleton className="h-[34rem] rounded-xl" />
+              )}
               <p className="text-xs text-muted-foreground">Logo PINTU tetap biru apa pun warna utamanya.</p>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" variant="outline" size="sm" disabled={membuka} onClick={bukaDiPortal}>
+                  {membuka ? <Spinner /> : <IconExternalLink />}
+                  Pratinjau di portal
+                </Button>
+                <Button type="button" variant="ghost" size="sm" onClick={akhiri}>
+                  Akhiri pratinjau
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Membuka beranda di tab baru dengan tema yang belum disimpan, hanya di peramban ini dan selama 30 menit. Pengunjung
+                lain tetap melihat tema tersimpan.
+              </p>
             </div>
           )}
         </TabsContent>
@@ -142,6 +204,7 @@ function IsiTampilan({ form, admin }: { form: UseFormReturn<Tema>; admin: boolea
           />
         </TabsContent>
       </Tabs>
+      {admin && <RiwayatTampilan form={form} />}
     </fieldset>
   )
 }
@@ -180,7 +243,7 @@ function FormBagian({
               key={t.id}
               type="button"
               aria-pressed={cocok?.id === t.id}
-              onClick={() => atur(t.nilai)}
+              onClick={() => atur({ ...t.nilai, skala: nilai.skala })}
               className="grid gap-1 rounded-lg border p-3 text-left transition-colors hover:bg-muted/50 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-60 aria-pressed:border-ring aria-pressed:bg-muted/50"
             >
               <span className="flex items-center gap-2 text-sm font-medium">
@@ -335,6 +398,47 @@ function FormBagian({
         />
       </Bagian>
 
+      <Bagian
+        judul="Skala tampilan"
+        deskripsi={
+          bagian === "portal"
+            ? "Memperbesar atau memperkecil seluruh halaman portal: teks, gambar, dan jarak. Layar TV antrean tidak ikut karena sudah memenuhi layarnya."
+            : "Ukuran dasar teks dan jarak di dashboard dan Absensi. Di layar selebar ponsel (di bawah 768 px), skala di atas 100% tidak dipakai agar halaman tidak melebar."
+        }
+      >
+        <FormField
+          control={form.control}
+          name={`${bagian}.skala`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="sr-only">Skala tampilan</FormLabel>
+              <FormControl>
+                <RadioGroup
+                  value={String(field.value)}
+                  onValueChange={(v) => field.onChange(Number(v))}
+                  className="grid grid-cols-2 gap-2 sm:grid-cols-4"
+                >
+                  {SKALA.map((s) => (
+                    <Label
+                      key={s.nilai}
+                      htmlFor={`${id}-${bagian}-skala-${s.nilai}`}
+                      className="gap-3 rounded-lg border p-3 font-normal has-[[data-state=checked]]:border-ring has-[[data-state=checked]]:bg-muted/50"
+                    >
+                      <RadioGroupItem value={String(s.nilai)} id={`${id}-${bagian}-skala-${s.nilai}`} />
+                      <span className="grid gap-0.5">
+                        <span className="font-medium tabular-nums">{s.label}</span>
+                        <span className="text-xs text-muted-foreground">{s.keterangan}</span>
+                      </span>
+                    </Label>
+                  ))}
+                </RadioGroup>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </Bagian>
+
       {admin && (
         <Bagian
           judul="Keterbacaan"
@@ -367,5 +471,63 @@ function FormBagian({
         </Bagian>
       )}
     </>
+  )
+}
+
+/** Lima tema terakhir yang disimpan; "Pakai lagi" memuatnya ke formulir untuk disimpan ulang */
+function RiwayatTampilan({ form }: { form: UseFormReturn<Tema> }) {
+  const { data, error } = useRiwayatTema(true)
+  const pakai = (r: RiwayatTema) => {
+    form.setValue("portal", { ...r.tema.portal }, { shouldDirty: true, shouldValidate: true })
+    form.setValue("dashboard", { ...r.tema.dashboard }, { shouldDirty: true, shouldValidate: true })
+    toast.success("Tema dimuat ke formulir. Simpan untuk memakainya.")
+  }
+
+  return (
+    <Bagian
+      judul="Riwayat"
+      deskripsi="Lima tema terakhir yang disimpan, terbaru di atas. Pakai lagi memuat tema itu ke formulir; simpan untuk memakainya."
+    >
+      {error ? (
+        <p className="text-sm text-destructive">Riwayat gagal dimuat: {(error as Error).message}</p>
+      ) : !data ? (
+        <Skeleton className="h-24" />
+      ) : data.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Belum ada tema yang disimpan dari tab ini.</p>
+      ) : (
+        <ul className="grid">
+          {data.map((r, i) => (
+            <li key={r.id} className="flex flex-wrap items-center gap-3 border-b py-3 first:pt-0 last:border-0 last:pb-0">
+              <div className="grid min-w-0 flex-1 gap-1">
+                <p className="flex flex-wrap items-center gap-2 text-sm font-medium">
+                  {tanggalJam(r.disimpan)}
+                  {i === 0 && <Badge variant="secondary">Sedang dipakai</Badge>}
+                </p>
+                <p className="text-xs text-muted-foreground">oleh {r.oleh ?? "akun yang sudah dihapus"}</p>
+                <p className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                  <RingkasanBagian judul="Portal" bagian={r.tema.portal} />
+                  <RingkasanBagian judul="Dashboard" bagian={r.tema.dashboard} />
+                </p>
+              </div>
+              <Button type="button" variant="outline" size="sm" onClick={() => pakai(r)}>
+                <IconHistory />
+                Pakai lagi
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Bagian>
+  )
+}
+
+function RingkasanBagian({ judul, bagian }: { judul: string; bagian: BagianTema }) {
+  return (
+    <span className="flex items-center gap-1.5">
+      <span aria-hidden="true" className="size-3 rounded-full border border-black/10" style={{ background: bagian.aksen }} />
+      <span>
+        <span className="text-muted-foreground">{judul}:</span> {temaSiapPakai(bagian)?.nama ?? "Kustom"} · {bagian.skala}%
+      </span>
+    </span>
   )
 }

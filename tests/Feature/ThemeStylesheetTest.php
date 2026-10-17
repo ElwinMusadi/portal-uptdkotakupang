@@ -67,6 +67,28 @@ class ThemeStylesheetTest extends TestCase
         $this->assertStringStartsWith('/* Tema portal PINTU: tampilan bawaan', $this->get('/tema-portal.css')->getContent());
     }
 
+    public function test_scales_every_portal_page_but_the_tv_display_and_the_dashboard_by_its_root_font_size(): void
+    {
+        $this->saveTheme(['skala' => 120], ['skala' => 90]);
+
+        $this->assertStringEndsWith(
+            "\n:root:not(:has([data-react=\"layar-antrean\"])) {\n  zoom: 1.2;\n  --zoom: 1.2;\n}\n",
+            $this->get('/tema-portal.css')->assertOk()->getContent(),
+        );
+        $this->assertStringEndsWith("\nhtml:root {\n  font-size: 90%;\n}\n", $this->get('/tema-dashboard.css')->getContent());
+        $this->assertStringContainsString('<div data-react="layar-antrean">', $this->get('/layar')->getContent());
+    }
+
+    public function test_enlarges_the_dashboard_only_on_screens_from_48rem_wide(): void
+    {
+        $this->saveTheme(dashboard: ['skala' => 110]);
+
+        $this->assertStringEndsWith(
+            "\n@media (min-width: 48rem) {\n  html:root {\n    font-size: 110%;\n  }\n}\n",
+            $this->get('/tema-dashboard.css')->assertOk()->getContent(),
+        );
+    }
+
     public function test_leaves_out_the_blocks_of_the_modes_a_dashboard_theme_does_not_change(): void
     {
         $this->saveTheme(dashboard: ['sudut' => 'tegas']);

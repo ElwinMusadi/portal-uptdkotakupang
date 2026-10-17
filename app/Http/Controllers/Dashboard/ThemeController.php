@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Dashboard;
 
-use App\Actions\SaveSetting;
+use App\Actions\SaveTheme;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dashboard\UpdateThemeRequest;
 use App\Models\Setting;
@@ -23,11 +23,11 @@ class ThemeController extends Controller
     }
 
     /**
-     * Replace the document.
+     * Replace the document; a changed theme is kept in the history.
      */
-    public function update(UpdateThemeRequest $request, SaveSetting $saveSetting): JsonResponse
+    public function update(UpdateThemeRequest $request, SaveTheme $saveTheme): JsonResponse
     {
-        $setting = $saveSetting->handle($request->user(), Setting::THEME, $request->theme());
+        $setting = $saveTheme->handle($request->user(), $request->theme());
 
         return response()->json($setting->value);
     }

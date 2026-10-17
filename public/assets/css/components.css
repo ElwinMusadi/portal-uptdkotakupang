@@ -97,7 +97,7 @@
   max-width: 880px; margin: 10px auto 0;
   background: var(--ink); color: #fff; border-radius: calc(26px * var(--r-scale, 1));
   padding: 12px; box-shadow: var(--shadow-pop);
-  max-height: calc(100vh - 120px); overflow: auto;
+  max-height: calc(100vh / var(--zoom, 1) - 120px); overflow: auto;
 }
 .mobile-menu[hidden] { display: none; }
 .mobile-menu__group + .mobile-menu__group { border-top: 1px solid var(--night-line); }

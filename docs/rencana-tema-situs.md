@@ -1,6 +1,6 @@
 # Rencana Implementasi — Tema Portal dan Dashboard
 
-**Status:** rencana dengan keputusan awal pemilik (17 Oktober 2026, [D-057](decisions.md#d-057--2026-10-17--tema-portal-dan-dashboard-rencana-dan-keputusan-awal)). **Irisan 1 (fondasi) dan Irisan 2 (warna, latar, huruf, sudut, tab Tampilan) selesai** pada 17 Oktober 2026 (hasilnya di §5.1 dan §5.2); berikutnya Irisan 3.
+**Status:** rencana dengan keputusan awal pemilik (17 Oktober 2026, [D-057](decisions.md#d-057--2026-10-17--tema-portal-dan-dashboard-rencana-dan-keputusan-awal)). **Irisan 1 (fondasi), Irisan 2 (warna, latar, huruf, sudut, tab Tampilan), dan Irisan 3 (skala, pratinjau di portal, riwayat) selesai** pada 17 Oktober 2026 (hasilnya di §5.1–§5.3); yang tersisa Irisan 4 opsional.
 **Sumber:** permintaan pemilik pada 17 Oktober 2026: Administrator dapat mengatur tema (jenis huruf, warna utama, skala tampilan, dan pengaturan tampilan lain yang lazim) dari menu Pengaturan di dashboard, agar tampilan tidak itu-itu saja.
 
 ---
@@ -60,12 +60,12 @@ Dokumen pengaturan `tema` di tabel `settings` (pola yang sama dengan `situs`, `s
 
 ```json
 {
-  "portal":    { "aksen": "#2B63F6", "latar": "hangat", "hurufTeks": "sistem", "hurufJudul": "sama", "sudut": "sedang" },
-  "dashboard": { "aksen": "#2B63F6", "latar": "hangat", "hurufTeks": "sistem", "hurufJudul": "sama", "sudut": "sedang" }
+  "portal":    { "aksen": "#2B63F6", "latar": "hangat", "hurufTeks": "sistem", "hurufJudul": "sama", "sudut": "sedang", "skala": 100 },
+  "dashboard": { "aksen": "#2B63F6", "latar": "hangat", "hurufTeks": "sistem", "hurufJudul": "sama", "sudut": "sedang", "skala": 100 }
 }
 ```
 
-Semua nilai dari daftar tertutup kecuali `aksen` (hex `#RRGGBB` yang divalidasi, disimpan dengan huruf kapital). Tidak ada teks bebas yang masuk ke CSS, sehingga tidak ada celah menyisipkan CSS. `hurufJudul` `sama` berarti mengikuti huruf teks. Tema siap pakai tidak disimpan: dashboard mencocokkan pilihan dengan daftarnya ("Kustom" bila tidak cocok). `skala` ditambahkan di Irisan 3 dengan nilai bawaan 100 untuk dokumen yang sudah tersimpan (`Setting::theme()` melengkapi kunci yang belum ada dengan nilai bawaan).
+Semua nilai dari daftar tertutup kecuali `aksen` (hex `#RRGGBB` yang divalidasi, disimpan dengan huruf kapital). Tidak ada teks bebas yang masuk ke CSS, sehingga tidak ada celah menyisipkan CSS. `hurufJudul` `sama` berarti mengikuti huruf teks. Tema siap pakai tidak disimpan: dashboard mencocokkan pilihan dengan daftarnya ("Kustom" bila tidak cocok). `skala` (90, 100, 110, 120) ditambahkan di Irisan 3; dokumen yang tersimpan sebelumnya dibaca dengan skala 100 (`Setting::theme()` melengkapi kunci yang belum ada dengan nilai bawaan).
 
 ### 4.2 Dua stylesheet tema
 
@@ -100,16 +100,16 @@ Aksen bawaan PINTU (`#2B63F6`) tidak diturunkan: warna rancangan tangan di `toke
 
 ### 4.5 Skala tampilan
 
-- **Portal (keputusan pemilik): properti CSS `zoom`** pada halaman (mis. `html { zoom: 1.1 }`), didukung peramban modern. Tata letak ikut menyempit (110% di ponsel 375 px berarti ruang ±341 px), jadi setiap tingkat skala diuji di 375, 768, dan 1280 px, termasuk peta Pemetaan PKB, grafik dasbor beranda, dan layar TV (yang memakai satuan `vh`).
-- **Dashboard:** ukuran huruf dasar (`html { font-size: 110% }`); Tailwind memakai `rem`, jadi seluruh dashboard ikut membesar secara proporsional. ±31 ukuran px langsung (mis. `text-[11px]`) diubah ke `rem` di Irisan 1.
+- **Portal (keputusan pemilik): properti CSS `zoom`** pada halaman (`:root:not(:has([data-react="layar-antrean"])) { zoom: 1.1; --zoom: 1.1 }`). Tata letak ikut menyempit (110% di ponsel 375 px berarti ruang ±341 px), jadi setiap tingkat skala diuji di 375, 768, dan 1280 px. Chrome kini memperbesar juga satuan `vw`/`vh`, sehingga tinggi selayar akan melebihi layar: `.auth` (Login, Aktivasi) dan menu ponsel membagi tingginya dengan `var(--zoom, 1)`. **Layar TV antrean tidak ikut skala**, karena seluruh ukurannya relatif terhadap layar dan sudah memenuhinya.
+- **Dashboard:** ukuran huruf dasar (`html { font-size: 110% }`); Tailwind memakai `rem`, jadi seluruh dashboard ikut membesar secara proporsional. ±31 ukuran px langsung (mis. `text-[11px]`) diubah ke `rem` di Irisan 1. Skala **di atas 100% hanya berlaku mulai 48rem (768 px)**: di 375 px, skala 110% membuat 5 halaman dan 120% membuat 10 halaman dashboard lebih lebar dari layar. Skala 90% berlaku di semua layar.
 
 ### 4.6 Dashboard: tab Tampilan
 
 - Pengaturan → tab **Tampilan** (di samping Situs, Akun, Data), dengan sub-tab **Portal** dan **Dashboard**. Formulirnya hanya bisa disimpan Administrator; pegawai lain melihatnya hanya-baca, seperti Pengaturan Situs.
 - Isinya: kartu tema siap pakai, pemilih warna, nuansa latar, huruf, skala, dan sudut.
-  - **Portal:** pratinjau langsung di samping formulir (tombol, kartu, lencana, panel gelap, grafik kecil, tautan) yang berubah sebelum disimpan, dan *Pratinjau di portal* (Irisan 3): membuka beranda dengan tema yang belum disimpan lewat tautan pratinjau berumur pendek, tanpa mengubah tampilan bagi pengunjung.
+  - **Portal:** pratinjau langsung di samping formulir (tombol, kartu, lencana, panel gelap, grafik kecil, tautan) yang berubah sebelum disimpan, dan *Pratinjau di portal* (Irisan 3): membuka beranda di tab baru dengan tema yang belum disimpan, tanpa mengubah tampilan bagi pengunjung. Tautannya (`/pratinjau-tema/{token}`, 30 menit) menyimpan token di cookie terenkripsi; `tema-portal.css` lalu menyajikan tema yang belum disimpan kepada peramban itu saja, dengan pita "Pratinjau tema · belum disimpan" di setiap halaman. Halaman portal tetap byte demi byte. *Akhiri pratinjau* (atau `/pratinjau-tema/selesai`) menghapus cookie; menyimpan tema juga mengakhirinya.
   - **Dashboard:** pilihan langsung diterapkan pada dashboard yang sedang dibuka sebagai pratinjau, dan kembali ke tema tersimpan bila dibatalkan.
-- Seperti Pengaturan Situs (D-026), tema bukan milik modul mana pun, sehingga tidak masuk log aktivitas yang dicatat per modul. Siapa dan kapan menyimpan dicatat riwayat lima tema terakhir (Irisan 3), yang juga bisa dipulihkan.
+- Seperti Pengaturan Situs (D-026), tema bukan milik modul mana pun, sehingga tidak masuk log aktivitas yang dicatat per modul. Siapa dan kapan menyimpan dicatat riwayat lima tema terakhir (Irisan 3, tabel `theme_revisions`, hanya bila isinya berubah): *Pakai lagi* memuat tema itu ke formulir untuk disimpan ulang.
 
 ### 4.7 Rancangan API
 
@@ -120,7 +120,8 @@ Aksen bawaan PINTU (`#2B63F6`) tidak diturunkan: warna rancangan tangan di `toke
 | `GET /api/pengaturan/tema/riwayat` | Administrator | lima tema terakhir (Irisan 3) |
 | `POST /api/pengaturan/tema/pratinjau` | Administrator | tema yang belum disimpan sebagaimana akan diterapkan: variabel dan `@font-face` portal untuk contoh, aksen dan stylesheet dashboard, rasio kontras (Irisan 2) |
 | `POST /api/pengaturan/tema/tautan-pratinjau` | Administrator | tautan pratinjau portal berumur pendek (Irisan 3) |
-| `GET /tema-portal.css` | publik | stylesheet tema portal; `?pratinjau=` hanya dengan tautan pratinjau yang sah |
+| `GET /pratinjau-tema/{token}`, `GET /pratinjau-tema/selesai` | siapa pun yang memegang tautan | memasang atau menghapus cookie pratinjau, lalu ke beranda (Irisan 3) |
+| `GET /tema-portal.css` | publik | stylesheet tema portal; tema yang belum disimpan bila cookie pratinjau masih berlaku |
 | `GET /tema-dashboard.css` | publik (isinya hanya warna dan huruf) | stylesheet tema dashboard |
 
 ---
@@ -159,6 +160,15 @@ Setiap irisan diperiksa seperti biasa: tes fitur dan unit, uji mutasi, typecheck
 | Tab Tampilan | `components/tema/tab-tampilan.tsx` di Pengaturan: sub-tab Portal dan Dashboard; enam tema siap pakai (PINTU, Samudra, Hutan, Senja, Tenun, Grafit, di `lib/tema.ts`); warna utama (pemilih warna dan kode, dengan keterangan bila warna disesuaikan); nuansa latar; huruf teks dan judul; kelengkungan sudut; daftar rasio kontras; *Kembalikan tampilan bawaan PINTU*; *Samakan dengan portal* di bagian Dashboard. Contoh portal (`pratinjau-portal.tsx`) memakai variabel berawalan `--p-` karena nama variabel portal juga dipakai dashboard. Dashboard yang sedang dibuka menjadi pratinjau tema dashboard (stylesheet tersimpan dinonaktifkan, stylesheet dari server disisipkan) dan kembali ke tema tersimpan saat tab ditinggalkan; sesudah disimpan, `/tema-dashboard.css` dimuat ulang tanpa memuat ulang halaman. Pegawai selain Administrator melihat formulirnya hanya-baca, tanpa pratinjau. |
 | Berbeda dari rencana | Tema siap pakai tidak disimpan di dokumen (dicocokkan dari nilainya); `skala` menyusul di Irisan 3; latar tidak mengubah panel gelap; tidak ada entri log aktivitas (seperti Pengaturan Situs, D-026). |
 | Pemeriksaan | Tes unit `ThemePalette` dan `ThemeVariables` (sepuluh macam aksen termasuk kuning terang, biru tua, abu, hijau menyala, putih, pada tiga latar: semua pasangan teks ≥ 4,5:1, rona terjaga, turunan dari `#2B63F7` dekat nilai rancangan tangan), tes fitur API, stylesheet, nilai bawaan sama dengan `tokens.css`/`index.css`, dan berkas huruf. Di browser: tema siap pakai, pratinjau portal dan dashboard (mode terang dan gelap), kuning `#F2C46B` dipakai sebagai `#936A00`, simpan lalu portal memakai aksen, DM Sans, dan sudut navigasi 29,7 px, kembali ke bawaan; kedelapan huruf di enam halaman portal (375 dan 1280 px) dan dashboard (375 px, Lexend): tidak ada halaman yang meluap ke samping, sebagian judul membungkus satu baris lebih. |
+
+### 5.3 Hasil Irisan 3 (17 Oktober 2026)
+
+| Bagian | Yang dibuat |
+|---|---|
+| Skala | `skala` 90/100/110/120 di dokumen (`Setting::THEME_SCALES`). Portal: `zoom` dan `--zoom` untuk semua halaman kecuali layar TV; `tokens.css` mendapat `--zoom: 1`, `.auth` dan menu ponsel membagi tinggi selayar dengan `var(--zoom, 1)`. Dashboard: `font-size` di `html:root`, untuk 110/120% di dalam `@media (min-width: 48rem)`. Tab Tampilan: pilihan Skala tampilan; contoh portal ikut di-`zoom`; memilih tema siap pakai tidak mengubah skala. |
+| Pratinjau di portal | `App\Support\ThemePreview` (token acak di cache 30 menit, cookie `pintu_pratinjau_tema`), `POST /api/pengaturan/tema/tautan-pratinjau` (Administrator), `ThemePreviewPageController` (`/pratinjau-tema/{token}`, `/pratinjau-tema/selesai`), `ThemeStylesheetController` menyajikan tema pratinjau dan pita `body::after`. Tombol *Pratinjau di portal* (tab baru; bila diblokir, toast dengan tombol Buka) dan *Akhiri pratinjau*. |
+| Riwayat | Tabel `theme_revisions` (`ThemeRevision`, dimigrasi di `pintu`), `SaveTheme` mencatat tema yang berubah beserta penyimpannya dan menyisakan lima terbaru, `GET /api/pengaturan/tema/riwayat` (Administrator, terbaru dulu). Kartu *Riwayat* di tab Tampilan dengan *Sedang dipakai* dan *Pakai lagi*. |
+| Pemeriksaan | Tes fitur (skala, riwayat, tautan pratinjau, cookie, kedaluwarsa) dan unit; uji mutasi 32 dari 35 mati lalu dua pemeriksaan yang terbukti tidak diperlukan dihapus (aturan `.auth` diperiksa di browser). Browser: zoom 90/110/120% di tujuh halaman portal pada 375 px dan empat halaman pada 768 dan 1280 px tanpa luapan; Login tetap setinggi layar; layar TV tetap zoom 1; skala dashboard 110/120% di 36 halaman (375 dan 768 px, temuan di atas); alur tab Tampilan: skala, contoh portal, tautan pratinjau di beranda dan Pemetaan (aksen, huruf, zoom, pita) lalu diakhiri, dua simpanan uji lalu riwayat, *Pakai lagi*, *Batalkan*. |
 
 ---
 
@@ -201,5 +211,6 @@ Setiap irisan diperiksa seperti biasa: tes fitur dan unit, uji mutasi, typecheck
 
 - Baru: `app/Support/ThemePalette.php`, controller dan request tema, rute `tema-portal.css` dan `tema-dashboard.css`, `public/assets/fonts/`, tab Tampilan di `resources/js/dashboard/pages/pengaturan.tsx`, tes unit dan fitur.
 - Dibuat di Irisan 1: `app/Http/Controllers/ThemeStylesheetController.php`, rute `tema.portal` dan `tema.dashboard` di `routes/web.php`, `tests/Feature/ThemeStylesheetTest.php`.
+- Dibuat di Irisan 3: `app/Support/ThemePreview.php`, `app/Actions/SaveTheme.php`, `app/Models/ThemeRevision.php` dan factory-nya, migrasi `create_theme_revisions_table`, `app/Http/Resources/ThemeRevisionResource.php`, `app/Http/Controllers/Dashboard/{ThemeRevisionController,ThemePreviewLinkController}.php`, `app/Http/Controllers/ThemePreviewPageController.php`, `tests/Feature/{ThemeRevisionTest,ThemePreviewLinkTest}.php`.
 - Dibuat di Irisan 2: `app/Support/{ThemePalette,ThemeVariables}.php`, `app/Enums/{ThemeFont,ThemeBackground,ThemeCorners}.php`, `app/Actions/BuildThemeStylesheet.php`, `app/Http/Controllers/Dashboard/{ThemeController,ThemePreviewController}.php`, `app/Http/Requests/Dashboard/UpdateThemeRequest.php`, `public/assets/fonts/`, `resources/js/dashboard/lib/tema.ts`, `resources/js/dashboard/components/tema/`, `tests/Unit/Support/`, `tests/Feature/ThemeControllerTest.php`.
 - Diubah: `public/assets/css/{tokens,base,components,pages}.css`, CSS komponen portal (`resources/js/portal/**/*.css`), `resources/js/dashboard/index.css`, `pages/papan.tsx`, semua halaman portal dan `errors/404`, `auth/aktivasi`, `layar`, `dashboard`, `absen` (satu `<link>`), `app/Models/Setting.php`, `routes/api.php`, `routes/web.php`, `tests/Feature/PortalPagesTest.php`, `docs/api.md`, `docs/dashboard.md`, `docs/decisions.md`, `KONTEKS-PROYEK.md`.

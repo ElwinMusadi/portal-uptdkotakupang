@@ -342,6 +342,8 @@ export type HurufTema =
   | "lexend"
 export type LatarTema = "hangat" | "netral" | "sejuk"
 export type SudutTema = "tegas" | "sedang" | "membulat"
+/** Skala tampilan dalam persen: zoom halaman portal, ukuran huruf dasar dashboard */
+export type SkalaTema = 90 | 100 | 110 | 120
 
 /** Satu bagian tema: portal atau dashboard */
 export interface BagianTema {
@@ -352,6 +354,7 @@ export interface BagianTema {
   /** "sama" = mengikuti huruf teks */
   hurufJudul: HurufTema | "sama"
   sudut: SudutTema
+  skala: SkalaTema
 }
 
 /** Pengaturan › Tampilan (D-057): tema portal dan dashboard masing-masing */

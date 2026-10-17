@@ -79,6 +79,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `PUT` | `/api/pengaturan/situs` | Administrator | tersedia |
 | `GET` | `/api/pengaturan/tema` | pegawai login | tersedia |
 | `PUT`, `POST` | `/api/pengaturan/tema`, `/api/pengaturan/tema/pratinjau` | Administrator | tersedia |
+| `GET`, `POST` | `/api/pengaturan/tema/riwayat`, `/api/pengaturan/tema/tautan-pratinjau` | Administrator | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/akun` | pegawai login, untuk akunnya sendiri | tersedia |
 | `GET` | `/api/kendaraan/{nopol}` | pegawai login | tersedia |
 | `POST` | `/api/unggah` | pengelola modul tujuan; foto absensi: semua pegawai | tersedia |
@@ -860,22 +861,24 @@ Dipakai tab *Tampilan* di halaman Pengaturan ([D-057](decisions.md#d-057--2026-1
 
 ```json
 {
-  "portal":    { "aksen": "#2B63F6", "latar": "hangat", "hurufTeks": "sistem", "hurufJudul": "sama", "sudut": "sedang" },
-  "dashboard": { "aksen": "#2B63F6", "latar": "hangat", "hurufTeks": "sistem", "hurufJudul": "sama", "sudut": "sedang" }
+  "portal":    { "aksen": "#2B63F6", "latar": "hangat", "hurufTeks": "sistem", "hurufJudul": "sama", "sudut": "sedang", "skala": 100 },
+  "dashboard": { "aksen": "#2B63F6", "latar": "hangat", "hurufTeks": "sistem", "hurufJudul": "sama", "sudut": "sedang", "skala": 100 }
 }
 ```
 
 - `aksen`: `#RRGGBB`, disimpan dengan huruf kapital. Warna turunannya dibuat server dan disesuaikan agar teks tetap terbaca (kontras ≥ 4,5:1); `#2B63F6` memakai warna rancangan tangan PINTU.
-- `latar`: `hangat` (bawaan), `netral`, `sejuk`. `sudut`: `tegas`, `sedang` (bawaan), `membulat`.
+- `latar`: `hangat` (bawaan), `netral`, `sejuk`. `sudut`: `tegas`, `sedang` (bawaan), `membulat`. `skala`: `90`, `100` (bawaan), `110`, `120` (bilangan bulat); dokumen yang disimpan sebelum ada skala dibaca dengan `100`.
 - `hurufTeks`: `sistem` (bawaan), `inter`, `plus-jakarta-sans`, `dm-sans`, `source-sans-3`, `ibm-plex-sans`, `nunito-sans`. `hurufJudul`: `sama` (mengikuti huruf teks), `sistem`, salah satu huruf teks, `manrope`, atau `lexend`.
 
 | Alamat | Permintaan | Respons |
 |---|---|---|
 | `GET /api/pengaturan/tema` | — | `200` dokumen di atas; tampilan bawaan sebelum pertama kali disimpan. |
 | `PUT /api/pengaturan/tema` | dokumen lengkap | `200` dokumen tersimpan, tanpa kunci lain. `422` bila sebuah bagian hilang, warna bukan `#RRGGBB`, atau pilihan di luar daftar (mis. Manrope sebagai huruf teks). `/tema-portal.css` dan `/tema-dashboard.css` langsung memakai isi barunya. |
+| `GET /api/pengaturan/tema/riwayat` | — | `200` lima tema terakhir yang disimpan, terbaru dulu (yang pertama sedang dipakai): `[{id, tema, disimpan, oleh}]`; `oleh` nama Administrator yang menyimpan, `null` bila akunnya sudah dihapus; pengaturan yang ditambahkan sesudah tema itu disimpan diisi nilai bawaan. Hanya penyimpanan yang mengubah isi yang dicatat. |
+| `POST /api/pengaturan/tema/tautan-pratinjau` | dokumen lengkap, belum disimpan | `201` `{tautan, berlaku}`: tautan `/pratinjau-tema/{token 40 karakter}` yang berlaku 30 menit. Membukanya memasang cookie terenkripsi `pintu_pratinjau_tema` lalu mengarah ke beranda; selama berlaku, `/tema-portal.css` menyajikan bagian `portal` yang belum disimpan kepada peramban itu, dengan pita "Pratinjau tema · belum disimpan". Tautan yang kedaluwarsa hanya mengarah ke beranda dan menghapus cookie; `/pratinjau-tema/selesai` mengakhiri pratinjau. Validasi sama dengan `PUT`; tidak ada yang disimpan. |
 | `POST /api/pengaturan/tema/pratinjau` | dokumen lengkap, belum disimpan | `200` `{portal: {variabel, huruf, kontras}, dashboard: {aksen, css, kontras}}`: semua variabel portal yang bisa diatur tema dengan nilai pilihan ini (untuk contoh portal), aturan `@font-face` huruf portal, warna merek dashboard sesudah disesuaikan, isi `tema-dashboard.css` untuk pilihan ini, dan rasio kontras pasangan warna yang memuat teks (`[{pasangan, rasio}]`). Tidak ada yang disimpan; validasi sama dengan `PUT`. |
 
-Kode: `app/Http/Controllers/Dashboard/ThemeController.php`, `ThemePreviewController.php`, `app/Http/Requests/Dashboard/UpdateThemeRequest.php`, `app/Support/ThemePalette.php`, `app/Support/ThemeVariables.php`, `app/Enums/Theme{Font,Background,Corners}.php`, `app/Actions/BuildThemeStylesheet.php`. Tes: `tests/Feature/ThemeControllerTest.php`, `tests/Feature/ThemeStylesheetTest.php`, `tests/Unit/Support/`.
+Kode: `app/Http/Controllers/Dashboard/ThemeController.php`, `ThemePreviewController.php`, `ThemeRevisionController.php`, `ThemePreviewLinkController.php`, `app/Http/Controllers/ThemePreviewPageController.php`, `app/Actions/SaveTheme.php`, `app/Support/ThemePreview.php`, `app/Http/Requests/Dashboard/UpdateThemeRequest.php`, `app/Support/ThemePalette.php`, `app/Support/ThemeVariables.php`, `app/Enums/Theme{Font,Background,Corners}.php`, `app/Actions/BuildThemeStylesheet.php`. Tes: `tests/Feature/ThemeControllerTest.php`, `ThemeRevisionTest.php`, `ThemePreviewLinkTest.php`, `ThemeStylesheetTest.php`, `tests/Unit/Support/`.
 
 ## Profil akun di dashboard
 
@@ -1001,7 +1004,8 @@ Kode: `app/Http/Controllers/Dashboard/FieldActivity*`, `app/Http/Controllers/Das
 Bukan rute API (`routes/web.php`, `ThemeStylesheetController`), tetapi bagian dari tema ([D-057](decisions.md#d-057--2026-10-17--tema-portal-dan-dashboard-rencana-dan-keputusan-awal), [rencana](rencana-tema-situs.md)). `tema-portal.css` adalah stylesheet terakhir di semua halaman portal, 404, Login Pegawai, Aktivasi, dan layar TV; `tema-dashboard.css` dimuat sesudah CSS hasil build di dashboard dan Absensi.
 
 - `200` `text/css; charset=UTF-8`, tanpa sesi dan cookie. `Cache-Control: no-cache, private` dengan `ETag`: peramban memeriksa ulang setiap kali dan mendapat `304` tanpa isi bila tidak berubah, sehingga tema yang disimpan langsung terlihat tanpa nomor versi di HTML.
-- Isinya bagian `portal` atau `dashboard` dari dokumen [`tema`](#tampilan-di-dashboard): `@font-face` huruf terpilih (berkas di `/assets/fonts/<nama>/`, `font-display: swap`) dan variabel yang berbeda dari tampilan bawaan. Portal memakai `:root`; dashboard memakai `html:root` (kedua mode), `html:root:not(.dark)` (terang), dan `html:root.dark` (gelap), yang mengalahkan `index.css` apa pun urutan pemuatannya.
+- Isinya bagian `portal` atau `dashboard` dari dokumen [`tema`](#tampilan-di-dashboard): `@font-face` huruf terpilih (berkas di `/assets/fonts/<nama>/`, `font-display: swap`) dan variabel yang berbeda dari tampilan bawaan. Portal memakai `:root`; skalanya `zoom` dan `--zoom` pada `:root:not(:has([data-react="layar-antrean"]))` (semua halaman kecuali layar TV). Dashboard memakai `html:root` (kedua mode), `html:root:not(.dark)` (terang), dan `html:root.dark` (gelap), yang mengalahkan `index.css` apa pun urutan pemuatannya; skalanya `font-size` pada `html:root`, untuk 110% dan 120% di dalam `@media (min-width: 48rem)`.
+- `tema-portal.css` menyajikan tema pratinjau bila peramban memegang cookie pratinjau yang masih berlaku (lihat `tautan-pratinjau` di [Tampilan](#tampilan-di-dashboard)).
 - Selama tema belum disimpan atau sama dengan tampilan bawaan, isinya hanya komentar, jadi tampilan bawaan PINTU yang berlaku.
 
 ## `GET /api/public/faq`

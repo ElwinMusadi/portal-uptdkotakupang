@@ -50,6 +50,21 @@ class ThemeVariablesTest extends TestCase
         $this->assertSame([], ThemeVariables::portal($section));
         $this->assertSame(['both' => [], 'light' => [], 'dark' => []], ThemeVariables::dashboard($section));
         $this->assertSame([], ThemeVariables::fontFaces($section));
+        $this->assertSame([], ThemeVariables::portalZoom($section));
+        $this->assertNull(ThemeVariables::dashboardFontSize($section));
+    }
+
+    #[TestWith([90, '0.9'])]
+    #[TestWith([110, '1.1'])]
+    #[TestWith([120, '1.2'])]
+    public function test_scales_the_portal_by_zoom_and_the_dashboard_by_its_root_font_size(int $scale, string $zoom): void
+    {
+        $section = $this->section(['skala' => $scale]);
+
+        $this->assertSame(['zoom' => $zoom, '--zoom' => $zoom], ThemeVariables::portalZoom($section));
+        $this->assertSame([], ThemeVariables::portal($section));
+        $this->assertSame(['both' => [], 'light' => [], 'dark' => []], ThemeVariables::dashboard($section));
+        $this->assertSame("{$scale}%", ThemeVariables::dashboardFontSize($section));
     }
 
     public function test_keeps_the_hand_tuned_colours_for_pintu_blue_written_in_lower_case(): void
@@ -176,11 +191,11 @@ class ThemeVariablesTest extends TestCase
     /**
      * A theme section, the built-in look unless overridden.
      *
-     * @param  array<string, string>  $overrides
-     * @return array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string}
+     * @param  array<string, string|int>  $overrides
+     * @return array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int}
      */
     private function section(array $overrides = []): array
     {
-        return [...['aksen' => '#2B63F6', 'latar' => 'hangat', 'hurufTeks' => 'sistem', 'hurufJudul' => 'sama', 'sudut' => 'sedang'], ...$overrides];
+        return [...['aksen' => '#2B63F6', 'latar' => 'hangat', 'hurufTeks' => 'sistem', 'hurufJudul' => 'sama', 'sudut' => 'sedang', 'skala' => 100], ...$overrides];
     }
 }

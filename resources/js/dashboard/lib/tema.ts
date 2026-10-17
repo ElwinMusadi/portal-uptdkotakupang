@@ -1,7 +1,7 @@
 import * as React from "react"
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
 
-import type { BagianTema, HurufTema, LatarTema, SudutTema, Tema } from "@/lib/api"
+import type { BagianTema, HurufTema, IsoDateTime, LatarTema, SkalaTema, SudutTema, Tema } from "@/lib/api"
 import { mintaServer } from "@/lib/api/http"
 
 /** Tampilan bawaan PINTU (D-057), sama dengan Setting::DEFAULT_THEME_SECTION di server */
@@ -11,6 +11,7 @@ export const TEMA_BAWAAN: BagianTema = {
   hurufTeks: "sistem",
   hurufJudul: "sama",
   sudut: "sedang",
+  skala: 100,
 }
 
 /** Huruf yang tersedia; Manrope dan Lexend khusus judul (ThemeFont di server) */
@@ -38,11 +39,19 @@ export const SUDUT: { nilai: SudutTema; label: string; keterangan: string; px: n
   { nilai: "membulat", label: "Membulat", keterangan: "Sepertiga lebih bulat", px: 16 },
 ]
 
+export const SKALA: { nilai: SkalaTema; label: string; keterangan: string }[] = [
+  { nilai: 90, label: "90%", keterangan: "Lebih kecil" },
+  { nilai: 100, label: "100%", keterangan: "Bawaan" },
+  { nilai: 110, label: "110%", keterangan: "Lebih besar" },
+  { nilai: 120, label: "120%", keterangan: "Paling besar" },
+]
+
 export interface TemaSiapPakai {
   id: string
   nama: string
   keterangan: string
-  nilai: BagianTema
+  /** Tanpa skala: memilih tema siap pakai tidak mengubah ukuran tampilan */
+  nilai: Omit<BagianTema, "skala">
 }
 
 /** Tema siap pakai; tiap pilihan tetap bisa diubah sesudahnya (menjadi "Kustom") */
@@ -80,7 +89,7 @@ export const TEMA_SIAP_PAKAI: TemaSiapPakai[] = [
   },
 ]
 
-/** Tema siap pakai yang sama persis dengan pilihan sekarang, bila ada */
+/** Tema siap pakai yang sama dengan pilihan sekarang (skala tidak dihitung), bila ada */
 export function temaSiapPakai(bagian: BagianTema): TemaSiapPakai | undefined {
   return TEMA_SIAP_PAKAI.find(
     (t) =>
@@ -188,6 +197,33 @@ export function muatUlangTemaDashboard() {
   }
   baru.onerror = () => baru.remove()
   tautan.after(baru)
+}
+
+/** Tema yang pernah disimpan (GET /api/pengaturan/tema/riwayat), terbaru dulu; yang pertama sedang dipakai */
+export interface RiwayatTema {
+  id: string
+  tema: Tema
+  disimpan: IsoDateTime
+  /** Nama Administrator yang menyimpan; null bila akunnya sudah dihapus */
+  oleh: string | null
+}
+
+export function useRiwayatTema(aktif: boolean) {
+  return useQuery({
+    queryKey: ["tema-riwayat"],
+    queryFn: () => mintaServer<RiwayatTema[]>("/api/pengaturan/tema/riwayat", "GET"),
+    enabled: aktif,
+  })
+}
+
+/** Tautan yang menampilkan tema portal yang belum disimpan di portal itu sendiri, hanya di peramban ini */
+export function buatTautanPratinjau(tema: Tema) {
+  return mintaServer<{ tautan: string; berlaku: IsoDateTime }>("/api/pengaturan/tema/tautan-pratinjau", "POST", tema)
+}
+
+/** Akhiri pratinjau tema di portal pada peramban ini */
+export async function akhiriPratinjauPortal() {
+  await fetch("/pratinjau-tema/selesai", { credentials: "same-origin", redirect: "manual" })
 }
 
 /** Rasio kontras seperti "4,98 : 1" */
