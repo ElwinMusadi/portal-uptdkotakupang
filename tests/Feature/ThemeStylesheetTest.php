@@ -79,12 +79,12 @@ class ThemeStylesheetTest extends TestCase
         $this->assertStringContainsString('<div data-react="layar-antrean">', $this->get('/layar')->getContent());
     }
 
-    public function test_enlarges_the_dashboard_only_on_screens_from_48rem_wide(): void
+    public function test_enlarges_the_dashboard_only_on_screens_from_64rem_wide(): void
     {
         $this->saveTheme(dashboard: ['skala' => 110]);
 
         $this->assertStringEndsWith(
-            "\n@media (min-width: 48rem) {\n  html:root {\n    font-size: 110%;\n  }\n}\n",
+            "\n@media (min-width: 64rem) {\n  html:root {\n    font-size: 110%;\n  }\n}\n",
             $this->get('/tema-dashboard.css')->assertOk()->getContent(),
         );
     }

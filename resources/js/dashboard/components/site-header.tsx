@@ -31,16 +31,17 @@ export function SiteHeader() {
   const portal = modul?.portal ?? (pathname === "/" ? "index.html" : undefined)
 
   return (
-    <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
+    <header className="@container/header flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
       <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4" />
         <h1 className="truncate text-base font-medium">{judul}</h1>
-        <div className="ml-auto flex items-center gap-1 sm:gap-2">
+        {/* Header sempit (sidebar terbuka, skala besar): Cari lalu Lihat di portal menjadi ikon agar judul tetap utuh */}
+        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
           <Button
             variant="outline"
             size="sm"
-            className="hidden w-56 justify-start text-muted-foreground lg:flex"
+            className="hidden w-56 justify-start text-muted-foreground @min-[46rem]/header:flex"
             onClick={() => setOpen(true)}
           >
             <IconSearch />
@@ -50,7 +51,7 @@ export function SiteHeader() {
           <Button
             variant="ghost"
             size="icon"
-            className="size-8 lg:hidden"
+            className="size-8 @min-[46rem]/header:hidden"
             onClick={() => setOpen(true)}
           >
             <IconSearch />
@@ -69,9 +70,15 @@ export function SiteHeader() {
           </Button>
           {portal && (
             <Button variant="ghost" asChild size="sm" className="hidden sm:flex">
-              <a href={urlPortal(portal)} target="_blank" rel="noopener" className="dark:text-foreground">
+              <a
+                href={urlPortal(portal)}
+                target="_blank"
+                rel="noopener"
+                title="Lihat di portal"
+                className="dark:text-foreground"
+              >
                 <IconExternalLink />
-                Lihat di portal
+                <span className="sr-only @min-[34rem]/header:not-sr-only">Lihat di portal</span>
               </a>
             </Button>
           )}

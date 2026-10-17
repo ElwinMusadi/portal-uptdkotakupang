@@ -449,7 +449,7 @@ function FormBagian({
         deskripsi={
           bagian === "portal"
             ? "Memperbesar atau memperkecil seluruh halaman portal: teks, gambar, dan jarak. Layar TV antrean tidak ikut karena sudah memenuhi layarnya."
-            : "Ukuran dasar teks dan jarak di dashboard dan Absensi. Di layar selebar ponsel (di bawah 768 px), skala di atas 100% tidak dipakai agar halaman tidak melebar."
+            : "Ukuran dasar teks dan jarak di dashboard dan Absensi. Di layar ponsel dan tablet (di bawah 1024 px), skala di atas 100% tidak dipakai agar halaman tidak melebar."
         }
       >
         <FormField

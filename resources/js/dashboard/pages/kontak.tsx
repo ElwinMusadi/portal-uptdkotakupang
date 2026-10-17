@@ -108,7 +108,7 @@ export default function HalamanKontak() {
                 labelItem={(i) => `akun media sosial ${i + 1}`}
                 itemBaru={() => ({ id: newId(), platform: "Instagram", akun: "", url: "" })}
                 render={(i) => (
-                  <div className="grid gap-2 sm:grid-cols-[9rem_12rem_minmax(0,1fr)]">
+                  <div className="grid gap-2 @2xl/main:grid-cols-[9rem_12rem_minmax(0,1fr)]">
                     <IsianItem control={form.control} name={`mediaSosial.${i}.platform`} label="Platform" />
                     <IsianItem control={form.control} name={`mediaSosial.${i}.akun`} label="Akun" placeholder="@akun" />
                     <IsianItem control={form.control} name={`mediaSosial.${i}.url`} label="Tautan" placeholder="https://…" />

@@ -243,7 +243,7 @@ export default function HalamanStatistik() {
                 )}
               </Bagian>
               <Tabs value={tab} onValueChange={setTab} className="gap-4">
-                <TabsList className="flex h-auto flex-wrap justify-start">
+                <TabsList className="flex flex-wrap justify-start group-data-[orientation=horizontal]/tabs:h-auto *:data-[slot=tabs-trigger]:h-auto">
                   {form.getValues("set").map((s, i) => {
                     const galat = !!form.formState.errors.set?.[i]
                     const tersembunyi = !form.watch(`set.${i}.tampil`)

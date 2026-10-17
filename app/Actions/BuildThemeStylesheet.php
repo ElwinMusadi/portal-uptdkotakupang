@@ -93,8 +93,9 @@ class BuildThemeStylesheet
      * The dashboard's theme. Its selectors outrank index.css's :root and
      * .dark, so they apply whether this stylesheet loads before or after the
      * built one (Vite inserts it later while it serves the dashboard). A
-     * scale above 100% applies from 48rem (768px) up: narrower, several
-     * dashboard pages would grow wider than the screen.
+     * scale above 100% applies from 64rem (1024px) up: narrower, the open
+     * sidebar leaves the pages too little room and several grow wider than
+     * the screen.
      *
      * @param  ThemeSection  $section
      */
@@ -110,7 +111,7 @@ class BuildThemeStylesheet
         $scale = match (true) {
             $fontSize === null => '',
             $section['skala'] < 100 => $this->block('html:root', ['font-size' => $fontSize]),
-            default => "@media (min-width: 48rem) {\n".preg_replace('/^/m', '  ', $this->block('html:root', ['font-size' => $fontSize]))."}\n",
+            default => "@media (min-width: 64rem) {\n".preg_replace('/^/m', '  ', $this->block('html:root', ['font-size' => $fontSize]))."}\n",
         };
 
         return $this->header('dashboard')
