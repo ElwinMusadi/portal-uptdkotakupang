@@ -19,7 +19,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import type { BagianTema, Tema } from "@/lib/api"
+import type { BagianTema, BagianTemaPortal, Tema } from "@/lib/api"
 import { sesi } from "@/lib/auth"
 import { tanggalJam } from "@/lib/format"
 import { laporGalat } from "@/lib/queries"
@@ -29,6 +29,7 @@ import {
   HURUF,
   hurufPratinjauPortal,
   LATAR,
+  MODE_PORTAL,
   muatUlangTemaDashboard,
   POLA_WARNA,
   pratinjauDashboard,
@@ -36,6 +37,7 @@ import {
   SKALA,
   SUDUT,
   TEMA_BAWAAN,
+  TEMA_BAWAAN_PORTAL,
   TEMA_SIAP_PAKAI,
   temaSiapPakai,
   usePratinjauTema,
@@ -54,7 +56,7 @@ const skemaBagian = z.object({
   sudut: z.enum(["tegas", "sedang", "membulat"]),
   skala: z.union([z.literal(90), z.literal(100), z.literal(110), z.literal(120)]),
 })
-const skemaTema = z.object({ portal: skemaBagian, dashboard: skemaBagian })
+const skemaTema = z.object({ portal: skemaBagian.extend({ mode: z.enum(["terang", "gelap"]) }), dashboard: skemaBagian })
 
 const OPSI_HURUF_TEKS = HURUF.filter((h) => h.teks).map((h) => ({ nilai: h.nilai, label: h.label }))
 const OPSI_HURUF_JUDUL = [
@@ -157,7 +159,7 @@ function IsiTampilan({ form, admin }: { form: UseFormReturn<Tema>; admin: boolea
               id={id}
               form={form}
               bagian="portal"
-              keterangan="Berlaku di semua halaman portal, halaman 404, Login Pegawai, Aktivasi, dan layar TV antrean."
+              keterangan="Berlaku untuk semua pengunjung di semua halaman portal, halaman 404, Login Pegawai, Aktivasi, dan layar TV antrean."
               aksenJadi={pratinjau?.portal.variabel["--accent"]}
               kontras={pratinjau?.portal.kontras}
               admin={admin}
@@ -228,7 +230,9 @@ function FormBagian({
 }) {
   const nilai = useWatch({ control: form.control, name: bagian })
   const cocok = temaSiapPakai(nilai)
-  const atur = (baru: BagianTema) => form.setValue(bagian, { ...baru }, { shouldDirty: true, shouldValidate: true })
+  // Pilihan baru menimpa pilihan sekarang; yang tidak disebut (skala, mode portal) tetap
+  const atur = (baru: Partial<BagianTemaPortal>) =>
+    form.setValue(bagian, { ...nilai, ...baru } as BagianTemaPortal, { shouldDirty: true, shouldValidate: true })
   const disesuaikan = POLA_WARNA.test(nilai.aksen) && aksenJadi !== undefined && aksenJadi.toUpperCase() !== nilai.aksen.toUpperCase()
 
   return (
@@ -243,7 +247,7 @@ function FormBagian({
               key={t.id}
               type="button"
               aria-pressed={cocok?.id === t.id}
-              onClick={() => atur({ ...t.nilai, skala: nilai.skala })}
+              onClick={() => atur(t.nilai)}
               className="grid gap-1 rounded-lg border p-3 text-left transition-colors hover:bg-muted/50 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-60 aria-pressed:border-ring aria-pressed:bg-muted/50"
             >
               <span className="flex items-center gap-2 text-sm font-medium">
@@ -262,12 +266,12 @@ function FormBagian({
           ))}
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={() => atur(TEMA_BAWAAN)}>
+          <Button type="button" variant="outline" size="sm" onClick={() => atur(bagian === "portal" ? TEMA_BAWAAN_PORTAL : TEMA_BAWAAN)}>
             <IconRestore />
             Kembalikan tampilan bawaan PINTU
           </Button>
           {bagian === "dashboard" && (
-            <Button type="button" variant="outline" size="sm" onClick={() => atur(form.getValues("portal"))}>
+            <Button type="button" variant="outline" size="sm" onClick={() => atur(tanpaMode(form.getValues("portal")))}>
               Samakan dengan portal
             </Button>
           )}
@@ -318,6 +322,48 @@ function FormBagian({
           )}
         />
       </Bagian>
+
+      {bagian === "portal" && (
+        <Bagian
+          judul="Mode tampilan"
+          deskripsi="Berlaku untuk semua pengunjung, apa pun pengaturan perangkatnya. Panel gelap (papan layanan, dasbor beranda, layar TV) tetap gelap di kedua mode."
+        >
+          <FormField
+            control={form.control}
+            name="portal.mode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="sr-only">Mode tampilan</FormLabel>
+                <FormControl>
+                  <RadioGroup value={field.value} onValueChange={field.onChange} className="grid gap-2 sm:grid-cols-2">
+                    {MODE_PORTAL.map((m) => (
+                      <Label
+                        key={m.nilai}
+                        htmlFor={`${id}-portal-mode-${m.nilai}`}
+                        className="gap-3 rounded-lg border p-3 font-normal has-[[data-state=checked]]:border-ring has-[[data-state=checked]]:bg-muted/50"
+                      >
+                        <RadioGroupItem value={m.nilai} id={`${id}-portal-mode-${m.nilai}`} />
+                        <span
+                          aria-hidden="true"
+                          className="flex size-6 shrink-0 items-center justify-center rounded-md border text-[0.6875rem] font-semibold"
+                          style={{ background: m.contoh[0], color: m.contoh[1] }}
+                        >
+                          Aa
+                        </span>
+                        <span className="grid gap-0.5">
+                          <span className="font-medium">{m.label}</span>
+                          <span className="text-xs text-muted-foreground">{m.keterangan}</span>
+                        </span>
+                      </Label>
+                    ))}
+                  </RadioGroup>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </Bagian>
+      )}
 
       <Bagian judul="Nuansa latar" deskripsi="Warna latar halaman, kotak abu, dan garis. Kecerahannya sama, jadi teks tetap terbaca.">
         <FormField
@@ -521,13 +567,20 @@ function RiwayatTampilan({ form }: { form: UseFormReturn<Tema> }) {
   )
 }
 
-function RingkasanBagian({ judul, bagian }: { judul: string; bagian: BagianTema }) {
+function RingkasanBagian({ judul, bagian }: { judul: string; bagian: BagianTema | BagianTemaPortal }) {
   return (
     <span className="flex items-center gap-1.5">
       <span aria-hidden="true" className="size-3 rounded-full border border-black/10" style={{ background: bagian.aksen }} />
       <span>
         <span className="text-muted-foreground">{judul}:</span> {temaSiapPakai(bagian)?.nama ?? "Kustom"} · {bagian.skala}%
+        {"mode" in bagian && bagian.mode === "gelap" ? " · gelap" : ""}
       </span>
     </span>
   )
+}
+
+/** Bagian portal tanpa mode, untuk disalin ke dashboard yang mode gelapnya pilihan tiap pegawai */
+function tanpaMode(portal: BagianTemaPortal): BagianTema {
+  const { aksen, latar, hurufTeks, hurufJudul, sudut, skala } = portal
+  return { aksen, latar, hurufTeks, hurufJudul, sudut, skala }
 }

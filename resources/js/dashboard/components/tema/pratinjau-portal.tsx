@@ -2,10 +2,6 @@ import type * as React from "react"
 
 /** Warna portal yang tidak diatur tema (tokens.css), untuk melengkapi contoh */
 const TETAP: Record<string, string> = {
-  "--surface": "#FFFFFF",
-  "--ink": "#0F1319",
-  "--gray": "#82878E",
-  "--text-2": "#646A72",
   "--night": "#0A0A0C",
   "--night-2": "#17181B",
   "--night-muted": "#9BA0A8",
@@ -19,7 +15,9 @@ const BATANG = [38, 52, 44, 70, 86, 61]
  * Contoh kecil portal dengan tema yang sedang disunting: tombol, tautan,
  * lencana, kartu, isian, kotak abu, dan panel gelap. Variabel portal diberi
  * awalan --p- karena namanya (mis. --accent) juga dipakai dashboard. Skala
- * diterapkan dengan zoom, seperti di portal.
+ * diterapkan dengan zoom, seperti di portal; mode gelap lewat variabelnya,
+ * dengan --chrome untuk permukaan yang tetap gelap dan --on-ink untuk teks
+ * di atas tombol yang dibalik.
  */
 export function PratinjauPortal({ variabel, skala }: { variabel: Record<string, string>; skala: number }) {
   const gaya = Object.fromEntries(
@@ -35,12 +33,12 @@ export function PratinjauPortal({ variabel, skala }: { variabel: Record<string, 
       role="img"
       className="grid gap-4 overflow-hidden rounded-xl border bg-(--p-paper) p-4 font-(family-name:--p-font-sans) text-(--p-ink)"
     >
-      <div className="flex items-center justify-between rounded-full bg-(--p-ink) py-2 pr-2 pl-4 text-xs text-white">
+      <div className="flex items-center justify-between rounded-full bg-(--p-chrome) py-2 pr-2 pl-4 text-xs text-white">
         <span className="flex items-center gap-2 font-semibold tracking-[0.08em]">
           <span aria-hidden="true" className="size-3 rotate-45 rounded-[3px] bg-(--p-logo-leaf-night)" />
           PINTU
         </span>
-        <span className="rounded-full bg-white px-3 py-1 text-(--p-ink)">Masuk</span>
+        <span className="rounded-full bg-white px-3 py-1 text-(--p-chrome)">Masuk</span>
       </div>
 
       <div className="grid gap-2">
@@ -53,8 +51,8 @@ export function PratinjauPortal({ variabel, skala }: { variabel: Record<string, 
       </div>
 
       <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
-        <span className="rounded-full bg-(--p-ink) px-4 py-2 text-white">Cek persyaratan</span>
-        <span className="rounded-full bg-(--p-accent) px-4 py-2 text-white">Ambil antrean</span>
+        <span className="rounded-full bg-(--p-ink) px-4 py-2 text-(--p-on-ink)">Cek persyaratan</span>
+        <span className="rounded-full bg-(--p-accent) px-4 py-2 text-(--p-on-ink)">Ambil antrean</span>
         <span className="text-(--p-accent-ink) underline decoration-(--p-accent-line) decoration-2 underline-offset-4">
           Lihat jadwal →
         </span>

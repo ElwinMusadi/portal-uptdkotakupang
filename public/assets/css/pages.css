@@ -135,7 +135,7 @@
 .bar.is-now .bar__fill { background: var(--night-accent); }
 .bar:hover .bar__fill, .bar:focus-visible .bar__fill { background: var(--night-accent-2, #B5C8FF); }
 .bar__x { position: absolute; bottom: -22px; font-size: 11px; color: var(--night-muted); }
-.bar__tip { position: absolute; bottom: calc(var(--h, 50%) + 8px); left: 50%; transform: translate(-50%, 4px); background: #fff; color: var(--ink); font-size: 12px; font-weight: 550; padding: 5px 9px; border-radius: var(--r-xs); white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity var(--dur-1) var(--ease), transform var(--dur-1) var(--ease); z-index: 2; }
+.bar__tip { position: absolute; bottom: calc(var(--h, 50%) + 8px); left: 50%; transform: translate(-50%, 4px); background: #fff; color: var(--chrome, #0F1319); font-size: 12px; font-weight: 550; padding: 5px 9px; border-radius: var(--r-xs); white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity var(--dur-1) var(--ease), transform var(--dur-1) var(--ease); z-index: 2; }
 .bar:hover .bar__tip, .bar:focus-visible .bar__tip { opacity: 1; transform: translate(-50%, 0); }
 /* Grafik per kecamatan: nama wilayah utuh di bawah setiap batang, boleh dua baris */
 .bars--wilayah { padding-bottom: 34px; gap: 6px; }
@@ -146,7 +146,7 @@
 .notch {
   display: inline-flex; align-items: center; gap: 20px;
   margin-top: 48px; padding: 12px 24px; border-radius: var(--r-pill);
-  background: var(--ink); color: #fff; text-align: left; position: relative; z-index: 1;
+  background: var(--chrome, #0F1319); color: #fff; text-align: left; position: relative; z-index: 1;
 }
 .notch__item { display: inline-flex; align-items: center; gap: 12px; }
 .notch__item small { display: block; font-size: 11px; color: var(--night-muted); letter-spacing: .02em; }
@@ -308,7 +308,7 @@
 .values .values__l { font-family: var(--font-display); font-weight: var(--fw-display); font-size: 40px; line-height: 1; letter-spacing: -0.03em; color: var(--ink); }
 .values h3 { font-size: 15px; font-weight: 600; }
 .values p { font-size: 13.5px; color: var(--text-2); }
-.values > div.values__intro { background: var(--ink); color: #fff; }
+.values > div.values__intro { background: var(--chrome, #0F1319); color: #fff; }
 .values__intro p { color: var(--night-muted); }
 .values__intro .values__l { color: #fff; }
 @media (max-width: 900px) { .values { grid-template-columns: repeat(2, 1fr); } }
@@ -330,7 +330,7 @@
 .org__node:hover { border-color: var(--line-2); }
 .org__node strong { display: block; font-size: 14.5px; font-weight: 600; line-height: 1.3; }
 .org__node span { display: block; font-size: 12.5px; color: var(--text-2); line-height: 1.4; }
-.org__node--head { background: var(--ink); color: #fff; border-color: var(--ink); max-width: 320px; }
+.org__node--head { background: var(--chrome, #0F1319); color: #fff; border-color: var(--chrome, #0F1319); max-width: 320px; }
 .org__node--head span { color: var(--night-muted); }
 .org__node--head .avatar { background: var(--night-2); border-color: var(--night-line); color: #fff; }
 .org__node--dashed { border-style: dashed; background: transparent; }
@@ -409,7 +409,7 @@
 @media (max-width: 860px) { .std { grid-template-columns: repeat(2, 1fr); row-gap: 24px; } }
 
 /* ---------- Jadwal ---------- */
-.status-card { display: grid; grid-template-columns: auto 1fr auto; gap: 20px; align-items: center; padding: 22px 26px; border-radius: var(--r-lg); background: var(--ink); color: #fff; }
+.status-card { display: grid; grid-template-columns: auto 1fr auto; gap: 20px; align-items: center; padding: 22px 26px; border-radius: var(--r-lg); background: var(--chrome, #0F1319); color: #fff; }
 .status-card .live-dot { color: var(--ok-night); width: 10px; height: 10px; }
 .status-card .live-dot.is-closed { color: var(--night-muted); }
 .status-card .live-dot.is-closed::after { display: none; }
@@ -471,7 +471,7 @@
 .pager { display: flex; justify-content: center; gap: 6px; }
 .pager a, .pager span { min-width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-size: 14px; color: var(--text-2); }
 .pager a:hover { background: var(--paper-2); color: var(--ink); }
-.pager [aria-current] { background: var(--ink); color: #fff; }
+.pager [aria-current] { background: var(--ink); color: var(--on-ink, #FFFFFF); }
 @media (max-width: 900px) { .feature-post { grid-template-columns: 1fr; } .posts { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 600px) { .posts { grid-template-columns: 1fr; } .notice-list a { grid-template-columns: 1fr; gap: 4px; } .search { min-width: 0; width: 100%; } }
 
@@ -541,7 +541,7 @@
 .map { aspect-ratio: 16 / 10; border-radius: var(--r-xl); overflow: hidden; position: relative; background: var(--map, #ECE9E1); border: var(--hairline); }
 .map svg { width: 100%; height: 100%; }
 .map__pin { position: absolute; left: 63%; top: 52%; transform: translate(-50%, -100%); display: grid; justify-items: center; gap: 6px; }
-.map__pin span { background: var(--ink); color: #fff; font-size: 12.5px; font-weight: 550; padding: 6px 12px; border-radius: var(--r-pill); white-space: nowrap; box-shadow: var(--shadow-soft); }
+.map__pin span { background: var(--chrome, #0F1319); color: #fff; font-size: 12.5px; font-weight: 550; padding: 6px 12px; border-radius: var(--r-pill); white-space: nowrap; box-shadow: var(--shadow-soft); }
 .map__pin i { width: 14px; height: 14px; border-radius: 50%; background: var(--accent); border: 3px solid #fff; box-shadow: 0 0 0 6px var(--accent-halo, rgba(43, 99, 246, .18)); }
 .map__open { position: absolute; right: 14px; bottom: 14px; }
 .form-card { padding: clamp(22px, 3vw, 36px); }
@@ -553,7 +553,7 @@
 .radio-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .radio-chips input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .radio-chips label { cursor: pointer; }
-.radio-chips input:checked + .chip { background: var(--ink); color: #fff; border-color: var(--ink); }
+.radio-chips input:checked + .chip { background: var(--ink); color: var(--on-ink, #FFFFFF); border-color: var(--ink); }
 .radio-chips input:focus-visible + .chip { outline: 2px solid var(--accent); outline-offset: 2px; }
 .channels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .channel { padding: 24px; display: flex; flex-direction: column; gap: 10px; }

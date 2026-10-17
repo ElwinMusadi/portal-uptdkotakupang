@@ -2557,6 +2557,13 @@
     new MutationObserver(muatkan).observe(card, { subtree: true, childList: true, attributeFilter: ["class"] });
   }
 
+  /* ---------- Warna bilah peramban mengikuti latar tema (D-057) ---------- */
+  function initWarnaBilah() {
+    const meta = document.querySelector('meta[name="theme-color"]');
+    const latar = getComputedStyle(document.documentElement).getPropertyValue("--paper").trim();
+    if (meta && latar) meta.setAttribute("content", latar);
+  }
+
   /* ---------- Bagikan / salin tautan / cetak ---------- */
   function initUtilities() {
     $$("[data-copy-link]").forEach((b) => b.addEventListener("click", async () => {
@@ -2589,6 +2596,6 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil(); initLayanan(); initDokumen(); initInformasi(); initBerita(); initPengumumanBeranda(); initDokumentasi(); initStruktur(); initAplikasi(); initBeranda(); initHalaman(); initSitus();
-    initDash(); initDialogs(); initGag(); initFilters(); initGallery(); initFaq(); initForms(); initPesanForm(); initAuthFit(); initUtilities();
+    initDash(); initDialogs(); initGag(); initFilters(); initGallery(); initFaq(); initForms(); initPesanForm(); initAuthFit(); initUtilities(); initWarnaBilah();
   });
 })();

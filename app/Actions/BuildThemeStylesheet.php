@@ -21,6 +21,15 @@ class BuildThemeStylesheet
     private const string SCALED_PAGES = ':root:not(:has([data-react="layar-antrean"]))';
 
     /**
+     * What the portal's dark mode changes beyond its variables: the footer's
+     * logo in white. The other logos sit on white badges.
+     */
+    private const string DARK_RULES = <<<'CSS'
+        .footer__logo { content: url("/assets/img/logo-pintu-lockup-putih.png"); }
+
+        CSS;
+
+    /**
      * The badge a portal preview link adds to every portal page, so the
      * administrator does not mistake the unsaved theme for the saved one.
      */
@@ -48,7 +57,8 @@ class BuildThemeStylesheet
     /**
      * The portal's theme, loaded after the portal's own stylesheets, so its
      * :root block overrides tokens.css. The scale zooms every page but the
-     * TV display.
+     * TV display; the dark mode, set by the administrator, applies to every
+     * visitor.
      *
      * @param  ThemeSection  $section
      */
@@ -64,7 +74,8 @@ class BuildThemeStylesheet
         return $this->header('portal')
             .$this->fonts($section)
             .$this->block(':root', $variables)
-            .$this->block(self::SCALED_PAGES, $zoom);
+            .$this->block(self::SCALED_PAGES, $zoom)
+            .(ThemeVariables::isDark($section) ? self::DARK_RULES : '');
     }
 
     /**

@@ -357,9 +357,16 @@ export interface BagianTema {
   skala: SkalaTema
 }
 
+/** Mode portal untuk semua pengunjung (D-057); mode gelap dashboard tetap pilihan tiap pegawai */
+export type ModePortal = "terang" | "gelap"
+
+export interface BagianTemaPortal extends BagianTema {
+  mode: ModePortal
+}
+
 /** Pengaturan › Tampilan (D-057): tema portal dan dashboard masing-masing */
 export interface Tema {
-  portal: BagianTema
+  portal: BagianTemaPortal
   dashboard: BagianTema
 }
 

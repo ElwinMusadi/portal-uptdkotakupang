@@ -77,6 +77,7 @@ class ThemeRevisionTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('0.tema.portal.skala', 100)
+            ->assertJsonPath('0.tema.portal.mode', 'terang')
             ->assertJsonPath('0.tema.portal.sudut', 'tegas')
             ->assertJsonPath('0.oleh', null);
     }
@@ -89,6 +90,8 @@ class ThemeRevisionTest extends TestCase
         $this->actingAs(User::factory()->create())->getJson('/api/pengaturan/tema')
             ->assertOk()
             ->assertJsonPath('portal.skala', 100)
+            ->assertJsonPath('portal.mode', 'terang')
+            ->assertJsonMissingPath('dashboard.mode')
             ->assertJsonPath('dashboard.aksen', '#2F7D4F');
     }
 
@@ -100,7 +103,7 @@ class ThemeRevisionTest extends TestCase
     private function saveTheme(User $administrator, array $portal): void
     {
         $this->actingAs($administrator)->putJson('/api/pengaturan/tema', [
-            'portal' => [...Setting::DEFAULT_THEME_SECTION, ...$portal],
+            'portal' => [...Setting::DEFAULT_PORTAL_THEME, ...$portal],
             'dashboard' => Setting::DEFAULT_THEME_SECTION,
         ])->assertOk();
     }

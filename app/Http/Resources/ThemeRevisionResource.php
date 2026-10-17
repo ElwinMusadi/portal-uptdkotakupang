@@ -26,7 +26,7 @@ class ThemeRevisionResource extends JsonResource
         return [
             'id' => $this->id,
             'tema' => [
-                'portal' => [...Setting::DEFAULT_THEME_SECTION, ...$this->tema['portal']],
+                'portal' => [...Setting::DEFAULT_PORTAL_THEME, ...$this->tema['portal']],
                 'dashboard' => [...Setting::DEFAULT_THEME_SECTION, ...$this->tema['dashboard']],
             ],
             'disimpan' => $this->created_at?->toIso8601String(),

@@ -1,7 +1,7 @@
 import * as React from "react"
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
 
-import type { BagianTema, HurufTema, IsoDateTime, LatarTema, SkalaTema, SudutTema, Tema } from "@/lib/api"
+import type { BagianTema, BagianTemaPortal, HurufTema, IsoDateTime, LatarTema, ModePortal, SkalaTema, SudutTema, Tema } from "@/lib/api"
 import { mintaServer } from "@/lib/api/http"
 
 /** Tampilan bawaan PINTU (D-057), sama dengan Setting::DEFAULT_THEME_SECTION di server */
@@ -13,6 +13,15 @@ export const TEMA_BAWAAN: BagianTema = {
   sudut: "sedang",
   skala: 100,
 }
+
+/** Bagian portal tampilan bawaan: terang untuk semua pengunjung */
+export const TEMA_BAWAAN_PORTAL: BagianTemaPortal = { ...TEMA_BAWAAN, mode: "terang" }
+
+/** contoh = [latar, teks] tiap mode, sama dengan tokens.css dan mode gelap di ThemeVariables */
+export const MODE_PORTAL: { nilai: ModePortal; label: string; keterangan: string; contoh: [string, string] }[] = [
+  { nilai: "terang", label: "Terang", keterangan: "Latar kertas, teks gelap (bawaan)", contoh: ["#F7F6F2", "#0F1319"] },
+  { nilai: "gelap", label: "Gelap", keterangan: "Latar gelap, teks terang", contoh: ["#100F0D", "#EFEEEB"] },
+]
 
 /** Huruf yang tersedia; Manrope dan Lexend khusus judul (ThemeFont di server) */
 export const HURUF: { nilai: HurufTema; label: string; teks: boolean }[] = [

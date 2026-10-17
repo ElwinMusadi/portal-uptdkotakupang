@@ -76,12 +76,53 @@ class ThemeVariablesTest extends TestCase
     public function test_keeps_every_text_colour_pair_readable_on_every_background(string $accent): void
     {
         foreach (ThemeBackground::cases() as $background) {
-            $section = $this->section(['aksen' => $accent, 'latar' => $background->value]);
+            foreach (['terang', 'gelap'] as $mode) {
+                $section = $this->section(['aksen' => $accent, 'latar' => $background->value, 'mode' => $mode]);
 
-            foreach ([...ThemeVariables::portalContrasts($section), ...ThemeVariables::dashboardContrasts($section)] as $pair) {
-                $this->assertGreaterThanOrEqual(ThemePalette::MIN_CONTRAST, $pair['rasio'], "{$accent} {$background->value}: {$pair['pasangan']}");
+                foreach ([...ThemeVariables::portalContrasts($section), ...ThemeVariables::dashboardContrasts($section)] as $pair) {
+                    $this->assertGreaterThanOrEqual(ThemePalette::MIN_CONTRAST, $pair['rasio'], "{$accent} {$background->value} {$mode}: {$pair['pasangan']}");
+                }
             }
         }
+    }
+
+    public function test_turns_the_portal_dark_for_every_visitor_and_keeps_the_dark_panels(): void
+    {
+        $portal = ThemeVariables::portal($this->section(['mode' => 'gelap']));
+
+        $this->assertSame('dark', $portal['color-scheme']);
+        $this->assertSame([], array_diff_key(ThemeVariables::PORTAL_DARK, $portal));
+        $this->assertSame('#100F0D', $portal['--paper']);
+        $this->assertSame('#EFEEEB', $portal['--ink']);
+        $this->assertSame('#100F0D', $portal['--on-ink']);
+        $this->assertSame('#5FD39B', $portal['--ok']);
+        $this->assertSame('#7FA4FF', $portal['--night-accent']);
+        $this->assertGreaterThan(ThemePalette::oklch('#2B63F6')[0], ThemePalette::oklch($portal['--accent'])[0]);
+        $this->assertSame(ThemePalette::rgba($portal['--accent'], 0.25), $portal['--accent-halo']);
+        $this->assertArrayNotHasKey('--night', $portal);
+        $this->assertFalse(ThemeVariables::isDark($this->section()));
+        $this->assertFalse(ThemeVariables::isDark(['aksen' => '#2B63F6', 'latar' => 'hangat', 'hurufTeks' => 'sistem', 'hurufJudul' => 'sama', 'sudut' => 'sedang', 'skala' => 100]));
+    }
+
+    #[TestWith(['netral'])]
+    #[TestWith(['sejuk'])]
+    public function test_shades_the_dark_mode_like_the_light_one(string $background): void
+    {
+        $portal = ThemeVariables::portal($this->section(['mode' => 'gelap', 'latar' => $background]));
+
+        foreach (ThemeVariables::PORTAL_DARK as $name => $warm) {
+            $this->assertEqualsWithDelta(ThemePalette::oklch($warm)[0], ThemePalette::oklch($portal[$name])[0], 0.005, $name);
+        }
+        $this->assertSame(ThemeBackground::from($background)->shade('#100F0D'), $portal['--paper']);
+    }
+
+    public function test_previews_the_dark_portal_with_custom_properties_only(): void
+    {
+        $preview = ThemeVariables::portalPreview($this->section(['mode' => 'gelap']));
+
+        $this->assertSame('#EFEEEB', $preview['--ink']);
+        $this->assertSame('#1A1917', $preview['--surface']);
+        $this->assertArrayNotHasKey('color-scheme', $preview);
     }
 
     #[DataProvider('colouredAccents')]
@@ -180,7 +221,7 @@ class ThemeVariablesTest extends TestCase
         $preview = ThemeVariables::portalPreview($this->section(['latar' => 'sejuk']));
 
         $this->assertSame(
-            [...array_keys(ThemeVariables::PORTAL_BACKGROUND), ...array_keys(ThemeVariables::PORTAL_ACCENT), '--font-sans', '--font-display', '--r-scale'],
+            [...array_keys(ThemeVariables::PORTAL_BACKGROUND), ...array_keys(ThemeVariables::PORTAL_TEXT), ...array_keys(ThemeVariables::PORTAL_ACCENT), '--font-sans', '--font-display', '--r-scale'],
             array_keys($preview),
         );
         $this->assertSame(ThemeBackground::Sejuk->shade('#F7F6F2'), $preview['--paper']);

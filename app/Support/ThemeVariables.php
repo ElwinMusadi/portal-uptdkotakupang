@@ -13,7 +13,7 @@ use App\Enums\ThemeFont;
  * setting differs from it, and colours derived from another accent are
  * computed in OKLCH and kept readable (ThemePalette).
  *
- * @phpstan-type ThemeSection array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int}
+ * @phpstan-type ThemeSection array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, mode?: string}
  */
 final class ThemeVariables
 {
@@ -38,6 +38,69 @@ final class ThemeVariables
         '--surface-2' => '#FBFAF7',
         '--surface-hover' => '#ECEAE4',
         '--map' => '#ECE9E1',
+    ];
+
+    /**
+     * The portal's text colours and solids (tokens.css) that only the dark
+     * mode changes.
+     *
+     * @var array<string, string>
+     */
+    public const array PORTAL_TEXT = [
+        '--surface' => '#FFFFFF',
+        '--ink' => '#0F1319',
+        '--ink-2' => '#2A2F37',
+        '--ink-hover' => '#262B33',
+        '--gray' => '#82878E',
+        '--text-2' => '#646A72',
+        '--on-ink' => '#FFFFFF',
+        '--chrome' => '#0F1319',
+    ];
+
+    /**
+     * The portal's dark mode (D-057), in the warm shade: backgrounds, lines
+     * and text inverted, solids that invert (--ink with --on-ink), and the
+     * dark surfaces that stay dark (--chrome), slightly lighter than the
+     * page. The dark panels (--night*) keep their colours.
+     *
+     * @var array<string, string>
+     */
+    public const array PORTAL_DARK = [
+        '--paper' => '#100F0D',
+        '--paper-2' => '#181715',
+        '--paper-3' => '#201F1D',
+        '--line' => '#2C2B29',
+        '--line-2' => '#393834',
+        '--line-3' => '#51504B',
+        '--surface-2' => '#1F1E1C',
+        '--surface-hover' => '#292825',
+        '--map' => '#201F1D',
+        '--surface' => '#1A1917',
+        '--ink' => '#EFEEEB',
+        '--ink-2' => '#D5D4D1',
+        '--ink-hover' => '#CFCECB',
+        '--gray' => '#93928E',
+        '--text-2' => '#AFAEAA',
+        '--on-ink' => '#100F0D',
+        '--chrome' => '#232321',
+    ];
+
+    /**
+     * The status colours and shadows of the portal's dark mode: the light
+     * status tones of the dark panels on a faint tint of the same colour.
+     *
+     * @var array<string, string>
+     */
+    public const array PORTAL_DARK_STATUS = [
+        '--ok' => '#5FD39B',
+        '--ok-soft' => 'rgba(95, 211, 155, .14)',
+        '--warn' => '#F2C46B',
+        '--warn-soft' => 'rgba(242, 196, 107, .14)',
+        '--danger' => '#FF8F7E',
+        '--danger-soft' => 'rgba(255, 143, 126, .14)',
+        '--shadow-soft' => '0 1px 2px rgba(0, 0, 0, .3), 0 12px 32px -16px rgba(0, 0, 0, .6)',
+        '--shadow-nav' => '0 10px 30px -12px rgba(0, 0, 0, .7)',
+        '--shadow-pop' => '0 24px 60px -20px rgba(0, 0, 0, .7)',
     ];
 
     /**
@@ -145,10 +208,17 @@ final class ThemeVariables
     {
         $background = ThemeBackground::from($section['latar']);
         $backgroundColours = $background->shades(self::PORTAL_BACKGROUND);
-        $variables = $background === ThemeBackground::Hangat ? [] : $backgroundColours;
 
-        if (! self::hasDefaultAccent($section)) {
-            $variables += self::portalAccent($section['aksen'], $backgroundColours);
+        if (self::isDark($section)) {
+            $dark = $background->shades(self::PORTAL_DARK);
+            $accent = self::hasDefaultAccent($section) ? self::PORTAL_ACCENT : self::portalAccent($section['aksen'], $backgroundColours);
+            $variables = ['color-scheme' => 'dark', ...$dark, ...self::PORTAL_DARK_STATUS, ...$accent, ...self::portalDarkAccent($section['aksen'], $dark)];
+        } else {
+            $variables = $background === ThemeBackground::Hangat ? [] : $backgroundColours;
+
+            if (! self::hasDefaultAccent($section)) {
+                $variables += self::portalAccent($section['aksen'], $backgroundColours);
+            }
         }
 
         $variables += self::fonts($section);
@@ -191,6 +261,16 @@ final class ThemeVariables
     }
 
     /**
+     * Whether the portal part shows the portal dark for every visitor.
+     *
+     * @param  ThemeSection  $section
+     */
+    public static function isDark(array $section): bool
+    {
+        return ($section['mode'] ?? 'terang') === 'gelap';
+    }
+
+    /**
      * Every themable portal token with the section's value, for the
      * dashboard's preview of the portal.
      *
@@ -199,12 +279,15 @@ final class ThemeVariables
      */
     public static function portalPreview(array $section): array
     {
-        return array_merge(
+        $variables = array_merge(
             self::PORTAL_BACKGROUND,
+            self::PORTAL_TEXT,
             self::PORTAL_ACCENT,
             ['--font-sans' => self::SYSTEM_TEXT_FONT, '--font-display' => self::SYSTEM_DISPLAY_FONT, '--r-scale' => '1'],
             self::portal($section),
         );
+
+        return array_filter($variables, fn (string $name): bool => str_starts_with($name, '--'), ARRAY_FILTER_USE_KEY);
     }
 
     /**
@@ -261,6 +344,18 @@ final class ThemeVariables
     public static function portalContrasts(array $section): array
     {
         $colours = self::portalPreview($section);
+
+        if (self::isDark($section)) {
+            return self::contrasts([
+                'Teks pada latar halaman' => [$colours['--ink'], $colours['--paper']],
+                'Teks pendukung pada latar halaman' => [$colours['--text-2'], $colours['--paper']],
+                'Aksen pada latar halaman' => [$colours['--accent'], $colours['--paper']],
+                'Tautan kecil pada kartu' => [$colours['--accent-ink'], $colours['--surface']],
+                'Tautan kecil pada kotak abu' => [$colours['--accent-ink'], $colours['--paper-2']],
+                'Teks pada tombol terpilih' => [$colours['--on-ink'], $colours['--ink']],
+                'Aksen pada panel gelap' => [$colours['--night-accent'], self::PORTAL_NIGHT[1]],
+            ]);
+        }
 
         return self::contrasts([
             'Teks putih pada tombol aksen' => ['#FFFFFF', $colours['--accent']],
@@ -320,6 +415,33 @@ final class ThemeVariables
             '--night-accent-soft' => ThemePalette::rgba($night, 0.1),
             '--night-accent-ring' => ThemePalette::rgba($night, 0.35),
             '--night-accent-dim' => ThemePalette::tone($accent, 0.334, 0.35, 0.09),
+        ];
+    }
+
+    /**
+     * The portal's accent colours on its dark mode's backgrounds: lighter,
+     * readable on the page, the cards and the grey boxes. No accent fill
+     * carries text, so it is safe to lighten.
+     *
+     * @param  array<string, string>  $dark
+     * @return array<string, string>
+     */
+    private static function portalDarkAccent(string $accent, array $dark): array
+    {
+        $surfaces = [$dark['--paper'], $dark['--paper-2'], $dark['--surface']];
+        $main = self::onDark($accent, $surfaces);
+        [$mainLightness] = ThemePalette::oklch($main);
+        $soft = ThemePalette::tone($accent, 0.3, 0.3, 0.06);
+
+        return [
+            '--accent' => $main,
+            '--accent-ink' => ThemePalette::lightenedFor(
+                ThemePalette::tone($main, max($mainLightness, 0.8), 0.6, 0.12),
+                [...$surfaces, $dark['--paper-3'], $soft],
+            ),
+            '--accent-soft' => $soft,
+            '--accent-line' => ThemePalette::tone($accent, 0.45, 0.5, 0.1),
+            '--accent-halo' => ThemePalette::rgba($main, 0.25),
         ];
     }
 

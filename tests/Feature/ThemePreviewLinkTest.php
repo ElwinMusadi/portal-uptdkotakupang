@@ -60,7 +60,7 @@ class ThemePreviewLinkTest extends TestCase
 
     public function test_marks_a_preview_of_the_built_in_look_too(): void
     {
-        $token = ThemePreview::store(Setting::DEFAULT_THEME_SECTION);
+        $token = ThemePreview::store(Setting::DEFAULT_PORTAL_THEME);
 
         $preview = $this->withCookie(ThemePreview::COOKIE, $token)->get('/tema-portal.css')->getContent();
 
@@ -70,7 +70,7 @@ class ThemePreviewLinkTest extends TestCase
 
     public function test_ends_the_preview_when_the_link_expires(): void
     {
-        $token = ThemePreview::store([...Setting::DEFAULT_THEME_SECTION, 'aksen' => '#2F7D4F']);
+        $token = ThemePreview::store([...Setting::DEFAULT_PORTAL_THEME, 'aksen' => '#2F7D4F']);
         $this->travel(ThemePreview::MINUTES + 1)->minutes();
 
         $this->assertStringNotContainsString('{', $this->withCookie(ThemePreview::COOKIE, $token)->get('/tema-portal.css')->getContent());
@@ -103,6 +103,6 @@ class ThemePreviewLinkTest extends TestCase
      */
     private function theme(array $portal = []): array
     {
-        return ['portal' => [...Setting::DEFAULT_THEME_SECTION, ...$portal], 'dashboard' => Setting::DEFAULT_THEME_SECTION];
+        return ['portal' => [...Setting::DEFAULT_PORTAL_THEME, ...$portal], 'dashboard' => Setting::DEFAULT_THEME_SECTION];
     }
 }

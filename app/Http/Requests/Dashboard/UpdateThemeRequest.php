@@ -55,6 +55,8 @@ class UpdateThemeRequest extends FormRequest
             ];
         }
 
+        $rules['portal.mode'] = ['required', 'string', Rule::in(Setting::THEME_MODES)];
+
         return $rules;
     }
 
@@ -92,13 +94,16 @@ class UpdateThemeRequest extends FormRequest
             ];
         }
 
+        $attributes['portal.mode'] = 'mode tampilan portal';
+
         return $attributes;
     }
 
     /**
-     * The validated document, with the accents in capitals.
+     * The validated document, with the accents in capitals. Only the portal
+     * has a mode: the dashboard's dark mode is each employee's choice.
      *
-     * @return array{portal: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int}, dashboard: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int}}
+     * @return array{portal: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, mode: string}, dashboard: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int}}
      */
     public function theme(): array
     {
@@ -111,6 +116,9 @@ class UpdateThemeRequest extends FormRequest
             'skala' => $this->integer("{$name}.skala"),
         ];
 
-        return ['portal' => $section('portal'), 'dashboard' => $section('dashboard')];
+        return [
+            'portal' => [...$section('portal'), 'mode' => $this->string('portal.mode')->value()],
+            'dashboard' => $section('dashboard'),
+        ];
     }
 }

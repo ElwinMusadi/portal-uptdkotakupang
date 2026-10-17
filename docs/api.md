@@ -861,13 +861,14 @@ Dipakai tab *Tampilan* di halaman Pengaturan ([D-057](decisions.md#d-057--2026-1
 
 ```json
 {
-  "portal":    { "aksen": "#2B63F6", "latar": "hangat", "hurufTeks": "sistem", "hurufJudul": "sama", "sudut": "sedang", "skala": 100 },
+  "portal":    { "aksen": "#2B63F6", "latar": "hangat", "hurufTeks": "sistem", "hurufJudul": "sama", "sudut": "sedang", "skala": 100, "mode": "terang" },
   "dashboard": { "aksen": "#2B63F6", "latar": "hangat", "hurufTeks": "sistem", "hurufJudul": "sama", "sudut": "sedang", "skala": 100 }
 }
 ```
 
 - `aksen`: `#RRGGBB`, disimpan dengan huruf kapital. Warna turunannya dibuat server dan disesuaikan agar teks tetap terbaca (kontras ≥ 4,5:1); `#2B63F6` memakai warna rancangan tangan PINTU.
 - `latar`: `hangat` (bawaan), `netral`, `sejuk`. `sudut`: `tegas`, `sedang` (bawaan), `membulat`. `skala`: `90`, `100` (bawaan), `110`, `120` (bilangan bulat); dokumen yang disimpan sebelum ada skala dibaca dengan `100`.
+- `mode` (hanya bagian `portal`): `terang` (bawaan) atau `gelap`, untuk semua pengunjung; dokumen lama dibaca `terang`. Bagian `dashboard` tidak punya `mode` (mode gelap dashboard pilihan tiap pegawai); kunci itu dibuang bila dikirim.
 - `hurufTeks`: `sistem` (bawaan), `inter`, `plus-jakarta-sans`, `dm-sans`, `source-sans-3`, `ibm-plex-sans`, `nunito-sans`. `hurufJudul`: `sama` (mengikuti huruf teks), `sistem`, salah satu huruf teks, `manrope`, atau `lexend`.
 
 | Alamat | Permintaan | Respons |
@@ -1005,6 +1006,7 @@ Bukan rute API (`routes/web.php`, `ThemeStylesheetController`), tetapi bagian da
 
 - `200` `text/css; charset=UTF-8`, tanpa sesi dan cookie. `Cache-Control: no-cache, private` dengan `ETag`: peramban memeriksa ulang setiap kali dan mendapat `304` tanpa isi bila tidak berubah, sehingga tema yang disimpan langsung terlihat tanpa nomor versi di HTML.
 - Isinya bagian `portal` atau `dashboard` dari dokumen [`tema`](#tampilan-di-dashboard): `@font-face` huruf terpilih (berkas di `/assets/fonts/<nama>/`, `font-display: swap`) dan variabel yang berbeda dari tampilan bawaan. Portal memakai `:root`; skalanya `zoom` dan `--zoom` pada `:root:not(:has([data-react="layar-antrean"]))` (semua halaman kecuali layar TV). Dashboard memakai `html:root` (kedua mode), `html:root:not(.dark)` (terang), dan `html:root.dark` (gelap), yang mengalahkan `index.css` apa pun urutan pemuatannya; skalanya `font-size` pada `html:root`, untuk 110% dan 120% di dalam `@media (min-width: 48rem)`.
+- Mode gelap portal menimpa latar, garis, teks, `--on-ink`, `--chrome`, warna status, bayangan, dan aksen di `:root`, menambah `color-scheme: dark`, dan mengganti logo kaki halaman dengan versi putih (`.footer__logo { content: url(…) }`). Panel gelap (`--night*`) tidak berubah.
 - `tema-portal.css` menyajikan tema pratinjau bila peramban memegang cookie pratinjau yang masih berlaku (lihat `tautan-pratinjau` di [Tampilan](#tampilan-di-dashboard)).
 - Selama tema belum disimpan atau sama dengan tampilan bawaan, isinya hanya komentar, jadi tampilan bawaan PINTU yang berlaku.
 

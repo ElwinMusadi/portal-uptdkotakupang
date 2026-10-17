@@ -320,6 +320,23 @@ class Setting extends Model
     ];
 
     /**
+     * The portal part of the theme as the built-in look: the dashboard part
+     * plus the portal's mode, light for every visitor. The dashboard's dark
+     * mode stays each employee's choice.
+     *
+     * @var array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, mode: string}
+     */
+    public const array DEFAULT_PORTAL_THEME = [...self::DEFAULT_THEME_SECTION, 'mode' => 'terang'];
+
+    /**
+     * The modes the administrator sets the portal to (D-057): light or dark
+     * for every visitor.
+     *
+     * @var list<string>
+     */
+    public const array THEME_MODES = ['terang', 'gelap'];
+
+    /**
      * The scales a theme part may use, in percent.
      *
      * @var list<int>
@@ -439,14 +456,14 @@ class Setting extends Model
      * built-in look until they are first saved. A setting added later, such
      * as the scale, takes its built-in value in a document saved before it.
      *
-     * @return array{portal: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int}, dashboard: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int}}
+     * @return array{portal: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, mode: string}, dashboard: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int}}
      */
     public static function theme(): array
     {
         $theme = self::query()->find(self::THEME)?->value ?? [];
 
         return [
-            'portal' => [...self::DEFAULT_THEME_SECTION, ...($theme['portal'] ?? [])],
+            'portal' => [...self::DEFAULT_PORTAL_THEME, ...($theme['portal'] ?? [])],
             'dashboard' => [...self::DEFAULT_THEME_SECTION, ...($theme['dashboard'] ?? [])],
         ];
     }

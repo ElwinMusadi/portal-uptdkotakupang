@@ -99,6 +99,19 @@ class ThemeStylesheetTest extends TestCase
         $this->assertSame(1, substr_count($css, '{'));
     }
 
+    public function test_serves_the_portal_dark_with_its_white_footer_logo_and_leaves_the_dashboard_alone(): void
+    {
+        $this->saveTheme(['mode' => 'gelap']);
+
+        $css = $this->get('/tema-portal.css')->assertOk()->getContent();
+
+        $this->assertStringContainsString("\n:root {\n  color-scheme: dark;\n  --paper: #100F0D;\n", $css);
+        $this->assertStringContainsString('  --chrome: #232321;', $css);
+        $this->assertStringEndsWith("}\n.footer__logo { content: url(\"/assets/img/logo-pintu-lockup-putih.png\"); }\n", $css);
+        $this->assertFileExists(public_path('assets/img/logo-pintu-lockup-putih.png'));
+        $this->assertStringNotContainsString('{', $this->get('/tema-dashboard.css')->getContent());
+    }
+
     public function test_serves_only_a_comment_for_a_saved_theme_equal_to_the_built_in_look(): void
     {
         $this->saveTheme(['aksen' => '#2b63f6']);
@@ -121,7 +134,7 @@ class ThemeStylesheetTest extends TestCase
     public function test_keeps_the_built_in_values_equal_to_the_stylesheets_they_override(): void
     {
         $portal = $this->declarations(public_path('assets/css/tokens.css'));
-        foreach ([...ThemeVariables::PORTAL_BACKGROUND, ...ThemeVariables::PORTAL_ACCENT] as $name => $value) {
+        foreach ([...ThemeVariables::PORTAL_BACKGROUND, ...ThemeVariables::PORTAL_TEXT, ...ThemeVariables::PORTAL_ACCENT] as $name => $value) {
             $this->assertSame($value, $portal[$name], $name);
         }
         $this->assertSame(ThemeVariables::SYSTEM_TEXT_FONT, $portal['--font-sans']);
@@ -178,7 +191,7 @@ class ThemeStylesheetTest extends TestCase
     private function saveTheme(array $portal = [], array $dashboard = []): void
     {
         $this->actingAs(User::factory()->administrator()->create())->putJson('/api/pengaturan/tema', [
-            'portal' => [...Setting::DEFAULT_THEME_SECTION, ...$portal],
+            'portal' => [...Setting::DEFAULT_PORTAL_THEME, ...$portal],
             'dashboard' => [...Setting::DEFAULT_THEME_SECTION, ...$dashboard],
         ])->assertOk();
     }

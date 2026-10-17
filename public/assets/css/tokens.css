@@ -24,6 +24,8 @@
   --surface-2: #FBFAF7;      /* baris daftar periksa saat disorot, kaki daftar */
   --surface-hover: #ECEAE4;  /* tombol terang saat disorot */
   --ink-hover: #262B33;      /* tombol hitam saat disorot */
+  --on-ink: #FFFFFF;         /* teks di atas --ink (tombol dan pilihan aktif); gelap di mode gelap */
+  --chrome: #0F1319;         /* gelap tetap: menu, kartu gelap, teks di atas elemen yang selalu putih */
   --map: #ECE9E1;            /* latar kotak peta */
 
   /* ---------- Aksen: hanya untuk tautan, status aktif, garis bawah ---------- */

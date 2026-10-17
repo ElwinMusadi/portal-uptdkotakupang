@@ -7,7 +7,7 @@
  * dashboard dibuka agar grafik dan status pemutakhiran tetap bermakna.
  */
 import { newId } from "@/lib/id"
-import { TEMA_BAWAAN } from "@/lib/tema"
+import { TEMA_BAWAAN, TEMA_BAWAAN_PORTAL } from "@/lib/tema"
 import type {
   Aktivitas,
   Beralur,
@@ -1276,7 +1276,7 @@ function pengaturan(sekarang: Date): Pengaturan {
         { id: id(), nama: "Ombudsman RI Perwakilan NTT", deskripsi: "Bila pengaduan Anda tidak ditanggapi atau ada dugaan maladministrasi.", tautanLabel: "Buka ombudsman.go.id", tautanUrl: "https://ombudsman.go.id" },
       ],
     },
-    tema: { portal: { ...TEMA_BAWAAN }, dashboard: { ...TEMA_BAWAAN } },
+    tema: { portal: { ...TEMA_BAWAAN_PORTAL }, dashboard: { ...TEMA_BAWAAN } },
     akun: {
       nama: "Admin PINTU",
       jabatan: "Penata Kelola Sistem dan Teknologi Informasi",
