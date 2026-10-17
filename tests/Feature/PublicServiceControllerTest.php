@@ -21,7 +21,7 @@ class PublicServiceControllerTest extends TestCase
         $response = $this->getJson('/api/public/layanan');
 
         $response->assertOk()
-            ->assertJsonPath('*.slug', ['pajak-tahunan', 'lima-tahun', 'mutasi-tetap', 'mutasi-bbn', 'duplikat', 'badan-hukum'])
+            ->assertJsonPath('*.slug', ['pajak-tahunan', 'lima-tahun', 'mutasi-tetap', 'mutasi-bbn', 'duplikat', 'badan-hukum', 'balik-nama', 'mutasi-masuk'])
             ->assertJsonPath('0', [
                 'nama' => 'Pajak tahunan',
                 'slug' => 'pajak-tahunan',
@@ -50,6 +50,8 @@ class PublicServiceControllerTest extends TestCase
                 ['Menjual kendaraan kepada pembeli di luar Kota Kupang', 'Membeli kendaraan dari Kota Kupang untuk dibawa ke daerah lain'],
                 ['STNK hilang', 'STNK rusak atau tidak terbaca'],
                 ['Kendaraan atas nama perusahaan atau badan hukum'],
+                ['Membeli kendaraan bekas yang terdaftar di Kota Kupang', 'Mengganti nama pemilik di STNK dan BPKB'],
+                ['Pindah ke Kota Kupang dengan kendaraan dari daerah lain', 'Membeli kendaraan dari luar daerah untuk dipakai di Kota Kupang'],
             ])
             ->assertJsonPath('1.nama', "Perpanjangan STNK 5\u{00A0}tahun")
             ->assertJsonPath('3.catatan', 'Kendaraan sudah berada di tempat baru? Ajukan permohonan cek fisik bantuan di Samsat tujuan.');

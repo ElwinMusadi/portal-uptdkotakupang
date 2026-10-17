@@ -40,13 +40,13 @@ class ServiceControllerTest extends TestCase
         $this->actingAs($employee)->postJson('/api/koleksi/layanan', $this->service())->assertForbidden();
     }
 
-    public function test_lists_the_initial_services_in_portal_order_with_the_two_drafts_last(): void
+    public function test_lists_the_initial_published_services_in_portal_order(): void
     {
         $response = $this->actingAs($this->layananEmployee())->getJson('/api/koleksi/layanan');
 
         $response->assertOk()
             ->assertJsonPath('*.slug', ['pajak-tahunan', 'lima-tahun', 'mutasi-tetap', 'mutasi-bbn', 'duplikat', 'badan-hukum', 'balik-nama', 'mutasi-masuk'])
-            ->assertJsonPath('*.status', [...array_fill(0, 6, 'terbit'), 'draf', 'draf'])
+            ->assertJsonPath('*.status', array_fill(0, 8, 'terbit'))
             ->assertJsonPath('0.nama', 'Pajak tahunan')
             ->assertJsonPath('0.persyaratan.0', ['id' => 'p1', 'dokumen' => 'Fotokopi STNK dan notis pajak (lampirkan asli)', 'jumlah' => '2 lembar'])
             ->assertJsonPath('0.riwayat.0.oleh', 'PINTU')

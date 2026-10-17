@@ -864,3 +864,13 @@ Pemilik ingin panduan *Layanan apa yang saya perlukan?* (D-059) juga menawarkan 
 | Cara menambah | **Sebagai draf yang diperiksa petugas** (pemilik). Migrasi memasukkan *Balik nama di dalam Kota Kupang* (`balik-nama`) dan *Mutasi masuk dari luar daerah* (`mutasi-masuk`) berstatus Draf di urutan terakhir: Loket 3, wajib cek fisik, tanpa non-tunai dan diwakilkan seperti layanan mutasi yang ada, dengan kalimat situasi untuk panduan. Persyaratannya disusun dari pola layanan mutasi dan belum dicocokkan dengan papan persyaratan loket; petugas memeriksa, mengubah bila perlu, lalu menerbitkannya lewat alur biasa (D-022). Setelah terbit, keduanya tampil di panduan dan daftar layanan. Slug yang sudah dipakai dilewati, dan membatalkan migrasi hanya menghapus yang masih draf. |
 | Rancangan persyaratan | Balik nama: fotokopi KTP pemilik baru (alamat di Kota Kupang) dan pemilik lama, fotokopi STNK dan BPKB (lampirkan yang asli), kuitansi pembelian bermeterai Rp10.000, kendaraan untuk cek fisik, map; catatan tentang hibah atau warisan. Mutasi masuk: berkas mutasi tersegel dari Samsat daerah asal, fotokopi KTP pemilik (alamat di Kota Kupang), fotokopi STNK dan BPKB, kuitansi bermeterai bila ganti pemilik, kendaraan untuk cek fisik, map. |
 | Halaman Layanan | Catatan kaki "Layanan lain (mis. balik nama dalam daerah) dapat ditanyakan di meja informasi." menjadi "Layanan lain dapat ditanyakan di meja informasi." |
+
+## D-062 · 2026-10-17 · Balik nama dan mutasi masuk diterbitkan
+
+Pemilik meminta kedua draf D-061 diterbitkan.
+
+| Hal | Keputusan |
+|---|---|
+| Penerbitan | Migrasi menerbitkan *Balik nama di dalam Kota Kupang* dan *Mutasi masuk dari luar daerah* bila masih draf (pemilik), dengan langkah "menerbitkan atas keputusan pemilik" di riwayat alurnya; layanan yang sudah dipindahkan petugas ke tahap lain dibiarkan. Keduanya tampil di halaman Layanan, panduan, dan pencarian, di urutan terakhir daftar (urutannya bisa diubah Administrator). |
+| Persyaratan | Masih rancangan D-061 yang belum dicocokkan dengan papan persyaratan loket; petugas bisa mengubahnya dari Dashboard › Persyaratan Layanan. Halaman Layanan menulis tanggal terbit terakhir sebagai "diverifikasi petugas", jadi pencocokan itu tetap perlu dilakukan. |
+| Pembatalan | Membatalkan migrasi mengembalikan ke draf hanya layanan yang langkah terakhirnya masih penerbitan oleh migrasi ini. |
