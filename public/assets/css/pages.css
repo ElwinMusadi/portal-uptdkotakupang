@@ -648,7 +648,8 @@
 @media (max-width: 860px) { .ds-head { grid-template-columns: 1fr; } }
 .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
 .swatch { border: var(--hairline); border-radius: var(--r-md); overflow: hidden; background: var(--surface); }
-.swatch__chip { height: 96px; border-bottom: var(--hairline); display: flex; align-items: flex-end; padding: 10px; font-size: 12px; font-weight: 600; }
+/* Contoh warna mendokumentasikan nilai bawaan mode terang: "Aa" tanpa warna sendiri memakai tinta bawaan, juga di mode gelap. */
+.swatch__chip { height: 96px; border-bottom: var(--hairline); display: flex; align-items: flex-end; padding: 10px; font-size: 12px; font-weight: 600; color: #0F1319; }
 .swatch__body { padding: 12px 14px; display: grid; gap: 2px; }
 .swatch__body strong { font-size: 13.5px; font-weight: 600; }
 .swatch__body code, .ds-code { font-family: var(--font-mono); font-size: 12px; color: var(--ink-2); background: var(--paper-2); padding: 1px 6px; border-radius: calc(6px * var(--r-scale, 1)); }
