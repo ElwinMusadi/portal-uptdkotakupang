@@ -40,6 +40,7 @@ export const KOLEKSI_LABEL: Record<NamaKoleksi, string> = {
 
 export const PENGATURAN_LABEL: Record<NamaPengaturan, string> = {
   situs: "Pengaturan Situs",
+  tema: "Tampilan",
   beranda: "Beranda",
   papan: "Papan Layanan",
   jam: "Jam Pelayanan",

@@ -17,6 +17,7 @@ import { useKonfirmasi } from "@/components/data/confirm"
 import { Bagian, Baris, Halaman, PengantarHalaman } from "@/components/data/page"
 import { FieldArea, FieldPilih, FieldSakelar, FieldTeks } from "@/components/form/fields"
 import { FormPengaturan } from "@/components/form/settings-form"
+import { TabTampilan } from "@/components/tema/tab-tampilan"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
@@ -424,7 +425,7 @@ export default function HalamanPengaturan() {
   const tab = params.get("tab") ?? "situs"
   return (
     <Halaman>
-      <PengantarHalaman deskripsi="Identitas portal, profil pengelola, serta cadangan dan pemulihan data dashboard." />
+      <PengantarHalaman deskripsi="Identitas portal, tampilan portal dan dashboard, profil pengelola, serta cadangan dan pemulihan data dashboard." />
       <Tabs
         value={tab}
         onValueChange={(t) => setParams({ tab: t }, { replace: true })}
@@ -432,11 +433,15 @@ export default function HalamanPengaturan() {
       >
         <TabsList>
           <TabsTrigger value="situs">Situs</TabsTrigger>
+          <TabsTrigger value="tampilan">Tampilan</TabsTrigger>
           <TabsTrigger value="akun">Akun</TabsTrigger>
           <TabsTrigger value="data">Data</TabsTrigger>
         </TabsList>
         <TabsContent value="situs">
           <TabSitus />
+        </TabsContent>
+        <TabsContent value="tampilan">
+          <TabTampilan />
         </TabsContent>
         <TabsContent value="akun">
           <TabAkun />

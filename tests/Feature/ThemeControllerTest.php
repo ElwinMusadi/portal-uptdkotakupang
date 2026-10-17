@@ -1,0 +1,125 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Enums\DashboardModule;
+use App\Models\Setting;
+use App\Models\User;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use PHPUnit\Framework\Attributes\TestWith;
+use Tests\TestCase;
+
+class ThemeControllerTest extends TestCase
+{
+    use LazilyRefreshDatabase;
+
+    #[TestWith(['GET', '/api/pengaturan/tema'])]
+    #[TestWith(['PUT', '/api/pengaturan/tema'])]
+    #[TestWith(['POST', '/api/pengaturan/tema/pratinjau'])]
+    public function test_returns_401_to_guests(string $method, string $uri): void
+    {
+        $this->json($method, $uri, $this->theme())->assertUnauthorized();
+    }
+
+    public function test_lets_every_employee_read_the_built_in_look_until_first_saved(): void
+    {
+        $employee = User::factory()->withModules(DashboardModule::Faq)->create();
+
+        $this->actingAs($employee)->getJson('/api/pengaturan/tema')
+            ->assertOk()
+            ->assertExactJson(['portal' => Setting::DEFAULT_THEME_SECTION, 'dashboard' => Setting::DEFAULT_THEME_SECTION]);
+    }
+
+    #[TestWith(['PUT', '/api/pengaturan/tema'])]
+    #[TestWith(['POST', '/api/pengaturan/tema/pratinjau'])]
+    public function test_forbids_employees_other_than_administrators_to_save_or_preview_it(string $method, string $uri): void
+    {
+        $employee = User::factory()->withModules(...DashboardModule::cases())->create();
+
+        $this->actingAs($employee)->json($method, $uri, $this->theme(['aksen' => '#2F7D4F']))
+            ->assertForbidden()
+            ->assertExactJson(['message' => 'Hanya Administrator yang dapat mengubah Tampilan.']);
+        $this->assertDatabaseCount('settings', 0);
+    }
+
+    public function test_saves_both_parts_with_the_accent_in_capitals_and_without_unknown_keys(): void
+    {
+        $theme = $this->theme(['aksen' => '#2f7d4f', 'latar' => 'sejuk', 'hurufTeks' => 'inter', 'hurufJudul' => 'lexend', 'sudut' => 'tegas'], ['hurufTeks' => 'dm-sans']);
+        $theme['portal']['css'] = 'body { display: none }';
+        $theme['logo'] = 'merah';
+
+        $response = $this->actingAs(User::factory()->administrator()->create())->putJson('/api/pengaturan/tema', $theme);
+
+        $expected = [
+            'portal' => ['aksen' => '#2F7D4F', 'latar' => 'sejuk', 'hurufTeks' => 'inter', 'hurufJudul' => 'lexend', 'sudut' => 'tegas'],
+            'dashboard' => [...Setting::DEFAULT_THEME_SECTION, 'hurufTeks' => 'dm-sans'],
+        ];
+        $response->assertOk()->assertExactJson($expected);
+        $this->assertSame($expected, Setting::query()->find(Setting::THEME)->value);
+        $this->assertSame($expected, Setting::theme());
+        $this->assertDatabaseCount('activities', 0);
+    }
+
+    /**
+     * @param  array<string, mixed>  $portal
+     */
+    #[TestWith([['aksen' => '#2F7D4'], 'portal.aksen', 'Warna utama portal harus berupa kode warna #RRGGBB.'])]
+    #[TestWith([['aksen' => 'red'], 'portal.aksen', 'Warna utama portal harus berupa kode warna #RRGGBB.'])]
+    #[TestWith([['aksen' => '#2F7D4F;}'], 'portal.aksen', 'Warna utama portal harus berupa kode warna #RRGGBB.'])]
+    #[TestWith([['latar' => 'gelap'], 'portal.latar', 'Nuansa latar portal tidak tersedia.'])]
+    #[TestWith([['hurufTeks' => 'manrope'], 'portal.hurufTeks', 'Huruf teks portal tidak tersedia.'])]
+    #[TestWith([['hurufTeks' => 'sama'], 'portal.hurufTeks', 'Huruf teks portal tidak tersedia.'])]
+    #[TestWith([['hurufJudul' => 'comic-sans'], 'portal.hurufJudul', 'Huruf judul portal tidak tersedia.'])]
+    #[TestWith([['sudut' => 'bulat'], 'portal.sudut', 'Kelengkungan sudut portal tidak tersedia.'])]
+    #[TestWith([['sudut' => null], 'portal.sudut', 'Kelengkungan sudut portal wajib diisi.'])]
+    public function test_rejects_values_outside_the_lists(array $portal, string $field, string $message): void
+    {
+        $response = $this->actingAs(User::factory()->administrator()->create())->putJson('/api/pengaturan/tema', $this->theme($portal));
+
+        $response->assertUnprocessable()->assertJsonValidationErrors([$field => $message]);
+        $this->assertDatabaseCount('settings', 0);
+    }
+
+    public function test_requires_both_parts(): void
+    {
+        $theme = $this->theme();
+        unset($theme['dashboard']);
+
+        $this->actingAs(User::factory()->administrator()->create())->putJson('/api/pengaturan/tema', $theme)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['dashboard' => 'Tema dashboard wajib diisi.']);
+    }
+
+    public function test_previews_an_unsaved_theme_without_saving_it(): void
+    {
+        $theme = $this->theme(['aksen' => '#2F7D4F', 'hurufTeks' => 'inter'], ['aksen' => '#F2C46B', 'sudut' => 'membulat']);
+
+        $response = $this->actingAs(User::factory()->administrator()->create())->postJson('/api/pengaturan/tema/pratinjau', $theme);
+
+        $response->assertOk()
+            ->assertJsonPath('portal.variabel.--accent', '#2F7D4F')
+            ->assertJsonPath('portal.variabel.--paper', '#F7F6F2')
+            ->assertJsonPath('portal.variabel.--r-scale', '1')
+            ->assertJsonPath('portal.kontras.0.pasangan', 'Teks putih pada tombol aksen')
+            ->assertJsonPath('dashboard.aksen', '#936A00')
+            ->assertJsonPath('dashboard.kontras.0.pasangan', 'Teks putih pada tombol warna merek');
+        $this->assertStringContainsString('src: url("/assets/fonts/inter/inter-latin-wght-normal.woff2")', $response->json('portal.huruf'));
+        $this->assertStringContainsString('--radius: 0.84375rem;', $response->json('dashboard.css'));
+        $this->assertDatabaseCount('settings', 0);
+    }
+
+    /**
+     * A complete theme document: the built-in look unless overridden.
+     *
+     * @param  array<string, mixed>  $portal
+     * @param  array<string, mixed>  $dashboard
+     * @return array<string, mixed>
+     */
+    private function theme(array $portal = [], array $dashboard = []): array
+    {
+        return [
+            'portal' => [...Setting::DEFAULT_THEME_SECTION, ...$portal],
+            'dashboard' => [...Setting::DEFAULT_THEME_SECTION, ...$dashboard],
+        ];
+    }
+}

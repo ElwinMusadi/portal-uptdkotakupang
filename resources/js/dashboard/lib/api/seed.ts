@@ -7,6 +7,7 @@
  * dashboard dibuka agar grafik dan status pemutakhiran tetap bermakna.
  */
 import { newId } from "@/lib/id"
+import { TEMA_BAWAAN } from "@/lib/tema"
 import type {
   Aktivitas,
   Beralur,
@@ -1275,6 +1276,7 @@ function pengaturan(sekarang: Date): Pengaturan {
         { id: id(), nama: "Ombudsman RI Perwakilan NTT", deskripsi: "Bila pengaduan Anda tidak ditanggapi atau ada dugaan maladministrasi.", tautanLabel: "Buka ombudsman.go.id", tautanUrl: "https://ombudsman.go.id" },
       ],
     },
+    tema: { portal: { ...TEMA_BAWAAN }, dashboard: { ...TEMA_BAWAAN } },
     akun: {
       nama: "Admin PINTU",
       jabatan: "Penata Kelola Sistem dan Teknologi Informasi",
@@ -1332,6 +1334,7 @@ export function buatSeed(sekarang = new Date()): Snapshot {
 export function seedWaktuPengaturan(sekarang = new Date()): Record<keyof Pengaturan, string> {
   return {
     situs: waktu(sekarang, 40),
+    tema: waktu(sekarang, 40),
     beranda: waktu(sekarang, 40),
     papan: waktu(sekarang, 1, 7, 45),
     jam: waktu(sekarang, 9, 7, 45),

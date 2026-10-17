@@ -75,6 +75,8 @@ interface FormPengaturanProps<N extends NamaPengaturan> {
   children: (form: UseFormReturn<Pengaturan[N]>) => React.ReactNode
   /** Ubah nilai sesaat sebelum disimpan (mis. cap waktu) */
   sebelumSimpan?: (nilai: Pengaturan[N]) => Pengaturan[N]
+  /** Dijalankan sesudah berhasil disimpan (mis. memuat ulang stylesheet tema) */
+  setelahSimpan?: (tersimpan: Pengaturan[N]) => void
 }
 
 /** Halaman pengaturan: muat → sunting → simpan, dengan penjaga perubahan */
@@ -96,6 +98,7 @@ function IsiFormPengaturan<N extends NamaPengaturan>({
   schema,
   children,
   sebelumSimpan,
+  setelahSimpan,
   data,
 }: FormPengaturanProps<N> & { data: Pengaturan[N] }) {
   const simpan = useSimpanPengaturan(nama)
@@ -114,6 +117,7 @@ function IsiFormPengaturan<N extends NamaPengaturan>({
       if (sebelumSimpan) nilai = sebelumSimpan(nilai)
       try {
         const tersimpan = await simpan.mutateAsync(nilai)
+        setelahSimpan?.(tersimpan)
         form.reset(structuredClone(tersimpan) as DefaultValues<Pengaturan[N]>)
         toast.success("Perubahan disimpan")
       } catch {

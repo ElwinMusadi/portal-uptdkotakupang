@@ -65,6 +65,8 @@ use App\Http\Controllers\Dashboard\SettingTimestampController;
 use App\Http\Controllers\Dashboard\SiteController;
 use App\Http\Controllers\Dashboard\StaticPageController;
 use App\Http\Controllers\Dashboard\StatisticsController;
+use App\Http\Controllers\Dashboard\ThemeController;
+use App\Http\Controllers\Dashboard\ThemePreviewController;
 use App\Http\Controllers\Dashboard\UpdateStandardController;
 use App\Http\Controllers\Dashboard\UpdateStandardDeletionController;
 use App\Http\Controllers\Dashboard\UpdateStandardOrderController;
@@ -277,6 +279,18 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::put('/pengaturan/situs', [SiteController::class, 'update'])
         ->can('update', [Setting::class, $site])
         ->name('pengaturan.situs.update');
+
+    // Tampilan, the portal and dashboard themes: every employee reads them, only administrators save and preview them (D-057).
+    $theme = "'".Setting::THEME."'";
+    Route::get('/pengaturan/tema', [ThemeController::class, 'show'])
+        ->can('view', [Setting::class, $theme])
+        ->name('pengaturan.tema.show');
+    Route::put('/pengaturan/tema', [ThemeController::class, 'update'])
+        ->can('update', [Setting::class, $theme])
+        ->name('pengaturan.tema.update');
+    Route::post('/pengaturan/tema/pratinjau', ThemePreviewController::class)
+        ->can('update', [Setting::class, $theme])
+        ->name('pengaturan.tema.pratinjau');
 
     // The signed-in employee's own profile, the dashboard's "akun" settings (D-027).
     Route::get('/pengaturan/akun', [OwnAccountController::class, 'show'])->name('pengaturan.akun.show');

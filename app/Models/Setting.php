@@ -297,6 +297,27 @@ class Setting extends Model
      * dashboard and on the portal, "sasaran" for the dashboard's collection
      * list. The name of the area or the plate number is always shown.
      */
+    /**
+     * The themes of the portal and the dashboard (Pengaturan › Tampilan,
+     * D-057). Like the site settings it belongs to no module: every employee
+     * reads it, only administrators save it.
+     */
+    public const string THEME = 'tema';
+
+    /**
+     * One part of the theme as the built-in PINTU look: blue accent, warm
+     * background, system fonts, medium corners.
+     *
+     * @var array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string}
+     */
+    public const array DEFAULT_THEME_SECTION = [
+        'aksen' => '#2B63F6',
+        'latar' => 'hangat',
+        'hurufTeks' => 'sistem',
+        'hurufJudul' => 'sama',
+        'sudut' => 'sedang',
+    ];
+
     public const string POTENTIAL_MAP = 'pemetaan';
 
     /**
@@ -403,6 +424,22 @@ class Setting extends Model
     public static function site(): array
     {
         return self::query()->find(self::SITE)?->value ?? self::INITIAL_SITE;
+    }
+
+    /**
+     * The portal and dashboard themes as the dashboard edits them; the
+     * built-in look until they are first saved.
+     *
+     * @return array{portal: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string}, dashboard: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string}}
+     */
+    public static function theme(): array
+    {
+        $theme = self::query()->find(self::THEME)?->value ?? [];
+
+        return [
+            'portal' => [...self::DEFAULT_THEME_SECTION, ...($theme['portal'] ?? [])],
+            'dashboard' => [...self::DEFAULT_THEME_SECTION, ...($theme['dashboard'] ?? [])],
+        ];
     }
 
     /**

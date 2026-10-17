@@ -2,30 +2,31 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\BuildThemeStylesheet;
+use App\Models\Setting;
 use Illuminate\Http\Response;
 
 class ThemeStylesheetController extends Controller
 {
     /**
      * Serve /tema-portal.css, the stylesheet every portal page, the 404,
-     * sign-in, activation and TV display pages load after their own (D-057).
-     * It will override the design tokens with the portal theme an
-     * administrator saves; until then it holds only a comment, so the
-     * built-in PINTU look applies.
+     * sign-in, activation and TV display pages load after their own (D-057):
+     * the portal theme an administrator saved in Pengaturan › Tampilan, or
+     * only a comment while it is the built-in PINTU look.
      */
-    public function portal(): Response
+    public function portal(BuildThemeStylesheet $buildStylesheet): Response
     {
-        return $this->stylesheet('/* Tema portal PINTU: tampilan bawaan, belum diatur dari dashboard (D-057). */');
+        return $this->stylesheet($buildStylesheet->portal(Setting::theme()['portal']));
     }
 
     /**
      * Serve /tema-dashboard.css, which the dashboard and Absensi load after
-     * their built stylesheet (D-057); it holds only a comment until a
-     * dashboard theme is saved.
+     * their built stylesheet (D-057): the dashboard theme, or only a comment
+     * while it is the built-in look.
      */
-    public function dashboard(): Response
+    public function dashboard(BuildThemeStylesheet $buildStylesheet): Response
     {
-        return $this->stylesheet('/* Tema dashboard PINTU: tampilan bawaan, belum diatur dari dashboard (D-057). */');
+        return $this->stylesheet($buildStylesheet->dashboard(Setting::theme()['dashboard']));
     }
 
     /**
@@ -34,6 +35,6 @@ class ThemeStylesheetController extends Controller
      */
     private function stylesheet(string $css): Response
     {
-        return response($css."\n")->header('Content-Type', 'text/css; charset=UTF-8');
+        return response($css)->header('Content-Type', 'text/css; charset=UTF-8');
     }
 }

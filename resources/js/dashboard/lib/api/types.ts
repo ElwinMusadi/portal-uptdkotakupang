@@ -329,6 +329,37 @@ export type NamaKoleksi = keyof Koleksi
 /* Pengaturan (satu dokumen per halaman)                               */
 /* ------------------------------------------------------------------ */
 
+/** Huruf tema (D-057): huruf sistem atau huruf OFL yang di-host sendiri; Manrope dan Lexend khusus judul */
+export type HurufTema =
+  | "sistem"
+  | "inter"
+  | "plus-jakarta-sans"
+  | "dm-sans"
+  | "source-sans-3"
+  | "ibm-plex-sans"
+  | "nunito-sans"
+  | "manrope"
+  | "lexend"
+export type LatarTema = "hangat" | "netral" | "sejuk"
+export type SudutTema = "tegas" | "sedang" | "membulat"
+
+/** Satu bagian tema: portal atau dashboard */
+export interface BagianTema {
+  /** Warna utama #RRGGBB; turunannya dibuat server dan dijaga kontrasnya */
+  aksen: string
+  latar: LatarTema
+  hurufTeks: Exclude<HurufTema, "manrope" | "lexend">
+  /** "sama" = mengikuti huruf teks */
+  hurufJudul: HurufTema | "sama"
+  sudut: SudutTema
+}
+
+/** Pengaturan › Tampilan (D-057): tema portal dan dashboard masing-masing */
+export interface Tema {
+  portal: BagianTema
+  dashboard: BagianTema
+}
+
 export interface Situs {
   namaPortal: string
   kepanjangan: string
@@ -469,6 +500,7 @@ export interface Akun {
 
 export interface Pengaturan {
   situs: Situs
+  tema: Tema
   beranda: Beranda
   papan: PapanLayanan
   jam: JamPelayanan

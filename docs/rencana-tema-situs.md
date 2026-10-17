@@ -1,6 +1,6 @@
 # Rencana Implementasi — Tema Portal dan Dashboard
 
-**Status:** rencana dengan keputusan awal pemilik (17 Oktober 2026, [D-057](decisions.md#d-057--2026-10-17--tema-portal-dan-dashboard-rencana-dan-keputusan-awal)). **Irisan 1 (fondasi) selesai** pada 17 Oktober 2026 tanpa perubahan tampilan (hasilnya di §5.1); berikutnya Irisan 2.
+**Status:** rencana dengan keputusan awal pemilik (17 Oktober 2026, [D-057](decisions.md#d-057--2026-10-17--tema-portal-dan-dashboard-rencana-dan-keputusan-awal)). **Irisan 1 (fondasi) dan Irisan 2 (warna, latar, huruf, sudut, tab Tampilan) selesai** pada 17 Oktober 2026 (hasilnya di §5.1 dan §5.2); berikutnya Irisan 3.
 **Sumber:** permintaan pemilik pada 17 Oktober 2026: Administrator dapat mengatur tema (jenis huruf, warna utama, skala tampilan, dan pengaturan tampilan lain yang lazim) dari menu Pengaturan di dashboard, agar tampilan tidak itu-itu saja.
 
 ---
@@ -60,22 +60,22 @@ Dokumen pengaturan `tema` di tabel `settings` (pola yang sama dengan `situs`, `s
 
 ```json
 {
-  "portal":    { "preset": "pintu", "aksen": "#2B63F6", "latar": "hangat", "hurufTeks": "sistem", "hurufJudul": "sistem", "skala": 100, "sudut": "sedang" },
-  "dashboard": { "preset": "pintu", "aksen": "#2B63F6", "latar": "hangat", "hurufTeks": "sistem", "hurufJudul": "sistem", "skala": 100, "sudut": "sedang" }
+  "portal":    { "aksen": "#2B63F6", "latar": "hangat", "hurufTeks": "sistem", "hurufJudul": "sama", "sudut": "sedang" },
+  "dashboard": { "aksen": "#2B63F6", "latar": "hangat", "hurufTeks": "sistem", "hurufJudul": "sama", "sudut": "sedang" }
 }
 ```
 
-Semua nilai dari daftar tertutup kecuali `aksen` (hex `#RRGGBB` yang divalidasi). Tidak ada teks bebas yang masuk ke CSS, sehingga tidak ada celah menyisipkan CSS.
+Semua nilai dari daftar tertutup kecuali `aksen` (hex `#RRGGBB` yang divalidasi, disimpan dengan huruf kapital). Tidak ada teks bebas yang masuk ke CSS, sehingga tidak ada celah menyisipkan CSS. `hurufJudul` `sama` berarti mengikuti huruf teks. Tema siap pakai tidak disimpan: dashboard mencocokkan pilihan dengan daftarnya ("Kustom" bila tidak cocok). `skala` ditambahkan di Irisan 3 dengan nilai bawaan 100 untuk dokumen yang sudah tersimpan (`Setting::theme()` melengkapi kunci yang belum ada dengan nilai bawaan).
 
 ### 4.2 Dua stylesheet tema
 
 - Rute baru `GET /tema-portal.css` dan `GET /tema-dashboard.css` (bukan di bawah `/api`) membuat stylesheet dari bagiannya masing-masing:
   - **Portal:** blok `:root { … }` yang menimpa variabel `tokens.css`, `@font-face` huruf terpilih, `zoom` untuk skala, dan pengali sudut.
-  - **Dashboard:** blok `:root { … }` dan `.dark { … }` yang menimpa variabel shadcn untuk mode terang dan gelap, `@font-face` huruf terpilih, ukuran huruf dasar untuk skala, dan `--radius`.
-- Bila dokumen belum pernah disimpan, isinya kosong (komentar saja), jadi tampilan sama persis dengan sekarang.
+  - **Dashboard:** blok `html:root { … }` (kedua mode: huruf, `--radius`, warna pratinjau papan), `html:root:not(.dark) { … }` (mode terang) dan `html:root.dark { … }` (mode gelap) yang menimpa variabel shadcn, `@font-face` huruf terpilih, dan ukuran huruf dasar untuk skala (Irisan 3).
+- Hanya pengaturan yang berbeda dari tampilan bawaan yang ditulis. Bila dokumen belum pernah disimpan atau sama dengan tampilan bawaan, isinya komentar saja, jadi tampilan sama persis dengan sekarang.
 - `Content-Type: text/css`, `Cache-Control: no-cache` dengan `ETag` (hash isi): peramban selalu memeriksa ulang dan mendapat `304` bila tidak berubah, jadi perubahan tema langsung terlihat tanpa nomor versi di HTML.
 - Satu `<link rel="stylesheet" href="tema-portal.css">` ditambahkan sebagai **stylesheet terakhir** (sesudah `pages.css`) di 20 halaman portal, 404, Login, Aktivasi, dan layar TV; satu `<link rel="stylesheet" href="{{ route('tema.dashboard') }}">` sesudah CSS Vite di `dashboard.blade.php` dan `absen.blade.php`. Teksnya tetap sama di setiap permintaan, jadi aturan "byte demi byte" halaman portal tetap terpenuhi. Bila stylesheet gagal dimuat, halaman tampil dengan tema bawaan.
-- Saat `npm run dev`, Vite menyisipkan CSS dashboard lewat JavaScript **sesudah** `<link>` tema, sehingga aturan `:root` yang sama kuatnya akan kalah. Karena itu `tema-dashboard.css` (Irisan 2) memakai pemilih yang lebih kuat, mis. `html:root` untuk mode terang dan `html.dark` untuk mode gelap.
+- Saat `npm run dev`, Vite menyisipkan CSS dashboard lewat JavaScript **sesudah** `<link>` tema, sehingga aturan `:root` yang sama kuatnya akan kalah. Karena itu `tema-dashboard.css` memakai pemilih `html:root`, `html:root:not(.dark)`, dan `html:root.dark`, yang mengalahkan `:root` dan `.dark` di `index.css` apa pun urutannya.
 - Karena `<link>` di `<head>` memblokir penggambaran, halaman tidak sempat tampil dengan warna lama (tanpa kedipan).
 
 ### 4.3 Turunan warna dan kontras
@@ -85,12 +85,12 @@ Kelas PHP murni (mis. `App\Support\ThemePalette`, diuji unit) menurunkan semua w
 | Variabel | Diturunkan menjadi | Syarat |
 |---|---|---|
 | `--accent` (portal), `--brand`/`--ring`/`--sidebar-primary` (dashboard) | aksen terpilih (tombol, tautan aktif, fokus) | teks putih di atasnya ≥ 4,5:1; bila kurang, digelapkan |
-| `--accent-ink` | aksen lebih gelap untuk teks/tautan | ≥ 4,5:1 di atas `--surface` dan `--paper` |
+| `--accent-ink` | aksen lebih gelap untuk teks/tautan | ≥ 4,5:1 di atas `--surface`, `--paper`, `--paper-2`, dan `--accent-soft` |
 | `--accent-soft` | aksen sangat muda (latar lencana, sorotan) | — |
-| `--night-accent`, aksen mode gelap dashboard | aksen lebih terang untuk latar gelap | ≥ 4,5:1 di atas `--night-2` / latar gelap dashboard |
+| `--night-accent`, aksen mode gelap dashboard | aksen lebih terang untuk latar gelap, sedikitnya secerah `#7FA4FF` | ≥ 4,5:1 di atas `--night`, `--night-2`, `--night-3` / latar, kartu, popover, dan kotak redup mode gelap dashboard |
 | Turunan lain | hover batang grafik (pengganti `#B5C8FF`), palet grafik Laporan Penerimaan dan `--chart-1..5` dashboard | perbedaan antarwarna grafik tetap terlihat |
 
-Warna status (hijau taat, merah menunggak, kuning peringatan) **tidak** ikut aksen agar maknanya tetap. `--primary` dashboard (tinta gelap untuk tombol utama) tetap tinta, hanya nuansanya mengikuti latar. Pratinjau di dashboard menampilkan rasio kontras setiap pasangan warna.
+Aksen bawaan PINTU (`#2B63F6`) tidak diturunkan: warna rancangan tangan di `tokens.css` dan `index.css` tetap dipakai. Kecerahan dan kroma turunan dikalibrasi dari palet bawaan itu (dari `#2B63F7` turunannya berselisih paling banyak 0,015 kecerahan OKLCH dari nilai rancangan tangan). Warna status (hijau taat, merah menunggak, kuning peringatan) **tidak** ikut aksen agar maknanya tetap. `--primary` dashboard (tinta gelap untuk tombol utama) tetap tinta, hanya nuansanya mengikuti latar. Pratinjau di dashboard menampilkan rasio kontras setiap pasangan warna.
 
 ### 4.4 Huruf
 
@@ -109,7 +109,7 @@ Warna status (hijau taat, merah menunggak, kuning peringatan) **tidak** ikut aks
 - Isinya: kartu tema siap pakai, pemilih warna, nuansa latar, huruf, skala, dan sudut.
   - **Portal:** pratinjau langsung di samping formulir (tombol, kartu, lencana, panel gelap, grafik kecil, tautan) yang berubah sebelum disimpan, dan *Pratinjau di portal* (Irisan 3): membuka beranda dengan tema yang belum disimpan lewat tautan pratinjau berumur pendek, tanpa mengubah tampilan bagi pengunjung.
   - **Dashboard:** pilihan langsung diterapkan pada dashboard yang sedang dibuka sebagai pratinjau, dan kembali ke tema tersimpan bila dibatalkan.
-- Setiap penyimpanan dicatat di log aktivitas ("memperbarui Tampilan"). Lima tema terakhir yang disimpan bisa dipulihkan.
+- Seperti Pengaturan Situs (D-026), tema bukan milik modul mana pun, sehingga tidak masuk log aktivitas yang dicatat per modul. Siapa dan kapan menyimpan dicatat riwayat lima tema terakhir (Irisan 3), yang juga bisa dipulihkan.
 
 ### 4.7 Rancangan API
 
@@ -118,7 +118,8 @@ Warna status (hijau taat, merah menunggak, kuning peringatan) **tidak** ikut aks
 | `GET /api/pengaturan/tema` | semua pegawai | dokumen tema (bawaan bila belum disimpan) |
 | `PUT /api/pengaturan/tema` | Administrator | dokumen lengkap; `422` untuk nilai di luar daftar atau warna tidak valid |
 | `GET /api/pengaturan/tema/riwayat` | Administrator | lima tema terakhir (Irisan 3) |
-| `POST /api/pengaturan/tema/pratinjau` | Administrator | tautan pratinjau portal berumur pendek (Irisan 3) |
+| `POST /api/pengaturan/tema/pratinjau` | Administrator | tema yang belum disimpan sebagaimana akan diterapkan: variabel dan `@font-face` portal untuk contoh, aksen dan stylesheet dashboard, rasio kontras (Irisan 2) |
+| `POST /api/pengaturan/tema/tautan-pratinjau` | Administrator | tautan pratinjau portal berumur pendek (Irisan 3) |
 | `GET /tema-portal.css` | publik | stylesheet tema portal; `?pratinjau=` hanya dengan tautan pratinjau yang sah |
 | `GET /tema-dashboard.css` | publik (isinya hanya warna dan huruf) | stylesheet tema dashboard |
 
@@ -147,12 +148,24 @@ Setiap irisan diperiksa seperti biasa: tes fitur dan unit, uji mutasi, typecheck
 | Sengaja tidak dijadikan variabel | Warna status (`--ok`, `--danger`, …, hijau `rgba(95,211,155,.1)`), bayangan dan tirai berbasis tinta (`rgba(15,19,25,…)`, `rgba(10,10,12,.55)`), abu-abu netral (`#9A9EA5`), palet placeholder foto `.ph--*`, contoh warna di halaman Design System (mendokumentasikan palet bawaan), ilustrasi peta statis di Kontak, `meta theme-color`, garis dan cincin fokus komponen shadcn/ui, label peta dashboard (ukurannya dihitung `peta.ts`). |
 | Pemeriksaan | Gaya terhitung semua elemen (warna, latar, garis, sudut, huruf, ukuran, bayangan, termasuk `::before`/`::after`) dibandingkan sebelum dan sesudah di 23 halaman portal, 18 halaman dashboard (terang), 5 halaman dashboard (gelap), dan Absensi: tidak ada beda selain teks yang bergerak sendiri (judul berganti di beranda, waktu relatif "… jam yang lalu"). Bukti statis: setelah variabel diganti nilainya, CSS lama dan baru identik (termasuk keadaan *hover*). Uji aksen hijau: tidak ada sisa biru selain daun logo, contoh warna Design System, dan placeholder `.ph--blue`. Simulasi `tokens.css` lama: tetap tanpa beda. |
 
+### 5.2 Hasil Irisan 2 (17 Oktober 2026)
+
+| Bagian | Yang dibuat |
+|---|---|
+| Dokumen dan API | Dokumen `tema` (`Setting::THEME`, bawaan `Setting::DEFAULT_THEME_SECTION`), `GET/PUT /api/pengaturan/tema` (`ThemeController`, `UpdateThemeRequest`; semua pegawai membaca, hanya Administrator menyimpan, seperti Pengaturan Situs), `POST /api/pengaturan/tema/pratinjau` (`ThemePreviewController`, Administrator). |
+| Turunan warna | `App\Support\ThemePalette` (OKLCH, kontras WCAG, menggelapkan atau mencerahkan secukupnya dengan rona yang sama) dan `App\Support\ThemeVariables` (variabel yang diubah tiap bagian dan pasangan kontrasnya). Latar *Netral* dan *Sejuk* (`ThemeBackground`) memakai kecerahan yang sama dengan latar hangat, dengan kroma 0 atau rona 255°. Sudut (`ThemeCorners`) ×0,5, ×1, ×1,35 lewat `--r-scale` (portal) dan `--radius` (dashboard). |
+| Huruf | Delapan berkas WOFF2 Latin variabel beserta `OFL.txt` di `public/assets/fonts/<nama>/`, dari Fontsource 5.3.x lewat jsDelivr (izin unduh pemilik, 17 Oktober 2026; ±283 KB huruf), dipetakan oleh enum `ThemeFont`. |
+| Stylesheet | `BuildThemeStylesheet`: portal `:root`; dashboard `html:root`, `html:root:not(.dark)`, `html:root.dark`; hanya pengaturan yang berbeda dari bawaan; `@font-face` huruf terpilih dengan `font-display: swap`. |
+| Tab Tampilan | `components/tema/tab-tampilan.tsx` di Pengaturan: sub-tab Portal dan Dashboard; enam tema siap pakai (PINTU, Samudra, Hutan, Senja, Tenun, Grafit, di `lib/tema.ts`); warna utama (pemilih warna dan kode, dengan keterangan bila warna disesuaikan); nuansa latar; huruf teks dan judul; kelengkungan sudut; daftar rasio kontras; *Kembalikan tampilan bawaan PINTU*; *Samakan dengan portal* di bagian Dashboard. Contoh portal (`pratinjau-portal.tsx`) memakai variabel berawalan `--p-` karena nama variabel portal juga dipakai dashboard. Dashboard yang sedang dibuka menjadi pratinjau tema dashboard (stylesheet tersimpan dinonaktifkan, stylesheet dari server disisipkan) dan kembali ke tema tersimpan saat tab ditinggalkan; sesudah disimpan, `/tema-dashboard.css` dimuat ulang tanpa memuat ulang halaman. Pegawai selain Administrator melihat formulirnya hanya-baca, tanpa pratinjau. |
+| Berbeda dari rencana | Tema siap pakai tidak disimpan di dokumen (dicocokkan dari nilainya); `skala` menyusul di Irisan 3; latar tidak mengubah panel gelap; tidak ada entri log aktivitas (seperti Pengaturan Situs, D-026). |
+| Pemeriksaan | Tes unit `ThemePalette` dan `ThemeVariables` (sepuluh macam aksen termasuk kuning terang, biru tua, abu, hijau menyala, putih, pada tiga latar: semua pasangan teks ≥ 4,5:1, rona terjaga, turunan dari `#2B63F7` dekat nilai rancangan tangan), tes fitur API, stylesheet, nilai bawaan sama dengan `tokens.css`/`index.css`, dan berkas huruf. Di browser: tema siap pakai, pratinjau portal dan dashboard (mode terang dan gelap), kuning `#F2C46B` dipakai sebagai `#936A00`, simpan lalu portal memakai aksen, DM Sans, dan sudut navigasi 29,7 px, kembali ke bawaan; kedelapan huruf di enam halaman portal (375 dan 1280 px) dan dashboard (375 px, Lexend): tidak ada halaman yang meluap ke samping, sebagian judul membungkus satu baris lebih. |
+
 ---
 
 ## 6. Pengujian
 
 - **Unit:** `ThemePalette` — turunan warna untuk aksen terang, gelap, dan jenuh; semua rasio kontras ≥ 4,5:1; warna status tidak berubah.
-- **Fitur:** `GET/PUT /api/pengaturan/tema` (bawaan, hanya Administrator, validasi daftar tertutup dan hex, log aktivitas); `GET /tema-portal.css` dan `/tema-dashboard.css` (kosong sebelum disimpan, isi sesuai pilihan bagiannya saja, `ETag`/`304`, hanya `@font-face` huruf terpilih, tidak ada teks bebas di keluaran, pratinjau hanya dengan tautan sah).
+- **Fitur:** `GET/PUT /api/pengaturan/tema` (bawaan, hanya Administrator, validasi daftar tertutup dan hex); `GET /tema-portal.css` dan `/tema-dashboard.css` (kosong sebelum disimpan, isi sesuai pilihan bagiannya saja, `ETag`/`304`, hanya `@font-face` huruf terpilih, tidak ada teks bebas di keluaran, pratinjau hanya dengan tautan sah).
 - **Halaman:** `<link>` tema portal ada di semua halaman portal, 404, Login, Aktivasi, dan layar TV; `<link>` tema dashboard di dashboard dan Absensi; halaman portal tetap byte demi byte.
 - **Browser:** tiap tema siap pakai dan tiap huruf di beranda, Pemetaan PKB, Laporan Penerimaan, Antrean (lacak dan layar TV), dan dashboard (terang dan gelap); skala 90–120%.
 
@@ -180,7 +193,7 @@ Setiap irisan diperiksa seperti biasa: tes fitur dan unit, uji mutasi, typecheck
 | Huruf baru mengubah lebar teks | Setiap huruf diperiksa di halaman utama sebelum masuk daftar; tumpukan sistem sebagai cadangan. |
 | `zoom` merusak tata letak portal | Tingkat skala dibatasi (90–120%) dan diuji di tiga lebar layar; peta, grafik, dan layar TV yang mengukur lebar atau memakai `vh` diperiksa khusus. |
 | Perubahan tidak langsung terlihat | Stylesheet tema memakai `no-cache` + `ETag`; CSS portal lain memang belum berversi (catatan lama di KONTEKS §8.2). |
-| Tema terpasang keliru | Riwayat lima tema dan tombol kembali ke bawaan; perubahan tercatat di log aktivitas. |
+| Tema terpasang keliru | Riwayat lima tema (mencatat siapa dan kapan) dan tombol kembali ke bawaan. |
 
 ---
 
@@ -188,4 +201,5 @@ Setiap irisan diperiksa seperti biasa: tes fitur dan unit, uji mutasi, typecheck
 
 - Baru: `app/Support/ThemePalette.php`, controller dan request tema, rute `tema-portal.css` dan `tema-dashboard.css`, `public/assets/fonts/`, tab Tampilan di `resources/js/dashboard/pages/pengaturan.tsx`, tes unit dan fitur.
 - Dibuat di Irisan 1: `app/Http/Controllers/ThemeStylesheetController.php`, rute `tema.portal` dan `tema.dashboard` di `routes/web.php`, `tests/Feature/ThemeStylesheetTest.php`.
+- Dibuat di Irisan 2: `app/Support/{ThemePalette,ThemeVariables}.php`, `app/Enums/{ThemeFont,ThemeBackground,ThemeCorners}.php`, `app/Actions/BuildThemeStylesheet.php`, `app/Http/Controllers/Dashboard/{ThemeController,ThemePreviewController}.php`, `app/Http/Requests/Dashboard/UpdateThemeRequest.php`, `public/assets/fonts/`, `resources/js/dashboard/lib/tema.ts`, `resources/js/dashboard/components/tema/`, `tests/Unit/Support/`, `tests/Feature/ThemeControllerTest.php`.
 - Diubah: `public/assets/css/{tokens,base,components,pages}.css`, CSS komponen portal (`resources/js/portal/**/*.css`), `resources/js/dashboard/index.css`, `pages/papan.tsx`, semua halaman portal dan `errors/404`, `auth/aktivasi`, `layar`, `dashboard`, `absen` (satu `<link>`), `app/Models/Setting.php`, `routes/api.php`, `routes/web.php`, `tests/Feature/PortalPagesTest.php`, `docs/api.md`, `docs/dashboard.md`, `docs/decisions.md`, `KONTEKS-PROYEK.md`.

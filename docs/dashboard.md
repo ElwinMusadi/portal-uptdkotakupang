@@ -442,7 +442,13 @@ Halaman *Pesan & Pengaduan* (`#/pesan`, `pages/pesan.tsx`) tersimpan di server s
 
 ## Tema
 
-Dashboard dan Absensi memuat `/tema-dashboard.css` sesudah CSS hasil build ([D-057](decisions.md#d-057--2026-10-17--tema-portal-dan-dashboard-rencana-dan-keputusan-awal), [rencana](rencana-tema-situs.md)); sampai tab *Tampilan* dibuat isinya hanya komentar. Agar tema bisa menimpa tampilan:
+Tab *Tampilan* di halaman *Pengaturan* (`#/pengaturan?tab=tampilan`, `components/tema/tab-tampilan.tsx`) mengatur tema portal dan dashboard masing-masing sebagai pengaturan `tema` ([D-057](decisions.md#d-057--2026-10-17--tema-portal-dan-dashboard-rencana-dan-keputusan-awal), [rencana](rencana-tema-situs.md)).
+
+- Hanya Administrator yang menyimpan; pegawai lain melihat formulirnya hanya-baca. Sub-tab *Portal* dan *Dashboard* masing-masing berisi tema siap pakai (`TEMA_SIAP_PAKAI` di `lib/tema.ts`: PINTU, Samudra, Hutan, Senja, Tenun, Grafit; "Kustom" bila pilihan tidak cocok dengan satu pun), warna utama, nuansa latar, huruf teks dan judul, kelengkungan sudut, *Keterbacaan* (rasio kontras dari server), dan *Kembalikan tampilan bawaan PINTU*; bagian Dashboard juga *Samakan dengan portal*.
+- Pratinjau dari `POST /api/pengaturan/tema/pratinjau` (ditunda 250 ms selama warna diubah). Bagian Portal menampilkan contoh portal (`components/tema/pratinjau-portal.tsx`) dengan variabel berawalan `--p-`, karena nama variabel portal (mis. `--accent`) juga dipakai dashboard. Dashboard yang sedang dibuka menjadi pratinjau tema dashboard: `<link>` tema tersimpan dinonaktifkan dan stylesheet pratinjau disisipkan (`pratinjauDashboard`), lalu dikembalikan saat tab ditinggalkan. Sesudah disimpan, `/tema-dashboard.css` dimuat ulang tanpa memuat ulang halaman (`muatUlangTemaDashboard`).
+- Logo tetap biru PINTU apa pun warna utamanya.
+
+Dashboard dan Absensi memuat `/tema-dashboard.css` sesudah CSS hasil build. Agar tema bisa menimpa tampilan:
 
 - Warna ditulis lewat variabel di `index.css` (`:root` dan `.dark`), bukan heksadesimal di kelas. Pratinjau Papan Layanan memakai `bg-night`, `bg-night-2`, `text-night-muted`, `text-night-accent`, `text-ok-night`, `text-warn-night`, dan `text-danger-night`; teks di atas warna merek memakai `text-brand-foreground`.
 - `--font-sans` dan `--font-display` ada di blok `@theme` biasa (bukan `@theme inline`), sehingga kelas `font-*` membaca variabelnya.
