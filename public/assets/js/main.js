@@ -76,6 +76,244 @@
     }
   }
 
+  /* ---------- Pencarian di navbar (D-060) ----------
+     Kotak cari di navbar (ikon di layar sempit) dengan hasil di panel di bawah
+     navbar sambil mengetik. Isi yang dicari dimuat dari API publik saat
+     pencarian pertama kali dibuka lalu dicari di peramban, jadi kata kunci
+     tidak pernah dikirim ke server. Halaman diambil dari menu navbar. */
+  const CARI_KELOMPOK = [
+    ["halaman", "Halaman", "file"],
+    ["layanan", "Layanan", "list-check"],
+    ["faq", "Tanya Jawab", "message"],
+    ["berita", "Berita & Pengumuman", "news"],
+    ["dokumen", "Regulasi & Unduhan", "download"],
+    ["aplikasi", "Aplikasi & Situs", "grid"],
+  ];
+  // Bagian halaman yang tidak ada di menu navbar
+  const CARI_HALAMAN_LAIN = [
+    ["Layanan apa yang saya perlukan?", "Panduan memilih layanan dan berkas sesuai keperluan.", "/layanan#panduan"],
+    ["Lacak pesan atau pengaduan", "Status dan balasan petugas dari nomor tiket.", "/kontak#lacak-pesan"],
+    ["Kirim pertanyaan atau pengaduan", "Formulir pesan kepada UPTD.", "/kontak#masukan"],
+  ];
+  const CARI_PER_KELOMPOK = 4;
+  const normalCari = (s) => String(s ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+
+  function initCari() {
+    const nav = $(".nav");
+    const panel = $("[data-cari-panel]");
+    const buka = $("[data-cari-buka]");
+    if (!nav || !panel || !buka) return;
+    const kotak = $(".nav__cari", nav);
+    const masukanNavbar = kotak ? $("[data-cari-input]", kotak) : null;
+    const masukan = $$("[data-cari-input]");
+    const daftar = $("[data-cari-hasil]", panel);
+    const status = $("[data-cari-status]", panel);
+    let indeks = null;
+    let opsi = [];
+    let aktif = -1;
+    let terakhir = null;
+
+    const butir = (jenis, judul, teks, url, luar = false) => ({
+      jenis, judul, teks: teks.filter(Boolean).map(String), url, luar,
+      cariJudul: normalCari(judul), cariTeks: normalCari(teks.join(" ")),
+    });
+    const alamatLuar = (tautan) => {
+      const aman = tautanAman(String(tautan ?? ""));
+      if (!aman) return null;
+      const url = new URL(aman, `${location.origin}/`);
+      return { url: url.href, luar: url.origin !== location.origin || /\/storage\//.test(url.pathname) };
+    };
+    const daftarDari = (hasil, kunci) => {
+      const nilai = hasil.status === "fulfilled" ? hasil.value : null;
+      const isi = kunci ? nilai?.[kunci] : nilai;
+      return Array.isArray(isi) ? isi : [];
+    };
+
+    // Dimuat sekali; sumber yang gagal dilewati agar sisanya tetap bisa dicari
+    const muatIndeks = () => (indeks ??= Promise.allSettled(
+      ["/api/public/layanan", "/api/public/faq", "/api/public/berita", "/api/public/dokumen", "/api/public/aplikasi"].map(ambilJson),
+    ).then(([layanan, faq, berita, dokumen, aplikasi]) => {
+      const menu = $$(".nav__menu-link, .nav__links > .nav__item > a.nav__link", nav).map((a) => butir(
+        "halaman", ($("strong", a) ?? a).textContent, [$("span:not(.nav__menu-icon)", a)?.textContent ?? ""], a.href,
+      ));
+      return [
+        ...menu,
+        ...CARI_HALAMAN_LAIN.map(([judul, teks, url]) => butir("halaman", judul, [teks], url)),
+        ...daftarDari(layanan).map((l) => butir("layanan", l.nama, [l.ringkasan, ...(l.situasi ?? []), ...(l.label ?? []), ...(l.persyaratan ?? []).map((p) => p.dokumen), l.catatan], l.jenis === "layanan" ? `/layanan#${encodeURIComponent(l.slug)}` : "/layanan")),
+        ...daftarDari(faq).map((f) => butir("faq", f.pertanyaan, [f.jawaban], "/#faq")),
+        ...daftarDari(berita).map((b) => butir("berita", b.judul, [b.ringkasan], `/berita/${encodeURIComponent(b.slug)}`)),
+        ...daftarDari(dokumen).map((d) => {
+          const tujuan = alamatLuar(d.berkas?.url || d.tautan);
+          return butir("dokumen", d.judul, [d.keterangan, d.nomor, d.tahun], tujuan?.url ?? "/unduhan", tujuan?.luar);
+        }),
+        ...daftarDari(aplikasi, "aplikasi").map((a) => {
+          const tujuan = alamatLuar(a.tautan);
+          return butir("aplikasi", a.nama, [a.namaLengkap, a.keterangan], tujuan?.url ?? "/aplikasi", tujuan?.luar);
+        }),
+      ];
+    }));
+
+    // Semua kata harus ada; kata di judul (terutama di awal kata) dinilai lebih tinggi
+    const cocokkan = (kata, semua) => semua.map((b, i) => {
+      let skor = 0;
+      for (const k of kata) {
+        if (b.cariJudul.includes(k)) skor += b.cariJudul.split(/[^\p{L}\p{N}]+/u).some((w) => w.startsWith(k)) ? 4 : 3;
+        else if (b.cariTeks.includes(k)) skor += 1;
+        else return null;
+      }
+      return { b, skor, i };
+    }).filter(Boolean).sort((x, y) => y.skor - x.skor || x.i - y.i).map((x) => x.b);
+
+    // Teks yang memuat kata kunci terbanyak, dipotong di sekitar kata pertama yang cocok
+    const cuplikan = (b, kata) => {
+      const cocok = (t) => kata.filter((k) => normalCari(t).includes(k)).length;
+      const sumber = b.teks.reduce((terbaik, t) => (cocok(t) > cocok(terbaik) ? t : terbaik), b.teks[0] ?? "");
+      if (sumber.length <= 120) return sumber;
+      const k = kata.find((x) => normalCari(sumber).includes(x));
+      const mulai = k ? Math.max(0, normalCari(sumber).indexOf(k) - 40) : 0;
+      return `${mulai ? "…" : ""}${sumber.slice(mulai, mulai + 120).trim()}${mulai + 120 < sumber.length ? "…" : ""}`;
+    };
+    // Kata yang dicari ditebalkan; teks dipasang sebagai teks, bukan HTML
+    const tandai = (el, teks, kata) => {
+      const pola = new RegExp(`(${kata.map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "gi");
+      teks.split(pola).forEach((bagian, i) => {
+        if (i % 2) { const m = document.createElement("mark"); m.textContent = bagian; el.append(m); } else if (bagian) el.append(bagian);
+      });
+    };
+
+    const pilih = (i) => {
+      aktif = i;
+      opsi.forEach((o, j) => o.setAttribute("aria-selected", String(j === i)));
+      const id = opsi[i]?.id ?? "";
+      masukan.forEach((m) => (id ? m.setAttribute("aria-activedescendant", id) : m.removeAttribute("aria-activedescendant")));
+      opsi[i]?.scrollIntoView({ block: "nearest" });
+    };
+
+    const tampilkan = async (q) => {
+      terakhir = q;
+      const kata = normalCari(q).split(/\s+/).filter(Boolean);
+      daftar.replaceChildren();
+      opsi = [];
+      pilih(-1);
+      if (!kata.length) { status.textContent = "Ketik untuk mencari layanan, tanya jawab, berita, unduhan, dan halaman."; return; }
+      status.textContent = "Mencari…";
+      const semua = await muatIndeks();
+      if (terakhir !== q) return;
+      const hasil = cocokkan(kata, semua);
+      for (const [jenis, judul, ikon] of CARI_KELOMPOK) {
+        const isi = hasil.filter((b) => b.jenis === jenis).slice(0, CARI_PER_KELOMPOK);
+        if (!isi.length) continue;
+        const grup = document.createElement("div");
+        grup.setAttribute("role", "group");
+        grup.setAttribute("aria-label", judul);
+        const label = document.createElement("p");
+        label.className = "cari-hasil__label";
+        label.setAttribute("aria-hidden", "true");
+        label.textContent = judul;
+        grup.append(label);
+        for (const b of isi) {
+          const a = document.createElement("a");
+          a.className = "nav__menu-link";
+          a.id = `cari-opsi-${opsi.length}`;
+          a.href = b.url;
+          a.setAttribute("role", "option");
+          a.setAttribute("aria-selected", "false");
+          a.tabIndex = -1;
+          if (b.luar) { a.target = "_blank"; a.rel = "noopener"; }
+          a.innerHTML = `<span class="nav__menu-icon"><svg class="i i--sm" aria-hidden="true"><use href="#i-${ikon}"/></svg></span><strong></strong><span></span>`;
+          tandai($("strong", a), b.judul, kata);
+          tandai($("span:not(.nav__menu-icon)", a), cuplikan(b, kata), kata);
+          grup.append(a);
+          opsi.push(a);
+        }
+        daftar.append(grup);
+      }
+      if (opsi.length) {
+        status.textContent = `${hasil.length} hasil${hasil.length > opsi.length ? `, ${opsi.length} teratas ditampilkan` : ""}.`;
+      } else {
+        status.textContent = `Tidak ada hasil untuk “${q.trim()}”. `;
+        const tanya = document.createElement("a");
+        tanya.href = "/kontak#masukan";
+        tanya.textContent = "Tanyakan lewat formulir";
+        status.append(tanya, " atau periksa ejaan kata kuncinya.");
+      }
+    };
+
+    const terbuka = () => !panel.hidden;
+    const bukaPanel = (dariIkon) => {
+      panel.classList.toggle("cari-panel--kotak", dariIkon);
+      panel.hidden = false;
+      buka.setAttribute("aria-expanded", "true");
+      masukanNavbar?.setAttribute("aria-expanded", "true");
+      const menuPonsel = $("#mobile-menu");
+      if (menuPonsel && !menuPonsel.hidden) $(".nav__toggle")?.click();
+      muatIndeks();
+      tampilkan(masukan[0].value);
+    };
+    const tutupPanel = (fokusKe) => {
+      if (!terbuka()) return;
+      panel.hidden = true;
+      buka.setAttribute("aria-expanded", "false");
+      masukanNavbar?.setAttribute("aria-expanded", "false");
+      pilih(-1);
+      fokusKe?.focus();
+    };
+
+    masukan.forEach((m) => {
+      m.addEventListener("focus", () => {
+        muatIndeks();
+        if (m === masukanNavbar && m.value.trim() && !terbuka()) bukaPanel(false);
+      });
+      m.addEventListener("input", () => {
+        masukan.forEach((lain) => { if (lain !== m) lain.value = m.value; });
+        if (!terbuka()) bukaPanel(m.closest("[data-cari-panel]") !== null);
+        else tampilkan(m.value);
+      });
+      m.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+          if (!opsi.length) return;
+          e.preventDefault();
+          if (!terbuka()) bukaPanel(false);
+          pilih(e.key === "ArrowDown" ? (aktif + 1) % opsi.length : (aktif - 1 + opsi.length) % opsi.length);
+        } else if (e.key === "Enter") {
+          e.preventDefault();
+          (opsi[aktif] ?? opsi[0])?.click();
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          if (m.value) { masukan.forEach((x) => (x.value = "")); tampilkan(""); } else tutupPanel(panel.classList.contains("cari-panel--kotak") ? buka : m);
+        }
+      });
+    });
+
+    buka.addEventListener("click", () => {
+      if (terbuka()) { tutupPanel(buka); return; }
+      bukaPanel(true);
+      $("[data-cari-input]", panel).focus();
+    });
+    $(".nav__toggle")?.addEventListener("click", () => tutupPanel());
+    // Klik atau fokus di luar kotak, ikon, dan panel menutup panel
+    document.addEventListener("click", (e) => {
+      if (terbuka() && !e.target.closest(".nav__cari, [data-cari-buka], [data-cari-panel]")) tutupPanel();
+    });
+    document.addEventListener("focusin", (e) => {
+      if (terbuka() && !e.target.closest(".nav__cari, [data-cari-buka], [data-cari-panel]")) tutupPanel();
+    });
+
+    // Navbar yang tidak muat (layar 1001–1140 px, skala tampilan, atau huruf yang lebar) memakai ikon. Diukur dari
+    // tepi kanan isinya, bukan scrollWidth, karena lekuk notch di ::before/::after memang menjorok keluar.
+    const sesuaikan = () => {
+      nav.classList.remove("nav--cari-ringkas");
+      if (!kotak || getComputedStyle(kotak).display === "none") return;
+      const isi = [...nav.children].filter((el) => getComputedStyle(el).display !== "none");
+      const kanan = Math.max(...isi.map((el) => el.getBoundingClientRect().right));
+      const batas = nav.getBoundingClientRect().right - parseFloat(getComputedStyle(nav).paddingRight);
+      if (kanan > batas + 1) nav.classList.add("nav--cari-ringkas");
+    };
+    sesuaikan();
+    window.addEventListener("resize", sesuaikan);
+    document.fonts?.ready.then(sesuaikan);
+  }
+
   /* ---------- Fade-up saat scroll ---------- */
   function initReveal() {
     const els = $$("[data-reveal]");
@@ -2658,7 +2896,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil(); initLayanan(); initDokumen(); initInformasi(); initBerita(); initPengumumanBeranda(); initDokumentasi(); initStruktur(); initAplikasi(); initBeranda(); initHalaman(); initSitus();
+    initNav(); initCari(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil(); initLayanan(); initDokumen(); initInformasi(); initBerita(); initPengumumanBeranda(); initDokumentasi(); initStruktur(); initAplikasi(); initBeranda(); initHalaman(); initSitus();
     initDash(); initDialogs(); initGag(); initFilters(); initGallery(); initFaq(); initForms(); initPesanForm(); initLacakPesanForm(); initAuthFit(); initUtilities(); initWarnaBilah();
   });
 })();

@@ -286,6 +286,19 @@ class PortalPagesTest extends TestCase
         $this->assertStringContainsString('<p class="muted" role="status">Memuat persyaratan layanan…</p>', $section[0]);
     }
 
+    #[DataProvider('pagesWithHeader')]
+    public function test_offers_the_search_in_the_navbar_of_every_page(string $uri, string $view): void
+    {
+        $html = $this->get($uri)->assertOk()->getContent();
+
+        $this->assertStringContainsString('<input class="nav__cari-input" type="search" placeholder="Cari…" aria-label="Cari di PINTU"', $html);
+        $this->assertStringContainsString('aria-controls="cari-panel" data-cari-buka>', $html);
+        $this->assertStringContainsString('<div class="cari-panel" id="cari-panel" hidden data-cari-panel>', $html);
+        $this->assertStringContainsString('<div class="cari-hasil" id="cari-hasil" role="listbox" aria-label="Hasil pencarian" data-cari-hasil></div>', $html);
+        $this->assertSame(2, substr_count($html, 'data-cari-input'));
+        $this->assertStringContainsString('<script src="assets/js/main.js" defer></script>', $html);
+    }
+
     public function test_leaves_the_service_guide_to_its_component_above_the_services(): void
     {
         $html = $this->get('/layanan')->assertOk()->getContent();

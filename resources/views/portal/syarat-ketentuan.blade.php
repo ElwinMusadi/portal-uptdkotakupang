@@ -154,10 +154,25 @@
         <a class="nav__link" data-nav="kontak" href="kontak.html">Kontak &amp; Pengaduan</a>
       </li>
     </ul>
+    <!-- Pencarian (D-060): main.js (initCari) mencari layanan, tanya jawab, berita, unduhan, aplikasi, dan halaman di peramban -->
+    <div class="nav__cari" role="search">
+      <svg class="i" aria-hidden="true"><use href="#i-search"/></svg>
+      <input class="nav__cari-input" type="search" placeholder="Cari…" aria-label="Cari di PINTU" autocomplete="off" spellcheck="false" enterkeyhint="search" role="combobox" aria-expanded="false" aria-controls="cari-hasil" aria-autocomplete="list" data-cari-input>
+    </div>
+    <button class="nav__icon-btn nav__cari-buka" type="button" aria-label="Cari di PINTU" title="Cari di PINTU" aria-expanded="false" aria-controls="cari-panel" data-cari-buka><svg class="i" aria-hidden="true"><use href="#i-search"/></svg></button>
     <a class="nav__icon-btn" href="login.html" aria-label="Login Pegawai" title="Login Pegawai"><svg class="i" aria-hidden="true"><use href="#i-log-in"/></svg></a>
     <a class="btn btn--light btn--sm nav__cta" href="layanan.html">Cek Persyaratan</a>
     <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="mobile-menu"><span class="bars" aria-hidden="true"></span>Menu</button>
   </nav>
+
+  <div class="cari-panel" id="cari-panel" hidden data-cari-panel>
+    <div class="cari-panel__kotak">
+      <svg class="i" aria-hidden="true"><use href="#i-search"/></svg>
+      <input class="cari-panel__input" type="search" placeholder="Cari layanan, tanya jawab, berita…" aria-label="Cari di PINTU" autocomplete="off" spellcheck="false" enterkeyhint="search" role="combobox" aria-expanded="true" aria-controls="cari-hasil" aria-autocomplete="list" data-cari-input>
+    </div>
+    <div class="cari-hasil" id="cari-hasil" role="listbox" aria-label="Hasil pencarian" data-cari-hasil></div>
+    <p class="cari-panel__status" role="status" data-cari-status></p>
+  </div>
 
   <div class="mobile-menu" id="mobile-menu" hidden>
     <div class="mobile-menu__group">

@@ -161,7 +161,7 @@ class ThemeStylesheetTest extends TestCase
         $this->assertStringContainsString("  --nav-blur: 18px;\n", $glass);
         $this->assertStringContainsString(".nav { background: transparent; }\n.nav::after { display: none; }\n.nav::before {\n", $glass);
         $this->assertStringContainsString('  backdrop-filter: blur(var(--nav-blur)) saturate(1.4);', $glass);
-        $this->assertStringContainsString(".nav__menu, .mobile-menu {\n", $glass);
+        $this->assertStringContainsString(".nav__menu, .mobile-menu, .cari-panel {\n", $glass);
 
         $this->assertSame(1, preg_match('/^\.nav::before \{\n  clip-path: polygon\((.+)\);\n\}$/m', $glass, $outline));
         $points = explode(', ', $outline[1]);

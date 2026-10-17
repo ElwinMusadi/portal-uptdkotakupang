@@ -41,7 +41,8 @@ class BuildThemeStylesheet
      * The navbar's glass (Irisan 8). The glass sits in .nav::before, cut to
      * the notch by notchOutline(), rather than on .nav itself: an element
      * with a backdrop filter keeps the menus inside it from blurring the
-     * page. The menus and the mobile menu get their own.
+     * page. The menus, the mobile menu and the search panel (D-060) get
+     * their own.
      */
     private const string NAVBAR_GLASS_RULES = <<<'CSS'
         .nav { background: transparent; }
@@ -54,7 +55,7 @@ class BuildThemeStylesheet
           -webkit-backdrop-filter: blur(var(--nav-blur)) saturate(1.4);
           backdrop-filter: blur(var(--nav-blur)) saturate(1.4);
         }
-        .nav__menu, .mobile-menu {
+        .nav__menu, .mobile-menu, .cari-panel {
           -webkit-backdrop-filter: blur(var(--nav-blur)) saturate(1.4);
           backdrop-filter: blur(var(--nav-blur)) saturate(1.4);
         }

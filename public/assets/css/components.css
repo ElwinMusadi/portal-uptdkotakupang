@@ -123,6 +123,54 @@
 @media (max-width: 1000px) { .nav__toggle { margin-left: 0; } }
 @media (max-width: 480px) { .nav .nav__cta { display: none; } .nav__toggle { margin-left: auto; } .nav-wrap { padding-inline: 20px; } }
 
+/* ---------- Pencarian di navbar (D-060) ----------
+   Kotak cari di navbar layar lebar; ikon di layar sempit atau bila navbar tidak muat (initCari menambahkan
+   .nav--cari-ringkas). Hasilnya di panel di bawah navbar dengan warna navbar, seperti menunya. */
+.nav__cari { position: relative; flex: 0 1 220px; min-width: 140px; margin-left: 4px; }
+.nav__cari .i, .cari-panel__kotak .i { position: absolute; left: 13px; top: 50%; width: 16px; height: 16px; margin-top: -8px; color: var(--nav-muted, var(--night-muted)); pointer-events: none; }
+.nav__cari-input, .cari-panel__input {
+  width: 100%; min-height: 38px; padding: 0 14px 0 36px; border: 0; border-radius: var(--r-pill);
+  background: rgba(var(--nav-tint, 255, 255, 255), .08); color: rgb(var(--nav-tint, 255, 255, 255));
+  font: inherit; font-size: 13px; appearance: none; transition: background-color var(--dur-1) var(--ease);
+}
+.nav__cari-input::placeholder, .cari-panel__input::placeholder { color: var(--nav-muted, var(--night-muted)); opacity: 1; }
+.nav__cari-input:hover, .nav__cari-input:focus, .cari-panel__input:focus { background: rgba(var(--nav-tint, 255, 255, 255), .13); }
+.nav__cari-input:focus-visible, .cari-panel__input:focus-visible { outline: 2px solid var(--nav-accent, var(--night-accent)); outline-offset: 2px; }
+.nav__cari-input::-webkit-search-cancel-button, .cari-panel__input::-webkit-search-cancel-button { display: none; }
+.nav .nav__cari-buka { display: none; }
+.nav--cari-ringkas .nav__cari { display: none; }
+.nav.nav--cari-ringkas .nav__cari-buka { display: grid; }
+.nav__cari-buka[aria-expanded="true"] { color: rgb(var(--nav-tint, 255, 255, 255)); background: rgba(var(--nav-tint, 255, 255, 255), .08); }
+
+.cari-panel {
+  pointer-events: auto; position: absolute; left: 50%; top: calc(100% + 10px); transform: translateX(-50%);
+  width: min(640px, calc(100% - 48px)); max-height: calc(100vh / var(--zoom, 1) - 120px); overflow: auto; padding: 8px;
+  background: var(--nav-surface, var(--chrome, #0F1319)); color: rgb(var(--nav-tint, 255, 255, 255));
+  border-radius: calc(22px * var(--r-scale, 1)); box-shadow: var(--shadow-pop);
+}
+.cari-panel[hidden] { display: none; }
+.cari-panel__kotak { position: relative; display: none; padding: 4px 4px 8px; }
+.cari-panel__kotak .i { left: 17px; margin-top: -10px; }
+.cari-panel--kotak .cari-panel__kotak { display: block; }
+.cari-panel__input { min-height: 44px; font-size: 16px; }
+.cari-hasil__label { padding: 10px 12px 6px; font-size: var(--fs-eyebrow); letter-spacing: var(--track-eyebrow); text-transform: uppercase; color: var(--nav-muted, var(--night-muted)); }
+.cari-hasil .nav__menu-link[aria-selected="true"] { background: rgba(var(--nav-tint, 255, 255, 255), .1); }
+.cari-hasil .nav__menu-link span:not(.nav__menu-icon) { overflow-wrap: anywhere; }
+.cari-hasil mark { background: none; color: rgb(var(--nav-tint, 255, 255, 255)); font-weight: 650; }
+.cari-panel__status { padding: 12px; font-size: 13.5px; color: var(--nav-muted, var(--night-muted)); }
+.cari-panel__status:empty { display: none; }
+.cari-panel__status a { color: var(--nav-accent, var(--night-accent)); text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 1000px) {
+  .nav__cari { display: none; }
+  .nav .nav__cari-buka { display: grid; margin-left: auto; }
+  .nav .nav__cari-buka ~ .nav__cta { margin-left: 4px; }
+  .cari-panel { width: calc(100% - 48px); }
+}
+@media (max-width: 480px) {
+  .nav .nav__cari-buka ~ .nav__toggle { margin-left: 4px; }
+  .cari-panel { width: calc(100% - 40px); }
+}
+
 /* ---------- Tombol ---------- */
 .btn {
   display: inline-flex; align-items: center; gap: 10px;

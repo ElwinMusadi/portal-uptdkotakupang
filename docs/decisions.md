@@ -842,3 +842,15 @@ Usulan fitur yang disetujui pemilik di D-058: panduan bagi warga yang belum tahu
 | Isi awal | Kalimat situasi untuk enam layanan awal diisi migrasi (mis. "STNK hilang", "STNK sudah lima tahun dan pelat nomor perlu diganti", "Kendaraan atas nama perusahaan atau badan hukum"); petugas bisa mengubahnya. |
 | Hasil | Layanan, loket, ringkasan, ketentuan (cek fisik, non-tunai, dapat diwakilkan, label), daftar berkas yang bisa dicentang (tidak disimpan), catatan, dan tombol *Cetak daftar* (hanya hasil panduan yang tercetak), *Rincian layanan*, dan *Cek biaya pajak*. Keperluan yang tidak ada diarahkan ke formulir Kontak atau meja informasi. |
 | Belum ada | Data layanan untuk balik nama di dalam Kota Kupang dan mutasi masuk dari luar daerah; bila persyaratannya dimasukkan sebagai layanan baru di dashboard, panduan otomatis menawarkannya. |
+
+## D-060 · 2026-10-17 · Pencarian di navbar portal
+
+Usulan fitur yang disetujui pemilik di D-058: satu kotak cari untuk seluruh portal.
+
+| Hal | Keputusan |
+|---|---|
+| Tampilan | **Kotak cari di navbar** layar lebar; navbar boleh melebar untuk memuatnya (pemilik). **Hasil langsung di panel di bawah navbar** sambil mengetik, dikelompokkan (pemilik): Halaman, Layanan, Tanya Jawab, Berita & Pengumuman, Regulasi & Unduhan, Aplikasi & Situs, paling banyak empat per kelompok. Di layar sampai 1000 px, atau bila navbar tidak muat (mis. skala tampilan 120% atau huruf tema yang lebar), kotak menjadi ikon kaca pembesar yang membuka panel yang sama dengan kotaknya sendiri. Panel mengikuti warna dan efek glass navbar seperti menunya. |
+| Cara mencari | Di peramban, tanpa endpoint baru: saat pencarian pertama kali dipakai, isi dimuat dari API publik yang sudah ada (layanan dengan situasi, label, berkas, dan catatannya; tanya jawab; berita; dokumen; aplikasi), sedangkan halaman diambil dari menu navbar ditambah panduan layanan, lacak pesan, dan formulir pesan. **Kata kunci tidak dikirim ke server** dan tidak tercatat; aturan D-004 (API publik tanpa parameter kueri) tetap. Semua kata harus cocok, tanpa membedakan huruf besar dan tanda diakritik; kata di judul diutamakan. |
+| Teknis | `initCari()` di `public/assets/js/main.js`, bukan komponen React, karena navbar ada di setiap halaman dan sebagian besar halaman tidak memuat React. |
+| Keyboard | Kotak cari berperan *combobox* dengan daftar hasil: panah atas/bawah memilih, Enter membuka, Escape mengosongkan lalu menutup; jumlah hasil diumumkan lewat status. |
+| Belum dibuat | Isi berita lengkap (yang dicari hanya judul dan ringkasan), lokasi jadwal Samsat Keliling, dan halaman hasil tersendiri. |
