@@ -161,8 +161,25 @@ class ThemeStylesheetTest extends TestCase
         $this->assertStringContainsString("  --nav-blur: 18px;\n", $glass);
         $this->assertStringContainsString(".nav { background: transparent; }\n.nav::after { display: none; }\n.nav::before {\n", $glass);
         $this->assertStringContainsString('  backdrop-filter: blur(var(--nav-blur)) saturate(1.4);', $glass);
-        $this->assertStringContainsString('  mask: var(--nav-glass-shape);', $glass);
         $this->assertStringContainsString(".nav__menu, .mobile-menu {\n", $glass);
+
+        $this->assertSame(1, preg_match('/^\.nav::before \{\n  clip-path: polygon\((.+)\);\n\}$/m', $glass, $outline));
+        $points = explode(', ', $outline[1]);
+        $this->assertCount(52, $points);
+        $this->assertSame([
+            '100% 0',
+            'calc(100% - var(--nav-lekuk) * 0.7071) calc(var(--nav-lekuk) * 0.2929)',
+            'calc(100% - var(--nav-lekuk)) var(--nav-lekuk)',
+            'calc(100% - var(--nav-lekuk)) calc(100% - var(--nav-r))',
+            'calc(100% - var(--nav-lekuk) - var(--nav-r) * 0.2929) calc(100% - var(--nav-r) * 0.2929)',
+            'calc(100% - var(--nav-lekuk) - var(--nav-r)) 100%',
+            'calc(var(--nav-lekuk) + var(--nav-r)) 100%',
+            'calc(var(--nav-lekuk) + var(--nav-r) * 0.2929) calc(100% - var(--nav-r) * 0.2929)',
+            'var(--nav-lekuk) calc(100% - var(--nav-r))',
+            'var(--nav-lekuk) var(--nav-lekuk)',
+            'calc(var(--nav-lekuk) * 0.7071) calc(var(--nav-lekuk) * 0.2929)',
+            '0 0',
+        ], array_values(array_intersect_key($points, array_flip([0, 6, 12, 13, 19, 25, 26, 32, 38, 39, 45, 51]))));
         $this->assertStringNotContainsString('logo-pintu-nav.png', $glass);
         $this->assertStringNotContainsString('{', $this->get('/tema-dashboard.css')->getContent());
     }
