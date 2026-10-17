@@ -123,6 +123,17 @@ class ThemeStylesheetTest extends TestCase
         $this->assertStringEndsWith("\n  --fw-heading: 700;\n}\n", $dashboard);
     }
 
+    public function test_colours_the_portal_buttons_and_navigation_and_the_dashboard_main_buttons_in_light_mode(): void
+    {
+        $this->saveTheme(['gelap' => '#0F1B3D'], ['gelap' => '#0F1B3D']);
+
+        $portal = $this->get('/tema-portal.css')->assertOk()->getContent();
+        $this->assertStringContainsString("\n:root {\n  --ink-fill: #0F1B3D;\n  --ink-hover: ", $portal);
+        $this->assertStringContainsString("\n  --chrome: #0F1B3D;\n  --chrome-2: ", $portal);
+        $this->assertStringNotContainsString('--night', $portal);
+        $this->assertStringEndsWith("\nhtml:root:not(.dark) {\n  --primary: #0F1B3D;\n}\n", $this->get('/tema-dashboard.css')->getContent());
+    }
+
     public function test_serves_only_a_comment_for_a_saved_theme_equal_to_the_built_in_look(): void
     {
         $this->saveTheme(['aksen' => '#2b63f6']);
@@ -151,11 +162,14 @@ class ThemeStylesheetTest extends TestCase
         $this->assertSame(ThemeVariables::SYSTEM_TEXT_FONT, $portal['--font-sans']);
         $this->assertSame(ThemeVariables::SYSTEM_DISPLAY_FONT, $portal['--font-display']);
         $this->assertSame((string) ThemeVariables::DEFAULT_HEADING_WEIGHT, $portal['--fw-display']);
+        $this->assertSame(ThemeVariables::DEFAULT_DARK, $portal['--chrome']);
+        $this->assertSame('var(--ink)', $portal['--ink-fill']);
+        $this->assertSame('var(--night-2)', $portal['--chrome-2']);
 
         $index = (string) file_get_contents(resource_path('js/dashboard/index.css'));
         $light = $this->declarations(substr($index, strpos($index, "\n:root {")));
         $dark = $this->declarations(substr($index, strpos($index, "\n.dark {")));
-        foreach ([...ThemeVariables::DASHBOARD_BACKGROUND, ...ThemeVariables::DASHBOARD_LIGHT_ACCENT, '--radius' => ThemeVariables::DASHBOARD_RADIUS, '--fw-heading' => (string) ThemeVariables::DEFAULT_HEADING_WEIGHT] as $name => $value) {
+        foreach ([...ThemeVariables::DASHBOARD_BACKGROUND, ...ThemeVariables::DASHBOARD_LIGHT_ACCENT, '--radius' => ThemeVariables::DASHBOARD_RADIUS, '--fw-heading' => (string) ThemeVariables::DEFAULT_HEADING_WEIGHT, '--primary' => ThemeVariables::DASHBOARD_PRIMARY] as $name => $value) {
             $this->assertSame($value, $light[$name], $name);
         }
         foreach (ThemeVariables::DASHBOARD_DARK_ACCENT as $name => $value) {

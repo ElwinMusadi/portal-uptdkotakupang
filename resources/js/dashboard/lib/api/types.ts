@@ -358,6 +358,8 @@ export interface BagianTema {
   sudut: SudutTema
   skala: SkalaTema
   tebalJudul: TebalJudul
+  /** Warna gelap #RRGGBB tombol dan navigasi (portal) atau tombol utama (dashboard); panel gelap tetap hitam */
+  gelap: string
 }
 
 /** Mode portal untuk semua pengunjung (D-057); mode gelap dashboard tetap pilihan tiap pegawai */

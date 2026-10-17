@@ -17,7 +17,7 @@ const BATANG = [38, 52, 44, 70, 86, 61]
  * awalan --p- karena namanya (mis. --accent) juga dipakai dashboard. Skala
  * diterapkan dengan zoom, seperti di portal; mode gelap lewat variabelnya,
  * dengan --chrome untuk permukaan yang tetap gelap dan --on-ink untuk teks
- * di atas tombol yang dibalik.
+ * di atas tombol yang dibalik. Tombol gelap memakai --ink-fill (warna gelap).
  */
 export function PratinjauPortal({ variabel, skala }: { variabel: Record<string, string>; skala: number }) {
   const gaya = Object.fromEntries(
@@ -51,7 +51,7 @@ export function PratinjauPortal({ variabel, skala }: { variabel: Record<string, 
       </div>
 
       <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
-        <span className="rounded-full bg-(--p-ink) px-4 py-2 text-(--p-on-ink)">Cek persyaratan</span>
+        <span className="rounded-full bg-(--p-ink-fill) px-4 py-2 text-(--p-on-ink)">Cek persyaratan</span>
         <span className="rounded-full bg-(--p-accent) px-4 py-2 text-(--p-on-ink)">Ambil antrean</span>
         <span className="text-(--p-accent-ink) underline decoration-(--p-accent-line) decoration-2 underline-offset-4">
           Lihat jadwal →

@@ -15,8 +15,9 @@ class ThemePreviewController extends Controller
      * Tampilan previews it while it is edited: the portal's themable tokens
      * and font rules for the portal sample (the portal's variable names are
      * also the dashboard's, so its stylesheet cannot be applied there), the
-     * dashboard's accent as adjusted and its stylesheet, and the contrast of
-     * the colour pairs that carry text. Nothing is saved.
+     * dashboard's accent as adjusted and its stylesheet, each part's dark as
+     * adjusted, and the contrast of the colour pairs that carry text. Nothing
+     * is saved.
      */
     public function __invoke(UpdateThemeRequest $request, BuildThemeStylesheet $buildStylesheet): JsonResponse
     {
@@ -26,10 +27,12 @@ class ThemePreviewController extends Controller
             'portal' => [
                 'variabel' => ThemeVariables::portalPreview($portal),
                 'huruf' => $buildStylesheet->fonts($portal),
+                'gelap' => ThemeVariables::portalDark($portal),
                 'kontras' => ThemeVariables::portalContrasts($portal),
             ],
             'dashboard' => [
                 'aksen' => ThemeVariables::dashboard($dashboard)['light']['--brand'] ?? ThemeVariables::DEFAULT_ACCENT,
+                'gelap' => ThemeVariables::dashboardDark($dashboard),
                 'css' => $buildStylesheet->dashboard($dashboard),
                 'kontras' => ThemeVariables::dashboardContrasts($dashboard),
             ],

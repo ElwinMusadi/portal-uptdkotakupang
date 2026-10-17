@@ -13,7 +13,7 @@ use App\Enums\ThemeFont;
  * setting differs from it, and colours derived from another accent are
  * computed in OKLCH and kept readable (ThemePalette).
  *
- * @phpstan-type ThemeSection array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, mode?: string}
+ * @phpstan-type ThemeSection array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, gelap: string, mode?: string}
  */
 final class ThemeVariables
 {
@@ -21,6 +21,24 @@ final class ThemeVariables
      * The built-in accent, PINTU blue.
      */
     public const string DEFAULT_ACCENT = '#2B63F6';
+
+    /**
+     * The built-in dark of the buttons and the navigation (Irisan 6): the
+     * portal's --ink as a fill and --chrome, the dashboard's --primary.
+     */
+    public const string DEFAULT_DARK = '#0F1319';
+
+    /**
+     * How light a chosen dark may be (OKLCH lightness), so it stays a dark;
+     * the built-in one is 0.19.
+     */
+    private const float DARK_MAX_LIGHTNESS = 0.28;
+
+    /**
+     * The grey text of the portal's dark surfaces (--night-muted), which
+     * also sits on the navigation and the dark cards.
+     */
+    private const string NIGHT_MUTED = '#9BA0A8';
 
     /**
      * The built-in weight of the headings: the portal's --fw-display
@@ -188,6 +206,11 @@ final class ThemeVariables
     ];
 
     /**
+     * The dashboard's main buttons in light mode (index.css --primary).
+     */
+    public const string DASHBOARD_PRIMARY = '#0f1319';
+
+    /**
      * The dashboard's corner radius (index.css).
      */
     public const string DASHBOARD_RADIUS = '0.625rem';
@@ -215,15 +238,37 @@ final class ThemeVariables
         $background = ThemeBackground::from($section['latar']);
         $backgroundColours = $background->shades(self::PORTAL_BACKGROUND);
 
+        $accent = self::hasDefaultAccent($section) ? self::PORTAL_ACCENT : self::portalAccent($section['aksen'], $backgroundColours);
+
         if (self::isDark($section)) {
             $dark = $background->shades(self::PORTAL_DARK);
-            $accent = self::hasDefaultAccent($section) ? self::PORTAL_ACCENT : self::portalAccent($section['aksen'], $backgroundColours);
             $variables = ['color-scheme' => 'dark', ...$dark, ...self::PORTAL_DARK_STATUS, ...$accent, ...self::portalDarkAccent($section['aksen'], $dark)];
+
+            if (! self::hasDefaultDark($section)) {
+                // The fills stay inverted; only the surfaces that stay dark take the colour
+                [$lightness] = ThemePalette::oklch($section['gelap']);
+                [$chromeLightness] = ThemePalette::oklch($dark['--chrome']);
+                $chrome = ThemePalette::darkenedFor(
+                    ThemePalette::tone($section['gelap'], max(min($lightness, self::DARK_MAX_LIGHTNESS), $chromeLightness), 1, 0.12),
+                    ['#FFFFFF', self::NIGHT_MUTED, $accent['--night-accent']],
+                );
+                $variables = [...$variables, '--chrome' => $chrome, '--chrome-2' => self::lighter($chrome, 0.05)];
+            }
         } else {
             $variables = $background === ThemeBackground::Hangat ? [] : $backgroundColours;
 
             if (! self::hasDefaultAccent($section)) {
-                $variables += self::portalAccent($section['aksen'], $backgroundColours);
+                $variables += $accent;
+            }
+
+            if (! self::hasDefaultDark($section)) {
+                $fill = self::portalDark($section);
+                $variables += [
+                    '--ink-fill' => $fill,
+                    '--ink-hover' => ThemePalette::darkenedFor(self::lighter($fill, 0.08), ['#FFFFFF']),
+                    '--chrome' => $fill,
+                    '--chrome-2' => self::lighter($fill, 0.05),
+                ];
             }
         }
 
@@ -271,6 +316,39 @@ final class ThemeVariables
     }
 
     /**
+     * The portal's dark buttons and navigation in light mode: the section's
+     * dark, kept dark and readable under white text, the grey text of the
+     * dark surfaces, and the accent that marks the current page.
+     *
+     * @param  ThemeSection  $section
+     */
+    public static function portalDark(array $section): string
+    {
+        if (self::hasDefaultDark($section)) {
+            return self::DEFAULT_DARK;
+        }
+
+        $nightAccent = self::hasDefaultAccent($section)
+            ? self::PORTAL_ACCENT['--night-accent']
+            : self::onDark($section['aksen'], self::PORTAL_NIGHT);
+
+        return ThemePalette::darkenedFor(self::deepened($section['gelap']), ['#FFFFFF', self::NIGHT_MUTED, $nightAccent]);
+    }
+
+    /**
+     * The dashboard's main buttons in light mode: the section's dark, kept
+     * dark and readable under white text.
+     *
+     * @param  ThemeSection  $section
+     */
+    public static function dashboardDark(array $section): string
+    {
+        return self::hasDefaultDark($section)
+            ? self::DEFAULT_DARK
+            : ThemePalette::darkenedFor(self::deepened($section['gelap']), ['#FFFFFF']);
+    }
+
+    /**
      * Whether the portal part shows the portal dark for every visitor.
      *
      * @param  ThemeSection  $section
@@ -301,6 +379,9 @@ final class ThemeVariables
             ],
             self::portal($section),
         );
+        // Without a dark of their own, the fills are --ink and the boxes on the navigation --night-2
+        $variables['--ink-fill'] ??= $variables['--ink'];
+        $variables['--chrome-2'] ??= self::PORTAL_NIGHT[1];
 
         return array_filter($variables, fn (string $name): bool => str_starts_with($name, '--'), ARRAY_FILTER_USE_KEY);
     }
@@ -340,6 +421,11 @@ final class ThemeVariables
             $both['--radius'] = self::number(0.625 * $corners->factor()).'rem';
         }
 
+        if (! self::hasDefaultDark($section)) {
+            // The main buttons; in dark mode they stay light
+            $light['--primary'] = self::dashboardDark($section);
+        }
+
         return ['both' => $both, 'light' => $light, 'dark' => $dark];
     }
 
@@ -377,6 +463,8 @@ final class ThemeVariables
                 'Tautan kecil pada kotak abu' => [$colours['--accent-ink'], $colours['--paper-2']],
                 'Teks pada tombol terpilih' => [$colours['--on-ink'], $colours['--ink']],
                 'Aksen pada panel gelap' => [$colours['--night-accent'], self::PORTAL_NIGHT[1]],
+                'Teks abu pada navigasi gelap' => [self::NIGHT_MUTED, $colours['--chrome']],
+                'Aksen pada navigasi gelap' => [$colours['--night-accent'], $colours['--chrome']],
             ]);
         }
 
@@ -387,6 +475,9 @@ final class ThemeVariables
             'Tautan kecil pada kotak abu' => [$colours['--accent-ink'], $colours['--paper-2']],
             'Aksen pada panel gelap' => [$colours['--night-accent'], self::PORTAL_NIGHT[1]],
             'Teks pendukung pada latar halaman' => ['#646A72', $colours['--paper']],
+            'Teks putih pada tombol gelap' => ['#FFFFFF', $colours['--ink-fill']],
+            'Teks abu pada navigasi gelap' => [self::NIGHT_MUTED, $colours['--chrome']],
+            'Aksen pada navigasi gelap' => [$colours['--night-accent'], $colours['--chrome']],
         ]);
     }
 
@@ -400,13 +491,14 @@ final class ThemeVariables
     public static function dashboardContrasts(array $section): array
     {
         $variables = self::dashboard($section);
-        $light = array_merge(self::DASHBOARD_BACKGROUND, self::DASHBOARD_LIGHT_ACCENT, $variables['light']);
+        $light = array_merge(self::DASHBOARD_BACKGROUND, self::DASHBOARD_LIGHT_ACCENT, ['--primary' => self::DASHBOARD_PRIMARY], $variables['light']);
         $dark = array_merge(self::DASHBOARD_DARK_ACCENT, $variables['dark']);
 
         return self::contrasts([
             'Teks putih pada tombol warna merek' => ['#FFFFFF', $light['--brand']],
             'Warna merek pada sidebar' => [$light['--brand'], $light['--sidebar']],
             'Warna merek pada kartu mode gelap' => [$dark['--brand'], self::DASHBOARD_DARK_SURFACES[1]],
+            'Teks putih pada tombol utama' => ['#FFFFFF', $light['--primary']],
         ]);
     }
 
@@ -557,6 +649,36 @@ final class ThemeVariables
     private static function hasDefaultAccent(array $section): bool
     {
         return strtoupper($section['aksen']) === self::DEFAULT_ACCENT;
+    }
+
+    /**
+     * @param  ThemeSection  $section
+     */
+    private static function hasDefaultDark(array $section): bool
+    {
+        return strtoupper($section['gelap']) === self::DEFAULT_DARK;
+    }
+
+    /**
+     * The colour as a dark: no lighter than DARK_MAX_LIGHTNESS, in its hue.
+     * A colour already dark enough is kept as it is.
+     */
+    private static function deepened(string $colour): string
+    {
+        [$lightness] = ThemePalette::oklch($colour);
+
+        return $lightness > self::DARK_MAX_LIGHTNESS ? ThemePalette::tone($colour, self::DARK_MAX_LIGHTNESS, 1, 0.12) : $colour;
+    }
+
+    /**
+     * A lighter shade of a dark in its hue, for hover states and the boxes
+     * on a dark surface.
+     */
+    private static function lighter(string $colour, float $step): string
+    {
+        [$lightness] = ThemePalette::oklch($colour);
+
+        return ThemePalette::tone($colour, $lightness + $step, 1, 0.12);
     }
 
     /**

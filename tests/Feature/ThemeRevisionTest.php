@@ -79,6 +79,7 @@ class ThemeRevisionTest extends TestCase
             ->assertJsonPath('0.tema.portal.skala', 100)
             ->assertJsonPath('0.tema.portal.mode', 'terang')
             ->assertJsonPath('0.tema.portal.tebalJudul', 600)
+            ->assertJsonPath('0.tema.portal.gelap', '#0F1319')
             ->assertJsonPath('0.tema.portal.sudut', 'tegas')
             ->assertJsonPath('0.oleh', null);
     }
@@ -94,6 +95,7 @@ class ThemeRevisionTest extends TestCase
             ->assertJsonPath('portal.mode', 'terang')
             ->assertJsonPath('portal.tebalJudul', 600)
             ->assertJsonPath('dashboard.tebalJudul', 600)
+            ->assertJsonPath('dashboard.gelap', '#0F1319')
             ->assertJsonMissingPath('dashboard.mode')
             ->assertJsonPath('dashboard.aksen', '#2F7D4F');
     }

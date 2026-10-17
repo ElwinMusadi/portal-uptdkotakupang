@@ -86,6 +86,73 @@ class ThemeVariablesTest extends TestCase
         }
     }
 
+    #[DataProvider('accents')]
+    public function test_keeps_every_chosen_dark_dark_and_readable(string $dark): void
+    {
+        foreach (['#2B63F6', '#F2C46B', '#0B1533', '#00FF66'] as $accent) {
+            foreach (['terang', 'gelap'] as $mode) {
+                $section = $this->section(['aksen' => $accent, 'gelap' => $dark, 'mode' => $mode]);
+
+                foreach ([...ThemeVariables::portalContrasts($section), ...ThemeVariables::dashboardContrasts($section)] as $pair) {
+                    $this->assertGreaterThanOrEqual(ThemePalette::MIN_CONTRAST, $pair['rasio'], "{$dark} {$accent} {$mode}: {$pair['pasangan']}");
+                }
+            }
+            $section = $this->section(['aksen' => $accent, 'gelap' => $dark]);
+            $portal = ThemeVariables::portal($section);
+            $this->assertGreaterThanOrEqual(ThemePalette::MIN_CONTRAST, ThemePalette::contrast('#FFFFFF', $portal['--ink-hover']), "{$dark} {$accent}: hover");
+        }
+        foreach ([ThemeVariables::portalDark($this->section(['gelap' => $dark])), ThemeVariables::dashboardDark($this->section(['gelap' => $dark]))] as $used) {
+            $this->assertLessThanOrEqual(0.285, ThemePalette::oklch($used)[0], "{$dark} -> {$used}");
+        }
+    }
+
+    #[DataProvider('colouredAccents')]
+    public function test_keeps_the_hue_of_the_chosen_dark(string $dark): void
+    {
+        foreach ([ThemeVariables::portalDark($this->section(['gelap' => $dark])), ThemeVariables::dashboardDark($this->section(['gelap' => $dark]))] as $used) {
+            $this->assertEqualsWithDelta(ThemePalette::oklch($dark)[2], ThemePalette::oklch($used)[2], 6, "{$dark} -> {$used}");
+        }
+    }
+
+    public function test_colours_the_buttons_and_the_navigation_but_not_the_dark_panels_or_the_text(): void
+    {
+        $section = $this->section(['gelap' => '#0F1B3D']);
+
+        $portal = ThemeVariables::portal($section);
+        $this->assertSame(['--ink-fill', '--ink-hover', '--chrome', '--chrome-2'], array_keys($portal));
+        $this->assertSame('#0F1B3D', $portal['--ink-fill']);
+        $this->assertSame('#0F1B3D', $portal['--chrome']);
+        $this->assertGreaterThan(ThemePalette::oklch('#0F1B3D')[0], ThemePalette::oklch($portal['--ink-hover'])[0]);
+        $this->assertGreaterThan(ThemePalette::oklch('#0F1B3D')[0], ThemePalette::oklch($portal['--chrome-2'])[0]);
+        $this->assertSame(['both' => [], 'light' => ['--primary' => '#0F1B3D'], 'dark' => []], ThemeVariables::dashboard($section));
+        $this->assertSame('#0F1B3D', ThemeVariables::portalPreview($section)['--ink-fill']);
+        $this->assertSame([], ThemeVariables::portal($this->section(['gelap' => '#0f1319'])));
+
+        $dark = ThemeVariables::portal($this->section(['gelap' => '#0F1B3D', 'mode' => 'gelap']));
+        $this->assertArrayNotHasKey('--ink-fill', $dark);
+        $this->assertSame('#EFEEEB', $dark['--ink']);
+        $this->assertGreaterThanOrEqual(ThemePalette::oklch(ThemeVariables::PORTAL_DARK['--chrome'])[0] - 0.0005, ThemePalette::oklch($dark['--chrome'])[0]);
+        $this->assertEqualsWithDelta(ThemePalette::oklch('#0F1B3D')[2], ThemePalette::oklch($dark['--chrome'])[2], 6);
+        $this->assertGreaterThan(ThemePalette::oklch($dark['--chrome'])[0], ThemePalette::oklch($dark['--chrome-2'])[0]);
+        $this->assertSame('#EFEEEB', ThemeVariables::portalPreview($this->section(['gelap' => '#0F1B3D', 'mode' => 'gelap']))['--ink-fill']);
+
+        $pairs = array_column(ThemeVariables::portalContrasts($section), 'rasio', 'pasangan');
+        $this->assertSame(round(ThemePalette::contrast('#FFFFFF', '#0F1B3D'), 2), $pairs['Teks putih pada tombol gelap']);
+        $this->assertSame(round(ThemePalette::contrast('#9BA0A8', '#0F1B3D'), 2), $pairs['Teks abu pada navigasi gelap']);
+        $this->assertSame(round(ThemePalette::contrast('#7FA4FF', '#0F1B3D'), 2), $pairs['Aksen pada navigasi gelap']);
+        $darkPairs = array_column(ThemeVariables::portalContrasts($this->section(['gelap' => '#0F1B3D', 'mode' => 'gelap'])), 'rasio', 'pasangan');
+        $this->assertSame(round(ThemePalette::contrast('#9BA0A8', $dark['--chrome']), 2), $darkPairs['Teks abu pada navigasi gelap']);
+        $this->assertSame(round(ThemePalette::contrast('#7FA4FF', $dark['--chrome']), 2), $darkPairs['Aksen pada navigasi gelap']);
+        $this->assertSame(round(ThemePalette::contrast('#FFFFFF', '#0F1B3D'), 2), array_column(ThemeVariables::dashboardContrasts($section), 'rasio', 'pasangan')['Teks putih pada tombol utama']);
+    }
+
+    public function test_deepens_a_light_dark_to_a_dark_shade(): void
+    {
+        $this->assertSame('#082163', ThemeVariables::portalDark($this->section(['gelap' => '#2B63F6'])));
+        $this->assertSame('#0F1B3D', ThemeVariables::portalDark($this->section(['gelap' => '#0F1B3D'])));
+        $this->assertSame(ThemeVariables::DEFAULT_DARK, ThemeVariables::dashboardDark($this->section()));
+    }
+
     public function test_turns_the_portal_dark_for_every_visitor_and_keeps_the_dark_panels(): void
     {
         $portal = ThemeVariables::portal($this->section(['mode' => 'gelap']));
@@ -101,7 +168,7 @@ class ThemeVariablesTest extends TestCase
         $this->assertSame(ThemePalette::rgba($portal['--accent'], 0.25), $portal['--accent-halo']);
         $this->assertArrayNotHasKey('--night', $portal);
         $this->assertFalse(ThemeVariables::isDark($this->section()));
-        $this->assertFalse(ThemeVariables::isDark(['aksen' => '#2B63F6', 'latar' => 'hangat', 'hurufTeks' => 'sistem', 'hurufJudul' => 'sama', 'sudut' => 'sedang', 'skala' => 100, 'tebalJudul' => 600]));
+        $this->assertFalse(ThemeVariables::isDark(['aksen' => '#2B63F6', 'latar' => 'hangat', 'hurufTeks' => 'sistem', 'hurufJudul' => 'sama', 'sudut' => 'sedang', 'skala' => 100, 'tebalJudul' => 600, 'gelap' => '#0F1319']));
     }
 
     #[TestWith(['netral'])]
@@ -236,23 +303,25 @@ class ThemeVariablesTest extends TestCase
         $preview = ThemeVariables::portalPreview($this->section(['latar' => 'sejuk']));
 
         $this->assertSame(
-            [...array_keys(ThemeVariables::PORTAL_BACKGROUND), ...array_keys(ThemeVariables::PORTAL_TEXT), ...array_keys(ThemeVariables::PORTAL_ACCENT), '--font-sans', '--font-display', '--fw-display', '--r-scale'],
+            [...array_keys(ThemeVariables::PORTAL_BACKGROUND), ...array_keys(ThemeVariables::PORTAL_TEXT), ...array_keys(ThemeVariables::PORTAL_ACCENT), '--font-sans', '--font-display', '--fw-display', '--r-scale', '--ink-fill', '--chrome-2'],
             array_keys($preview),
         );
         $this->assertSame(ThemeBackground::Sejuk->shade('#F7F6F2'), $preview['--paper']);
         $this->assertSame('#2B63F6', $preview['--accent']);
         $this->assertSame(ThemeVariables::SYSTEM_TEXT_FONT, $preview['--font-sans']);
         $this->assertSame('600', $preview['--fw-display']);
+        $this->assertSame('#0F1319', $preview['--ink-fill']);
+        $this->assertSame('#17181B', $preview['--chrome-2']);
     }
 
     /**
      * A theme section, the built-in look unless overridden.
      *
      * @param  array<string, string|int>  $overrides
-     * @return array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int}
+     * @return array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, gelap: string}
      */
     private function section(array $overrides = []): array
     {
-        return [...['aksen' => '#2B63F6', 'latar' => 'hangat', 'hurufTeks' => 'sistem', 'hurufJudul' => 'sama', 'sudut' => 'sedang', 'skala' => 100, 'tebalJudul' => 600], ...$overrides];
+        return [...['aksen' => '#2B63F6', 'latar' => 'hangat', 'hurufTeks' => 'sistem', 'hurufJudul' => 'sama', 'sudut' => 'sedang', 'skala' => 100, 'tebalJudul' => 600, 'gelap' => '#0F1319'], ...$overrides];
     }
 }

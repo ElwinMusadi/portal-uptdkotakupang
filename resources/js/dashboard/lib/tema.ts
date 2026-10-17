@@ -24,6 +24,7 @@ export const TEMA_BAWAAN: BagianTema = {
   sudut: "sedang",
   skala: 100,
   tebalJudul: 600,
+  gelap: "#0F1319",
 }
 
 /** Bagian portal tampilan bawaan: terang untuk semua pengunjung */
@@ -67,6 +68,19 @@ export function keluargaHuruf(keluarga: string | null) {
   return keluarga === null ? `"SF Pro Display", ${sistem}` : `"${keluarga}", ${sistem}`
 }
 
+/**
+ * Contoh warna gelap siap klik; "Dari warna utama" memakai warna utama saat
+ * ini, yang digelapkan server. Semua contoh lain sudah cukup gelap.
+ */
+export const GELAP: { nilai: string; label: string }[] = [
+  { nilai: "#0F1319", label: "Hitam (bawaan)" },
+  { nilai: "aksen", label: "Dari warna utama" },
+  { nilai: "#0F1B3D", label: "Biru malam" },
+  { nilai: "#0E2A20", label: "Hijau tua" },
+  { nilai: "#2A1C14", label: "Cokelat kopi" },
+  { nilai: "#24163A", label: "Ungu terong" },
+]
+
 export const TEBAL_JUDUL: { nilai: TebalJudul; label: string }[] = [
   { nilai: 600, label: "Semi-tebal" },
   { nilai: 700, label: "Tebal" },
@@ -98,14 +112,26 @@ export interface TemaSiapPakai {
   keterangan: string
   /**
    * Tanpa skala: memilih tema siap pakai tidak mengubah ukuran tampilan.
-   * Tanpa ketebalan judul: diisi saran untuk huruf judulnya.
+   * Tanpa ketebalan judul: diisi saran untuk huruf judulnya. Tanpa warna
+   * gelap: tema siap pakai tidak mengubahnya.
    */
-  nilai: Omit<BagianTema, "skala" | "tebalJudul">
+  nilai: Omit<BagianTema, "skala" | "tebalJudul" | "gelap">
 }
 
 /** Tema siap pakai; tiap pilihan tetap bisa diubah sesudahnya (menjadi "Kustom") */
 export const TEMA_SIAP_PAKAI: TemaSiapPakai[] = [
-  { id: "pintu", nama: "PINTU", keterangan: "Biru PINTU, kertas hangat (bawaan)", nilai: TEMA_BAWAAN },
+  {
+    id: "pintu",
+    nama: "PINTU",
+    keterangan: "Biru PINTU, kertas hangat (bawaan)",
+    nilai: {
+      aksen: TEMA_BAWAAN.aksen,
+      latar: TEMA_BAWAAN.latar,
+      hurufTeks: TEMA_BAWAAN.hurufTeks,
+      hurufJudul: TEMA_BAWAAN.hurufJudul,
+      sudut: TEMA_BAWAAN.sudut,
+    },
+  },
   {
     id: "samudra",
     nama: "Samudra",
@@ -164,10 +190,12 @@ export interface PratinjauTema {
     variabel: Record<string, string>
     /** Aturan @font-face huruf portal yang dipilih */
     huruf: string
+    /** Warna gelap tombol dan navigasi mode terang sesudah disesuaikan */
+    gelap: string
     kontras: Kontras[]
   }
-  /** aksen = warna merek dashboard sesudah disesuaikan agar terbaca */
-  dashboard: { aksen: string; css: string; kontras: Kontras[] }
+  /** aksen = warna merek dashboard dan gelap = tombol utama, sesudah disesuaikan agar terbaca */
+  dashboard: { aksen: string; gelap: string; css: string; kontras: Kontras[] }
 }
 
 /** Pratinjau tema dari server, ditunda sebentar selama warna diketik atau digeser */
@@ -182,7 +210,7 @@ export function usePratinjauTema(tema: Tema, aktif: boolean) {
   return useQuery({
     queryKey: ["tema-pratinjau", tertunda],
     queryFn: () => mintaServer<PratinjauTema>("/api/pengaturan/tema/pratinjau", "POST", isi),
-    enabled: aktif && POLA_WARNA.test(isi.portal.aksen) && POLA_WARNA.test(isi.dashboard.aksen),
+    enabled: aktif && [isi.portal.aksen, isi.portal.gelap, isi.dashboard.aksen, isi.dashboard.gelap].every((w) => POLA_WARNA.test(w)),
     placeholderData: keepPreviousData,
     staleTime: Infinity,
     retry: false,

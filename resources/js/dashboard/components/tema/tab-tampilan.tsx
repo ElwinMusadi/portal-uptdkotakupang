@@ -26,6 +26,7 @@ import { laporGalat } from "@/lib/queries"
 import {
   akhiriPratinjauPortal,
   buatTautanPratinjau,
+  GELAP,
   HURUF,
   hurufJudulDipakai,
   hurufPratinjauPortal,
@@ -59,6 +60,7 @@ const skemaBagian = z.object({
   sudut: z.enum(["tegas", "sedang", "membulat"]),
   skala: z.union([z.literal(90), z.literal(100), z.literal(110), z.literal(120)]),
   tebalJudul: z.union([z.literal(600), z.literal(700), z.literal(800)]),
+  gelap: z.string().regex(POLA_WARNA, "Tulis kode warna #RRGGBB, mis. #0F1319."),
 })
 const skemaTema = z.object({ portal: skemaBagian.extend({ mode: z.enum(["terang", "gelap"]) }), dashboard: skemaBagian })
 
@@ -165,6 +167,7 @@ function IsiTampilan({ form, admin }: { form: UseFormReturn<Tema>; admin: boolea
               bagian="portal"
               keterangan="Berlaku untuk semua pengunjung di semua halaman portal, halaman 404, Login Pegawai, Aktivasi, dan layar TV antrean."
               aksenJadi={pratinjau?.portal.variabel["--accent"]}
+              gelapJadi={pratinjau?.portal.gelap}
               kontras={pratinjau?.portal.kontras}
               admin={admin}
             />
@@ -205,6 +208,7 @@ function IsiTampilan({ form, admin }: { form: UseFormReturn<Tema>; admin: boolea
                 : "Berlaku di dashboard dan aplikasi Absensi, mode terang dan gelap."
             }
             aksenJadi={pratinjau?.dashboard.aksen}
+            gelapJadi={pratinjau?.dashboard.gelap}
             kontras={pratinjau?.dashboard.kontras}
             admin={admin}
           />
@@ -221,6 +225,7 @@ function FormBagian({
   bagian,
   keterangan,
   aksenJadi,
+  gelapJadi,
   kontras,
   admin,
 }: {
@@ -229,6 +234,7 @@ function FormBagian({
   bagian: NamaBagian
   keterangan: string
   aksenJadi?: string
+  gelapJadi?: string
   kontras?: Kontras[]
   admin: boolean
 }) {
@@ -237,7 +243,6 @@ function FormBagian({
   // Pilihan baru menimpa pilihan sekarang; yang tidak disebut (skala, mode portal) tetap
   const atur = (baru: Partial<BagianTemaPortal>) =>
     form.setValue(bagian, { ...nilai, ...baru } as BagianTemaPortal, { shouldDirty: true, shouldValidate: true })
-  const disesuaikan = POLA_WARNA.test(nilai.aksen) && aksenJadi !== undefined && aksenJadi.toUpperCase() !== nilai.aksen.toUpperCase()
   const judul = hurufJudulDipakai(nilai)
   // Huruf judul yang berganti mendapat ketebalan yang disarankan untuknya; sesudahnya tetap bisa diubah
   const sarankanTebal = () =>
@@ -290,45 +295,44 @@ function FormBagian({
         judul="Warna utama"
         deskripsi="Untuk tombol, tautan, sorotan, dan grafik. Warna turunannya (lebih gelap, lebih muda, dan versi panel gelap) dibuat otomatis."
       >
-        <FormField
-          control={form.control}
+        <FieldWarna
+          form={form}
           name={`${bagian}.aksen`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Kode warna</FormLabel>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  aria-label="Pilih warna"
-                  value={POLA_WARNA.test(field.value) ? field.value.toLowerCase() : "#000000"}
-                  onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-                  className="h-9 w-12 shrink-0 cursor-pointer rounded-md border bg-transparent p-1 disabled:cursor-not-allowed"
-                />
-                <FormControl>
-                  <Input
-                    {...field}
-                    onChange={(e) => field.onChange(e.target.value.trim())}
-                    maxLength={7}
-                    spellCheck={false}
-                    autoComplete="off"
-                    className="w-32 font-mono uppercase"
-                  />
-                </FormControl>
-              </div>
-              {disesuaikan && (
-                <FormDescription className="flex flex-wrap items-center gap-2">
-                  <span
-                    aria-hidden="true"
-                    className="size-3.5 rounded-full border border-black/10"
-                    style={{ background: aksenJadi }}
-                  />
-                  Dipakai sebagai {aksenJadi} agar teks putih di atasnya dan tautan tetap terbaca.
-                </FormDescription>
-              )}
-              <FormMessage />
-            </FormItem>
-          )}
+          jadi={aksenJadi}
+          alasan="agar teks putih di atasnya dan tautan tetap terbaca."
         />
+      </Bagian>
+
+      <Bagian
+        judul="Warna gelap"
+        deskripsi={
+          bagian === "portal"
+            ? "Latar tombol gelap, pilihan terpilih, navigasi dan menunya, toast, dan kartu gelap. Panel gelap (papan layanan, dasbor beranda, layar TV) tetap hitam; warna teks tidak berubah."
+            : "Latar tombol utama di dashboard dan Absensi (mode terang). Warna teks tidak berubah."
+        }
+      >
+        <FieldWarna form={form} name={`${bagian}.gelap`} jadi={gelapJadi} alasan="agar tetap gelap dan teks di atasnya terbaca." />
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Contoh warna gelap">
+          {GELAP.map((g) => {
+            const warna = g.nilai === "aksen" ? nilai.aksen : g.nilai
+            const bisa = POLA_WARNA.test(warna)
+            return (
+              <Button
+                key={g.label}
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={!bisa}
+                aria-pressed={bisa && nilai.gelap.toUpperCase() === warna.toUpperCase()}
+                onClick={() => atur({ gelap: warna.toUpperCase() })}
+                className="aria-pressed:border-ring aria-pressed:bg-muted/50"
+              >
+                <span aria-hidden="true" className="size-3.5 rounded-full border border-black/10" style={{ background: warna }} />
+                {g.label}
+              </Button>
+            )
+          })}
+        </div>
       </Bagian>
 
       {bagian === "portal" && (
@@ -592,6 +596,61 @@ function FormBagian({
   )
 }
 
+/** Pemilih warna dan kode #RRGGBB, dengan keterangan bila server menyesuaikan warnanya */
+function FieldWarna({
+  form,
+  name,
+  jadi,
+  alasan,
+}: {
+  form: UseFormReturn<Tema>
+  name: `${NamaBagian}.aksen` | `${NamaBagian}.gelap`
+  /** Warna yang dipakai sesudah disesuaikan server */
+  jadi?: string
+  alasan: string
+}) {
+  const nilai = useWatch({ control: form.control, name })
+  const disesuaikan = POLA_WARNA.test(nilai) && jadi !== undefined && jadi.toUpperCase() !== nilai.toUpperCase()
+
+  return (
+    <FormField
+      control={form.control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Kode warna</FormLabel>
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              aria-label="Pilih warna"
+              value={POLA_WARNA.test(field.value) ? field.value.toLowerCase() : "#000000"}
+              onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+              className="h-9 w-12 shrink-0 cursor-pointer rounded-md border bg-transparent p-1 disabled:cursor-not-allowed"
+            />
+            <FormControl>
+              <Input
+                {...field}
+                onChange={(e) => field.onChange(e.target.value.trim())}
+                maxLength={7}
+                spellCheck={false}
+                autoComplete="off"
+                className="w-32 font-mono uppercase"
+              />
+            </FormControl>
+          </div>
+          {disesuaikan && (
+            <FormDescription className="flex flex-wrap items-center gap-2">
+              <span aria-hidden="true" className="size-3.5 rounded-full border border-black/10" style={{ background: jadi }} />
+              Dipakai sebagai {jadi} {alasan}
+            </FormDescription>
+          )}
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  )
+}
+
 /** Lima tema terakhir yang disimpan; "Pakai lagi" memuatnya ke formulir untuk disimpan ulang */
 function RiwayatTampilan({ form }: { form: UseFormReturn<Tema> }) {
   const { data, error } = useRiwayatTema(true)
@@ -642,7 +701,10 @@ function RiwayatTampilan({ form }: { form: UseFormReturn<Tema> }) {
 function RingkasanBagian({ judul, bagian }: { judul: string; bagian: BagianTema | BagianTemaPortal }) {
   return (
     <span className="flex items-center gap-1.5">
-      <span aria-hidden="true" className="size-3 rounded-full border border-black/10" style={{ background: bagian.aksen }} />
+      <span aria-hidden="true" className="flex">
+        <span className="size-3 rounded-full border border-black/10" style={{ background: bagian.aksen }} />
+        <span className="-ml-1 size-3 rounded-full border border-black/10" style={{ background: bagian.gelap }} />
+      </span>
       <span>
         <span className="text-muted-foreground">{judul}:</span> {temaSiapPakai(bagian)?.nama ?? "Kustom"} · {bagian.skala}%
         {"mode" in bagian && bagian.mode === "gelap" ? " · gelap" : ""}
@@ -653,6 +715,6 @@ function RingkasanBagian({ judul, bagian }: { judul: string; bagian: BagianTema 
 
 /** Bagian portal tanpa mode, untuk disalin ke dashboard yang mode gelapnya pilihan tiap pegawai */
 function tanpaMode(portal: BagianTemaPortal): BagianTema {
-  const { aksen, latar, hurufTeks, hurufJudul, sudut, skala, tebalJudul } = portal
-  return { aksen, latar, hurufTeks, hurufJudul, sudut, skala, tebalJudul }
+  const { aksen, latar, hurufTeks, hurufJudul, sudut, skala, tebalJudul, gelap } = portal
+  return { aksen, latar, hurufTeks, hurufJudul, sudut, skala, tebalJudul, gelap }
 }

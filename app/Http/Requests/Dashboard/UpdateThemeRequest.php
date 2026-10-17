@@ -11,9 +11,9 @@ use Illuminate\Validation\Rule;
 
 /**
  * The complete theme document (D-057): the portal part and the dashboard
- * part, each from closed lists except the accent, a "#RRGGBB" colour. No
- * free text reaches the generated stylesheets. Also the unsaved theme of a
- * preview or a portal preview link.
+ * part, each from closed lists except the accent and the dark, "#RRGGBB"
+ * colours. No free text reaches the generated stylesheets. Also the unsaved
+ * theme of a preview or a portal preview link.
  */
 class UpdateThemeRequest extends FormRequest
 {
@@ -53,6 +53,7 @@ class UpdateThemeRequest extends FormRequest
                 "{$section}.sudut" => ['required', 'string', Rule::in(array_column(ThemeCorners::cases(), 'value'))],
                 "{$section}.skala" => ['required', 'integer', Rule::in(Setting::THEME_SCALES)],
                 "{$section}.tebalJudul" => ['required', 'integer', Rule::in(Setting::THEME_HEADING_WEIGHTS)],
+                "{$section}.gelap" => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}\z/'],
             ];
         }
 
@@ -93,6 +94,7 @@ class UpdateThemeRequest extends FormRequest
                 "{$section}.sudut" => "kelengkungan sudut {$name}",
                 "{$section}.skala" => "skala tampilan {$name}",
                 "{$section}.tebalJudul" => "ketebalan judul {$name}",
+                "{$section}.gelap" => "warna gelap {$name}",
             ];
         }
 
@@ -102,10 +104,10 @@ class UpdateThemeRequest extends FormRequest
     }
 
     /**
-     * The validated document, with the accents in capitals. Only the portal
+     * The validated document, with the colours in capitals. Only the portal
      * has a mode: the dashboard's dark mode is each employee's choice.
      *
-     * @return array{portal: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, mode: string}, dashboard: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int}}
+     * @return array{portal: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, gelap: string, mode: string}, dashboard: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, gelap: string}}
      */
     public function theme(): array
     {
@@ -117,6 +119,7 @@ class UpdateThemeRequest extends FormRequest
             'sudut' => $this->string("{$name}.sudut")->value(),
             'skala' => $this->integer("{$name}.skala"),
             'tebalJudul' => $this->integer("{$name}.tebalJudul"),
+            'gelap' => $this->string("{$name}.gelap")->upper()->value(),
         ];
 
         return [
