@@ -1,0 +1,56 @@
+/* Panduan "Layanan apa yang saya perlukan?" di halaman Persyaratan Layanan (D-059), dibangun Vite bersama komponennya.
+   Daftar berkas memakai .checklist dan .tag dari pages.css/components.css. */
+
+.pl { display: grid; gap: 24px; }
+.pl > * { min-width: 0; }
+@media (min-width: 900px) {
+  .pl { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); align-items: start; gap: 32px; }
+  .pl-hasil { position: sticky; top: 96px; }
+}
+
+.pl-tanya { display: grid; gap: 24px; align-content: start; }
+.pl-kelompok { min-width: 0; margin: 0; padding: 0; border: 0; }
+.pl-judul { float: left; width: 100%; margin-bottom: 10px; padding: 0; font-size: 15px; font-weight: 600; color: var(--ink); }
+.pl-opsi-daftar { clear: both; display: grid; gap: 8px; }
+.pl-opsi {
+  display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; align-items: center; gap: 12px;
+  padding: 13px 16px; border: 1px solid var(--line-2); border-radius: var(--r-md); background: var(--surface);
+  cursor: pointer; transition: border-color var(--dur-1) var(--ease), background-color var(--dur-1) var(--ease);
+}
+.pl-opsi:hover { border-color: var(--ink-2); }
+.pl-opsi input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); }
+.pl-opsi:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pl-opsi.is-on { border-color: var(--accent); background: var(--accent-soft); }
+.pl-opsi__teks { font-size: 15px; line-height: 1.4; color: var(--ink); }
+.pl-opsi__ikon { width: 16px; height: 16px; color: var(--text-2); }
+.pl-opsi.is-on .pl-opsi__ikon { color: var(--accent-ink); }
+
+.pl-hasil { display: grid; gap: 16px; align-content: start; }
+.pl-kosong {
+  display: grid; justify-items: center; gap: 12px; padding: 40px 24px; text-align: center;
+  border: 1px dashed var(--line-2); border-radius: var(--r-md); color: var(--text-2);
+}
+.pl-kosong .i { width: 28px; height: 28px; }
+.pl-kosong p { max-width: 36ch; }
+.pl-ringkas .h3 { margin-top: 6px; }
+.pl-ringkas .svc__meta { margin-top: 14px; }
+.pl-daftar { max-width: none; margin-inline: 0; }
+.pl-sub {
+  padding: 10px 20px; border-top: var(--hairline); background: var(--surface-2, #FBFAF7);
+  font-size: 12.5px; font-weight: 600; color: var(--text-2);
+}
+.pl-catatan { margin-top: 0; }
+.pl-aksi { display: flex; flex-wrap: wrap; gap: 8px; }
+.pl-galat { display: grid; justify-items: start; gap: 12px; color: var(--text-2); }
+
+@media print {
+  /* Tombol "Cetak daftar": hanya hasil panduan; "Cetak halaman" mencetak daftar layanan tanpa panduan */
+  html:not([data-cetak="panduan"]) #panduan { display: none !important; }
+  html[data-cetak="panduan"] main > :not(#panduan),
+  html[data-cetak="panduan"] #panduan .split,
+  html[data-cetak="panduan"] .pl-tanya,
+  html[data-cetak="panduan"] .pl-aksi { display: none !important; }
+  html[data-cetak="panduan"] .pl { display: block; }
+  html[data-cetak="panduan"] .pl-hasil { position: static; }
+  html[data-cetak="panduan"] .checklist { box-shadow: none; }
+}

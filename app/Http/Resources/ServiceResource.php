@@ -33,6 +33,7 @@ class ServiceResource extends JsonResource
             'diwakilkan' => $this->diwakilkan,
             'label' => $this->label,
             'persyaratan' => $this->persyaratan,
+            'situasi' => $this->situasi,
             'catatan' => $this->catatan,
             'unggulan' => $this->unggulan,
             'status' => $this->status->value,

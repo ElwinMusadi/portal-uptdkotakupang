@@ -483,10 +483,20 @@ function dokumen(sekarang: Date): Dokumen[] {
   return data.map(({ alur: o, ...d }, i) => ({ id: newId(), urutan: i, ...d, ...alur(sekarang, o) }))
 }
 
+/** Situasi warga contoh per layanan untuk panduan halaman Persyaratan Layanan (D-059) */
+const SITUASI_CONTOH: Record<string, string[]> = {
+  "pajak-tahunan": ["Membayar pajak kendaraan tahun ini", "Mengesahkan STNK tahunan"],
+  "perpanjangan-5-tahun": ["STNK sudah lima tahun dan pelat nomor perlu diganti"],
+  "mutasi-pemilik-tetap": ["Pindah ke luar Kota Kupang dan membawa kendaraan sendiri"],
+  "mutasi-ganti-pemilik": ["Menjual kendaraan kepada pembeli di luar Kota Kupang"],
+  "duplikat-stnk": ["STNK hilang", "STNK rusak atau tidak terbaca"],
+  "tambahan-badan-hukum": ["Kendaraan atas nama perusahaan atau badan hukum"],
+}
+
 function layanan(sekarang: Date): Layanan[] {
   const s = (dokumen: string, jumlah: string) => ({ id: newId(), dokumen, jumlah })
   const data: Array<
-    Omit<Layanan, keyof Beralur | "id" | "dibuat" | "diperbarui" | "urutan"> & { alur: OpsiAlur }
+    Omit<Layanan, keyof Beralur | "id" | "dibuat" | "diperbarui" | "urutan" | "situasi"> & { alur: OpsiAlur }
   > = [
     {
       nama: "Pajak tahunan",
@@ -620,7 +630,7 @@ function layanan(sekarang: Date): Layanan[] {
       alur: { status: "terbit", penyedia: "Seksi Verifikasi", mulai: 20 },
     },
   ]
-  return data.map(({ alur: o, ...d }, i) => ({ id: newId(), urutan: i, ...d, ...alur(sekarang, o) }))
+  return data.map(({ alur: o, ...d }, i) => ({ id: newId(), urutan: i, ...d, situasi: SITUASI_CONTOH[d.slug] ?? [], ...alur(sekarang, o) }))
 }
 
 function faq(sekarang: Date): Faq[] {

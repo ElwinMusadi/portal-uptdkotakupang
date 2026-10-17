@@ -79,9 +79,9 @@ class ServiceControllerTest extends TestCase
         $this->assertDatabaseHas('activities', ['user_id' => $employee->id, 'module' => 'layanan', 'action' => 'menambahkan', 'target' => 'Balik nama dalam daerah']);
     }
 
-    public function test_stores_empty_optional_fields_as_empty_and_drops_empty_labels(): void
+    public function test_stores_empty_optional_fields_as_empty_and_drops_empty_labels_and_situations(): void
     {
-        $service = ['catatan' => null, 'pemeriksa' => null, 'label' => ['Meterai Rp10.000', '']] + $this->service();
+        $service = ['catatan' => null, 'pemeriksa' => null, 'label' => ['Meterai Rp10.000', ''], 'situasi' => ['', 'Membeli kendaraan bekas di Kota Kupang', null]] + $this->service();
         $service['persyaratan'][0]['jumlah'] = null;
 
         $response = $this->actingAs($this->layananEmployee())->postJson('/api/koleksi/layanan', $service);
@@ -90,7 +90,38 @@ class ServiceControllerTest extends TestCase
             ->assertJsonPath('catatan', '')
             ->assertJsonPath('pemeriksa', '')
             ->assertJsonPath('label', ['Meterai Rp10.000'])
+            ->assertJsonPath('situasi', ['Membeli kendaraan bekas di Kota Kupang'])
             ->assertJsonPath('persyaratan.0.jumlah', '');
+    }
+
+    public function test_starts_a_service_sent_without_situations_with_none(): void
+    {
+        $this->actingAs($this->layananEmployee())->postJson('/api/koleksi/layanan', $this->service())
+            ->assertCreated()
+            ->assertJsonPath('situasi', []);
+    }
+
+    public function test_validates_the_situations(): void
+    {
+        $tooMany = $this->actingAs($this->layananEmployee())->postJson('/api/koleksi/layanan', ['situasi' => ['1', '2', '3', '4', '5', '6', '7']] + $this->service());
+        $tooLong = $this->postJson('/api/koleksi/layanan', ['situasi' => [str_repeat('a', 101), "STNK\u{0007}hilang"]] + $this->service());
+
+        $tooMany->assertUnprocessable()->assertJsonValidationErrors(['situasi' => 'Maksimal 6 situasi.']);
+        $tooLong->assertUnprocessable()->assertJsonValidationErrors([
+            'situasi.0' => 'Situasi maksimal 100 karakter.',
+            'situasi.1' => 'Situasi berisi karakter kontrol yang tidak diizinkan.',
+        ]);
+        $this->assertDatabaseCount('services', 6);
+    }
+
+    public function test_changes_the_situations_of_a_draft(): void
+    {
+        $service = Service::factory()->create(['situasi' => ['STNK hilang']]);
+
+        $this->actingAs($this->layananEmployee())->patchJson("/api/koleksi/layanan/{$service->id}", ['situasi' => ['STNK hilang', 'STNK rusak']])
+            ->assertOk()
+            ->assertJsonPath('situasi', ['STNK hilang', 'STNK rusak']);
+        $this->assertSame(['STNK hilang', 'STNK rusak'], $service->fresh()->situasi);
     }
 
     public function test_validates_a_new_service(): void

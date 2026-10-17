@@ -145,6 +145,8 @@ export interface Layanan extends Entri, Beralur {
   /** Label tambahan, mis. "Meterai Rp10.000" */
   label: string[]
   persyaratan: Persyaratan[]
+  /** Situasi warga yang dijawab layanan ini di panduan halaman Persyaratan Layanan (D-059); kosong = nama layanan */
+  situasi: string[]
   catatan: string
   /** Tampil sebagai tab "Layanan utama" di beranda */
   unggulan: boolean

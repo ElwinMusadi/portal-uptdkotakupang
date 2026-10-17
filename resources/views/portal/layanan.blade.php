@@ -209,6 +209,22 @@
     </dl>
   </section>
 
+  <section class="section section--flush-top" id="panduan">
+    <div class="container">
+      <div class="split split--middle" style="margin-bottom: 32px">
+        <div data-reveal>
+          <p class="eyebrow">Panduan</p>
+          <h2 class="h2" style="margin-top:20px">Layanan apa yang saya perlukan? <span class="tone">Pilih keperluan Anda.</span></h2>
+        </div>
+        <p class="body" data-reveal>Pilih keperluan yang paling sesuai. Panduan menunjukkan layanan, loket, dan berkas yang perlu dibawa; daftarnya bisa dicentang atau dicetak.</p>
+      </div>
+      <!-- Diisi komponen panduan-layanan (resources/js/portal/layanan) dari GET /api/public/layanan -->
+      <div data-react="panduan-layanan">
+        <p class="muted" role="status">Memuat panduan…</p>
+      </div>
+    </div>
+  </section>
+
   <section class="section section--flush-top" style="padding-top: 24px">
     <div class="container svc-layout">
       <aside class="svc-nav no-print" aria-label="Daftar layanan">
@@ -343,5 +359,6 @@
 <!-- /@footer -->
 <script src="assets/js/main.js" defer></script>
 <script type="module" src="skrip/cek-pajak"></script>
+<script type="module" src="skrip/portal"></script>
 </body>
 </html>

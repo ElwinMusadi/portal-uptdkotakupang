@@ -286,6 +286,17 @@ class PortalPagesTest extends TestCase
         $this->assertStringContainsString('<p class="muted" role="status">Memuat persyaratan layanan…</p>', $section[0]);
     }
 
+    public function test_leaves_the_service_guide_to_its_component_above_the_services(): void
+    {
+        $html = $this->get('/layanan')->assertOk()->getContent();
+
+        $this->assertSame(1, preg_match('/<section[^>]*\bid="panduan"[^>]*>.*?<\/section>/s', $html, $guide));
+        $this->assertStringContainsString('Layanan apa yang saya perlukan?', $guide[0]);
+        $this->assertStringContainsString("<div data-react=\"panduan-layanan\">\n        <p class=\"muted\" role=\"status\">Memuat panduan…</p>", str_replace("\r\n", "\n", $guide[0]));
+        $this->assertLessThan(strpos($html, 'data-layanan-daftar'), strpos($html, 'id="panduan"'));
+        $this->assertStringContainsString('<script type="module" src="skrip/portal"></script>', $html);
+    }
+
     public function test_leaves_the_documents_to_the_public_api(): void
     {
         $html = $this->get('/unduhan')->assertOk()->getContent();

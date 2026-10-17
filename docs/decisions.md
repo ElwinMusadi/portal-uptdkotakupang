@@ -830,3 +830,15 @@ Usulan fitur portal lain (17 Oktober 2026), keputusan pemilik:
 | Kotak pencarian di navbar | Disetujui, dibangun berikutnya: hasil langsung di panel bawah navbar sambil mengetik, dikelompokkan per jenis konten; di layar sempit menjadi ikon kaca pembesar; navbar boleh melebar agar menu dan tombolnya muat. |
 | Survei Kepuasan Masyarakat online, pola jam ramai dan sepi | Dikerjakan setelah Antrean Online resmi dipakai (keduanya bersumber dari tiket antrean). |
 | Pengingat jatuh tempo, sitemap/data terstruktur/pratinjau tautan, lupa kata sandi dan verifikasi dua langkah | Belum dibutuhkan. |
+
+## D-059 · 2026-10-17 · Panduan "Layanan apa yang saya perlukan?"
+
+Usulan fitur yang disetujui pemilik di D-058: panduan bagi warga yang belum tahu layanan mana yang ia perlukan.
+
+| Hal | Keputusan |
+|---|---|
+| Tempat | **Bagian teratas halaman Persyaratan Layanan** (pemilik), di atas daftar layanan, sebagai komponen React (`panduan-layanan`) yang membaca `GET /api/public/layanan` seperti daftar di bawahnya. |
+| Pilihan | **Diatur dari Dashboard** (pemilik): setiap layanan punya *Situasi warga* (`situasi`, maks. 6 kalimat, masing-masing maks. 100 karakter) di Dashboard › Persyaratan Layanan, ikut alur publikasi layanannya. Layanan tanpa situasi ditawarkan dengan namanya, jadi layanan baru otomatis ikut. Layanan berjenis *tambahan* (mis. badan hukum) menjadi pilihan centang *Berlaku juga untuk Anda?* yang menambahkan berkasnya. |
+| Isi awal | Kalimat situasi untuk enam layanan awal diisi migrasi (mis. "STNK hilang", "STNK sudah lima tahun dan pelat nomor perlu diganti", "Kendaraan atas nama perusahaan atau badan hukum"); petugas bisa mengubahnya. |
+| Hasil | Layanan, loket, ringkasan, ketentuan (cek fisik, non-tunai, dapat diwakilkan, label), daftar berkas yang bisa dicentang (tidak disimpan), catatan, dan tombol *Cetak daftar* (hanya hasil panduan yang tercetak), *Rincian layanan*, dan *Cek biaya pajak*. Keperluan yang tidak ada diarahkan ke formulir Kontak atau meja informasi. |
+| Belum ada | Data layanan untuk balik nama di dalam Kota Kupang dan mutasi masuk dari luar daerah; bila persyaratannya dimasukkan sebagai layanan baru di dashboard, panduan otomatis menawarkannya. |

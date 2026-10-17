@@ -11,7 +11,7 @@ import { EntriTidakDitemukan } from "@/components/data/not-found"
 import { Bagian, Baris, Halaman } from "@/components/data/page"
 import { useHapus } from "@/components/data/row-actions"
 import { FieldArea, FieldPilih, FieldSakelar, FieldTeks } from "@/components/form/fields"
-import { DaftarObjek, FieldLabel } from "@/components/form/list-fields"
+import { DaftarObjek, FieldDaftarTeks, FieldLabel } from "@/components/form/list-fields"
 import { BilahSimpan, KerangkaMemuat } from "@/components/form/settings-form"
 import { JagaPerubahan } from "@/components/form/unsaved"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -43,6 +43,7 @@ const schema = z.object({
   persyaratan: z
     .array(z.object({ id: z.string(), dokumen: v.wajib("Nama berkas"), jumlah: v.teks }))
     .min(1, "Tambahkan minimal satu berkas persyaratan."),
+  situasi: z.array(z.string().max(100, "Maksimal 100 karakter.")).max(6, "Maksimal 6 situasi."),
   catatan: v.teks,
   penyedia: v.wajib("Unit penyedia"),
   pemeriksa: v.teks,
@@ -62,6 +63,7 @@ function kosong(): FormLayanan {
     unggulan: false,
     label: [],
     persyaratan: [{ id: newId(), dokumen: "", jumlah: "2 lembar" }],
+    situasi: [],
     catatan: "",
     penyedia: "Seksi Verifikasi",
     pemeriksa: PEMERIKSA[1],
@@ -81,6 +83,7 @@ function dariEntri(l: Layanan): FormLayanan {
     unggulan: l.unggulan,
     label: l.label,
     persyaratan: l.persyaratan,
+    situasi: l.situasi ?? [],
     catatan: l.catatan,
     penyedia: l.penyedia,
     pemeriksa: l.pemeriksa,
@@ -268,6 +271,13 @@ function IsiEditor({ entri, semua }: { entri: Layanan | null; semua: Layanan[] }
                   </p>
                 ) : null}
                 <FieldArea control={form.control} name="catatan" label="Catatan di bawah tabel" rows={2} placeholder="Mis. Jika dikuasakan, sertakan surat kuasa bermeterai." />
+              </Bagian>
+
+              <Bagian
+                judul="Panduan warga"
+                deskripsi="Pilihan di panduan Layanan apa yang saya perlukan? di halaman Persyaratan Layanan. Tulis seperti warga menceritakan keperluannya; bila kosong, panduan memakai nama layanan."
+              >
+                <FieldDaftarTeks control={form.control} name="situasi" label="Situasi warga" placeholder="Mis. STNK hilang" labelTambah="Tambah situasi" />
               </Bagian>
             </fieldset>
 

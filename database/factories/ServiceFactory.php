@@ -32,6 +32,7 @@ class ServiceFactory extends Factory
             'diwakilkan' => true,
             'label' => [],
             'persyaratan' => [['id' => 'p1', 'dokumen' => 'Fotokopi KTP pemilik', 'jumlah' => '2 lembar']],
+            'situasi' => [],
             'catatan' => '',
             'unggulan' => false,
             'urutan' => 100,

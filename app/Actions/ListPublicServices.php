@@ -10,11 +10,11 @@ class ListPublicServices
 {
     /**
      * List the published services in display order for the portal's Layanan
-     * page and homepage, without IDs or workflow details other than the time
-     * of publication. A source that cannot be read fails the request instead
-     * of showing no services.
+     * page, its guide (situasi, D-059) and the homepage, without IDs or
+     * workflow details other than the time of publication. A source that
+     * cannot be read fails the request instead of showing no services.
      *
-     * @return list<array{nama: string, slug: string, ringkasan: string, loket: string, jenis: string, cekFisik: bool, nonTunai: bool, diwakilkan: bool, label: list<string>, persyaratan: list<array{dokumen: string, jumlah: string}>, catatan: string, unggulan: bool, terbitPada: ?string}>
+     * @return list<array{nama: string, slug: string, ringkasan: string, loket: string, jenis: string, cekFisik: bool, nonTunai: bool, diwakilkan: bool, label: list<string>, persyaratan: list<array{dokumen: string, jumlah: string}>, situasi: list<string>, catatan: string, unggulan: bool, terbitPada: ?string}>
      *
      * @throws PublicContentUnavailableException
      */
@@ -40,6 +40,7 @@ class ListPublicServices
                 'dokumen' => $requirement['dokumen'],
                 'jumlah' => $requirement['jumlah'],
             ], $service->persyaratan),
+            'situasi' => $service->situasi,
             'catatan' => $service->catatan,
             'unggulan' => $service->unggulan,
             'terbitPada' => $service->terbit_pada?->toIso8601String(),

@@ -38,9 +38,18 @@ class PublicServiceControllerTest extends TestCase
                     ['dokumen' => 'Fotokopi KTP pemilik (sesuai alamat di STNK dan BPKB)', 'jumlah' => '2 lembar'],
                     ['dokumen' => 'Map', 'jumlah' => '1 buah'],
                 ],
+                'situasi' => ['Membayar pajak kendaraan tahun ini', 'Mengesahkan STNK tahunan'],
                 'catatan' => '',
                 'unggulan' => true,
                 'terbitPada' => $response->json('0.terbitPada'),
+            ])
+            ->assertJsonPath('*.situasi', [
+                ['Membayar pajak kendaraan tahun ini', 'Mengesahkan STNK tahunan'],
+                ['STNK sudah lima tahun dan pelat nomor perlu diganti'],
+                ['Pindah ke luar Kota Kupang dan membawa kendaraan sendiri'],
+                ['Menjual kendaraan kepada pembeli di luar Kota Kupang', 'Membeli kendaraan dari Kota Kupang untuk dibawa ke daerah lain'],
+                ['STNK hilang', 'STNK rusak atau tidak terbaca'],
+                ['Kendaraan atas nama perusahaan atau badan hukum'],
             ])
             ->assertJsonPath('1.nama', "Perpanjangan STNK 5\u{00A0}tahun")
             ->assertJsonPath('3.catatan', 'Kendaraan sudah berada di tempat baru? Ajukan permohonan cek fisik bantuan di Samsat tujuan.');

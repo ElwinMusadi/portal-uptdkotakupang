@@ -615,6 +615,7 @@ Dipakai halaman *Persyaratan Layanan* di dashboard ([D-022](decisions.md#d-022--
   "id": "01m4…", "nama": "Pajak tahunan", "slug": "pajak-tahunan", "ringkasan": "…", "loket": "Loket 1",
   "jenis": "layanan", "cekFisik": false, "nonTunai": true, "diwakilkan": true, "label": [],
   "persyaratan": [{ "id": "p1", "dokumen": "Fotokopi STNK dan notis pajak (lampirkan asli)", "jumlah": "2 lembar" }],
+  "situasi": ["Membayar pajak kendaraan tahun ini", "Mengesahkan STNK tahunan"],
   "catatan": "", "unggulan": true,
   "status": "terbit", "penyedia": "Seksi Verifikasi", "pemeriksa": "", "catatanRevisi": "",
   "terbitPada": "2026-10-14T01:00:00+00:00",
@@ -632,7 +633,7 @@ Dipakai halaman *Persyaratan Layanan* di dashboard ([D-022](decisions.md#d-022--
 | `PUT /api/koleksi/layanan/urutan` | `{"ids": ["…"]}` | `204`. Hanya Administrator; pegawai lain `403` `{"message": "Hanya Administrator yang dapat mengubah urutan layanan di portal."}`. |
 | `POST /api/koleksi/layanan/hapus` | `{"ids": ["…"]}` | `204`. Hanya Administrator; pegawai lain `403` `{"message": "Hanya Administrator yang dapat menghapus layanan."}`. |
 
-Isi divalidasi seperti formulir dashboard: nama (maks. 120 karakter), slug unik (huruf kecil, angka, tanda hubung; maks. 80), ringkasan (maks. 200), loket (maks. 60), dan penyedia wajib; jenis `layanan` atau `tambahan`; maks. 6 label (label kosong dibuang); 1–20 berkas persyaratan dengan nama wajib (maks. 200) dan ID unik; catatan maks. 400; tanpa karakter kontrol.
+Isi divalidasi seperti formulir dashboard: nama (maks. 120 karakter), slug unik (huruf kecil, angka, tanda hubung; maks. 80), ringkasan (maks. 200), loket (maks. 60), dan penyedia wajib; jenis `layanan` atau `tambahan`; maks. 6 label (label kosong dibuang); 1–20 berkas persyaratan dengan nama wajib (maks. 200) dan ID unik; maks. 6 situasi warga untuk panduan halaman Layanan, masing-masing maks. 100 karakter (situasi kosong dibuang; boleh tidak dikirim, layanan baru lalu tanpa situasi; [D-059](decisions.md#d-059--2026-10-17--panduan-layanan-apa-yang-saya-perlukan)); catatan maks. 400; tanpa karakter kontrol.
 
 Kode: `app/Http/Controllers/Dashboard/Service*`, `app/Http/Requests/Dashboard/*Service*`, `app/Http/Requests/Dashboard/Concerns/TakesWorkflowStep.php`, `app/Actions/UpdateWorkflowEntry.php`, `app/Models/Service.php`, `app/Models/Concerns/HasPublicationWorkflow.php`, `app/Enums/WorkflowStatus.php`, `app/Policies/ServicePolicy.php`, `database/migrations/*_insert_initial_services.php`. Tes: `tests/Feature/ServiceControllerTest.php`, `ServiceWorkflowTest.php`.
 
@@ -1313,11 +1314,11 @@ Kode: `app/Http/Controllers/PublicProfileController.php`, `app/Actions/ShowPubli
 
 ## `GET /api/public/layanan`
 
-Halaman Layanan dan bagian *Layanan utama* di beranda ([D-022](decisions.md#d-022--2026-10-14--persyaratan-layanan-tersimpan-di-server-dengan-alur-persetujuan), `initLayanan()` di `public/assets/js/main.js`). Daftar layanan berstatus `terbit` sesuai urutan, dengan bentuk dokumen dashboard tanpa `id`, tanpa `id` berkas, dan tanpa kolom alur selain `terbitPada`.
+Halaman Layanan, panduan *Layanan apa yang saya perlukan?* di atasnya ([D-059](decisions.md#d-059--2026-10-17--panduan-layanan-apa-yang-saya-perlukan), `resources/js/portal/layanan/panduan-layanan.tsx`), dan bagian *Layanan utama* di beranda ([D-022](decisions.md#d-022--2026-10-14--persyaratan-layanan-tersimpan-di-server-dengan-alur-persetujuan), `initLayanan()` di `public/assets/js/main.js`). Daftar layanan berstatus `terbit` sesuai urutan, dengan bentuk dokumen dashboard tanpa `id`, tanpa `id` berkas, dan tanpa kolom alur selain `terbitPada`.
 
 | Hal | Perilaku |
 |---|---|
-| Berhasil | `200` daftar layanan. Layanan berjenis `tambahan` ditampilkan sebagai lipatan di kartu layanan terakhir; layanan `unggulan` menjadi tab di beranda. Teks wajib ditampilkan sebagai teks polos. |
+| Berhasil | `200` daftar layanan. Layanan berjenis `tambahan` ditampilkan sebagai lipatan di kartu layanan terakhir; layanan `unggulan` menjadi tab di beranda. `situasi` adalah pilihan panduan (kosong = nama layanan). Teks wajib ditampilkan sebagai teks polos. |
 | Galat | `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah batas laju yang sama dengan `GET /api/public/faq`; `503` bila data tidak bisa dibaca, tidak pernah daftar kosong sebagai gantinya. |
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 

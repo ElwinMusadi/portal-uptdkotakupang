@@ -11,11 +11,13 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * A service and its requirements on the portal's Layanan page and the
- * homepage (Persyaratan Layanan, D-022). It goes through the publication
- * workflow; only published services reach the portal. "riwayat" lists the
- * workflow steps, newest first, and is written only by the server.
+ * homepage (Persyaratan Layanan, D-022), and the citizens' situations it
+ * answers in the page's guide (situasi, D-059). It goes through the
+ * publication workflow; only published services reach the portal.
+ * "riwayat" lists the workflow steps, newest first, and is written only by
+ * the server.
  */
-#[Fillable(['nama', 'slug', 'ringkasan', 'loket', 'jenis', 'cek_fisik', 'non_tunai', 'diwakilkan', 'label', 'persyaratan', 'catatan', 'unggulan', 'penyedia', 'pemeriksa'])]
+#[Fillable(['nama', 'slug', 'ringkasan', 'loket', 'jenis', 'cek_fisik', 'non_tunai', 'diwakilkan', 'label', 'persyaratan', 'situasi', 'catatan', 'unggulan', 'penyedia', 'pemeriksa'])]
 class Service extends Model
 {
     /** @use HasFactory<ServiceFactory> */
@@ -30,6 +32,16 @@ class Service extends Model
     public const array KINDS = ['layanan', 'tambahan'];
 
     /**
+     * A new service answers no situation of its own yet; the Layanan page's
+     * guide offers it by name until staff add some (D-059).
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'situasi' => '[]',
+    ];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -42,6 +54,7 @@ class Service extends Model
             'diwakilkan' => 'boolean',
             'label' => 'array',
             'persyaratan' => 'array',
+            'situasi' => 'array',
             'unggulan' => 'boolean',
             'urutan' => 'integer',
         ];

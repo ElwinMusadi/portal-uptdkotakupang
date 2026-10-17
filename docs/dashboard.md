@@ -87,7 +87,7 @@ resources/js/dashboard/
 | Dokumentasi Kegiatan | `#/dokumentasi` | koleksi `dokumentasi` | `dokumentasi.html` |
 | Regulasi & Unduhan | `#/unduhan` | koleksi `dokumen` | `unduhan.html` |
 | Tanya Jawab | `#/faq` | koleksi `faq` | `index.html#faq` |
-| Persyaratan Layanan | `#/layanan` | koleksi `layanan` | `layanan.html` |
+| Persyaratan Layanan | `#/layanan` | koleksi `layanan` | `layanan.html` (juga panduan `#panduan`) |
 | Jam Pelayanan | `#/jadwal/jam` | pengaturan `jam`, koleksi `penyesuaian` | `jadwal.html` |
 | Layanan Luar Kantor | `#/jadwal/keliling` | koleksi `keliling` | `jadwal.html#keliling` |
 | Papan Layanan | `#/papan` | pengaturan `papan` | `index.html` |
@@ -350,6 +350,7 @@ Halaman *Persyaratan Layanan* (`#/layanan`, `pages/layanan/`) tersimpan di serve
 - Pengelola modul menyiapkan draf, mengajukan, memeriksa, dan meneruskan ke penyetuju. Administrator menyetujui-dan-menerbitkan, mengembalikan dari tahap persetujuan, menarik dari portal, mengubah urutan, dan menghapus. Penyunting terkunci bagi pegawai lain selama layanan menunggu persetujuan atau terbit.
 - Hanya layanan terbit yang tampil di halaman Layanan dan, bila bertanda *Tampil di beranda*, sebagai tab *Layanan utama* di beranda (`GET /api/public/layanan`).
 - Enam layanan yang sudah tampil di portal dimasukkan sebagai data awal berstatus Terbit lewat migrasi. Layanan contoh dari penyimpanan peramban tidak dipindahkan.
+- Bagian *Panduan warga* di penyunting berisi *Situasi warga* (maks. 6 kalimat), pilihan di panduan *Layanan apa yang saya perlukan?* di bagian atas halaman Layanan portal ([D-059](decisions.md#d-059--2026-10-17--panduan-layanan-apa-yang-saya-perlukan)). Bila kosong, panduan memakai nama layanan; layanan berjenis *tambahan* menjadi pilihan centang yang menambahkan berkasnya.
 
 ## Berita & Pengumuman
 

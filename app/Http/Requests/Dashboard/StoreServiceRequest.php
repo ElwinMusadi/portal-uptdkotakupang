@@ -30,6 +30,7 @@ class StoreServiceRequest extends FormRequest
         'diwakilkan' => 'diwakilkan',
         'label' => 'label',
         'persyaratan' => 'persyaratan',
+        'situasi' => 'situasi',
         'catatan' => 'catatan',
         'unggulan' => 'unggulan',
         'penyedia' => 'penyedia',
@@ -68,6 +69,8 @@ class StoreServiceRequest extends FormRequest
             'persyaratan.*.id' => ['required', 'string', 'max:40', 'distinct'],
             'persyaratan.*.dokumen' => ['required', 'string', 'max:200', new PlainText('Nama berkas')],
             'persyaratan.*.jumlah' => ['nullable', 'string', 'max:40', new PlainText('Jumlah')],
+            'situasi' => ['sometimes', 'list', 'max:6'],
+            'situasi.*' => ['nullable', 'string', 'max:100', new PlainText('Situasi')],
             'catatan' => ['nullable', 'string', 'max:400', new PlainText('Catatan')],
             'unggulan' => ['required', 'boolean'],
             'penyedia' => ['required', 'string', 'max:120', new PlainText('Unit penyedia')],
@@ -123,6 +126,10 @@ class StoreServiceRequest extends FormRequest
             'persyaratan.*.dokumen.max' => 'Nama berkas maksimal :max karakter.',
             'persyaratan.*.jumlah.string' => 'Jumlah tidak valid.',
             'persyaratan.*.jumlah.max' => 'Jumlah maksimal :max karakter.',
+            'situasi.list' => 'Daftar situasi tidak valid.',
+            'situasi.max' => 'Maksimal :max situasi.',
+            'situasi.*.string' => 'Situasi tidak valid.',
+            'situasi.*.max' => 'Situasi maksimal :max karakter.',
             'catatan.string' => 'Catatan tidak valid.',
             'catatan.max' => 'Catatan maksimal :max karakter.',
             'unggulan.required' => 'Pilih apakah layanan tampil di beranda.',
@@ -136,8 +143,8 @@ class StoreServiceRequest extends FormRequest
     }
 
     /**
-     * The validated content as model attributes. Empty labels are dropped,
-     * and empty optional texts are stored as empty strings.
+     * The validated content as model attributes. Empty labels and situations
+     * are dropped, and empty optional texts are stored as empty strings.
      *
      * @return array<string, mixed>
      */
@@ -153,7 +160,7 @@ class StoreServiceRequest extends FormRequest
 
             $content[$column] = match ($field) {
                 'cekFisik', 'nonTunai', 'diwakilkan', 'unggulan' => (bool) $validated[$field],
-                'label' => array_values(array_filter($validated['label'], fn (?string $label): bool => $label !== null)),
+                'label', 'situasi' => array_values(array_filter($validated[$field], fn (?string $text): bool => $text !== null)),
                 'persyaratan' => array_map(fn (array $requirement): array => [
                     'id' => $requirement['id'],
                     'dokumen' => $requirement['dokumen'],
