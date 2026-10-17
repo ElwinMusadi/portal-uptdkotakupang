@@ -809,3 +809,24 @@ Pemilik ingin Administrator dapat mengatur tema (jenis huruf, warna utama, skala
 | Sumber huruf (Irisan 2) | **Fontsource 5.3.x lewat jsDelivr** (pemilik mengizinkan unduhan 16 berkas, 17 Oktober 2026): delapan huruf Latin variabel (Inter, Plus Jakarta Sans, DM Sans, Source Sans 3, IBM Plex Sans, Nunito Sans; Manrope dan Lexend khusus judul) beserta lisensi OFL-nya, disimpan di `public/assets/fonts/`. |
 | Cara menerapkan | Dua stylesheet yang dibuat server (`tema-portal.css`, `tema-dashboard.css`) lewat satu `<link>` tetap di setiap halaman, sehingga halaman portal tetap dilayani byte demi byte dan tidak berkedip; kosong selama tema belum disimpan. |
 | Tahapan | Irisan 1 fondasi (warna yang ditulis langsung dijadikan variabel, tanpa perubahan tampilan), Irisan 2 warna/latar/huruf/sudut dengan tab Tampilan, Irisan 3 skala dan pratinjau portal, Irisan 4 opsional (`theme-color`, mode gelap portal). |
+
+## D-058 · 2026-10-17 · Lacak pesan dan pengaduan oleh pengirim
+
+Pemilik menyetujui fitur agar wajib pajak bisa melacak status pertanyaan, masukan, atau pengaduannya dan membaca balasan petugas. D-016 mencatatnya sebagai belum dibuat.
+
+| Hal | Keputusan |
+|---|---|
+| Akses | **Tautan lacak dan nomor tiket** (pemilik). Setiap pesan punya kode acak 22 karakter (`messages.kode_lacak`), termasuk pesan yang diterima sebelumnya (diisi migrasi) dan pesan yang dicatat petugas dari kanal lain. Setelah mengirim, pengirim mendapat tautan ke halaman `/pesan/{kode}`. Di halaman Kontak, bagian *Lacak pesan* membuka halaman itu dari nomor tiket dan email atau nomor WhatsApp yang dipakai saat mengirim: nomor boleh ditulis dengan atau tanpa spasi, tanda hubung, atau kode negara 62, email tanpa membedakan huruf besar, nomor tiket dengan atau tanpa `PINTU-`. Pesan yang dicatat tanpa kontak hanya bisa dibuka dari tautannya. Semua ketidakcocokan dijawab sama; maks. 5 percobaan per menit dan 30 per jam per IP. |
+| Isi halaman lacak | Nomor tiket, jenis, layanan, waktu diterima, status (*Diterima*, *Sedang ditindaklanjuti*, *Selesai*), isi pesan pengirim, dan balasan untuk pelapor beserta waktunya. Tidak menampilkan nama dan kontak pengirim, catatan internal, maupun nama petugas (balasan ditulis "Petugas UPTD"). Halaman `noindex`; respons `no-store` tanpa cookie. |
+| Balasan | **Petugas memilih** (pemilik) per tanggapan: *Kirim ke pelapor* (tampil di halaman lacak) atau *Simpan catatan internal*. Tanggapan yang tercatat sebelumnya tetap internal. Seperti D-016, tanggapan tidak bisa diubah setelah dicatat. Panel detail dashboard menampilkan tautan lacak dengan tombol *Salin*, agar petugas bisa mengirimkannya lewat kanal resmi. |
+| Status | Tetap tiga status D-016. Membuka pesan *Baru* di dashboard tetap menandainya *Diproses*, jadi pengirim melihat *Sedang ditindaklanjuti* begitu pesannya dibaca petugas. |
+| Belum dibuat | Pemberitahuan surel atau WhatsApp kepada pengirim saat ada balasan, dan pengirim menambah keterangan dari halaman lacak. |
+
+Usulan fitur portal lain (17 Oktober 2026), keputusan pemilik:
+
+| Usulan | Keputusan |
+|---|---|
+| Panduan *Layanan apa yang saya perlukan?* | Disetujui, dibangun berikutnya: bagian teratas halaman Persyaratan Layanan; kalimat situasi warga diatur per layanan di Dashboard › Persyaratan Layanan, layanan baru otomatis ikut. |
+| Kotak pencarian di navbar | Disetujui, dibangun berikutnya: hasil langsung di panel bawah navbar sambil mengetik, dikelompokkan per jenis konten; di layar sempit menjadi ikon kaca pembesar; navbar boleh melebar agar menu dan tombolnya muat. |
+| Survei Kepuasan Masyarakat online, pola jam ramai dan sepi | Dikerjakan setelah Antrean Online resmi dipakai (keduanya bersumber dari tiket antrean). |
+| Pengingat jatuh tempo, sitemap/data terstruktur/pratinjau tautan, lupa kata sandi dan verifikasi dua langkah | Belum dibutuhkan. |

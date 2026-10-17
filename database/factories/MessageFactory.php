@@ -19,6 +19,7 @@ class MessageFactory extends Factory
     {
         return [
             'tiket' => Message::newTicket(),
+            'kode_lacak' => Message::newTrackingCode(),
             'jenis' => 'pertanyaan',
             'nama' => fake()->name(),
             'kontak' => fake()->safeEmail(),

@@ -79,7 +79,7 @@ resources/js/dashboard/
 |---|---|---|---|
 | Ringkasan | `#/` | KPI, grafik pesan masuk, antrean kerja, aktivitas | — |
 | Alur Publikasi | `#/alur` | semua konten beralur | — |
-| Pesan & Pengaduan | `#/pesan` | koleksi `pesan` | `kontak.html#masukan` |
+| Pesan & Pengaduan | `#/pesan` | koleksi `pesan` | `kontak.html#masukan`, `/pesan/{kode}` |
 | Statistik Layanan | `#/statistik` | pengaturan `statistik` | `index.html#transparansi` |
 | Laporan Penerimaan | `#/penerimaan` | server (`/api/penerimaan/…`) dari berkas STS | `penerimaan.html` (impor yang dinyalakan Administrator) |
 | Pemetaan PKB | `#/pemetaan` | server (`/api/pemetaan/…`) dari berkas Data Potensi | `pemetaan.html` (angka gabungan, setelah dinyalakan Administrator) |
@@ -437,6 +437,7 @@ Tab *Akun* di halaman *Pengaturan* (`#/pengaturan?tab=akun`) tersimpan di server
 Halaman *Pesan & Pengaduan* (`#/pesan`, `pages/pesan.tsx`) tersimpan di server sejak [D-016](decisions.md#d-016--2026-10-13--pesan--pengaduan-tersimpan-di-server). Formulir Kontak di portal mengirim pesan ke `POST /api/public/pesan`.
 
 - Membuka pesan baru menandainya *Diproses*. Tanggapan ditambahkan dari panel detail dan dicatat atas nama akun yang masuk; isi pesan dan tanggapan lama tidak bisa diubah.
+- Tanggapan dikirim dengan *Kirim ke pelapor* (tampil di halaman lacak pesan `/pesan/{kode}` tanpa nama petugas) atau *Simpan catatan internal* ([D-058](decisions.md#d-058--2026-10-17--lacak-pesan-dan-pengaduan-oleh-pengirim)); setiap tanggapan berlabel *Untuk pelapor* atau *Catatan internal*, dan tanggapan dari sebelum D-058 tetap internal. Panel detail menampilkan tautan halaman lacak dengan tombol *Salin*.
 - Hapus, per baris maupun massal, hanya untuk Administrator. Tombol *Hapus semua pesan* di *Pengaturan › Data* tidak tampil selama pesan tersimpan di server.
 - Pesan contoh dari penyimpanan peramban tidak dipindahkan ke server.
 

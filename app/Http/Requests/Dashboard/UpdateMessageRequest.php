@@ -37,6 +37,7 @@ class UpdateMessageRequest extends FormRequest
             'tanggapan.*' => ['required', 'array'],
             'tanggapan.*.id' => ['nullable', 'string', 'max:40'],
             'tanggapan.*.isi' => ['required', 'string', 'max:2000', new PlainText('Tanggapan')],
+            'tanggapan.*.untukPelapor' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -56,20 +57,22 @@ class UpdateMessageRequest extends FormRequest
             'tanggapan.*.isi.required' => 'Tanggapan wajib diisi.',
             'tanggapan.*.isi.string' => 'Tanggapan tidak valid.',
             'tanggapan.*.isi.max' => 'Tanggapan maksimal :max karakter.',
+            'tanggapan.*.untukPelapor.boolean' => 'Tanggapan tidak valid.',
         ];
     }
 
     /**
-     * The texts of the responses the message does not have yet.
+     * The responses the message does not have yet: their text, and whether
+     * the sender sees them (D-058; an internal note when not given).
      *
-     * @return list<string>
+     * @return list<array{isi: string, untukPelapor: bool}>
      */
     public function newResponses(Message $message): array
     {
         $known = $message->responses()->pluck('id')->all();
 
         return array_values(array_map(
-            fn (array $response): string => $response['isi'],
+            fn (array $response): array => ['isi' => $response['isi'], 'untukPelapor' => (bool) ($response['untukPelapor'] ?? false)],
             array_filter(
                 $this->validated('tanggapan', []),
                 fn (array $response): bool => ! in_array($response['id'] ?? null, $known, true),

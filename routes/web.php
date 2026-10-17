@@ -2,11 +2,13 @@
 
 use App\Http\Controllers\ArticlePageController;
 use App\Http\Controllers\Auth\AccountActivationController;
+use App\Http\Controllers\MessageTrackingPageController;
 use App\Http\Controllers\QueueTrackingPageController;
 use App\Http\Controllers\ThemePreviewPageController;
 use App\Http\Controllers\ThemeStylesheetController;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Models\Article;
+use App\Models\Message;
 use App\Models\QueueTicket;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Http\RedirectResponse;
@@ -68,6 +70,8 @@ Route::withoutMiddleware([
 
     // The taxpayer's tracking page behind a queue ticket's QR (Antrean Online, D-051)
     Route::get('/lacak/{kode}', QueueTrackingPageController::class)->where('kode', QueueTicket::TRACKING_CODE_PATTERN)->name('portal.lacak');
+    // The sender's tracking page for a message to Pesan & Pengaduan (D-058)
+    Route::get('/pesan/{kode}', MessageTrackingPageController::class)->where('kode', Message::TRACKING_CODE_PATTERN)->name('portal.lacak-pesan');
     // The waiting-room TV display; it reads GET /api/layar with the token of its setup link (D-051)
     Route::view('/layar', 'layar')->name('layar');
 

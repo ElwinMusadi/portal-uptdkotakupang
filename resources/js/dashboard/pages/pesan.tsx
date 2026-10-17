@@ -1,5 +1,5 @@
 import * as React from "react"
-import { IconCheck, IconClipboardPlus, IconRefresh, IconSend, IconServer } from "@tabler/icons-react"
+import { IconCheck, IconClipboardPlus, IconCopy, IconNote, IconRefresh, IconSend, IconServer } from "@tabler/icons-react"
 import { useSearchParams } from "react-router"
 import { toast } from "sonner"
 import { z } from "zod"
@@ -74,22 +74,33 @@ function DetailPesan({ pesan, tutup }: { pesan: Pesan | null; tutup: () => void 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pesan?.id])
 
-  const kirim = async (e: React.FormEvent) => {
-    e.preventDefault()
+  // Balasan untuk pelapor tampil di halaman lacak pesan (D-058); catatan internal hanya di dashboard
+  const kirim = async (untukPelapor: boolean) => {
     if (!pesan || !balasan.trim()) return
     try {
       await ubah.mutateAsync({
         id: pesan.id,
         patch: {
-          tanggapan: [...pesan.tanggapan, { id: newId(), isi: balasan.trim(), oleh: nama, waktu: new Date().toISOString() }],
+          tanggapan: [...pesan.tanggapan, { id: newId(), isi: balasan.trim(), untukPelapor, oleh: nama, waktu: new Date().toISOString() }],
           status: selesai ? "selesai" : "diproses",
           ditangani: pesan.ditangani || nama,
         },
       })
       setBalasan("")
-      toast.success(selesai ? "Tanggapan dicatat dan pesan ditandai selesai" : "Tanggapan dicatat")
+      const dicatat = untukPelapor ? "Balasan tampil di halaman lacak pesan" : "Catatan internal dicatat"
+      toast.success(selesai ? `${dicatat}; pesan ditandai selesai` : dicatat)
     } catch {
       // galat ditampilkan oleh mutasi
+    }
+  }
+
+  const salinTautan = async () => {
+    if (!pesan?.tautanLacak) return
+    try {
+      await navigator.clipboard.writeText(pesan.tautanLacak)
+      toast.success("Tautan lacak disalin")
+    } catch {
+      toast.error("Tautan tidak bisa disalin otomatis", { description: "Pilih tautannya lalu salin secara manual." })
     }
   }
 
@@ -128,6 +139,20 @@ function DetailPesan({ pesan, tutup }: { pesan: Pesan | null; tutup: () => void 
                   <dt className="text-muted-foreground">Ditangani</dt>
                   <dd>{pesan.ditangani || "—"}</dd>
                 </div>
+                {pesan.tautanLacak && (
+                  <div className="col-span-2">
+                    <dt className="text-muted-foreground">Halaman lacak pesan</dt>
+                    <dd className="mt-1 flex items-center gap-2">
+                      <a href={pesan.tautanLacak} target="_blank" rel="noopener" className="min-w-0 truncate font-mono text-xs underline underline-offset-4">
+                        {pesan.tautanLacak}
+                      </a>
+                      <Button type="button" variant="outline" size="sm" onClick={salinTautan}>
+                        <IconCopy />
+                        Salin
+                      </Button>
+                    </dd>
+                  </div>
+                )}
               </dl>
               <div className="grid gap-2">
                 <Label htmlFor={idStatus}>Status</Label>
@@ -156,14 +181,21 @@ function DetailPesan({ pesan, tutup }: { pesan: Pesan | null; tutup: () => void 
                     {pesan.tanggapan.map((t) => (
                       <li key={t.id} className="rounded-lg border p-3 text-sm">
                         <p className="whitespace-pre-line">{t.isi}</p>
-                        <p className="mt-1.5 text-xs text-muted-foreground">
+                        <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                          <NadaBadge nada={t.untukPelapor ? "info" : "netral"}>{t.untukPelapor ? "Untuk pelapor" : "Catatan internal"}</NadaBadge>
                           {t.oleh} · {tanggalJam(t.waktu)}
                         </p>
                       </li>
                     ))}
                   </ol>
                 )}
-                <form onSubmit={kirim} className="grid gap-2">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    void kirim(true)
+                  }}
+                  className="grid gap-2"
+                >
                   <Label htmlFor={idBalasan} className="sr-only">
                     Tulis tanggapan
                   </Label>
@@ -172,20 +204,26 @@ function DetailPesan({ pesan, tutup }: { pesan: Pesan | null; tutup: () => void 
                     value={balasan}
                     onChange={(e) => setBalasan(e.target.value)}
                     rows={4}
-                    placeholder="Tulis tanggapan atau catatan tindak lanjut…"
+                    placeholder="Tulis balasan untuk pelapor atau catatan tindak lanjut…"
                   />
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <Label className="font-normal">
                       <Checkbox checked={selesai} onCheckedChange={(c) => setSelesai(!!c)} />
                       Tandai selesai
                     </Label>
-                    <Button type="submit" size="sm" disabled={!balasan.trim() || ubah.isPending}>
-                      {ubah.isPending ? <Spinner /> : <IconSend />}
-                      Catat tanggapan
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                      <Button type="button" variant="outline" size="sm" disabled={!balasan.trim() || ubah.isPending} onClick={() => void kirim(false)}>
+                        <IconNote />
+                        Simpan catatan internal
+                      </Button>
+                      <Button type="submit" size="sm" disabled={!balasan.trim() || ubah.isPending}>
+                        {ubah.isPending ? <Spinner /> : <IconSend />}
+                        Kirim ke pelapor
+                      </Button>
+                    </div>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Dashboard mencatat tanggapan; kirimkan balasan ke kontak pengirim lewat email atau WhatsApp resmi.
+                    Balasan untuk pelapor tampil di halaman lacak pesan tanpa nama petugas dan tidak bisa diubah lagi. Bila perlu, kirim tautan halaman itu ke kontak pengirim lewat email atau WhatsApp resmi.
                   </p>
                 </form>
               </div>
@@ -215,7 +253,7 @@ export default function HalamanPesan() {
     dariEntri: (p): FormPesan => ({ jenis: p.jenis, nama: p.nama, kontak: p.kontak, layanan: p.layanan, isi: p.isi, sumber: p.sumber }),
     keEntriBaru: (f) => {
       const kini = new Date().toISOString()
-      return { ...f, tiket: newTiket(), status: "baru" as StatusPesan, diterima: kini, ditangani: "", tanggapan: [] }
+      return { ...f, tiket: newTiket(), tautanLacak: null, status: "baru" as StatusPesan, diterima: kini, ditangani: "", tanggapan: [] }
     },
   })
 

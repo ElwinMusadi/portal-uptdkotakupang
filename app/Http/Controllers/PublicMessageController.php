@@ -12,19 +12,20 @@ class PublicMessageController extends Controller
 {
     /**
      * Receive a message from the portal's contact form and return its
-     * ticket number (D-016). A message that fills the hidden field is
-     * answered the same way but not stored, so bots learn nothing. The log
-     * records the ticket only, never the sender or the content.
+     * ticket number (D-016) and the code of its tracking page (D-058). A
+     * message that fills the hidden field is answered the same way but not
+     * stored, so bots learn nothing. The log records the ticket only, never
+     * the sender or the content.
      */
     public function __invoke(SubmitPublicMessageRequest $request, ReceiveMessage $receiveMessage): JsonResponse
     {
         if ($request->isFromBot()) {
-            return response()->json(['tiket' => Message::newTicket()], 201);
+            return response()->json(['tiket' => Message::newTicket(), 'kode' => Message::newTrackingCode()], 201);
         }
 
         $message = $receiveMessage->handle($request->messageFields(), 'formulir');
         Log::info('message.received', ['tiket' => $message->tiket]);
 
-        return response()->json(['tiket' => $message->tiket], 201);
+        return response()->json(['tiket' => $message->tiket, 'kode' => $message->kode_lacak], 201);
     }
 }

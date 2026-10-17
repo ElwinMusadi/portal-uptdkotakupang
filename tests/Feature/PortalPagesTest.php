@@ -38,19 +38,20 @@ class PortalPagesTest extends TestCase
             'kebijakan privasi' => ['/kebijakan-privasi', 'kebijakan-privasi'],
             'syarat ketentuan' => ['/syarat-ketentuan', 'syarat-ketentuan'],
             'lacak antrean' => ['/lacak/AbCdEfGhIjKlMnOpQrStUv', 'lacak'],
+            'lacak pesan' => ['/pesan/AbCdEfGhIjKlMnOpQrStUv', 'lacak-pesan'],
         ];
     }
 
     /**
      * The portal pages served exactly as their files are written: all but
-     * the article and queue tracking pages, whose addresses are made
+     * the article and the two tracking pages, whose addresses are made
      * root-relative.
      *
      * @return array<string, array{string, string}>
      */
     public static function pagesAsWritten(): array
     {
-        return array_filter(self::pages(), fn (array $page): bool => ! in_array($page[1], ['berita-detail', 'lacak'], true));
+        return array_filter(self::pages(), fn (array $page): bool => ! in_array($page[1], ['berita-detail', 'lacak', 'lacak-pesan'], true));
     }
 
     /**
@@ -459,6 +460,36 @@ class PortalPagesTest extends TestCase
         $this->assertSame([], $response->headers->getCookies());
     }
 
+    public function test_serves_the_message_tracking_page_with_addresses_from_the_site_root_and_kept_out_of_search(): void
+    {
+        $response = $this->get('/pesan/AbCdEfGhIjKlMnOpQrStUv');
+        $html = $response->assertOk()->assertHeader('Content-Type', 'text/html; charset=UTF-8')->getContent();
+
+        $this->assertSame(0, preg_match('/\s(?:href|src)="(?![a-z][a-z0-9+.-]*:|\/|#)/i', $html));
+        $this->assertStringContainsString('<meta name="robots" content="noindex, nofollow">', $html);
+        $this->assertStringContainsString('<div class="lacak-pesan" data-react="lacak-pesan">', $html);
+        $this->assertStringContainsString('<script type="module" src="/skrip/portal"></script>', $html);
+        $this->assertSame(
+            file_get_contents(resource_path('views/portal/lacak-pesan.blade.php')),
+            preg_replace('/(\s(?:href|src)=")\/(?!\/)/', '$1', $html),
+        );
+        $this->assertSame([], $response->headers->getCookies());
+    }
+
+    public function test_offers_the_message_lookup_by_ticket_and_contact_on_the_contact_page(): void
+    {
+        $html = $this->get('/kontak')->assertOk()->getContent();
+
+        $this->assertSame(1, preg_match('/<section[^>]*\bid="lacak-pesan"[^>]*>.*?<\/section>/s', $html, $section));
+        $this->assertStringContainsString('<form class="card card--xl form-card" data-lacak-pesan-form novalidate data-reveal>', $section[0]);
+        $this->assertStringContainsString('name="tiket" required', $section[0]);
+        $this->assertStringContainsString('name="kontak" required', $section[0]);
+    }
+
+    #[TestWith(['/pesan/AbCdEfGhIjKlMnOpQrStU'])]
+    #[TestWith(['/pesan/AbCdEfGhIjKlMnOpQrStUvW'])]
+    #[TestWith(['/pesan/PINTU-7KQ2MX'])]
+    #[TestWith(['/pesan'])]
     #[TestWith(['/lacak/AbCdEfGhIjKlMnOpQrStU'])]
     #[TestWith(['/lacak/AbCdEfGhIjKlMnOpQrStUvW'])]
     #[TestWith(['/lacak/AbCdEfGhIjKlMnOpQrSt-v'])]

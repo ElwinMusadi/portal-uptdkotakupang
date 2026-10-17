@@ -20,7 +20,8 @@ class PublicMessageControllerTest extends TestCase
 
         $response->assertCreated();
         $message = Message::query()->sole();
-        $response->assertExactJson(['tiket' => $message->tiket]);
+        $response->assertExactJson(['tiket' => $message->tiket, 'kode' => $message->kode_lacak]);
+        $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{22}$/', $message->kode_lacak);
         $this->assertSame(
             ['pengaduan', 'Yohanes', '+62 812-3456-7890', 'Samsat Keliling', 'Petugas datang terlambat satu jam.', 'formulir', 'baru'],
             [$message->jenis, $message->nama, $message->kontak, $message->layanan, $message->isi, $message->sumber, $message->status],
@@ -75,7 +76,8 @@ class PublicMessageControllerTest extends TestCase
     {
         $response = $this->postJson('/api/public/pesan', ['kode_tambahan' => 'https://spam.example'] + $this->form());
 
-        $response->assertCreated()->assertJsonStructure(['tiket']);
+        $response->assertCreated()->assertJsonStructure(['tiket', 'kode']);
+        $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{22}$/', $response->json('kode'));
         $this->assertDatabaseCount('messages', 0);
     }
 

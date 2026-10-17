@@ -71,6 +71,18 @@ class AppServiceProvider extends ServiceProvider
                 ], 429, $headers));
         });
 
+        // Looking up a message by ticket number and contact address (D-058): 5 a minute and 30 an hour from one address.
+        RateLimiter::for('public-message-lookups', function (Request $request): array {
+            $tooMany = fn (Request $request, array $headers): JsonResponse => response()->json([
+                'message' => 'Terlalu banyak percobaan dari jaringan ini. Coba lagi beberapa saat lagi.',
+            ], 429, $headers);
+
+            return [
+                Limit::perMinute(5)->by('menit:'.$request->ip())->response($tooMany),
+                Limit::perHour(30)->by('jam:'.$request->ip())->response($tooMany),
+            ];
+        });
+
         RateLimiter::for('login', function (Request $request): Limit {
             return Limit::perMinute(30)
                 ->by($request->ip())

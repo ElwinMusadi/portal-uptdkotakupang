@@ -64,6 +64,7 @@ class MessageControllerTest extends TestCase
         $result->assertOk()->assertJsonPath('0', [
             'id' => $newest->id,
             'tiket' => 'PINTU-ABC234',
+            'tautanLacak' => url("/pesan/{$newest->kode_lacak}"),
             'jenis' => 'pengaduan',
             'nama' => 'Yohanes',
             'kontak' => '081234567890',
@@ -73,7 +74,7 @@ class MessageControllerTest extends TestCase
             'status' => 'diproses',
             'diterima' => '2026-10-13T08:00:00+00:00',
             'ditangani' => 'Maria Bria',
-            'tanggapan' => [['id' => $response->id, 'isi' => 'Kami tambah petugas loket.', 'oleh' => 'Maria Bria', 'waktu' => '2026-10-13T08:00:00+00:00']],
+            'tanggapan' => [['id' => $response->id, 'isi' => 'Kami tambah petugas loket.', 'untukPelapor' => false, 'oleh' => 'Maria Bria', 'waktu' => '2026-10-13T08:00:00+00:00']],
             'urutan' => 0,
             'dibuat' => '2026-10-13T08:00:00+00:00',
             'diperbarui' => '2026-10-13T08:00:00+00:00',
@@ -98,6 +99,8 @@ class MessageControllerTest extends TestCase
             ->assertJsonPath('tanggapan', []);
         $this->assertMatchesRegularExpression('/^PINTU-[A-HJ-NP-Z2-9]{6}$/', $response->json('tiket'));
         $this->assertNotSame('PINTU-AAAAAA', $response->json('tiket'));
+        $this->assertSame(url('/pesan/'.Message::query()->sole()->kode_lacak), $response->json('tautanLacak'));
+        $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{22}$/', Message::query()->sole()->kode_lacak);
         $this->assertDatabaseHas('activities', ['user_id' => $staff->id, 'module' => 'pesan', 'action' => 'mencatat', 'target' => $response->json('tiket')]);
     }
 
@@ -153,6 +156,34 @@ class MessageControllerTest extends TestCase
             ->assertJsonPath('tanggapan.1.oleh', 'Petugas Pesan');
         $this->assertSame(2, $message->responses()->count());
         $this->assertDatabaseHas('activities', ['user_id' => $staff->id, 'module' => 'pesan', 'action' => 'menanggapi', 'target' => $message->tiket]);
+    }
+
+    public function test_records_a_new_response_as_a_reply_for_the_sender_only_when_marked_so(): void
+    {
+        $message = Message::factory()->create(['status' => 'diproses']);
+        $earlier = (new MessageResponse)->forceFill(['message_id' => $message->id, 'user_id' => User::factory()->create()->id, 'isi' => 'Catatan lama.']);
+        $earlier->save();
+
+        $response = $this->actingAs($this->staff())->patchJson("/api/koleksi/pesan/{$message->id}", [
+            'tanggapan' => [
+                ['id' => $earlier->id, 'isi' => 'Catatan lama.', 'untukPelapor' => true],
+                ['id' => 'lokal-1', 'isi' => 'Jadwal sudah kami perbaiki.', 'untukPelapor' => true],
+                ['id' => 'lokal-2', 'isi' => 'Cek ulang dengan koordinator.'],
+            ],
+        ]);
+
+        $response->assertOk()->assertJsonPath('tanggapan.*.untukPelapor', [false, true, false]);
+        $this->assertSame([false, true, false], $message->responses()->pluck('untuk_pelapor')->all());
+    }
+
+    public function test_rejects_a_response_marked_for_the_sender_with_anything_but_a_boolean(): void
+    {
+        $message = Message::factory()->create();
+
+        $response = $this->actingAs($this->staff())->patchJson("/api/koleksi/pesan/{$message->id}", ['tanggapan' => [['id' => 'baru', 'isi' => 'Halo.', 'untukPelapor' => 'ya']]]);
+
+        $response->assertUnprocessable()->assertJsonValidationErrors(['tanggapan.0.untukPelapor' => 'Tanggapan tidak valid.']);
+        $this->assertSame(0, $message->responses()->count());
     }
 
     public function test_never_changes_what_the_sender_wrote(): void

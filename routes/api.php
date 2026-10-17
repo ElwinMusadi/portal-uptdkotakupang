@@ -83,6 +83,8 @@ use App\Http\Controllers\PublicDocumentController;
 use App\Http\Controllers\PublicFaqController;
 use App\Http\Controllers\PublicHomepageController;
 use App\Http\Controllers\PublicMessageController;
+use App\Http\Controllers\PublicMessageLookupController;
+use App\Http\Controllers\PublicMessageStatusController;
 use App\Http\Controllers\PublicMobileServiceStopController;
 use App\Http\Controllers\PublicOpeningHoursController;
 use App\Http\Controllers\PublicOrganizationController;
@@ -616,6 +618,10 @@ Route::prefix('public')
         Route::get('/antrean/{kode}', PublicQueueTicketController::class)->where('kode', QueueTicket::TRACKING_CODE_PATTERN)->name('antrean.show');
         // The contact form; also limited to 5 messages per hour per address (D-016).
         Route::post('/pesan', PublicMessageController::class)->middleware('throttle:public-messages')->name('pesan.store');
+        // The sender's tracking page for a message, by its random code only (D-058)
+        Route::get('/pesan/{kode}', PublicMessageStatusController::class)->where('kode', Message::TRACKING_CODE_PATTERN)->name('pesan.show');
+        // The way to it from the contact page: the ticket number and the contact address the message was sent with
+        Route::post('/pesan/lacak', PublicMessageLookupController::class)->middleware('throttle:public-message-lookups')->name('pesan.lookup');
         // The portal's tax check: plate number and the last five chassis characters (D-041)
         Route::post('/kendaraan', PublicVehicleController::class)->middleware('throttle:public-kendaraan')->name('kendaraan.check');
     });

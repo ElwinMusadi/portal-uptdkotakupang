@@ -13,6 +13,7 @@ const KOMPONEN: Record<string, () => Promise<{ pasang: (el: HTMLElement) => void
   "pemetaan-pkb": () => import("./pemetaan/pemetaan-pkb"),
   "lacak-antrean": () => import("./antrean/lacak-antrean"),
   "layar-antrean": () => import("./antrean/layar-antrean"),
+  "lacak-pesan": () => import("./pesan/lacak-pesan"),
 }
 
 for (const el of document.querySelectorAll<HTMLElement>("[data-react]")) {

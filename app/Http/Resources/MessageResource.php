@@ -9,7 +9,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * A message in the shape of the dashboard's Pesan model, with its responses
- * credited to the employees who recorded them.
+ * credited to the employees who recorded them and the address of its
+ * tracking page for staff to pass on (D-058).
  *
  * @mixin Message
  */
@@ -25,6 +26,7 @@ class MessageResource extends JsonResource
         return [
             'id' => $this->id,
             'tiket' => $this->tiket,
+            'tautanLacak' => $this->trackingUrl(),
             'jenis' => $this->jenis,
             'nama' => $this->nama,
             'kontak' => $this->kontak,
@@ -37,6 +39,7 @@ class MessageResource extends JsonResource
             'tanggapan' => $this->responses->map(fn (MessageResponse $response): array => [
                 'id' => $response->id,
                 'isi' => $response->isi,
+                'untukPelapor' => $response->untuk_pelapor,
                 'oleh' => $response->user->name,
                 'waktu' => $response->created_at->toIso8601String(),
             ])->values()->all(),

@@ -281,6 +281,25 @@
     </div>
   </section>
 
+  <section class="section section--flush-top" id="lacak-pesan">
+    <div class="container split">
+      <div class="split__sticky" data-reveal>
+        <p class="eyebrow">Lacak pesan</p>
+        <h2 class="h2" style="margin-top:20px">Sudah mengirim pesan? <span class="tone">Lihat tindak lanjutnya.</span></h2>
+        <p class="body" style="margin-top:20px">Isi nomor tiket yang Anda terima dan email atau nomor WhatsApp yang Anda pakai saat mengirim. Status dan balasan petugas tampil di halaman lacak pesan.</p>
+      </div>
+      <!-- Dikirim main.js ke POST /api/public/pesan/lacak, lalu membuka halaman /pesan/<kode> -->
+      <form class="card card--xl form-card" data-lacak-pesan-form novalidate data-reveal>
+        <div class="form-row">
+          <div class="field"><label class="label" for="l-tiket">Nomor tiket</label><input class="input" id="l-tiket" name="tiket" required maxlength="20" autocomplete="off" spellcheck="false" placeholder="PINTU-XXXXXX"></div>
+          <div class="field"><label class="label" for="l-kontak">Email atau WhatsApp</label><input class="input" id="l-kontak" name="kontak" required maxlength="120" autocomplete="email" placeholder="Yang dipakai saat mengirim"></div>
+        </div>
+        <div class="form-alert" role="alert" data-lacak-pesan-alert><svg class="i i--sm" aria-hidden="true" style="margin-top:2px"><use href="#i-alert"/></svg><span data-lacak-pesan-msg></span></div>
+        <button class="btn btn--dark btn--block" type="submit" style="margin-top:24px">Lacak pesan<svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+      </form>
+    </div>
+  </section>
+
   <section class="section section--flush-top" id="pengaduan">
     <div class="container">
       <div class="center" style="margin-bottom: var(--inner-y)" data-reveal>

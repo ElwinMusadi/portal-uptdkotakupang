@@ -26,6 +26,8 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET` | `/api/public/halaman/{slug}` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/situs` | anonim, hanya baca | tersedia |
 | `POST` | `/api/public/pesan` | anonim, formulir Kontak | tersedia |
+| `GET` | `/api/public/pesan/{kode}` | anonim, halaman lacak pesan | tersedia |
+| `POST` | `/api/public/pesan/lacak` | anonim, lacak pesan di halaman Kontak | tersedia |
 | `POST` | `/api/public/kendaraan` | anonim, cek biaya pajak | tersedia |
 | `POST` | `/api/masuk` | halaman Login Pegawai | tersedia |
 | `GET` | `/api/sesi` | pegawai login | tersedia |
@@ -949,10 +951,10 @@ Dipakai halaman *Pesan & Pengaduan* di dashboard ([D-016](decisions.md#d-016--20
 
 ```json
 {
-  "id": "01m4…", "tiket": "PINTU-7KQ2MX", "jenis": "pengaduan", "nama": "Yohanes", "kontak": "081234567890",
+  "id": "01m4…", "tiket": "PINTU-7KQ2MX", "tautanLacak": "https://…/pesan/AbCdEfGhIjKlMnOpQrStUv", "jenis": "pengaduan", "nama": "Yohanes", "kontak": "081234567890",
   "layanan": "Samsat Keliling", "isi": "…", "sumber": "formulir", "status": "diproses",
   "diterima": "2026-10-13T08:00:00+00:00", "ditangani": "Maria Bria",
-  "tanggapan": [{ "id": "01m4…", "isi": "…", "oleh": "Maria Bria", "waktu": "2026-10-13T09:00:00+00:00" }],
+  "tanggapan": [{ "id": "01m4…", "isi": "…", "untukPelapor": true, "oleh": "Maria Bria", "waktu": "2026-10-13T09:00:00+00:00" }],
   "urutan": 0, "dibuat": "…", "diperbarui": "…"
 }
 ```
@@ -961,8 +963,8 @@ Dipakai halaman *Pesan & Pengaduan* di dashboard ([D-016](decisions.md#d-016--20
 |---|---|---|
 | `GET /api/koleksi/pesan` | — | `200` semua pesan, terbaru lebih dulu, dengan tanggapannya. |
 | `GET /api/koleksi/pesan/{id}` | — | `200` satu pesan; `404` bila tidak ada. |
-| `POST /api/koleksi/pesan` | `{"jenis", "nama", "kontak", "layanan", "isi", "sumber"}`; nama dan kontak boleh kosong | `201`. Server mengisi tiket, status `baru`, dan waktu terima; nilai lain dari klien diabaikan. Dicatat sebagai "mencatat PINTU-…". |
-| `PATCH /api/koleksi/pesan/{id}` | sebagian dari `{"status", "tanggapan"}` | `200`. `status`: `baru`, `diproses`, atau `selesai`. `tanggapan` adalah daftar lengkap seperti di dashboard; butir yang ID-nya belum ada di server ditambahkan atas nama akun yang masuk (hanya `isi` yang dipakai, maks. 2.000 karakter teks polos), butir lama dibiarkan. Isian pengirim dan `ditangani` diabaikan. Pegawai yang pertama memproses atau menanggapi menjadi `ditangani`. Dicatat sebagai "menanggapi", "memproses", "menyelesaikan", atau "menandai baru", dengan target nomor tiket. |
+| `POST /api/koleksi/pesan` | `{"jenis", "nama", "kontak", "layanan", "isi", "sumber"}`; nama dan kontak boleh kosong | `201`. Server mengisi tiket, kode lacak, status `baru`, dan waktu terima; nilai lain dari klien diabaikan. Dicatat sebagai "mencatat PINTU-…". |
+| `PATCH /api/koleksi/pesan/{id}` | sebagian dari `{"status", "tanggapan"}` | `200`. `status`: `baru`, `diproses`, atau `selesai`. `tanggapan` adalah daftar lengkap seperti di dashboard; butir yang ID-nya belum ada di server ditambahkan atas nama akun yang masuk (hanya `isi`, maks. 2.000 karakter teks polos, dan `untukPelapor` yang dipakai: `true` menampilkannya di halaman lacak pesan tanpa nama petugas, selain itu catatan internal; [D-058](decisions.md#d-058--2026-10-17--lacak-pesan-dan-pengaduan-oleh-pengirim)), butir lama dibiarkan. Isian pengirim dan `ditangani` diabaikan. Pegawai yang pertama memproses atau menanggapi menjadi `ditangani`. Dicatat sebagai "menanggapi", "memproses", "menyelesaikan", atau "menandai baru", dengan target nomor tiket. |
 | `POST /api/koleksi/pesan/hapus` | `{"ids": ["…"]}` | `204`. Hanya Administrator; pegawai lain `403` `{"message": "Hanya Administrator yang dapat menghapus pesan. Tandai selesai untuk menutupnya."}`. Tanggapan ikut terhapus. |
 
 Kontak harus berupa email atau nomor telepon/WhatsApp (min. 9 angka); layanan salah satu dari *Umum / portal PINTU*, *Pajak tahunan*, *Perpanjangan STNK 5 tahun*, *Mutasi & balik nama*, *Duplikat STNK*, *Samsat Keliling*.
@@ -1454,9 +1456,45 @@ Formulir Kontak di portal ([D-016](decisions.md#d-016--2026-10-13--pesan--pengad
 
 | Hal | Perilaku |
 |---|---|
-| Berhasil | `201` `{"tiket": "PINTU-7KQ2MX"}`. Pesan disimpan dengan sumber `formulir` dan status `baru`; sumber, status, atau isian lain dari pengunjung diabaikan. |
+| Berhasil | `201` `{"tiket": "PINTU-7KQ2MX", "kode": "AbCdEfGhIjKlMnOpQrStUv"}`. Pesan disimpan dengan sumber `formulir` dan status `baru`; sumber, status, atau isian lain dari pengunjung diabaikan. `kode` membuka halaman lacak pesan `/pesan/{kode}` ([D-058](decisions.md#d-058--2026-10-17--lacak-pesan-dan-pengaduan-oleh-pengirim)). |
 | Validasi | `422` dengan pesan per isian bila jenis atau layanan tidak dikenal, kontak kosong atau bukan email/nomor telepon, isi kurang dari 10 atau lebih dari 2.000 karakter, berisi karakter kontrol, atau persetujuan tidak dicentang. |
-| Anti-spam | Bila `kode_tambahan` (isian tersembunyi) terisi, jawabannya tetap `201` dengan nomor tiket, tetapi pesan tidak disimpan. `429` setelah 5 pesan per jam dari satu IP: `{"message": "Terlalu banyak pesan dari jaringan ini. Coba lagi dalam satu jam, atau hubungi kami lewat kanal lain."}`. Batas laju API publik umum (D-013) juga berlaku. |
+| Anti-spam | Bila `kode_tambahan` (isian tersembunyi) terisi, jawabannya tetap `201` dengan nomor tiket dan kode acak, tetapi pesan tidak disimpan. `429` setelah 5 pesan per jam dari satu IP: `{"message": "Terlalu banyak pesan dari jaringan ini. Coba lagi dalam satu jam, atau hubungi kami lewat kanal lain."}`. Batas laju API publik umum (D-013) juga berlaku. |
 | Privasi | Tidak memulai sesi dan tidak memasang cookie. Log hanya mencatat `message.received` dengan nomor tiket. |
 
 Kode: `app/Http/Controllers/PublicMessageController.php`, `app/Http/Requests/SubmitPublicMessageRequest.php`. Tes: `tests/Feature/PublicMessageControllerTest.php`.
+
+## `GET /api/public/pesan/{kode}`
+
+Halaman lacak pesan `/pesan/{kode}` ([D-058](decisions.md#d-058--2026-10-17--lacak-pesan-dan-pengaduan-oleh-pengirim), komponen `resources/js/portal/pesan/lacak-pesan.tsx`). Hanya kode acak 22 karakter yang membuka pesan; tidak ada pencarian.
+
+```json
+{
+  "tiket": "PINTU-7KQ2MX", "jenis": "pengaduan", "layanan": "Samsat Keliling", "isi": "…",
+  "diterima": "2026-10-17T01:00:00+00:00", "status": "diproses",
+  "balasan": [{ "isi": "…", "waktu": "2026-10-17T03:00:00+00:00" }]
+}
+```
+
+| Hal | Perilaku |
+|---|---|
+| Berhasil | `200`. `status`: `baru`, `diproses`, atau `selesai`. `balasan` hanya tanggapan yang ditandai untuk pelapor, urut waktu, tanpa nama petugas. Nama, kontak, dan catatan internal tidak pernah dikirim. |
+| Galat | `404` `{"message": "Pesan tidak ditemukan. Periksa kembali tautan lacak Anda, atau lacak dengan nomor tiket di halaman Kontak."}`; `422` untuk query parameter apa pun; `429` setelah batas laju API publik umum. |
+| Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
+
+Kode: `app/Http/Controllers/PublicMessageStatusController.php`, `app/Actions/ShowPublicMessage.php`. Tes: `tests/Feature/PublicMessageTrackingTest.php`.
+
+## `POST /api/public/pesan/lacak`
+
+Bagian *Lacak pesan* di halaman Kontak ([D-058](decisions.md#d-058--2026-10-17--lacak-pesan-dan-pengaduan-oleh-pengirim), `initLacakPesanForm()` di `public/assets/js/main.js`): nomor tiket dan kontak yang dipakai saat mengirim, untuk pengirim yang menyimpan nomor tiket tetapi tidak tautannya.
+
+```json
+{ "tiket": "PINTU-7KQ2MX", "kontak": "0812 3456 7890" }
+```
+
+| Hal | Perilaku |
+|---|---|
+| Berhasil | `200` `{"kode": "AbCdEfGhIjKlMnOpQrStUv"}`; portal lalu membuka `/pesan/{kode}`. Nomor tiket boleh tanpa `PINTU-`, huruf kecil, atau berspasi. Nomor telepon dicocokkan menurut angkanya (`0812…`, `62812…`, `+62 812-…` sama); email tanpa membedakan huruf besar. Pesan yang dicatat tanpa kontak tidak bisa ditemukan dengan cara ini. |
+| Galat | `404` `{"message": "Nomor tiket dan kontak tidak cocok dengan pesan mana pun. Periksa kembali keduanya."}` untuk setiap ketidakcocokan, sehingga nomor tiket saja tidak mengungkap apa pun; `422` bila salah satu kosong ("Isi nomor tiket pesan Anda.", "Isi email atau nomor WhatsApp yang Anda pakai saat mengirim pesan."); `429` setelah 5 percobaan per menit atau 30 per jam dari satu IP (`public-message-lookups`): `{"message": "Terlalu banyak percobaan dari jaringan ini. Coba lagi beberapa saat lagi."}`. |
+| Privasi | Tidak memulai sesi dan tidak memasang cookie; kontak dikirim di badan permintaan, tidak di alamat. |
+
+Kode: `app/Http/Controllers/PublicMessageLookupController.php`, `app/Http/Requests/LookUpPublicMessageRequest.php`, `Message::hasContact()`. Tes: `tests/Feature/PublicMessageTrackingTest.php`.

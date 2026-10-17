@@ -28,13 +28,17 @@ class UpdateMessage
      * The employee becomes the message's handler once they work on it, and
      * the change is logged by ticket number only, never by its content.
      *
-     * @param  list<string>  $responses
+     * @param  list<array{isi: string, untukPelapor: bool}>  $responses
      */
     public function handle(User $user, Message $message, ?string $status, array $responses): Message
     {
         DB::transaction(function () use ($user, $message, $status, $responses): void {
-            foreach ($responses as $isi) {
-                $message->responses()->save((new MessageResponse)->forceFill(['isi' => $isi, 'user_id' => $user->getKey()]));
+            foreach ($responses as $response) {
+                $message->responses()->save((new MessageResponse)->forceFill([
+                    'isi' => $response['isi'],
+                    'untuk_pelapor' => $response['untukPelapor'],
+                    'user_id' => $user->getKey(),
+                ]));
             }
 
             if ($status !== null) {

@@ -924,6 +924,7 @@ function pesan(sekarang: Date): Pesan[] {
       dibuat: diterima,
       diperbarui: diterima,
       tiket: tiketDari(rnd),
+      tautanLacak: null,
       jenis,
       nama: ["Wilhelmus", "Ratna", "Agustinus"][n],
       kontak: ["wilhelmus@contoh.id", "+62 812-0000-0001", "agustinus@contoh.id"][n],
@@ -949,6 +950,7 @@ function pesan(sekarang: Date): Pesan[] {
             {
               id: newId(),
               isi: balasan[jenis],
+              untukPelapor: true,
               oleh: OPERATOR,
               waktu: new Date(new Date(diterimaIso).getTime() + (4 + rnd() * 40) * 3600000).toISOString(),
             },
@@ -960,6 +962,7 @@ function pesan(sekarang: Date): Pesan[] {
       dibuat: diterimaIso,
       diperbarui: tanggapan[0]?.waktu ?? diterimaIso,
       tiket: tiketDari(rnd),
+      tautanLacak: null,
       jenis,
       nama: nm,
       kontak: nm ? `${nm.toLowerCase()}@contoh.id` : "+62 813-0000-0000",

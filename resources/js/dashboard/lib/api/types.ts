@@ -249,12 +249,16 @@ export type SumberPesan = "formulir" | "kotak-saran" | "lapor" | "whatsapp" | "t
 export interface Tanggapan {
   id: Id
   isi: string
+  /** Balasan yang tampil di halaman lacak pesan, tanpa nama petugas (D-058); selain itu catatan internal */
+  untukPelapor: boolean
   oleh: string
   waktu: IsoDateTime
 }
 
 export interface Pesan extends Entri {
   tiket: string
+  /** Alamat halaman lacak pesan untuk pengirim (D-058); null bila pesan belum tersimpan di server */
+  tautanLacak: string | null
   jenis: JenisPesan
   nama: string
   kontak: string

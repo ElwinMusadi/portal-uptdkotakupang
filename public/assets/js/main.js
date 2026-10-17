@@ -2521,7 +2521,16 @@
         if (res.status === 201 && typeof data.tiket === "string") {
           form.reset();
           alert.classList.remove("is-on");
-          $("[data-pesan-ok-msg]", form).textContent = `Terima kasih, pesan Anda kami terima dengan nomor tiket ${data.tiket}. Simpan nomor ini; kami membalas ke kontak Anda paling lambat tiga hari kerja.`;
+          const okMsg = $("[data-pesan-ok-msg]", form);
+          okMsg.textContent = `Terima kasih, pesan Anda kami terima dengan nomor tiket ${data.tiket}. Simpan nomor ini; kami membalas paling lambat tiga hari kerja, dan status serta balasan kami tampil di halaman lacak pesan. `;
+          // Halaman lacak pesan (D-058); kodenya acak, jadi hanya pengirim yang tahu alamatnya
+          if (typeof data.kode === "string" && /^[A-Za-z0-9]{22}$/.test(data.kode)) {
+            const lacak = document.createElement("a");
+            lacak.className = "link-ink";
+            lacak.href = `/pesan/${data.kode}`;
+            lacak.textContent = "Buka halaman lacak pesan";
+            okMsg.append(lacak);
+          }
           ok.classList.add("is-on");
           toast(`Pesan terkirim. Nomor tiket ${data.tiket}.`);
         } else if (res.status === 422 && data.errors) {
@@ -2532,6 +2541,60 @@
         }
       } catch {
         galat("Pesan belum terkirim. Periksa koneksi lalu coba lagi.");
+      }
+      btn.disabled = false;
+      btn.removeAttribute("aria-disabled");
+      btn.innerHTML = isiTombol;
+    });
+  }
+
+  /* ---------- Lacak pesan dari nomor tiket (D-058) ----------
+     Nomor tiket dan kontak yang dipakai saat mengirim dikirim ke
+     POST /api/public/pesan/lacak; bila cocok, halaman lacak pesan dibuka. */
+  function initLacakPesanForm() {
+    const form = $("[data-lacak-pesan-form]");
+    if (!form) return;
+    const alert = $("[data-lacak-pesan-alert]", form);
+    const btn = $("button[type=submit]", form);
+    const isiTombol = btn.innerHTML;
+
+    const galat = (teks, el) => {
+      $("[data-lacak-pesan-msg]", form).textContent = teks;
+      alert.classList.add("is-on");
+      if (el instanceof HTMLElement) { el.setAttribute("aria-invalid", "true"); el.focus(); }
+    };
+    form.addEventListener("input", (e) => {
+      e.target.removeAttribute?.("aria-invalid");
+      alert.classList.remove("is-on");
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!form.checkValidity()) { form.reportValidity(); return; }
+      const f = form.elements;
+      btn.disabled = true;
+      btn.setAttribute("aria-disabled", "true");
+      btn.textContent = "Mencari…";
+      try {
+        const res = await fetch("/api/public/pesan/lacak", {
+          method: "POST",
+          credentials: "omit",
+          headers: { Accept: "application/json", "Content-Type": "application/json" },
+          body: JSON.stringify({ tiket: f.tiket.value, kontak: f.kontak.value }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && typeof data.kode === "string" && /^[A-Za-z0-9]{22}$/.test(data.kode)) {
+          window.location.assign(`/pesan/${data.kode}`);
+          return;
+        }
+        if (res.status === 422 && data.errors) {
+          const [nama, daftar] = Object.entries(data.errors)[0];
+          galat(daftar[0], f[nama]);
+        } else {
+          galat(typeof data.message === "string" ? data.message : "Pesan belum dapat dicari. Coba lagi sebentar lagi.");
+        }
+      } catch {
+        galat("Pesan belum dapat dicari. Periksa koneksi lalu coba lagi.");
       }
       btn.disabled = false;
       btn.removeAttribute("aria-disabled");
@@ -2596,6 +2659,6 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     initNav(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil(); initLayanan(); initDokumen(); initInformasi(); initBerita(); initPengumumanBeranda(); initDokumentasi(); initStruktur(); initAplikasi(); initBeranda(); initHalaman(); initSitus();
-    initDash(); initDialogs(); initGag(); initFilters(); initGallery(); initFaq(); initForms(); initPesanForm(); initAuthFit(); initUtilities(); initWarnaBilah();
+    initDash(); initDialogs(); initGag(); initFilters(); initGallery(); initFaq(); initForms(); initPesanForm(); initLacakPesanForm(); initAuthFit(); initUtilities(); initWarnaBilah();
   });
 })();

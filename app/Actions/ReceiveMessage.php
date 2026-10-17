@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\DB;
 class ReceiveMessage
 {
     /**
-     * Store a new message under a fresh ticket number, as "baru" and received
-     * now. The sender's fields are kept exactly as given.
+     * Store a new message under a fresh ticket number and tracking code, as
+     * "baru" and received now. The sender's fields are kept exactly as given.
      *
      * @param  array{jenis: string, nama: string, kontak: string, layanan: string, isi: string}  $fields
      */
@@ -20,6 +20,7 @@ class ReceiveMessage
             $message->forceFill([
                 ...$fields,
                 'tiket' => Message::newTicket(),
+                'kode_lacak' => Message::newTrackingCode(),
                 'sumber' => $source,
                 'status' => 'baru',
                 'diterima' => now(),
