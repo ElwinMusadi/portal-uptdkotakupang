@@ -126,6 +126,31 @@ class PotentialImportTest extends TestCase
         $this->assertStringNotContainsString('081234567890', (string) $stored->telepon);
     }
 
+    public function test_keeps_the_columns_the_workbook_adds_and_leaves_them_empty_for_the_older_table(): void
+    {
+        $id = $this->start(2)->json('impor.id');
+
+        $this->part($id, 0, [
+            $this->row([
+                'POKOK PAJAK' => '202125', 'STS KENDARAAN DTD' => 'SIAP BAYAR : SIAP BAYAR', 'KET GIAT DTD' => '', 'PETUGAS DTD' => '',
+                'KODE UPT' => '010', 'KODE KEC' => '53.71.02', 'TARIF' => '0.012', 'TOTAL' => '530425', 'POKOK PAJAK NOR' => '245000',
+                'DENDA BERJALAN NOR' => '29400', 'POKOK TUNGGAK NOR' => '245000', 'DENDA TUNGGAK NOR' => '58800', 'TOTAL NOR' => '578200',
+                'DITARIK PADA' => '2026-10-17T21:45:10.000Z',
+            ]),
+            $this->row(),
+        ])->assertOk();
+
+        [$workbook, $table] = PotentialVehicle::query()->orderBy('urut')->get();
+        $this->assertSame(
+            ['010', '53.71.02', 0.012, 530425, 245000, 29400, 245000, 58800, 578200, '2026-10-17 21:45:10', 202125, 'SIAP BAYAR : SIAP BAYAR', '', ''],
+            [$workbook->kode_upt, $workbook->kode_kec, $workbook->tarif, $workbook->total, $workbook->pokok_pajak_nor, $workbook->denda_berjalan_nor,
+                $workbook->pokok_tunggak_nor, $workbook->denda_tunggak_nor, $workbook->total_nor, $workbook->ditarik_pada->utc()->toDateTimeString(),
+                $workbook->pokok_pajak, $workbook->dtd_status, $workbook->dtd_kegiatan, $workbook->dtd_petugas],
+        );
+        $this->assertSame(['', '', null, 0, 0, 0, null], [$table->kode_upt, $table->kode_kec, $table->tarif, $table->total, $table->pokok_pajak_nor, $table->total_nor, $table->ditarik_pada]);
+        $this->assertSame([573300 - 245000 + 202125, 573300], [$workbook->tagihan, $table->tagihan]);
+    }
+
     public function test_refuses_a_file_that_is_not_the_potential_data(): void
     {
         $this->actingAs($this->employee)->postJson('/api/pemetaan/impor', ['berkas' => 'STS.xls', 'kolom' => ['NO', 'NOPOL'], 'jumlah' => 3])
@@ -145,8 +170,8 @@ class PotentialImportTest extends TestCase
         $this->part($id, 0, [$this->row(), $this->row(), $this->row(), $this->row()])->assertUnprocessable()->assertJsonValidationErrors(['baris' => 'Berkas berisi lebih dari 3 baris yang disebutkan.']);
         $this->part($id, 0, [$this->row(), array_slice($this->row(), 0, 40)])
             ->assertUnprocessable()
-            ->assertJsonValidationErrors(['baris' => 'Baris 2 tidak berisi 43 kolom seperti berkas Data Potensi.']);
-        $this->part($id, 0, [$this->row(), [...array_slice($this->row(), 0, 42), ['x']]])->assertUnprocessable()->assertJsonValidationErrors(['baris' => 'Baris 2 tidak bisa dibaca.']);
+            ->assertJsonValidationErrors(['baris' => 'Baris 2 tidak berisi 53 kolom seperti berkas Data Potensi.']);
+        $this->part($id, 0, [$this->row(), [...array_slice($this->row(), 0, 52), ['x']]])->assertUnprocessable()->assertJsonValidationErrors(['baris' => 'Baris 2 tidak bisa dibaca.']);
         $this->part($id, 0, array_fill(0, 1001, $this->row()))->assertUnprocessable()->assertJsonValidationErrors(['baris' => 'Satu bagian berisi paling banyak 1000 baris.']);
 
         $this->assertSame([0, 0], [PotentialVehicle::query()->count(), PotentialImport::query()->sole()->diterima]);
@@ -218,7 +243,8 @@ class PotentialImportTest extends TestCase
     }
 
     /**
-     * A row of the file, with some columns changed.
+     * A row of the .xls table, without the columns the .xlsx workbook adds,
+     * with some columns changed.
      *
      * @param  array<string, string>  $changes
      * @return list<string>
@@ -230,6 +256,7 @@ class PotentialImportTest extends TestCase
             'HONDA', 'VARIO 125', 'MSN123', 'RKA123', '2020', 'PUTIH', 'HITAM', 'PERTALITE', '2026-10-16', 'Kota Kupang', 'PRIBADI', '125', 'C1',
             '2029-10-20', '2025-10-20', '-- TIDAK ADA PERUBAHAN --', '18.500.000', '0', '1.050', '26', '12', '12', '1', '1',
             '245.000', '24.500', '245.000', '58.800', 'Menunggak 1 Tahun', 'Segera Membayar Pajak di SAMSAT Terdekat', 'SIAP BAYAR | SIAP BAYAR', 'STPD', 'PETUGAS SATU',
+            '', '', '', '', '', '', '', '', '', '',
         ]);
 
         return array_values(array_replace($row, $changes));

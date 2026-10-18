@@ -883,7 +883,7 @@ function SheetImpor({ sekarang, tutup }: { sekarang: ImporPotensi | null; tutup:
       const hasil = await periksaBerkasPotensi(b, kendali.current.signal)
       if (!hasil.kolomCocok) throw new Error("Berkas ini bukan Data Potensi dari sistem BPAD: susunan kolomnya tidak dikenali.")
       if (hasil.jumlah === 0) throw new Error("Berkas tidak berisi baris kendaraan.")
-      if (hasil.barisRusak > 0) throw new Error(`${angka(hasil.barisRusak)} baris tidak berisi 43 kolom. Unduh ulang berkas dari sistem BPAD.`)
+      if (hasil.barisRusak > 0) throw new Error(`${angka(hasil.barisRusak)} baris tidak berisi kolom selengkap judulnya. Unduh ulang berkas dari sistem BPAD.`)
       setLangkah({ tahap: "siap", hasil })
     } catch (e) {
       setLangkah({ tahap: "pilih" })
@@ -914,7 +914,7 @@ function SheetImpor({ sekarang, tutup }: { sekarang: ImporPotensi | null; tutup:
         <SheetHeader className="border-b pr-12">
           <SheetTitle>Impor Data Potensi</SheetTitle>
           <SheetDescription>
-            Berkas Data Potensi dari sistem BPAD (.xls). Berkas dibaca di peramban lalu dikirim per 1.000 baris, jadi berkas besar pun bisa diimpor. Impor yang selesai menggantikan data sebelumnya.
+            Berkas Data Potensi dari sistem BPAD (.xlsx atau .xls). Berkas dibaca di peramban lalu dikirim per 1.000 baris, jadi berkas besar pun bisa diimpor; berkas setahun (±300.000 kendaraan) butuh beberapa menit. Impor yang selesai menggantikan data sebelumnya.
           </SheetDescription>
         </SheetHeader>
         <div className="grid flex-1 content-start gap-5 overflow-y-auto p-4">
@@ -923,7 +923,7 @@ function SheetImpor({ sekarang, tutup }: { sekarang: ImporPotensi | null; tutup:
             <Input
               id="potensi-berkas"
               type="file"
-              accept=".xls,.htm,.html"
+              accept=".xlsx,.xls,.htm,.html"
               disabled={sibuk}
               onChange={(e) => {
                 const b = e.target.files?.[0]

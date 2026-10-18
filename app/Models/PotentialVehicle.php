@@ -65,6 +65,14 @@ class PotentialVehicle extends Model
             'pokok_tunggak' => 'integer',
             'denda_tunggak' => 'integer',
             'tagihan' => 'integer',
+            'tarif' => 'float',
+            'total' => 'integer',
+            'pokok_pajak_nor' => 'integer',
+            'denda_berjalan_nor' => 'integer',
+            'pokok_tunggak_nor' => 'integer',
+            'denda_tunggak_nor' => 'integer',
+            'total_nor' => 'integer',
+            'ditarik_pada' => 'datetime',
         ];
     }
 

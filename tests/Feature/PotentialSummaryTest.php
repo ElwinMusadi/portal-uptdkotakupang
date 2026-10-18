@@ -82,6 +82,16 @@ class PotentialSummaryTest extends TestCase
         $this->summary()->assertJsonPath('kunjungan', [['hasil' => 'SIAP BAYAR', 'kendaraan' => 2], ['hasil' => 'JUAL BELI', 'kendaraan' => 1]]);
     }
 
+    public function test_reads_the_workbooks_visit_outcomes_whatever_their_capitals(): void
+    {
+        $this->vehicle(['dtd_status' => 'RUSAK BERAT : MESIN TIDAK MENYALA | DI BENGKEL']);
+        $this->vehicle(['dtd_status' => 'Rusak Berat : sudah lama']);
+        $this->vehicle(['dtd_status' => 'Rusak Berat']);
+        $this->vehicle(['dtd_status' => 'PINDAH ALAMAT : KE KOTA LAIN']);
+
+        $this->summary()->assertJsonPath('kunjungan', [['hasil' => 'RUSAK BERAT', 'kendaraan' => 3], ['hasil' => 'PINDAH ALAMAT', 'kendaraan' => 1]]);
+    }
+
     public function test_narrows_to_a_due_month_and_lists_every_month(): void
     {
         $this->vehicle(['bulan_jatuh_tempo' => 3]);

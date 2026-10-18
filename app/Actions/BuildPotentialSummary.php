@@ -29,7 +29,9 @@ class BuildPotentialSummary
 
     /**
      * Count the import's vehicles for its summary, anew. A visit outcome is
-     * the part before the officer's note ("SIAP BAYAR | …").
+     * the part before the officer's note, "SIAP BAYAR | …" in the .xls table
+     * and "SIAP BAYAR : …" in the .xlsx workbook (D-064), in capitals so that
+     * "Rusak Berat" counts as "RUSAK BERAT".
      */
     public function store(PotentialImport $import): void
     {
@@ -42,7 +44,7 @@ class BuildPotentialSummary
 
         $rows = [];
         foreach ($groups as $group) {
-            $outcome = trim(explode('|', $group->dtd_status)[0]);
+            $outcome = mb_strtoupper(trim(preg_split('/[|:]/', $group->dtd_status, 2)[0]));
             $key = implode("\0", [$group->bulan_jatuh_tempo, $group->kecamatan, $group->kelurahan, $group->roda, $group->kelompok, $group->tahun_tunggak, $group->jenis, $outcome]);
             $rows[$key] ??= [
                 'potential_import_id' => $import->getKey(),

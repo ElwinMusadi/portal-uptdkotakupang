@@ -1,22 +1,17 @@
 /*
- * Pemetaan PKB (D-052): berkas Data Potensi dari sistem BPAD, dibaca di
- * peramban dan dikirim ke server PINTU per bagian, lalu dipetakan per
- * kecamatan dan kelurahan Kota Kupang. Dashboard menyimpan semua kolom
- * termasuk identitas wajib pajak untuk sasaran penagihan (keputusan pemilik).
- * Kontraknya ada di docs/api.md.
+ * Pemetaan PKB (D-052): berkas Data Potensi dari sistem BPAD (.xls atau
+ * .xlsx, D-064), dibaca di peramban oleh berkas-potensi.ts dan dikirim ke
+ * server PINTU per bagian, lalu dipetakan per kecamatan dan kelurahan Kota
+ * Kupang. Dashboard menyimpan semua kolom termasuk identitas wajib pajak
+ * untuk sasaran penagihan (keputusan pemilik). Kontraknya ada di docs/api.md.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { mintaServer } from "@/lib/api/http"
 
-/** Kolom berkas Data Potensi, berurutan, seperti judul tabelnya */
-export const KOLOM_POTENSI = [
-  "NOPOL", "NAMA", "KTP", "TELEPON", "ALAMAT", "RT", "RW", "KELURAHAN", "KECAMATAN", "JENIS", "MERK", "TIPE",
-  "MESIN", "RANGKA", "TAHUN BUAT", "WARNA PLAT", "WARNA KENDARAAN", "BBM", "TGL PENETAPAN", "UPT ASAL", "PENGGUNAAN", "CYL", "KODE JR",
-  "SD STNK", "SD NOTICE", "RUBAH BENTUK", "NJKB", "NJUB", "BOBOT", "BEDA HARI BERJALAN", "BEDA BULAN BERLAJAN", "BULAT BULAN BERLAJAN",
-  "TAHUN TUNGGAK", "TAHUN TUNGGAK AWAL", "POKOK PAJAK", "DENDA BERJALAN", "POKOK TUNGGAK", "DENDA TUNGGAK", "KEPATUHAN", "PERINGATAN",
-  "STS KENDARAAN DTD", "KET GIAT DTD", "PETUGAS DTD",
-] as const
+import { bacaBerkasPotensi, KOLOM_POTENSI } from "./berkas-potensi"
+
+export { KOLOM_POTENSI, periksaBerkasPotensi, type PemeriksaanBerkas } from "./berkas-potensi"
 
 export type Kelompok = "taat" | "jatuh-tempo" | "terlambat" | "menunggak" | "lainnya"
 export type Roda = "r2" | "r3" | "r4"
@@ -270,89 +265,6 @@ export function useHapusPotensi() {
     mutationFn: () => mintaServer<void>("/api/pemetaan/impor", "DELETE"),
     onSuccess: () => void qc.invalidateQueries({ queryKey: KUNCI }),
   })
-}
-
-/* ---------- Membaca berkas di peramban ---------- */
-
-const ENTITAS: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " }
-
-/** Teks satu sel: tanpa tag, entitas HTML dibaca, spasi dirapikan */
-function teksSel(html: string): string {
-  return html
-    .replace(/<[^>]*>/g, "")
-    .replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (asli, k: string) =>
-      k[0] === "#" ? String.fromCodePoint(k[1].toLowerCase() === "x" ? parseInt(k.slice(2), 16) : Number(k.slice(1))) : (ENTITAS[k.toLowerCase()] ?? asli)
-    )
-    .replace(/\s+/g, " ")
-    .trim()
-}
-
-/**
- * Membaca berkas Data Potensi (tabel HTML berakhiran .xls) sedikit demi
- * sedikit agar berkas setahun pun tidak memenuhi memori: judul kolom, lalu
- * setiap baris kendaraan. Baris tanpa sel atau baris catatan kaki (satu sel)
- * dilewati.
- */
-export async function bacaBerkasPotensi(berkas: File, tiapBaris: (sel: string[]) => void | Promise<void>, sinyal?: AbortSignal): Promise<string[]> {
-  const pembaca = berkas.stream().pipeThrough(new TextDecoderStream()).getReader()
-  let sisa = ""
-  let kolom: string[] | null = null
-  try {
-    for (;;) {
-      if (sinyal?.aborted) throw new DOMException("Dibatalkan", "AbortError")
-      const { value, done } = await pembaca.read()
-      if (value) sisa += value
-      if (!kolom) {
-        const awalBaris = sisa.search(/<td[\s>]/i)
-        if (awalBaris < 0 && !done) continue
-        kolom = [...sisa.slice(0, awalBaris < 0 ? sisa.length : awalBaris).matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/gi)].map((m) => teksSel(m[1]))
-      }
-      const akhir = done ? sisa.length : sisa.toLowerCase().lastIndexOf("</tr>")
-      if (akhir >= 0) {
-        const potong = sisa.slice(0, done ? akhir : akhir + 5)
-        sisa = done ? "" : sisa.slice(akhir + 5)
-        for (const m of potong.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)) {
-          const sel = [...m[1].matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)].map((c) => teksSel(c[1]))
-          if (sel.length > 1) await tiapBaris(sel)
-        }
-      }
-      if (done) break
-    }
-  } finally {
-    pembaca.releaseLock()
-  }
-  return kolom ?? []
-}
-
-export interface PemeriksaanBerkas {
-  kolomCocok: boolean
-  jumlah: number
-  /** Tanggal penetapan yang muncul di berkas */
-  tanggalPenetapan: string[]
-  /** Baris yang jumlah selnya tidak sama dengan judul */
-  barisRusak: number
-}
-
-/** Lintasan pertama: susunan kolom, banyaknya baris, dan tanggal penetapannya, tanpa mengirim apa pun */
-export async function periksaBerkasPotensi(berkas: File, sinyal?: AbortSignal): Promise<PemeriksaanBerkas> {
-  let jumlah = 0
-  let barisRusak = 0
-  const tanggal = new Set<string>()
-  const kolom = await bacaBerkasPotensi(
-    berkas,
-    (sel) => {
-      jumlah++
-      if (sel.length !== KOLOM_POTENSI.length) barisRusak++
-      else if (sel[18]) tanggal.add(sel[18])
-    },
-    sinyal
-  )
-  return {
-    kolomCocok: kolom.length === KOLOM_POTENSI.length && kolom.every((k, i) => k === KOLOM_POTENSI[i]),
-    jumlah,
-    tanggalPenetapan: [...tanggal].sort(),
-    barisRusak,
-  }
 }
 
 /**
