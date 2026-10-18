@@ -122,7 +122,7 @@ Sejak 2026-10-18 PINTU berjalan di Laravel Cloud dengan domain utama **https://u
 
 **1. Siapkan di Laravel Cloud** (aplikasi, database, dan bucket di region yang sama: **Asia Pacific (Singapore)**, `ap-southeast-1`):
 
-- **Aplikasi:** dari repository ini. Wizard Laravel Cloud mengenali jenis aplikasi dari *default branch* GitHub, sehingga selama `main` masih situs statis, aplikasinya terdeteksi sebagai HTML. Karena itu default branch GitHub dijadikan `laravel-development` sebelum aplikasi dibuat; kembalikan ke `main` setelah merge.
+- **Aplikasi:** dari repository ini. Wizard Laravel Cloud mengenali jenis aplikasi dari *default branch* GitHub, sehingga selama `main` masih situs statis, aplikasinya terdeteksi sebagai HTML. Karena itu default branch GitHub sempat dijadikan `laravel-development` saat aplikasi dibuat. Sejak merge (2026-10-18), default branch dan branch environment adalah `main` ([D-067](docs/decisions.md#d-067--2026-10-18--main-sebagai-branch-produksi-dan-alur-rilis)).
 - **Root directory:** root repository.
 - **Build command:** bawaan Laravel Cloud (`composer install --no-dev …`, `npm ci --audit false`, `npm run build`) ditambah baris `php artisan optimize`. PHP 8.4, Node 24.
 - **Deploy command:** `php artisan migrate --force`
@@ -135,7 +135,7 @@ Sejak 2026-10-18 PINTU berjalan di Laravel Cloud dengan domain utama **https://u
   - `CACHE_STORE=database`, karena percobaan login dihitung di cache dan semua server harus memakai cache yang sama.
   - `NJKB_ACCESS_CLIENT_ID` dan `NJKB_ACCESS_CLIENT_SECRET` untuk data kendaraan, serta `NJKB_API_BASE_URL` dan `NJKB_API_TIMEOUT_SECONDS` seperti `.env` lokal.
   - `APP_DEBUG=false` dan `QUEUE_CONNECTION=sync`. PINTU tidak punya pekerjaan antrean, jadi saran Laravel Cloud `QUEUE_CONNECTION=database` tidak dipakai.
-- **Push to deploy:** dimatikan sampai go-live; deploy dijalankan dengan tombol *Deploy*.
+- **Push to deploy:** menyala untuk branch `main`. Pekerjaan dilakukan di `laravel-development`, dan rilis ke produksi dilakukan dengan memajukan `main` (*fast-forward*) atas permintaan pemilik (D-067).
 - **Edge network:** aktifkan rate limiting (paket Growth atau Business). Di Cloud, Laravel memercayai semua proxy sehingga IP pengunjung untuk pembatasan laju di aplikasi bisa dipalsukan. Batas percobaan login per NIP tetap berlaku karena tidak bergantung pada IP.
 
 **2. Pindahkan data** dari salinan lokal, sebelum deploy pertama:
