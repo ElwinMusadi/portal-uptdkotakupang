@@ -118,16 +118,42 @@ npm run typecheck && npm run lint && npm run build
 
 ## Deploy ke Laravel Cloud
 
-Produksi saat ini masih Cloudflare Pages dari branch `main` (situs statis lama). Saat pindah ke Laravel Cloud:
+Produksi saat ini masih Cloudflare Pages dari branch `main` (situs statis lama). PINTU pindah ke Laravel Cloud **beserta seluruh data database lokal** ([D-065](docs/decisions.md#d-065--2026-10-18--database-produksi-dan-pemindahan-data-ke-laravel-cloud)). Semua langkah di bawah dijalankan pemilik; kredensial Laravel Cloud tidak pernah disimpan di repository atau berkas.
+
+**1. Siapkan di Laravel Cloud** (aplikasi, database, dan bucket di region yang sama: **Asia Pacific (Singapore)**, `ap-southeast-1`):
 
 - **Root directory:** root repository.
 - **Build command:** `composer install --no-dev && npm ci && npm run build && php artisan optimize`
 - **Deploy command:** `php artisan migrate --force`
-- **Database:** pasang Laravel MySQL; kredensialnya disuntikkan otomatis.
-- **Variabel lingkungan:** `APP_URL` dengan alamat https produksi, `SESSION_DRIVER=database` (filesystem Cloud tidak permanen), `SESSION_SECURE_COOKIE=true`, `SESSION_LIFETIME=480`, `SESSION_EXPIRE_ON_CLOSE=true`, dan `CACHE_STORE=database` (percobaan login dihitung di cache, jadi semua server harus memakai cache yang sama), serta `NJKB_ACCESS_CLIENT_ID` dan `NJKB_ACCESS_CLIENT_SECRET` untuk data kendaraan.
-- **Administrator pertama:** di tab *Commands* jalankan `php artisan pintu:create-admin <nip> "<nama>" --no-interaction`, lalu kirim tautan aktivasi yang dicetak hanya kepada pemilik akun. Tautan berlaku 60 menit; bila terlewat, jalankan `php artisan pintu:activation-link <nip>`.
+- **Database:** Laravel MySQL ukuran *Flex* (bisa *scale-to-zero*), storage 5 GB, backup harian 7 hari. Kredensialnya disuntikkan otomatis.
+- **Bucket (D-028):** dua bucket Object Storage, yaitu bucket privat sebagai disk bawaan dan bucket publik dengan nama disk `public`.
+- **Variabel lingkungan:**
+  - `APP_KEY` sama persis dengan `APP_KEY` di `.env` lokal (pemilik, D-065). KTP dan telepon Pemetaan PKB terenkripsi dengan kunci itu, dan sidik transaksi Laporan Penerimaan memakainya, jadi kunci ini tidak boleh diganti setelah data diimpor.
+  - `APP_URL` dengan alamat https produksi.
+  - `SESSION_DRIVER=database` (filesystem Cloud tidak permanen), `SESSION_SECURE_COOKIE=true`, `SESSION_LIFETIME=480`, dan `SESSION_EXPIRE_ON_CLOSE=true`.
+  - `CACHE_STORE=database`, karena percobaan login dihitung di cache dan semua server harus memakai cache yang sama.
+  - `NJKB_ACCESS_CLIENT_ID` dan `NJKB_ACCESS_CLIENT_SECRET` untuk data kendaraan.
 - **Edge network:** aktifkan rate limiting (paket Growth atau Business). Di Cloud, Laravel memercayai semua proxy sehingga IP pengunjung untuk pembatasan laju di aplikasi bisa dipalsukan. Batas percobaan login per NIP tetap berlaku karena tidak bergantung pada IP.
-- Setelah aman, arahkan domain `pintu.uptdpenda-kupang.web.id` ke Laravel Cloud dan matikan deploy otomatis Cloudflare Pages.
+
+**2. Pindahkan data** dari salinan lokal, sebelum deploy pertama:
+
+1. Ekspor database ke berkas di luar folder proyek:
+   `php artisan pintu:export-production D:\pintu-produksi.sql --nip=<NIP Administrator> --nama="<Nama Administrator>"`.
+   Berkas berisi seluruh tabel dan tabel `migrations`. Akun admin lokal dari `LocalAccountSeeder`, yang kata sandinya ada di repository, menjadi akun Administrator dengan NIP dan nama itu, berkata sandi acak dan menunggu aktivasi. Sesi, cache, dan token atur ulang dikosongkan. Berkas ini berisi data pribadi wajib pajak: simpan di tempat aman dan hapus setelah diimpor.
+2. Di Laravel Cloud, nyalakan *public endpoint* database dan buka *View credentials*. Lalu impor dari PowerShell atau Git Bash; kata sandi diketik saat diminta:
+   `mysql --host=<host> --port=<port> --user=<user> --password --ssl-mode=REQUIRED --compress <database> -e "source D:/pintu-produksi.sql"`.
+   Bila impor terputus karena memori, naikkan ukuran database sementara, lalu ulangi; berkas dimulai dengan `DROP TABLE IF EXISTS`. Matikan lagi public endpoint, lalu hapus berkas ekspor.
+3. Salin berkas unggahan (`storage/app/public`) ke bucket publik dengan `php artisan pintu:copy-uploads --bucket=<nama bucket publik> --endpoint=<endpoint>`. Access key dan secret dari *View credentials* bucket diketik saat diminta. Berkas privat, bila ada, disalin ke bucket privat dengan `--privat`. Perintah ini boleh diulang; berkas yang sudah ada dilewati.
+
+**3. Deploy dan selesaikan** di tab *Commands*:
+
+1. Deploy. `migrate --force` tidak menemukan migrasi baru karena tabel `migrations` ikut diimpor.
+2. `php artisan pintu:rewrite-upload-urls http://portal-uptdkotakupang.test --dry-run`, lalu ulangi tanpa `--dry-run`. Konten menyimpan alamat lengkap unggahan (`http://portal-uptdkotakupang.test/storage/…`), dan perintah ini menggantinya dengan alamat bucket. Pada data 18 Oktober 2026 ada 10 baris.
+3. `php artisan pintu:activation-link <NIP Administrator>`, lalu buka tautan yang dicetak untuk membuat kata sandi. Tautan berlaku 60 menit.
+4. Periksa portal dan dashboard, lalu nyalakan *Scheduler* (pembersihan unggahan harian, `model:prune`).
+5. Setelah aman, arahkan domain `pintu.uptdpenda-kupang.web.id` ke Laravel Cloud dan matikan deploy otomatis Cloudflare Pages.
+
+Tanpa data lokal (database kosong), Administrator pertama dibuat di tab *Commands* dengan `php artisan pintu:create-admin <nip> "<nama>" --no-interaction`; kirim tautan aktivasi yang dicetak hanya kepada pemilik akun. Bila tautan terlewat, jalankan `php artisan pintu:activation-link <nip>`.
 
 ## Mengubah header, footer, atau ikon portal
 
