@@ -132,7 +132,7 @@ Cetak ─► Pendaftaran ─► Penetapan ─► Kwitansi ─► Pembayaran ─�
 - Dialog cetak bisa dilewati dengan menjalankan Chrome/Edge dalam mode cetak kios (`--kiosk-printing`) di komputer itu; tidak perlu aplikasi tambahan.
 - **Lembar 1 (WP):** nama UPTD, nomor besar (A-001), layanan, nomor polisi, tanggal dan jam cetak, QR, "Pindai untuk melacak berkas Anda. Simpan lembar ini sampai berkas diserahkan."
 - **Lembar 2 (berkas):** nomor besar, nomor polisi, layanan, tanggal, QR, "Tempel pada berkas".
-- QR berisi alamat halaman lacak, mis. `https://pintu.uptdpenda-kupang.web.id/lacak/<kode>`. QR yang sama dipakai petugas untuk memindai berkas.
+- QR berisi alamat halaman lacak, mis. `https://uptdpenda-kupang.web.id/lacak/<kode>`. QR yang sama dipakai petugas untuk memindai berkas.
 - Membuat gambar QR memerlukan pustaka baru (belum ada di proyek); perlu persetujuan pemilik (lihat §9).
 
 ### 4.6 Memindai QR di pos

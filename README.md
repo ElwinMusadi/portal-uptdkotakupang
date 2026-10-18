@@ -118,7 +118,7 @@ npm run typecheck && npm run lint && npm run build
 
 ## Deploy ke Laravel Cloud
 
-Domain `pintu.uptdpenda-kupang.web.id` masih dilayani Cloudflare Pages dari branch `main` (situs statis lama). Sejak 2026-10-18 PINTU berjalan di Laravel Cloud (https://pintu-laravel-development-5lifmp.laravel.cloud), dipindahkan **beserta seluruh data database lokal** ([D-065](docs/decisions.md#d-065--2026-10-18--database-produksi-dan-pemindahan-data-ke-laravel-cloud)). Semua langkah di bawah dijalankan pemilik; kredensial Laravel Cloud tidak pernah disimpan di repository atau berkas.
+Sejak 2026-10-18 PINTU berjalan di Laravel Cloud dengan domain utama **https://uptdpenda-kupang.web.id** ([D-066](docs/decisions.md#d-066--2026-10-18--domain-utama-uptdpenda-kupangwebid)), dipindahkan **beserta seluruh data database lokal** ([D-065](docs/decisions.md#d-065--2026-10-18--database-produksi-dan-pemindahan-data-ke-laravel-cloud)). Semua langkah di bawah dijalankan pemilik; kredensial Laravel Cloud tidak pernah disimpan di repository atau berkas.
 
 **1. Siapkan di Laravel Cloud** (aplikasi, database, dan bucket di region yang sama: **Asia Pacific (Singapore)**, `ap-southeast-1`):
 
@@ -154,7 +154,7 @@ Domain `pintu.uptdpenda-kupang.web.id` masih dilayani Cloudflare Pages dari bran
 2. `php artisan pintu:rewrite-upload-urls http://portal-uptdkotakupang.test --dry-run`, lalu ulangi tanpa `--dry-run`. Konten menyimpan alamat lengkap unggahan (`http://portal-uptdkotakupang.test/storage/…`), dan perintah ini menggantinya dengan alamat bucket. Pada data 18 Oktober 2026 ada 10 baris.
 3. `php artisan pintu:activation-link <NIP Administrator>`, lalu buka tautan yang dicetak untuk membuat kata sandi. Tautan berlaku 60 menit.
 4. Periksa portal dan dashboard, lalu nyalakan *Scheduler* (pembersihan unggahan harian, `model:prune`).
-5. Setelah aman, arahkan domain `pintu.uptdpenda-kupang.web.id` ke Laravel Cloud dan matikan deploy otomatis Cloudflare Pages.
+5. Pasang domain di *Settings › Network › Add domain*: pilih *Redirect from www*, tanpa wildcard, *Domain is managed by Cloudflare* (tanpa proxy), dan *Ensure uninterrupted domain transfer*. Tambahkan record TXT dan `_acme-challenge` yang diminta (DNS only), klik *Pre-verify*, lalu tambahkan CNAME `@` dan `www` ke `to.laravel.cloud` (DNS only) dan klik *Verify records*. Setelah *Connected*, pilih *Set as primary* (menjadi `APP_URL`) lalu deploy ulang. Alamat lama `pintu.uptdpenda-kupang.web.id` dialihkan dengan Cloudflare Redirect Rule, dan deploy otomatis Cloudflare Pages dimatikan (D-066).
 
 Tanpa data lokal (database kosong), Administrator pertama dibuat di tab *Commands* dengan `php artisan pintu:create-admin <nip> "<nama>" --no-interaction`; kirim tautan aktivasi yang dicetak hanya kepada pemilik akun. Bila tautan terlewat, jalankan `php artisan pintu:activation-link <nip>`.
 
