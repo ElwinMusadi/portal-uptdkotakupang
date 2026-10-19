@@ -41,6 +41,7 @@ class RevenueRealizationControllerTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('tahun', 2026)
             ->assertJsonPath('bulan', 10)
+            ->assertJsonPath('sampai', null)
             ->assertJsonPath('tersedia', true)
             ->assertJsonPath('sampaiTanggal', '2026-10-20')
             ->assertJsonPath('target.pkb', 10000000)
@@ -62,6 +63,39 @@ class RevenueRealizationControllerTest extends TestCase
             $this->row('jumlah', null, 'Jumlah Pendapatan Denda Pajak', 1, 500000, 0, 96000, 96000, 19.2),
             $this->row('total', null, 'TOTAL', 1, 30500000, 1200000, 9396000, 10596000, 34.741),
         ], $response->json('baris'));
+    }
+
+    public function test_stops_the_month_at_the_given_day(): void
+    {
+        $this->smallTarget()->create();
+        $this->october();
+
+        $response = $this->actingAs($this->revenueEmployee())->getJson('/api/penerimaan/realisasi?bulan=2026-10&sampai=2026-10-01');
+
+        $response->assertOk()
+            ->assertJsonPath('sampai', '2026-10-01')
+            ->assertJsonPath('sampaiTanggal', '2026-10-01')
+            ->assertJsonPath('loket', [
+                ['nilai' => 'kantor', 'nama' => 'Loket SAMSAT', 'transaksi' => 1, 'jumlah' => 306000, 'sampaiTanggal' => '2026-10-01'],
+            ]);
+        $this->assertSame(['lalu' => 1000000, 'ini' => 300000], $this->amounts($response, 0));
+        $this->assertSame(['lalu' => 0, 'ini' => 0], $this->amounts($response, 3));
+        $this->assertSame(
+            $this->row('total', null, 'TOTAL', 1, 30500000, 1200000, 306000, 1506000, 4.9377),
+            $response->json('baris.10'),
+        );
+    }
+
+    #[TestWith(['2026-11-01', 'Tanggal batas harus di dalam bulan laporan.'])]
+    #[TestWith(['2026-09-30', 'Tanggal batas harus di dalam bulan laporan.'])]
+    #[TestWith(['2026-10-32', 'Tanggal batas laporan tidak valid.'])]
+    #[TestWith(['7-10-2026', 'Tanggal batas laporan tidak valid.'])]
+    public function test_asks_for_a_day_of_the_month(string $day, string $message): void
+    {
+        $this->actingAs($this->revenueEmployee())
+            ->getJson("/api/penerimaan/realisasi?bulan=2026-10&sampai={$day}")
+            ->assertUnprocessable()
+            ->assertOnlyJsonValidationErrors(['sampai' => $message]);
     }
 
     public function test_counts_the_opening_balance_instead_of_the_transactions_of_the_months_it_covers(): void
@@ -150,6 +184,31 @@ class RevenueRealizationControllerTest extends TestCase
         $this->assertStringContainsString('<c r="F21" s="11"><v>10596000</v></c><c r="G21" s="12"><v>0.34741</v></c>', $sheet);
         $this->assertStringContainsString('<mergeCell ref="A11:A12"/><mergeCell ref="C11:C12"/>', $sheet);
         $this->assertStringContainsString('<mergeCell ref="A21:B21"/>', $sheet);
+        $this->assertStringNotContainsString('KEADAAN', $sheet);
+    }
+
+    public function test_writes_the_day_the_month_stops_at_under_the_year(): void
+    {
+        $this->smallTarget()->create();
+        $this->october();
+
+        $response = $this->actingAs($this->revenueEmployee())->get('/api/penerimaan/realisasi/unduh?bulan=2026-10&sampai=2026-10-07');
+
+        $response->assertOk()->assertDownload('realisasi-penerimaan-2026-10-sd-07.xlsx');
+        $path = $response->baseResponse->getFile()->getPathname();
+        $zip = new ZipArchive;
+        $this->assertTrue($zip->open($path));
+        $sheet = $zip->getFromName('xl/worksheets/sheet1.xml');
+        $zip->close();
+        unlink($path);
+
+        $this->assertStringContainsString('<row r="6"><c r="A6" s="1" t="inlineStr"><is><t xml:space="preserve">KEADAAN S/D 7 OKTOBER 2026</t></is></c></row>', $sheet);
+        $this->assertStringContainsString('<row r="8"><c r="A8" s="3" t="inlineStr"><is><t xml:space="preserve">GABUNGAN</t>', $sheet);
+        $this->assertStringContainsString('<row r="10" ht="30" customHeight="1">', $sheet);
+        $this->assertStringContainsString('<c r="E12" s="8"><v>300000</v></c>', $sheet);
+        $this->assertStringContainsString('<mergeCell ref="A6:G6"/>', $sheet);
+        $this->assertStringContainsString('<mergeCell ref="A12:A13"/><mergeCell ref="C12:C13"/>', $sheet);
+        $this->assertStringContainsString('<mergeCell ref="A22:B22"/>', $sheet);
     }
 
     public function test_refuses_to_download_a_month_the_opening_balance_covers(): void

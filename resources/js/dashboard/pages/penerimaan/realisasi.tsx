@@ -42,7 +42,7 @@ import {
 } from "@/lib/penerimaan"
 import { cn } from "@/lib/utils"
 
-import { geserPeriode, labelTanggal, periodeBulan } from "../../../portal/penerimaan/periode"
+import { akhirBulan, geserPeriode, labelTanggal, periodeBulan } from "../../../portal/penerimaan/periode"
 
 /* ---------- Bulan ---------- */
 
@@ -51,6 +51,17 @@ const NAMA_BULAN = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Jul
 const kodeBulan = (tahun: number, bulan: number) => `${tahun}-${String(bulan).padStart(2, "0")}`
 const labelBulan = (tahun: number, bulan: number) => `${NAMA_BULAN[bulan - 1]} ${tahun}`
 const geserBulan = (bulan: string, n: number) => geserPeriode(periodeBulan(bulan), n).dari.slice(0, 7)
+
+/** "7 Oktober 2026" */
+function tanggalPanjang(tanggal: string): string {
+  const [tahun, bulan, hari] = tanggal.split("-").map(Number)
+  return `${hari} ${NAMA_BULAN[bulan - 1]} ${tahun}`
+}
+
+/** Kolom bulan ini Form I: "Oktober 2026", atau "1–7 Oktober 2026" bila dibatasi sampai tanggal tertentu (D-070) */
+function rentangBulanIni(tahun: number, bulan: number, sampai: string | null): string {
+  return sampai ? `1–${tanggalPanjang(sampai)}` : labelBulan(tahun, bulan)
+}
 
 /** "Januari–September 2026", atau "Januari 2026" bila saldo awal hanya sebulan */
 function rentangSaldo(tahun: number, sampaiBulan: number): string {
@@ -67,7 +78,9 @@ const persenForm = (p: number | null) => (p === null ? "" : `${angka(p, 2)}%`)
 
 export default function HalamanRealisasi() {
   const [bulan, setBulan] = React.useState(() => hariIniIso().slice(0, 7))
-  const { data, isError, error, isFetching, refetch } = useRealisasi(bulan)
+  // Kosong berarti sebulan penuh; tanggal batas berlaku untuk bulan yang sedang dipilih saja (D-070)
+  const [sampai, setSampai] = React.useState("")
+  const { data, isError, error, isFetching, refetch } = useRealisasi(bulan, sampai)
   const [ubahTarget, setUbahTarget] = React.useState(false)
   const [mengunduh, setMengunduh] = React.useState(false)
   const tabel = React.useRef<HTMLTableElement>(null)
@@ -75,15 +88,20 @@ export default function HalamanRealisasi() {
   const tahun = Number(bulan.slice(0, 4))
   // Selama bulan lain dimuat, laporan sebelumnya tetap tampil redup
   const laporan = data
-  const sesuai = !!data && kodeBulan(data.tahun, data.bulan) === bulan
+  const sesuai = !!data && kodeBulan(data.tahun, data.bulan) === bulan && (data.sampai ?? "") === sampai
   const siap = sesuai && data.tersedia
   // Target baru bisa diubah setelah target tahun itu termuat, agar isian kosong tidak menimpanya
   const targetTermuat = !!data && data.tahun === tahun
 
+  const pilihBulan = (b: string) => {
+    setBulan(b)
+    setSampai("")
+  }
+
   const unduh = async () => {
     setMengunduh(true)
     try {
-      await unduhRealisasi(bulan)
+      await unduhRealisasi(bulan, sampai)
     } catch (e) {
       toast.error("Berkas Excel gagal diunduh", { description: (e as Error).message })
     } finally {
@@ -105,7 +123,7 @@ export default function HalamanRealisasi() {
         </Button>
       </PengantarHalaman>
 
-      <PilihBulan bulan={bulan} ubah={setBulan}>
+      <PilihBulan bulan={bulan} ubah={pilihBulan} sampai={sampai} ubahSampai={setSampai}>
         <Button variant="outline" onClick={cetak} disabled={!siap}>
           <IconPrinter />
           Cetak
@@ -155,7 +173,7 @@ export default function HalamanRealisasi() {
               <Ringkasan laporan={laporan} />
               <Card className="gap-4">
                 <CardHeader>
-                  <CardTitle className="text-base">Form I · {labelBulan(laporan.tahun, laporan.bulan)}</CardTitle>
+                  <CardTitle className="text-base">Form I · {rentangBulanIni(laporan.tahun, laporan.bulan, laporan.sampai)}</CardTitle>
                   <CardDescription>
                     Realisasi penerimaan gabungan semua loket, sama seperti berkas Excel dan hasil cetaknya.
                   </CardDescription>
@@ -167,7 +185,7 @@ export default function HalamanRealisasi() {
               <Sumber laporan={laporan} />
             </>
           ) : (
-            <TertutupSaldo laporan={laporan} ubah={setBulan} />
+            <TertutupSaldo laporan={laporan} ubah={pilihBulan} />
           )}
         </div>
       )}
@@ -177,9 +195,25 @@ export default function HalamanRealisasi() {
   )
 }
 
-/** Bulan laporan dengan tombol bulan sebelumnya dan berikutnya, lalu aksi untuk Form I bulan itu */
-function PilihBulan({ bulan, ubah, children }: { bulan: string; ubah: (b: string) => void; children: React.ReactNode }) {
+/**
+ * Bulan laporan dengan tombol bulan sebelumnya dan berikutnya, tanggal batasnya
+ * bila Form I dibuat di tengah bulan (D-070), lalu aksi untuk Form I itu
+ */
+function PilihBulan({
+  bulan,
+  ubah,
+  sampai,
+  ubahSampai,
+  children,
+}: {
+  bulan: string
+  ubah: (b: string) => void
+  sampai: string
+  ubahSampai: (t: string) => void
+  children: React.ReactNode
+}) {
   const [tahun, nomor] = bulan.split("-").map(Number)
+  const idSampai = React.useId()
   return (
     <Card className="gap-4 py-4">
       <CardContent className="flex flex-wrap items-center gap-x-4 gap-y-3 px-4">
@@ -206,8 +240,27 @@ function PilihBulan({ bulan, ubah, children }: { bulan: string; ubah: (b: string
             <IconChevronRight />
           </Button>
         </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Label htmlFor={idSampai} className="text-sm font-normal text-muted-foreground">
+            Sampai tanggal
+          </Label>
+          <Input
+            id={idSampai}
+            type="date"
+            value={sampai}
+            min={`${bulan}-01`}
+            max={akhirBulan(bulan)}
+            onChange={(e) => ubahSampai(e.target.value)}
+            className="w-auto"
+          />
+          {sampai && (
+            <Button variant="ghost" size="sm" onClick={() => ubahSampai("")}>
+              Sebulan penuh
+            </Button>
+          )}
+        </div>
         <p className="text-sm font-medium" aria-live="polite">
-          {labelBulan(tahun, nomor)}
+          {rentangBulanIni(tahun, nomor, sampai || null)}
         </p>
         <div className="flex flex-wrap items-center gap-2 sm:ml-auto">{children}</div>
       </CardContent>
@@ -221,7 +274,7 @@ function Ringkasan({ laporan }: { laporan: RealisasiPenerimaan }) {
   const total = laporan.baris.find((b) => b.jenis === "total")
   const [pajak, denda] = laporan.baris.filter((b) => b.jenis === "jumlah")
   if (!total || !pajak || !denda) return null
-  const sampaiBulan = `s.d. ${labelBulan(laporan.tahun, laporan.bulan)}`
+  const sampaiBulan = `s.d. ${laporan.sampai ? tanggalPanjang(laporan.sampai) : labelBulan(laporan.tahun, laporan.bulan)}`
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       <KartuCapaian judul={`Total realisasi ${sampaiBulan}`} baris={total} />
@@ -229,7 +282,7 @@ function Ringkasan({ laporan }: { laporan: RealisasiPenerimaan }) {
       <KartuCapaian judul="Denda pajak" baris={denda} />
       <Card className="@container/card gap-3">
         <CardHeader>
-          <CardDescription>Realisasi {labelBulan(laporan.tahun, laporan.bulan)}</CardDescription>
+          <CardDescription>Realisasi {rentangBulanIni(laporan.tahun, laporan.bulan, laporan.sampai)}</CardDescription>
           <CardTitle className="text-xl tabular-nums @[250px]/card:text-2xl">{rupiah(total.ini)}</CardTitle>
         </CardHeader>
         <CardFooter className="text-sm text-muted-foreground">
@@ -273,7 +326,7 @@ function TabelFormI({ laporan, ref }: { laporan: RealisasiPenerimaan; ref: React
     <div className="overflow-x-auto">
       <table ref={ref} className="w-full min-w-[50rem] border-collapse text-sm tabular-nums">
         <caption className="sr-only">
-          Realisasi penerimaan gabungan {labelBulan(laporan.tahun, laporan.bulan)} terhadap target
+          Realisasi penerimaan gabungan {rentangBulanIni(laporan.tahun, laporan.bulan, laporan.sampai)} terhadap target
         </caption>
         <thead className="bg-muted/50 text-xs font-semibold">
           <tr>
@@ -375,12 +428,12 @@ function Sumber({ laporan }: { laporan: RealisasiPenerimaan }) {
             : laporan.bulan > 1
               ? `S/D bulan lalu dihitung dari transaksi STS ${stsSebelumnya}.`
               : "Januari tidak memiliki bulan lalu."}{" "}
-          Bulan ini dihitung dari transaksi STS semua loket.
+          Bulan ini dihitung dari transaksi STS semua loket{laporan.sampai ? ` tanggal ${rentangBulanIni(laporan.tahun, laporan.bulan, laporan.sampai)}` : ""}.
         </CardDescription>
       </CardHeader>
       <CardContent>
         {laporan.loket.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Belum ada berkas STS yang diimpor untuk {labelBulan(laporan.tahun, laporan.bulan)}.</p>
+          <p className="text-sm text-muted-foreground">Belum ada berkas STS yang diimpor untuk {rentangBulanIni(laporan.tahun, laporan.bulan, laporan.sampai)}.</p>
         ) : (
           <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3" role="list">
             {laporan.loket.map((l) => (
@@ -457,7 +510,12 @@ tr[data-jenis="total"] th { letter-spacing: 0.3em; }
 
 /** Cetak Form I lewat bingkai tersembunyi: judul resmi di atas tabel yang sama dengan di layar, A4 mendatar */
 function cetakFormI(tabel: HTMLTableElement, laporan: RealisasiPenerimaan) {
-  const judul = [...JUDUL_FORM, `BULAN ${NAMA_BULAN[laporan.bulan - 1].toUpperCase()}`, `TAHUN ${laporan.tahun}`]
+  const judul = [
+    ...JUDUL_FORM,
+    `BULAN ${NAMA_BULAN[laporan.bulan - 1].toUpperCase()}`,
+    `TAHUN ${laporan.tahun}`,
+    ...(laporan.sampai ? [`KEADAAN S/D ${tanggalPanjang(laporan.sampai).toUpperCase()}`] : []),
+  ]
   const bingkai = document.createElement("iframe")
   bingkai.setAttribute("aria-hidden", "true")
   bingkai.tabIndex = -1

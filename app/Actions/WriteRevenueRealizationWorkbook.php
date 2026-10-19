@@ -9,7 +9,7 @@ use ZipArchive;
 
 /**
  * Writes the realisation report of a month as an Excel workbook laid out as
- * Form I (D-068): the title, the merged header and target cells, thin
+ * Form I (D-068, D-070): the title, the merged header and target cells, thin
  * borders and rupiah and percent formats, on A4 landscape. The workbook is
  * put together by hand with ZipArchive, so no spreadsheet package is needed.
  */
@@ -27,11 +27,6 @@ class WriteRevenueRealizationWorkbook
     ];
 
     /**
-     * The first row of the table's figures.
-     */
-    private const int FIRST_ROW = 11;
-
-    /**
      * The cell styles, by name, in the order of styles.xml.
      *
      * @var array<string, int>
@@ -45,7 +40,7 @@ class WriteRevenueRealizationWorkbook
      * Write the report to a temporary file and give its path; the caller
      * deletes it once sent.
      *
-     * @param  array{tahun: int, bulan: int, baris: list<array<string, mixed>>}  $report
+     * @param  array{tahun: int, bulan: int, sampai?: ?string, baris: list<array<string, mixed>>}  $report
      */
     public function handle(array $report): string
     {
@@ -69,35 +64,47 @@ class WriteRevenueRealizationWorkbook
 
     /**
      * The worksheet: title, header, the column numbers and a row per row of
-     * the report.
+     * the report. A report that stops before the month ends says so under
+     * the year (D-070), which moves every row below it down by one.
      *
-     * @param  array{tahun: int, bulan: int, baris: list<array<string, mixed>>}  $report
+     * @param  array{tahun: int, bulan: int, sampai?: ?string, baris: list<array<string, mixed>>}  $report
      */
     private function sheet(array $report): string
     {
         $month = Str::upper(Carbon::create($report['tahun'], $report['bulan'])->locale('id')->translatedFormat('F'));
+        $title = [...self::TITLE, "BULAN {$month}", "TAHUN {$report['tahun']}"];
+        if (($report['sampai'] ?? null) !== null) {
+            $title[] = 'KEADAAN S/D '.Str::upper(Carbon::parse($report['sampai'])->locale('id')->translatedFormat('j F Y'));
+        }
+
         $rows = [];
         $merges = [];
 
-        foreach ([...self::TITLE, "BULAN {$month}", "TAHUN {$report['tahun']}"] as $index => $line) {
+        foreach ($title as $index => $line) {
             $rows[$index + 1] = [$this->text('A', $index + 1, $line, 'title')];
             $merges[] = 'A'.($index + 1).':G'.($index + 1);
         }
 
-        $rows[7] = [$this->text('A', 7, 'GABUNGAN', 'label'), $this->text('G', 7, 'Form. I', 'form')];
+        // A blank row, then GABUNGAN and Form. I, the two header rows, the column numbers and the figures
+        $label = count($title) + 2;
+        $top = $label + 1;
+        $bottom = $top + 1;
+        $numbers = $bottom + 1;
 
-        $rows[8] = [$this->text('A', 8, 'NO.', 'header'), $this->text('B', 8, 'JENIS PENERIMAAN', 'header'), $this->text('C', 8, 'TARGET (Rp)', 'header'),
-            $this->text('D', 8, 'REALISASI PENERIMAAN GABUNGAN', 'header'), $this->blank('E', 8, 'header'), $this->blank('F', 8, 'header'),
-            $this->text('G', 8, 'PCT', 'header')];
-        $rows[9] = [$this->blank('A', 9, 'header'), $this->blank('B', 9, 'header'), $this->blank('C', 9, 'header'),
-            $this->text('D', 9, 'S/D BULAN LALU (Rp)', 'header'), $this->text('E', 9, 'BULAN INI (Rp)', 'header'),
-            $this->text('F', 9, 'S/D BULAN INI (Rp)', 'header'), $this->blank('G', 9, 'header')];
-        array_push($merges, 'A8:A9', 'B8:B9', 'C8:C9', 'D8:F8', 'G8:G9');
+        $rows[$label] = [$this->text('A', $label, 'GABUNGAN', 'label'), $this->text('G', $label, 'Form. I', 'form')];
 
-        $rows[10] = array_map(fn (string $column, int $number): string => $this->value($column, 10, $number, 'number'), range('A', 'G'), range(1, 7));
+        $rows[$top] = [$this->text('A', $top, 'NO.', 'header'), $this->text('B', $top, 'JENIS PENERIMAAN', 'header'),
+            $this->text('C', $top, 'TARGET (Rp)', 'header'), $this->text('D', $top, 'REALISASI PENERIMAAN GABUNGAN', 'header'),
+            $this->blank('E', $top, 'header'), $this->blank('F', $top, 'header'), $this->text('G', $top, 'PCT', 'header')];
+        $rows[$bottom] = [$this->blank('A', $bottom, 'header'), $this->blank('B', $bottom, 'header'), $this->blank('C', $bottom, 'header'),
+            $this->text('D', $bottom, 'S/D BULAN LALU (Rp)', 'header'), $this->text('E', $bottom, 'BULAN INI (Rp)', 'header'),
+            $this->text('F', $bottom, 'S/D BULAN INI (Rp)', 'header'), $this->blank('G', $bottom, 'header')];
+        array_push($merges, "A{$top}:A{$bottom}", "B{$top}:B{$bottom}", "C{$top}:C{$bottom}", "D{$top}:F{$top}", "G{$top}:G{$bottom}");
+
+        $rows[$numbers] = array_map(fn (string $column, int $number): string => $this->value($column, $numbers, $number, 'number'), range('A', 'G'), range(1, 7));
 
         foreach ($report['baris'] as $index => $line) {
-            $row = self::FIRST_ROW + $index;
+            $row = $numbers + 1 + $index;
             $rows[$row] = $this->line($row, $line);
 
             if ($line['baris'] > 1) {
@@ -108,7 +115,7 @@ class WriteRevenueRealizationWorkbook
             }
         }
 
-        $heights = [9 => 30];
+        $heights = [$bottom => 30];
         $sheetData = '';
         foreach ($rows as $number => $cells) {
             $height = isset($heights[$number]) ? " ht=\"{$heights[$number]}\" customHeight=\"1\"" : '';

@@ -959,3 +959,12 @@ Pemilik ingin setiap commit dan push langsung di-deploy (pemilik menyebutnya Clo
 | Yang tidak berubah | Branch kerja tetap `laravel-development`; pengaturan Laravel Cloud (branch `main`, *Push to deploy* menyala), default branch GitHub (`main`), dan Cloudflare (DNS, Redirect Rule `pintu.`, Pages `pintu` tetap *Automatic deployments paused*). |
 | Risiko yang diterima | Setiap commit tayang di https://uptdpenda-kupang.web.id tanpa jeda pemeriksaan, dan migrasi database berjalan saat deploy. Karena itu tes, typecheck, dan build harus lulus di lokal sebelum "Commit dan Push", dan perubahan skema diuji dulu pada database dev. |
 | Rilis pertama | Atas permintaan pemilik, `main` dimajukan dari `d574d9c` ke `f5874e4` (Realisasi Target D-068 dan dua commit dokumen). Deploy dari `f5874e4` aktif sekitar dua menit setelah push (2026-10-19): rute `/api/penerimaan/realisasi` dan `PUT /api/penerimaan/target/{tahun}` menjawab 401 untuk tamu (sebelumnya 404), beranda, `/penerimaan`, dan `/api/health` 200. |
+
+## D-070 · 2026-10-19 · Form I sampai tanggal tertentu
+
+Contoh Form I pemilik ternyata dibuat per 7 Oktober: transaksi STS semua loket 1–7 Oktober sama persis per rupiah dengan kolom bulan ininya. Pemilik meminta Form I bisa dibuat sampai tanggal tertentu, melengkapi [D-068](#d-068--2026-10-19--realisasi-target-penerimaan-form-i).
+
+| Hal | Keputusan |
+|---|---|
+| Tanggal batas | Isian **Sampai tanggal** di kartu pemilih bulan, di dalam bulan yang dipilih. Kolom *bulan ini* dihitung dari tanggal 1 sampai tanggal itu (termasuk), *s/d bulan ini* ikut menyesuaikan, dan *s/d bulan lalu* tidak berubah. Kosong berarti sebulan penuh, seperti sebelumnya; tanggal batas dikosongkan lagi saat bulan diganti. Berlaku untuk tampilan, Excel, dan cetak. |
+| Judul | **Satu baris tambahan** (keputusan pemilik): di bawah "TAHUN 2026" tertulis "KEADAAN S/D 7 OKTOBER 2026", hanya bila tanggalnya dibatasi, agar lembar cetak tidak tertukar dengan Form I sebulan penuh. Berkas Excel diberi nama `realisasi-penerimaan-2026-10-sd-07.xlsx`. |

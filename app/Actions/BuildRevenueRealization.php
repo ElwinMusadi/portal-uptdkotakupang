@@ -11,9 +11,10 @@ use stdClass;
 /**
  * The realisation report of a month against the year's target (D-068), laid
  * out as Form I: every counter's STS transactions summed per kind of revenue,
- * before the month ("s.d. bulan lalu"), in it and through it. The months
- * covered by the opening balance entered by hand count that balance instead
- * of their transactions, and have no report of their own.
+ * before the month ("s.d. bulan lalu"), in it and through it. The month can
+ * stop at a given day, as the office's reports made mid-month do (D-070).
+ * The months covered by the opening balance entered by hand count that
+ * balance instead of their transactions, and have no report of their own.
  */
 class BuildRevenueRealization
 {
@@ -55,22 +56,23 @@ class BuildRevenueRealization
     public function __construct(private BuildRevenueReport $report) {}
 
     /**
-     * The report of the month, or only whether it has one when the opening
-     * balance covers it.
+     * The report of the month, through the given day of it or the whole
+     * month, or only whether it has one when the opening balance covers it.
      *
-     * @return array{tahun: int, bulan: int, tersedia: bool, sampaiTanggal: ?string, loket: list<array<string, mixed>>, baris: list<array<string, mixed>>}
+     * @return array{tahun: int, bulan: int, sampai: ?string, tersedia: bool, sampaiTanggal: ?string, loket: list<array<string, mixed>>, baris: list<array<string, mixed>>}
      */
-    public function handle(int $year, int $month, ?RevenueTarget $target): array
+    public function handle(int $year, int $month, ?RevenueTarget $target, ?Carbon $until = null): array
     {
         $openingMonth = $target?->saldo_sampai_bulan ?? 0;
-        $report = ['tahun' => $year, 'bulan' => $month, 'tersedia' => $month > $openingMonth, 'sampaiTanggal' => null, 'loket' => [], 'baris' => []];
+        $report = ['tahun' => $year, 'bulan' => $month, 'sampai' => $until?->toDateString(), 'tersedia' => $month > $openingMonth,
+            'sampaiTanggal' => null, 'loket' => [], 'baris' => []];
 
         if (! $report['tersedia']) {
             return $report;
         }
 
         $first = Carbon::create($year, $month);
-        $last = $first->copy()->endOfMonth()->startOfDay();
+        $last = $until ?? $first->copy()->endOfMonth()->startOfDay();
         $before = $this->amounts($target, $year, $openingMonth, $month);
         $current = $this->parts($this->report->totals($first, $last));
         $counters = $this->counters($first, $last);

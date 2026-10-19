@@ -310,6 +310,8 @@ export interface BarisRealisasi {
 export interface RealisasiPenerimaan {
   tahun: number
   bulan: number
+  /** Tanggal batas bulan ini ("YYYY-MM-DD", D-070); null bila sebulan penuh */
+  sampai: string | null
   /** false bila saldo awal mencakup bulan ini, sehingga tidak ada laporan per bulannya */
   tersedia: boolean
   /** Tanggal transaksi terakhir bulan ini dari semua loket */
@@ -325,11 +327,18 @@ export interface IsianTarget {
   saldoAwal: SaldoAwal | null
 }
 
-/** Form I sebulan ("YYYY-MM") dari semua loket */
-export function useRealisasi(bulan: string) {
+/** Bulan dan tanggal batas sebagai parameter alamat; tanpa tanggal batas berarti sebulan penuh */
+function kueriRealisasi(bulan: string, sampai: string): string {
+  const p = new URLSearchParams({ bulan })
+  if (sampai) p.set("sampai", sampai)
+  return p.toString()
+}
+
+/** Form I sebulan ("YYYY-MM") dari semua loket, sampai tanggal tertentu bila diisi (D-070) */
+export function useRealisasi(bulan: string, sampai = "") {
   return useQuery({
-    queryKey: [...KUNCI, "realisasi", bulan],
-    queryFn: () => mintaServer<RealisasiPenerimaan>(`/api/penerimaan/realisasi?bulan=${encodeURIComponent(bulan)}`, "GET"),
+    queryKey: [...KUNCI, "realisasi", bulan, sampai],
+    queryFn: () => mintaServer<RealisasiPenerimaan>(`/api/penerimaan/realisasi?${kueriRealisasi(bulan, sampai)}`, "GET"),
     placeholderData: keepPreviousData,
   })
 }
@@ -344,11 +353,11 @@ export function useSimpanTarget() {
   })
 }
 
-/** Unduh Form I sebulan sebagai berkas Excel buatan server */
-export async function unduhRealisasi(bulan: string): Promise<void> {
+/** Unduh Form I sebulan, atau sampai tanggal batasnya, sebagai berkas Excel buatan server */
+export async function unduhRealisasi(bulan: string, sampai = ""): Promise<void> {
   let res: Response
   try {
-    res = await fetch(`/api/penerimaan/realisasi/unduh?bulan=${encodeURIComponent(bulan)}`, {
+    res = await fetch(`/api/penerimaan/realisasi/unduh?${kueriRealisasi(bulan, sampai)}`, {
       ...SAMA_ORIGIN,
       headers: { Accept: "application/json" },
     })
@@ -369,7 +378,7 @@ export async function unduhRealisasi(bulan: string): Promise<void> {
   const url = URL.createObjectURL(await res.blob())
   const a = document.createElement("a")
   a.href = url
-  a.download = `realisasi-penerimaan-${bulan}.xlsx`
+  a.download = `realisasi-penerimaan-${bulan}${sampai ? `-sd-${sampai.slice(8, 10)}` : ""}.xlsx`
   document.body.append(a)
   a.click()
   a.remove()
