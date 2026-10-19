@@ -135,7 +135,7 @@ Sejak 2026-10-18 PINTU berjalan di Laravel Cloud dengan domain utama **https://u
   - `CACHE_STORE=database`, karena percobaan login dihitung di cache dan semua server harus memakai cache yang sama.
   - `NJKB_ACCESS_CLIENT_ID` dan `NJKB_ACCESS_CLIENT_SECRET` untuk data kendaraan, serta `NJKB_API_BASE_URL` dan `NJKB_API_TIMEOUT_SECONDS` seperti `.env` lokal.
   - `APP_DEBUG=false` dan `QUEUE_CONNECTION=sync`. PINTU tidak punya pekerjaan antrean, jadi saran Laravel Cloud `QUEUE_CONNECTION=database` tidak dipakai.
-- **Push to deploy:** menyala untuk branch `main`. Pekerjaan dilakukan di `laravel-development`, dan rilis ke produksi dilakukan dengan memajukan `main` (*fast-forward*) atas permintaan pemilik (D-067).
+- **Push to deploy:** menyala untuk branch `main`. Pekerjaan dilakukan di `laravel-development`, dan setiap "Commit dan Push" juga memajukan `main` ke commit yang sama (*fast-forward*), sehingga langsung tayang ([D-069](docs/decisions.md#d-069--2026-10-19--commit-dan-push-langsung-tayang)). Cloudflare tidak men-deploy apa pun; ia hanya DNS dan pengalihan.
 - **Edge network:** aktifkan rate limiting (paket Growth atau Business). Di Cloud, Laravel memercayai semua proxy sehingga IP pengunjung untuk pembatasan laju di aplikasi bisa dipalsukan. Batas percobaan login per NIP tetap berlaku karena tidak bergantung pada IP.
 
 **2. Pindahkan data** dari salinan lokal, sebelum deploy pertama:

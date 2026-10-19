@@ -948,3 +948,14 @@ Pemilik ingin Laporan Penerimaan juga menyajikan realisasi target penerimaan paj
 | Target | **Satu target per tahun** (keputusan pemilik), bisa diubah kapan saja; laporan bulan mana pun memakai target terakhir yang disimpan. Perubahan target atau saldo awal tercatat di log aktivitas ("memperbarui Target penerimaan 2026"). |
 | Hak ubah | **Semua pegawai modul Laporan Penerimaan** (keputusan pemilik), bukan Administrator saja, mengisi target dan saldo awal. |
 | Unduhan | **Excel dan cetak** (keputusan pemilik). Berkas .xlsx bertata letak Form I (judul, sel nomor dan target yang digabung, garis tipis, format rupiah dan persen, A4 mendatar) dibuat server dengan ZipArchive tanpa paket baru. Tombol Cetak mencetak tabel yang sama di layar dengan judul resmi, A4 mendatar, dan bisa disimpan sebagai PDF. |
+
+## D-069 · 2026-10-19 · Commit dan Push langsung tayang
+
+Pemilik ingin setiap commit dan push langsung di-deploy (pemilik menyebutnya Cloudflare). PINTU berjalan di Laravel Cloud; Cloudflare hanya mengurus DNS dan pengalihan (D-066), dan proyek Cloudflare Pages `pintu` masih berisi situs statis lama, jadi deploy otomatisnya tidak dinyalakan lagi. Keputusan ini mengganti aturan "rilis hanya atas permintaan pemilik" di [D-067](#d-067--2026-10-18--main-sebagai-branch-produksi-dan-alur-rilis).
+
+| Hal | Keputusan |
+|---|---|
+| Alur | **"Commit dan Push" juga memajukan `main`** (keputusan pemilik): agen commit di `laravel-development` dan mendorongnya, lalu memajukan `main` ke commit yang sama (`git push origin laravel-development:main`, *fast-forward*) dan menyamakan `main` lokal. Laravel Cloud (*Push to deploy* untuk `main`) langsung men-deploy, termasuk `php artisan migrate --force`. Bila `main` tidak bisa dimajukan langsung, agen berhenti dan bertanya. |
+| Yang tidak berubah | Branch kerja tetap `laravel-development`; pengaturan Laravel Cloud (branch `main`, *Push to deploy* menyala), default branch GitHub (`main`), dan Cloudflare (DNS, Redirect Rule `pintu.`, Pages `pintu` tetap *Automatic deployments paused*). |
+| Risiko yang diterima | Setiap commit tayang di https://uptdpenda-kupang.web.id tanpa jeda pemeriksaan, dan migrasi database berjalan saat deploy. Karena itu tes, typecheck, dan build harus lulus di lokal sebelum "Commit dan Push", dan perubahan skema diuji dulu pada database dev. |
+| Rilis pertama | Atas permintaan pemilik, `main` dimajukan dari `d574d9c` ke `f5874e4` (Realisasi Target D-068 dan dua commit dokumen). Deploy dari `f5874e4` aktif sekitar dua menit setelah push (2026-10-19): rute `/api/penerimaan/realisasi` dan `PUT /api/penerimaan/target/{tahun}` menjawab 401 untuk tamu (sebelumnya 404), beranda, `/penerimaan`, dan `/api/health` 200. |
