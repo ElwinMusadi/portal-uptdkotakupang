@@ -10,6 +10,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { mintaServer } from "@/lib/api/http"
+import { SAMA_ORIGIN } from "@/lib/auth"
 
 import { KOLOM_CSV, teksCsv, unduhTeks } from "../../portal/penerimaan/csv"
 
@@ -262,3 +263,115 @@ export function csvRincian(dimensi: Dimensi | "tanggal", baris: BarisRincian[], 
 }
 
 export { unduhTeks }
+
+/* ---------- Realisasi target, Form I (D-068) ---------- */
+
+/** Jenis penerimaan Form I, dengan nama isian API */
+export type BagianRealisasi = "pkb" | "tunggakan" | "bbn" | "dendaPkb" | "dendaTunggakan" | "dendaBbn"
+
+export const LABEL_BAGIAN: Record<BagianRealisasi, string> = {
+  pkb: "PKB",
+  tunggakan: "PKB Tunggakan",
+  bbn: "BBNKB",
+  dendaPkb: "Denda PKB",
+  dendaTunggakan: "Denda PKB Tunggakan",
+  dendaBbn: "Denda BBNKB",
+}
+
+/** Target tahunan; target PKB dan denda PKB masing-masing termasuk tunggakannya */
+export type KunciTarget = "pkb" | "bbn" | "dendaPkb" | "dendaBbn"
+
+/** Realisasi bulan-bulan sebelum data STS lengkap, diisi manual sampai bulan tertentu */
+export type SaldoAwal = Record<BagianRealisasi, number> & { sampaiBulan: number }
+
+export interface TargetPenerimaan extends Record<KunciTarget, number> {
+  tahun: number
+  saldoAwal: SaldoAwal | null
+  diperbarui: string | null
+  oleh: string | null
+}
+
+export interface BarisRealisasi {
+  /** rincian, jumlah per target (JUMLAH PKB), jumlah per bagian (JUMLAH PAJAK), atau total */
+  jenis: "rincian" | "subjumlah" | "jumlah" | "total"
+  no: string | null
+  uraian: string
+  /** Banyak baris yang dicakup sel nomor dan target: 2 pada rincian pertama target bersama, 0 pada baris di bawahnya */
+  baris: number
+  /** null pada baris yang sel targetnya digabung dengan baris di atasnya */
+  target: number | null
+  lalu: number
+  ini: number
+  sampaiIni: number
+  /** Persen realisasi s.d. bulan ini terhadap target; null bila targetnya bersama atau nol */
+  persen: number | null
+}
+
+export interface RealisasiPenerimaan {
+  tahun: number
+  bulan: number
+  /** false bila saldo awal mencakup bulan ini, sehingga tidak ada laporan per bulannya */
+  tersedia: boolean
+  /** Tanggal transaksi terakhir bulan ini dari semua loket */
+  sampaiTanggal: string | null
+  loket: { nilai: string; nama: string; transaksi: number; jumlah: number; sampaiTanggal: string }[]
+  baris: BarisRealisasi[]
+  /** null bila target tahun ini belum diisi */
+  target: TargetPenerimaan | null
+}
+
+export interface IsianTarget {
+  target: Record<KunciTarget, number>
+  saldoAwal: SaldoAwal | null
+}
+
+/** Form I sebulan ("YYYY-MM") dari semua loket */
+export function useRealisasi(bulan: string) {
+  return useQuery({
+    queryKey: [...KUNCI, "realisasi", bulan],
+    queryFn: () => mintaServer<RealisasiPenerimaan>(`/api/penerimaan/realisasi?bulan=${encodeURIComponent(bulan)}`, "GET"),
+    placeholderData: keepPreviousData,
+  })
+}
+
+/** Simpan target dan saldo awal setahun */
+export function useSimpanTarget() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ tahun, isian }: { tahun: number; isian: IsianTarget }) =>
+      mintaServer<TargetPenerimaan>(`/api/penerimaan/target/${tahun}`, "PUT", isian),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: [...KUNCI, "realisasi"] }),
+  })
+}
+
+/** Unduh Form I sebulan sebagai berkas Excel buatan server */
+export async function unduhRealisasi(bulan: string): Promise<void> {
+  let res: Response
+  try {
+    res = await fetch(`/api/penerimaan/realisasi/unduh?bulan=${encodeURIComponent(bulan)}`, {
+      ...SAMA_ORIGIN,
+      headers: { Accept: "application/json" },
+    })
+  } catch {
+    throw new Error("Server tidak dapat dihubungi. Periksa koneksi internet Anda.")
+  }
+  if (!res.ok) {
+    let pesan = `Berkas gagal dibuat (${res.status}).`
+    try {
+      const json = (await res.json()) as { message?: string; errors?: Record<string, string[]> }
+      pesan = Object.values(json.errors ?? {})[0]?.[0] ?? json.message ?? pesan
+    } catch {
+      // respons bukan JSON
+    }
+    if (res.status === 401) pesan = "Sesi Anda berakhir. Silakan masuk kembali."
+    throw new Error(pesan)
+  }
+  const url = URL.createObjectURL(await res.blob())
+  const a = document.createElement("a")
+  a.href = url
+  a.download = `realisasi-penerimaan-${bulan}.xlsx`
+  document.body.append(a)
+  a.click()
+  a.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}

@@ -81,7 +81,7 @@ resources/js/dashboard/
 | Alur Publikasi | `#/alur` | semua konten beralur | — |
 | Pesan & Pengaduan | `#/pesan` | koleksi `pesan` | `kontak.html#masukan`, `/pesan/{kode}` |
 | Statistik Layanan | `#/statistik` | pengaturan `statistik` | `index.html#transparansi` |
-| Laporan Penerimaan | `#/penerimaan` | server (`/api/penerimaan/…`) dari berkas STS | `penerimaan.html` (impor yang dinyalakan Administrator) |
+| Laporan Penerimaan | `#/penerimaan`, `#/penerimaan/realisasi` | server (`/api/penerimaan/…`) dari berkas STS; target dan saldo awal per tahun | `penerimaan.html` (impor yang dinyalakan Administrator; realisasi target tidak tampil di portal) |
 | Pemetaan PKB | `#/pemetaan` | server (`/api/pemetaan/…`) dari berkas Data Potensi | `pemetaan.html` (angka gabungan, setelah dinyalakan Administrator) |
 | Berita & Pengumuman | `#/berita` | koleksi `berita` | `informasi.html`, `berita-detail.html` |
 | Dokumentasi Kegiatan | `#/dokumentasi` | koleksi `dokumentasi` | `dokumentasi.html` |
@@ -312,13 +312,25 @@ Halaman *Statistik Layanan* (`#/statistik`, `pages/statistik.tsx`) tersimpan di 
 
 ## Laporan Penerimaan
 
-Halaman *Laporan Penerimaan* (`#/penerimaan`, `pages/penerimaan.tsx`, modul `penerimaan`, [D-047](decisions.md#d-047--2026-10-15--laporan-penerimaan-dari-berkas-sts-per-loket)) mengolah berkas STS sistem BPAD menjadi laporan penerimaan per loket. Datanya selalu dibaca dari server (`lib/penerimaan.ts`, [docs/api.md](api.md#laporan-penerimaan-di-dashboard)); tidak ada salinannya di IndexedDB.
+Halaman *Laporan Penerimaan* (`#/penerimaan`, `pages/penerimaan/laporan.tsx`, modul `penerimaan`, [D-047](decisions.md#d-047--2026-10-15--laporan-penerimaan-dari-berkas-sts-per-loket)) mengolah berkas STS sistem BPAD menjadi laporan penerimaan per loket. Datanya selalu dibaca dari server (`lib/penerimaan.ts`, [docs/api.md](api.md#laporan-penerimaan-di-dashboard)); tidak ada salinannya di IndexedDB.
 
 - **Impor berkas STS** membuka panel samping: pilih loket asal (berkas tidak mencantumkannya) dan berkas .xls, lalu **Periksa berkas** menampilkan pratinjau dari server (transaksi di berkas, yang akan disimpan, yang dilewati karena sudah pernah diimpor, dan rincian per jenis daftar) sebelum **Simpan**. Setelah tersimpan, laporan pindah ke periode berkas itu.
 - Periode **Harian**, **Bulanan**, atau **Rentang** (maks. satu tahun), dengan tombol hari/bulan sebelumnya dan berikutnya. Sebelum dipilih, laporan menampilkan tanggal terakhir yang sudah diimpor. Saringan berupa daftar pilihan bercentang yang bisa dicari (loket, jenis daftar, jenis kendaraan, kepemilikan, warna plat, merek, asal UPT, kecamatan, kelurahan) dan pilihan tunggakan; isinya nilai yang ada dalam periode itu.
 - Isi laporan: bento ringkasan (total penerimaan dengan susunan komponen dan perubahan terhadap periode pembanding, transaksi, kendaraan baru dari jenis daftar Baru, pajak provinsi, opsen kabupaten/kota; lencana angka turun ke bawah angka bila tempatnya tidak cukup), kartu per loket (loket yang terjadwal melayani tetapi belum diimpor ditandai "Belum ada data" pada laporan harian tanpa saringan), grafik per hari (untuk lebih dari sehari; batang membuka laporan harian), grafik bertumpuk per jenis daftar, jenis kendaraan, kecamatan, dan asal UPT (delapan terbesar, sisanya digabung), dan tabel rincian bertab per saringan dan per tanggal. Nama di kolom pertama tabel menyaring laporan dengannya; **Ekspor CSV** mengunduh tab yang dibuka (pemisah titik koma dengan BOM, untuk Excel berbahasa Indonesia).
 - **Riwayat impor** mendaftar setiap impor (periode, berkas, loket, transaksi baru dan yang dilewati, total, pengimpor). Membuka impor menampilkan laporannya; menghapusnya menghapus transaksinya dari laporan.
 - Kolom **Portal** di Riwayat impor ([D-048](decisions.md#d-048--2026-10-15--halaman-portal-laporan-penerimaan)): Administrator menyalakan impor yang sudah diperiksa, setelah konfirmasi, agar penerimaannya tampil di halaman Laporan Penerimaan portal (`/penerimaan`), dan bisa mematikannya lagi. Pegawai lain melihat statusnya (Tampil atau Belum tampil). Kepala halaman punya tautan **Lihat di portal**.
+- Navigasi di atas halaman (`components/penerimaan/nav-penerimaan.tsx`) berpindah antara **Laporan** dan **Realisasi Target**.
+
+### Realisasi Target
+
+Sub-halaman *Realisasi Target* (`#/penerimaan/realisasi`, `pages/penerimaan/realisasi.tsx`, [D-068](decisions.md#d-068--2026-10-19--realisasi-target-penerimaan-form-i)) menyajikan Form I: realisasi PKB, BBNKB, dan dendanya dari STS semua loket terhadap target tahunan, tanpa opsen.
+
+- Bulan dipilih dengan tombol bulan sebelumnya dan berikutnya atau isian bulan; bawaannya bulan berjalan. Tombol **Cetak** dan **Unduh Excel** ada di kartu yang sama (turun ke baris berikutnya bila sempit); kepala halaman hanya berisi **Target {tahun}**, agar tidak meluber di layar 768 px dengan sidebar terbuka.
+- Empat kartu: total realisasi s.d. bulan itu, pajak (PKB dan BBNKB), dan denda pajak, masing-masing dengan persen dan batang capaian terhadap target, serta realisasi bulan itu dengan banyak loket dan tanggal transaksi terakhir.
+- Tabel Form I sama dengan berkas Excel dan hasil cetak: nomor dan target PKB serta denda PKB digabung dua baris, nol ditulis "-", PCT dua desimal. Lebar minimumnya 50rem, jadi pas di 1280 px dengan sidebar; di layar lebih sempit tabel digeser ke samping di dalam kartunya. Kartu **Sumber angka** menjelaskan isi S/D bulan lalu (saldo awal dan bulan-bulan STS) dan mendaftar loket bulan itu.
+- **Target {tahun}** membuka panel samping untuk semua pengelola modul: empat target (PKB dan denda PKB termasuk tunggakannya) dengan jumlah pajak, jumlah denda, dan totalnya, serta **Saldo awal** (sakelar, bulan terakhir yang tercakup, dan enam realisasi). Tombolnya aktif setelah target tahun itu termuat, agar isian kosong tidak menimpa target yang tersimpan. Pesan galat server tampil di bawah isiannya.
+- **Unduh Excel** mengambil berkas .xlsx dari server; **Cetak** mencetak tabel di layar dengan judul resmi Form I lewat bingkai tersembunyi (A4 mendatar, bisa disimpan sebagai PDF). Keduanya nonaktif untuk bulan yang tercakup saldo awal, yang menampilkan pesan dan tautan ke bulan pertama yang punya Form I.
+- Bila tahun itu belum bertarget, realisasi tetap tampil dengan kolom target dan PCT kosong, ditambah ajakan mengisi target.
 
 ## Kontak & Kanal
 

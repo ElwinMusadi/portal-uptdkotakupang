@@ -38,6 +38,16 @@ class RevenueImportPolicy
     }
 
     /**
+     * Determine whether the user can set a year's revenue target and opening
+     * balance for the realisation report: everyone assigned to the module
+     * (D-068).
+     */
+    public function updateTargets(User $user): Response
+    {
+        return $this->managesRevenue($user);
+    }
+
+    /**
      * Determine whether the user can show imports on the portal or take them
      * off: Administrators only, once the import is checked (D-048).
      */

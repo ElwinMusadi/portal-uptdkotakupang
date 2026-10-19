@@ -259,7 +259,7 @@ class BuildRevenueReport
      *
      * @return array<string, string>
      */
-    private function counterNames(): array
+    public function counterNames(): array
     {
         return RevenueImport::query()->orderBy('created_at')->orderBy('id')->pluck('nama_loket', 'loket')->all();
     }

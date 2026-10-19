@@ -22,6 +22,7 @@ import { DataTable, HeaderUrut, pembantuKolom } from "@/components/data/data-tab
 import { Halaman, PengantarHalaman } from "@/components/data/page"
 import { MenuBaris } from "@/components/data/row-actions"
 import { NadaBadge } from "@/components/data/status-badge"
+import { NavPenerimaan } from "@/components/penerimaan/nav-penerimaan"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -90,7 +91,7 @@ import {
   TANGGAL_ISO,
   type Mode,
   type Periode,
-} from "../../portal/penerimaan/periode"
+} from "../../../portal/penerimaan/periode"
 
 /* ---------- Angka ---------- */
 
@@ -209,6 +210,7 @@ export default function HalamanPenerimaan() {
 
   return (
     <Halaman>
+      <NavPenerimaan />
       <PengantarHalaman deskripsi="Penerimaan PKB, BBNKB, dan opsen per loket dari berkas STS sistem BPAD. Impor berkas harian atau bulanan setiap loket; laporan dihitung dari transaksinya tanpa nama pemilik, nomor polisi, atau alamat lengkap.">
         <Button onClick={() => setImpor(true)}>
           <IconUpload />

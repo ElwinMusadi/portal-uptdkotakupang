@@ -15,6 +15,7 @@ import { id as localeId } from "react-day-picker/locale"
 import { toast } from "sonner"
 
 import { Halaman, PengantarHalaman } from "@/components/data/page"
+import { InputRupiah } from "@/components/form/input-rupiah"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -43,7 +44,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { Switch } from "@/components/ui/switch"
 import { ApiError } from "@/lib/api"
 import { mintaServer } from "@/lib/api/http"
-import { angka, tanggal } from "@/lib/format"
+import { tanggal } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
 import {
@@ -134,53 +135,6 @@ function useCariKendaraan(nopol: string, isi: (data: DataKendaraan) => void) {
           ? jawaban.hasil
           : { status: "memuat" }
   return { normal, hasil, lupakan: () => setJawaban(null) }
-}
-
-/** Isian rupiah: angka mentah saat diketik, berformat ribuan saat tidak difokus */
-function InputRupiah({
-  id,
-  nilai,
-  ubah,
-  describedBy,
-}: {
-  id: string
-  nilai: number
-  ubah: (n: number) => void
-  describedBy?: string
-}) {
-  const [fokus, setFokus] = React.useState(false)
-  const [teks, setTeks] = React.useState("")
-  return (
-    <div className="relative">
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground"
-      >
-        Rp
-      </span>
-      <Input
-        id={id}
-        inputMode="numeric"
-        autoComplete="off"
-        className="pl-9 tabular-nums"
-        value={fokus ? teks : nilai ? angka(nilai) : ""}
-        placeholder="0"
-        aria-describedby={describedBy}
-        onFocus={(e) => {
-          setFokus(true)
-          setTeks(nilai ? String(nilai) : "")
-          const el = e.currentTarget
-          requestAnimationFrame(() => el.select())
-        }}
-        onBlur={() => setFokus(false)}
-        onChange={(e) => {
-          const bersih = e.target.value.replace(/\D/g, "").replace(/^0+(?=\d)/, "").slice(0, 13)
-          setTeks(bersih)
-          ubah(bersih ? Number(bersih) : 0)
-        }}
-      />
-    </div>
-  )
 }
 
 function PilihTanggal({

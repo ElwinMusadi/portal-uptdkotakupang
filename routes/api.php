@@ -51,7 +51,9 @@ use App\Http\Controllers\Dashboard\RevenueCounterController;
 use App\Http\Controllers\Dashboard\RevenueImportController;
 use App\Http\Controllers\Dashboard\RevenueImportDeletionController;
 use App\Http\Controllers\Dashboard\RevenueImportPreviewController;
+use App\Http\Controllers\Dashboard\RevenueRealizationController;
 use App\Http\Controllers\Dashboard\RevenueReportController;
+use App\Http\Controllers\Dashboard\RevenueTargetController;
 use App\Http\Controllers\Dashboard\ScheduleAdjustmentController;
 use App\Http\Controllers\Dashboard\ScheduleAdjustmentDeletionController;
 use App\Http\Controllers\Dashboard\ServiceBoardController;
@@ -484,6 +486,13 @@ Route::middleware('auth:sanctum')->group(function (): void {
             ->can('publish', RevenueImport::class)
             ->name('impor.update');
         Route::post('/impor/hapus', [RevenueImportDeletionController::class, 'store'])->can('deleteAny', RevenueImport::class)->name('impor.hapus');
+        // Realisasi target (D-068): Form I of a month against the year's target
+        Route::get('/realisasi', [RevenueRealizationController::class, 'show'])->can('viewAny', RevenueImport::class)->name('realisasi');
+        Route::get('/realisasi/unduh', [RevenueRealizationController::class, 'download'])->can('viewAny', RevenueImport::class)->name('realisasi.unduh');
+        Route::put('/target/{tahun}', [RevenueTargetController::class, 'update'])
+            ->where('tahun', '20[0-9]{2}')
+            ->can('updateTargets', RevenueImport::class)
+            ->name('target.update');
     });
 
     /*
