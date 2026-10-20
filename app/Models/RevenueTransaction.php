@@ -11,13 +11,15 @@ use Illuminate\Support\Carbon;
 
 /**
  * A transaction from an imported STS file (D-047), without the owner's name,
- * the plate number, the numbering or the address below the kelurahan.
- * Amounts are whole rupiah; "jumlah" is the sum of the other amounts.
+ * the plate number or the address below the kelurahan. Amounts are whole
+ * rupiah; "jumlah" is the sum of the other amounts. "nomoratur" is the SKPD
+ * form number (D-071): seven digits, "-" when the transaction has no form,
+ * null when it was imported before form numbers were kept.
  *
  * @property Carbon $tanggal
  */
 #[Fillable(['revenue_import_id', 'loket', 'tanggal', 'jenis_daftar', 'jenis_kendaraan', 'kepemilikan', 'merk', 'warna_plat', 'upt_asal',
-    'kecamatan', 'kelurahan', 'tahun_tunggakan', 'pkb', 'bbn', 'denda_pkb', 'denda_bbn', 'tunggakan', 'denda_tunggakan', 'opsen_pkb',
+    'kecamatan', 'kelurahan', 'nomoratur', 'tahun_tunggakan', 'pkb', 'bbn', 'denda_pkb', 'denda_bbn', 'tunggakan', 'denda_tunggakan', 'opsen_pkb',
     'opsen_bbn', 'opsen_denda_pkb', 'opsen_denda_bbn', 'opsen_tunggakan', 'opsen_denda_tunggakan', 'jumlah', 'sidik'])]
 class RevenueTransaction extends Model
 {

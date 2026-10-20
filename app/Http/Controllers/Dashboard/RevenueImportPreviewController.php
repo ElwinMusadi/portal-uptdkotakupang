@@ -11,13 +11,14 @@ class RevenueImportPreviewController extends Controller
 {
     /**
      * What importing an STS file would add, without saving anything (D-047):
-     * the whole file, the transactions not saved yet, and how many are skipped
-     * because an earlier import saved them or the file lists them twice.
+     * the whole file, the transactions not saved yet, how many are skipped
+     * because an earlier import saved them or the file lists them twice, and
+     * how many of those skipped get their SKPD form number (D-071).
      */
     public function __invoke(StoreRevenueImportRequest $request, ImportRevenue $importRevenue): JsonResponse
     {
         $transactions = $request->transactions();
-        [$new, $skipped] = $importRevenue->newOnly($transactions);
+        ['baru' => $new, 'dilewati' => $skipped, 'dilengkapi' => $completed] = $importRevenue->compare($transactions);
 
         return response()->json([
             'loket' => $request->counter(),
@@ -25,6 +26,7 @@ class RevenueImportPreviewController extends Controller
             'berkas' => $importRevenue->summary($transactions),
             'baru' => $importRevenue->summary($new),
             'dilewati' => $skipped,
+            'dilengkapi' => count($completed),
         ]);
     }
 }

@@ -90,6 +90,7 @@ class RevenueImportControllerTest extends TestCase
                 ],
             ],
             'dilewati' => 0,
+            'dilengkapi' => 0,
         ]);
         $this->assertDatabaseCount('revenue_imports', 0);
         $this->assertDatabaseCount('revenue_transactions', 0);
@@ -102,7 +103,7 @@ class RevenueImportControllerTest extends TestCase
         $file = StsReport::file([
             StsReport::row(['no' => '1', 'nopol' => 'DH1001AA', 'nama' => 'NAMA PEMILIK SATU', 'rt' => '011', 'rw' => '022']),
             StsReport::row([
-                'no' => '2', 'jenis_daftar' => 'PENDAFTARAN ULANG 5 TAHUN', 'nopol' => 'DH 1002 AB', 'nama' => 'NAMA PEMILIK DUA', 'jns_kend' => 'MINIBUS',
+                'no' => '2', 'jenis_daftar' => 'PENDAFTARAN ULANG 5 TAHUN', 'nopol' => 'DH 1002 AB', 'nomorator' => '123456', 'nama' => 'NAMA PEMILIK DUA', 'jns_kend' => 'MINIBUS',
                 'merk' => 'TOYOTA', 'plat' => 'MERAH', 'jenis_kendaraan' => 'MINIBUS PEMERINTAH DAERAH', 'upt_asal' => 'Kab. Kupang',
                 'kelurahan' => 'Oesao', 'kecamatan' => 'KUPANG TIMUR', 'pkb' => '1200000', 'd_pkb' => '24000', 'd_bbn' => '1000', 'tunggakan' => '1100000',
                 'denda_tunggakan' => '2000', 'opsen_pkb' => '792000', 'opsen_dpkb' => '15840', 'opsen_dbbn' => '660', 'opsen_tpkb' => '726000',
@@ -149,10 +150,11 @@ class RevenueImportControllerTest extends TestCase
             'opsen_tunggakan' => 726000,
             'opsen_denda_tunggakan' => 1320,
             'jumlah' => 3862820,
+            'nomoratur' => '0123456',
             'sidik' => ReadStsFile::fingerprint('DH1002AB', '2026-10-14', 'PENDAFTARAN ULANG 5 TAHUN', 3862820),
         ]);
         $stored = json_encode(DB::table('revenue_transactions')->get());
-        foreach (['NAMA PEMILIK', 'DH1001AA', 'DH1002AB', 'DH 1002 AB', 'A001', 'TIPE UJI', '18000000', '2027-10-14', '011', '022'] as $secret) {
+        foreach (['NAMA PEMILIK', 'DH1001AA', 'DH1002AB', 'DH 1002 AB', 'TIPE UJI', '18000000', '2027-10-14', '011', '022'] as $secret) {
             $this->assertStringNotContainsString($secret, $stored);
         }
         $this->assertDatabaseHas('activities', [
@@ -190,6 +192,69 @@ class RevenueImportControllerTest extends TestCase
             ->assertJsonPath('tanggalAwal', '2026-10-14')
             ->assertJsonPath('tanggalAkhir', '2026-10-15');
         $this->assertDatabaseCount('revenue_transactions', 3);
+    }
+
+    public function test_puts_back_the_leading_zeros_of_a_form_number_and_marks_a_transaction_without_one(): void
+    {
+        $this->actingAs($this->revenueEmployee())->post('/api/penerimaan/impor', ['berkas' => StsReport::file([
+            StsReport::row(['no' => '1', 'nopol' => 'DH1001AA', 'nomorator' => '12345']),
+            StsReport::row(['no' => '2', 'nopol' => 'DH1002AA', 'nomorator' => '1234567']),
+            StsReport::row(['no' => '3', 'nopol' => 'DH1003AA', 'nomorator' => '', 'jenis_daftar' => 'MUTASI KELUAR LUAR PROPINSI']),
+            StsReport::row(['no' => '4', 'nopol' => 'DH1004AA', 'nomorator' => '-', 'jenis_daftar' => 'TAMBAHAN PAJAK']),
+        ]), 'loket' => 'kantor'], ['Accept' => 'application/json'])->assertCreated();
+
+        $this->assertSame(['-', '-', '0012345', '1234567'], DB::table('revenue_transactions')->orderBy('nomoratur')->pluck('nomoratur')->all());
+    }
+
+    public function test_completes_the_form_numbers_of_transactions_imported_before_they_were_kept(): void
+    {
+        $employee = $this->revenueEmployee();
+        $rows = [
+            StsReport::row(['no' => '1', 'nopol' => 'DH1001AA', 'nomorator' => '123456']),
+            StsReport::row(['no' => '2', 'nopol' => 'DH1002AA', 'nomorator' => '', 'jenis_daftar' => 'MUTASI KELUAR LUAR PROPINSI']),
+        ];
+        $this->actingAs($employee)->post('/api/penerimaan/impor', ['berkas' => StsReport::file($rows), 'loket' => 'kantor'], ['Accept' => 'application/json'])->assertCreated();
+        DB::table('revenue_transactions')->update(['nomoratur' => null]);
+
+        $this->actingAs($employee)->post('/api/penerimaan/impor/pratinjau', ['berkas' => StsReport::file($rows), 'loket' => 'kantor'], ['Accept' => 'application/json'])
+            ->assertOk()
+            ->assertJsonPath('baru.transaksi', 0)
+            ->assertJsonPath('dilewati', 2)
+            ->assertJsonPath('dilengkapi', 2);
+        $this->actingAs($employee)->post('/api/penerimaan/impor', ['berkas' => StsReport::file($rows), 'loket' => 'kantor'], ['Accept' => 'application/json'])
+            ->assertOk()
+            ->assertExactJson(['dilengkapi' => 2]);
+
+        $this->assertDatabaseCount('revenue_imports', 1);
+        $this->assertSame(['-', '0123456'], DB::table('revenue_transactions')->orderBy('nomoratur')->pluck('nomoratur')->all());
+        $this->assertDatabaseHas('activities', [
+            'user_id' => $employee->id, 'module' => 'penerimaan', 'action' => 'melengkapi', 'target' => 'nomoratur STS Loket SAMSAT 2026-10-14 · 2 transaksi',
+        ]);
+        $this->actingAs($employee)->post('/api/penerimaan/impor', ['berkas' => StsReport::file($rows), 'loket' => 'kantor'], ['Accept' => 'application/json'])
+            ->assertUnprocessable()
+            ->assertOnlyJsonValidationErrors(['berkas' => 'Semua transaksi di berkas ini sudah pernah diimpor.']);
+    }
+
+    public function test_imports_the_new_transactions_and_completes_the_old_ones_together(): void
+    {
+        $employee = $this->revenueEmployee();
+        $old = StsReport::row(['no' => '1', 'nopol' => 'DH1001AA', 'nomorator' => '0000100']);
+        $this->actingAs($employee)->post('/api/penerimaan/impor', ['berkas' => StsReport::file([$old]), 'loket' => 'kantor'], ['Accept' => 'application/json'])->assertCreated();
+        DB::table('revenue_transactions')->update(['nomoratur' => null]);
+        $kept = RevenueTransaction::factory()->create(['nomoratur' => '0000999', 'sidik' => ReadStsFile::fingerprint('DH1003AA', '2026-10-14', 'Teliti Ulang / Pengesahan', 498000)]);
+
+        $this->actingAs($employee)->post('/api/penerimaan/impor', ['berkas' => StsReport::file([
+            [...$old, 'no' => '5'],
+            StsReport::row(['no' => '6', 'nopol' => 'DH1002AA', 'nomorator' => '0000101']),
+            StsReport::row(['no' => '7', 'nopol' => 'DH1003AA', 'nomorator' => '0000102']),
+        ]), 'loket' => 'kantor'], ['Accept' => 'application/json'])
+            ->assertCreated()
+            ->assertJsonPath('jumlahTransaksi', 1)
+            ->assertJsonPath('jumlahDilewati', 2);
+
+        $this->assertSame(['0000100', '0000101'], DB::table('revenue_transactions')->where('id', '!=', $kept->id)->orderBy('nomoratur')->pluck('nomoratur')->all());
+        $this->assertSame('0000999', $kept->fresh()->nomoratur);
+        $this->assertDatabaseHas('activities', ['action' => 'melengkapi', 'target' => 'nomoratur STS Loket SAMSAT 2026-10-14 · 1 transaksi']);
     }
 
     public function test_recognises_a_transaction_whatever_the_case_of_its_registration_type(): void
@@ -293,6 +358,8 @@ class RevenueImportControllerTest extends TestCase
     #[TestWith([['opsen_pkb' => '-198000'], 'Baris 4: nilai opsen_pkb "-198000" bukan angka rupiah bulat.'])]
     #[TestWith([['tahun_tunggakan' => 'dua'], 'Baris 4: nilai tahun tunggakan "dua" bukan angka bulat.'])]
     #[TestWith([['merk' => 'MERK YANG NAMANYA SANGAT PANJANG SEKALI MELEBIHI'], 'Baris 4: isi kolom merk lebih dari 40 karakter.'])]
+    #[TestWith([['nomorator' => '12345678'], 'Baris 4: nomoratur "12345678" bukan nomor SKPD 7 digit.'])]
+    #[TestWith([['nomorator' => 'A001'], 'Baris 4: nomoratur "A001" bukan nomor SKPD 7 digit.'])]
     public function test_names_the_row_that_cannot_be_read(array $overrides, string $message): void
     {
         $file = StsReport::file([StsReport::row(['no' => '1', 'nopol' => 'DH1001AA']), StsReport::row(['no' => '2', 'nopol' => 'DH1002AA', ...$overrides])]);

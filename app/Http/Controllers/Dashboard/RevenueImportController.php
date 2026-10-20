@@ -28,11 +28,20 @@ class RevenueImportController extends Controller
     }
 
     /**
-     * Save the new transactions of an STS file for a counter.
+     * Save the new transactions of an STS file for a counter, and complete
+     * the SKPD form numbers of those saved before form numbers were kept
+     * (D-071). A file that only completes form numbers adds no import, so
+     * the answer is just how many it completed.
      */
     public function store(StoreRevenueImportRequest $request, ImportRevenue $importRevenue): JsonResponse
     {
-        $import = $importRevenue->handle($request->user(), $request->counter(), $request->fileName(), $request->transactions());
+        ['impor' => $import, 'dilengkapi' => $completed] = $importRevenue->handle(
+            $request->user(), $request->counter(), $request->fileName(), $request->transactions(),
+        );
+
+        if ($import === null) {
+            return response()->json(['dilengkapi' => $completed]);
+        }
 
         return (new RevenueImportResource($import->load('user')))->response()->setStatusCode(201);
     }

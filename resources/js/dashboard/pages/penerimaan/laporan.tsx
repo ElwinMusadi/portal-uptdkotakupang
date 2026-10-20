@@ -1238,10 +1238,18 @@ function SheetImpor({ tutup, selesai }: { tutup: () => void; selesai: (i: ImporP
     setGalat(null)
     try {
       const i = await simpan.mutateAsync({ berkas, loket })
-      toast.success("Berkas STS diimpor", {
-        description: `${angka(i.jumlahTransaksi)} transaksi, ${rupiah(i.total)}, untuk ${i.namaLoket}.`,
-      })
-      selesai(i)
+      const lengkap = hasil?.dilengkapi ? ` Nomoratur ${angka(hasil.dilengkapi)} transaksi lama juga dilengkapi.` : ""
+      if ("id" in i) {
+        toast.success("Berkas STS diimpor", {
+          description: `${angka(i.jumlahTransaksi)} transaksi, ${rupiah(i.total)}, untuk ${i.namaLoket}.${lengkap}`,
+        })
+        selesai(i)
+      } else {
+        // Berkas yang sudah pernah diimpor hanya melengkapi nomoratur (D-071)
+        toast.success("Nomoratur dilengkapi", {
+          description: `${angka(i.dilengkapi)} transaksi yang sudah diimpor kini tercatat nomoraturnya.`,
+        })
+      }
       tutup()
     } catch (e) {
       setGalat((e as Error).message)
@@ -1320,9 +1328,11 @@ function SheetImpor({ tutup, selesai }: { tutup: () => void; selesai: (i: ImporP
             Batal
           </Button>
           {hasil ? (
-            <Button type="button" onClick={kirim} disabled={simpan.isPending || hasil.baru.transaksi === 0}>
+            <Button type="button" onClick={kirim} disabled={simpan.isPending || (hasil.baru.transaksi === 0 && hasil.dilengkapi === 0)}>
               {simpan.isPending && <Spinner />}
-              Simpan {angka(hasil.baru.transaksi)} transaksi
+              {hasil.baru.transaksi > 0 || hasil.dilengkapi === 0
+                ? `Simpan ${angka(hasil.baru.transaksi)} transaksi`
+                : `Lengkapi nomoratur ${angka(hasil.dilengkapi)} transaksi`}
             </Button>
           ) : (
             <Button type="button" onClick={periksa} disabled={pratinjau.isPending || !berkas}>
@@ -1364,11 +1374,22 @@ function HasilPratinjau({ hasil }: { hasil: PratinjauImpor }) {
           <dd className="text-xs text-muted-foreground">sudah pernah diimpor atau tercantum dua kali</dd>
         </div>
       </dl>
-      {baru.transaksi === 0 ? (
+      {hasil.dilengkapi > 0 && (
         <Alert>
           <IconInfoCircle />
-          <AlertDescription>Semua transaksi di berkas ini sudah pernah diimpor, jadi tidak ada yang perlu disimpan.</AlertDescription>
+          <AlertDescription>
+            {angka(hasil.dilengkapi)} transaksi yang dilewati diimpor sebelum nomoratur dicatat. Nomoraturnya akan diisi dari berkas ini
+            tanpa menghitung penerimaannya dua kali.
+          </AlertDescription>
         </Alert>
+      )}
+      {baru.transaksi === 0 ? (
+        hasil.dilengkapi === 0 && (
+          <Alert>
+            <IconInfoCircle />
+            <AlertDescription>Semua transaksi di berkas ini sudah pernah diimpor, jadi tidak ada yang perlu disimpan.</AlertDescription>
+          </Alert>
+        )
       ) : (
         <div className="overflow-hidden rounded-md border">
           <Table aria-label="Transaksi yang akan disimpan per jenis daftar">

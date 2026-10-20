@@ -81,7 +81,7 @@ resources/js/dashboard/
 | Alur Publikasi | `#/alur` | semua konten beralur | — |
 | Pesan & Pengaduan | `#/pesan` | koleksi `pesan` | `kontak.html#masukan`, `/pesan/{kode}` |
 | Statistik Layanan | `#/statistik` | pengaturan `statistik` | `index.html#transparansi` |
-| Laporan Penerimaan | `#/penerimaan`, `#/penerimaan/realisasi` | server (`/api/penerimaan/…`) dari berkas STS; target dan saldo awal per tahun | `penerimaan.html` (impor yang dinyalakan Administrator; realisasi target tidak tampil di portal) |
+| Laporan Penerimaan | `#/penerimaan`, `#/penerimaan/realisasi`, `#/penerimaan/nomoratur` | server (`/api/penerimaan/…`) dari berkas STS; target dan saldo awal per tahun | `penerimaan.html` (impor yang dinyalakan Administrator; realisasi target tidak tampil di portal) |
 | Pemetaan PKB | `#/pemetaan` | server (`/api/pemetaan/…`) dari berkas Data Potensi | `pemetaan.html` (angka gabungan, setelah dinyalakan Administrator) |
 | Berita & Pengumuman | `#/berita` | koleksi `berita` | `informasi.html`, `berita-detail.html` |
 | Dokumentasi Kegiatan | `#/dokumentasi` | koleksi `dokumentasi` | `dokumentasi.html` |
@@ -314,12 +314,12 @@ Halaman *Statistik Layanan* (`#/statistik`, `pages/statistik.tsx`) tersimpan di 
 
 Halaman *Laporan Penerimaan* (`#/penerimaan`, `pages/penerimaan/laporan.tsx`, modul `penerimaan`, [D-047](decisions.md#d-047--2026-10-15--laporan-penerimaan-dari-berkas-sts-per-loket)) mengolah berkas STS sistem BPAD menjadi laporan penerimaan per loket. Datanya selalu dibaca dari server (`lib/penerimaan.ts`, [docs/api.md](api.md#laporan-penerimaan-di-dashboard)); tidak ada salinannya di IndexedDB.
 
-- **Impor berkas STS** membuka panel samping: pilih loket asal (berkas tidak mencantumkannya) dan berkas .xls, lalu **Periksa berkas** menampilkan pratinjau dari server (transaksi di berkas, yang akan disimpan, yang dilewati karena sudah pernah diimpor, dan rincian per jenis daftar) sebelum **Simpan**. Setelah tersimpan, laporan pindah ke periode berkas itu.
+- **Impor berkas STS** membuka panel samping: pilih loket asal (berkas tidak mencantumkannya) dan berkas .xls, lalu **Periksa berkas** menampilkan pratinjau dari server (transaksi di berkas, yang akan disimpan, yang dilewati karena sudah pernah diimpor, yang dilengkapi nomoraturnya, dan rincian per jenis daftar) sebelum **Simpan**. Setelah tersimpan, laporan pindah ke periode berkas itu. Berkas yang sudah pernah diimpor sebelum nomoratur dicatat bisa diimpor ulang: tombolnya menjadi **Lengkapi nomoratur n transaksi** ([D-071](decisions.md#d-071--2026-10-21--nomoratur-skpd-dari-berkas-sts)).
 - Periode **Harian**, **Bulanan**, atau **Rentang** (maks. satu tahun), dengan tombol hari/bulan sebelumnya dan berikutnya. Sebelum dipilih, laporan menampilkan tanggal terakhir yang sudah diimpor. Saringan berupa daftar pilihan bercentang yang bisa dicari (loket, jenis daftar, jenis kendaraan, kepemilikan, warna plat, merek, asal UPT, kecamatan, kelurahan) dan pilihan tunggakan; isinya nilai yang ada dalam periode itu.
 - Isi laporan: bento ringkasan (total penerimaan dengan susunan komponen dan perubahan terhadap periode pembanding, transaksi, kendaraan baru dari jenis daftar Baru, pajak provinsi, opsen kabupaten/kota; lencana angka turun ke bawah angka bila tempatnya tidak cukup), kartu per loket (loket yang terjadwal melayani tetapi belum diimpor ditandai "Belum ada data" pada laporan harian tanpa saringan), grafik per hari (untuk lebih dari sehari; batang membuka laporan harian), grafik bertumpuk per jenis daftar, jenis kendaraan, kecamatan, dan asal UPT (delapan terbesar, sisanya digabung), dan tabel rincian bertab per saringan dan per tanggal. Nama di kolom pertama tabel menyaring laporan dengannya; **Ekspor CSV** mengunduh tab yang dibuka (pemisah titik koma dengan BOM, untuk Excel berbahasa Indonesia).
 - **Riwayat impor** mendaftar setiap impor (periode, berkas, loket, transaksi baru dan yang dilewati, total, pengimpor). Membuka impor menampilkan laporannya; menghapusnya menghapus transaksinya dari laporan.
 - Kolom **Portal** di Riwayat impor ([D-048](decisions.md#d-048--2026-10-15--halaman-portal-laporan-penerimaan)): Administrator menyalakan impor yang sudah diperiksa, setelah konfirmasi, agar penerimaannya tampil di halaman Laporan Penerimaan portal (`/penerimaan`), dan bisa mematikannya lagi. Pegawai lain melihat statusnya (Tampil atau Belum tampil). Kepala halaman punya tautan **Lihat di portal**.
-- Navigasi di atas halaman (`components/penerimaan/nav-penerimaan.tsx`) berpindah antara **Laporan** dan **Realisasi Target**.
+- Navigasi di atas halaman (`components/penerimaan/nav-penerimaan.tsx`) berpindah antara **Laporan**, **Realisasi Target**, dan **Nomoratur**.
 
 ### Realisasi Target
 
@@ -331,6 +331,16 @@ Sub-halaman *Realisasi Target* (`#/penerimaan/realisasi`, `pages/penerimaan/real
 - **Target {tahun}** membuka panel samping untuk semua pengelola modul: empat target (PKB dan denda PKB termasuk tunggakannya) dengan jumlah pajak, jumlah denda, dan totalnya, serta **Saldo awal** (sakelar, bulan terakhir yang tercakup, dan enam realisasi). Tombolnya aktif setelah target tahun itu termuat, agar isian kosong tidak menimpa target yang tersimpan. Pesan galat server tampil di bawah isiannya.
 - **Unduh Excel** mengambil berkas .xlsx dari server; **Cetak** mencetak tabel di layar dengan judul resmi Form I lewat bingkai tersembunyi (A4 mendatar, bisa disimpan sebagai PDF). Keduanya nonaktif untuk bulan yang tercakup saldo awal, yang menampilkan pesan dan tautan ke bulan pertama yang punya Form I.
 - Bila tahun itu belum bertarget, realisasi tetap tampil dengan kolom target dan PCT kosong, ditambah ajakan mengisi target.
+
+### Nomoratur
+
+Sub-halaman *Nomoratur* (`#/penerimaan/nomoratur`, `pages/penerimaan/nomoratur.tsx`, [D-071](decisions.md#d-071--2026-10-21--nomoratur-skpd-dari-berkas-sts)) menyajikan pemakaian nomoratur SKPD dari kolom NOMORATOR berkas STS.
+
+- Periode **Harian** atau **Bulanan** dengan tombol sebelumnya dan berikutnya, serta pilihan **Semua loket** atau satu loket. Sebelum dipilih, halaman membuka hari terakhir yang sudah diimpor.
+- Empat kartu: lembar SKPD terpakai (nomor berbeda), transaksi tanpa nomoratur (mis. Mutasi keluar dan Tambahan pajak), nomor terlewat, dan nomor ganda; lalu tabel per loket (nama loket menyaring halaman ke loket itu).
+- *Harian*: kartu per loket berisi setiap rentang nomor berurutan (nomor awal, akhir, lembar), nomor terlewat, dan nomor ganda. *Bulanan*: kartu per loket dengan satu baris per hari (tiga rentang pertama, sisanya diringkas) dan jumlah sebulan; tanggal membuka laporan hariannya.
+- Nomor terlewat dihitung di antara dua rentang yang berjarak paling banyak 50 nomor; lompatan lebih jauh dianggap tumpukan blanko lain. Kartu **Nomor ganda** mendaftar nomoratur yang dipakai lebih dari sekali dalam periode beserta loket, tanggal, dan jenis daftarnya.
+- Bila ada transaksi yang diimpor sebelum nomoratur dicatat, halaman mengingatkan untuk mengimpor ulang berkas STS-nya. **Unduh CSV** mengunduh rentang, nomor terlewat, dan nomor ganda per loket per tanggal, dengan nomor sebagai teks agar nol di depannya tetap ada di Excel.
 
 ## Kontak & Kanal
 

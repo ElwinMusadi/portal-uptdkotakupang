@@ -1,13 +1,14 @@
-import { IconReportMoney, IconTargetArrow } from "@tabler/icons-react"
+import { IconNumbers, IconReportMoney, IconTargetArrow } from "@tabler/icons-react"
 import { NavLink } from "react-router"
 
 import { cn } from "@/lib/utils"
 
-/** Pindah antarhalaman Laporan Penerimaan: laporan per loket (D-047) dan realisasi target, Form I (D-068) */
+/** Pindah antarhalaman Laporan Penerimaan: laporan per loket (D-047), realisasi target Form I (D-068), dan nomoratur SKPD (D-071) */
 export function NavPenerimaan() {
   const tautan = [
     { ke: "/penerimaan", label: "Laporan", ikon: IconReportMoney },
     { ke: "/penerimaan/realisasi", label: "Realisasi Target", ikon: IconTargetArrow },
+    { ke: "/penerimaan/nomoratur", label: "Nomoratur", ikon: IconNumbers },
   ]
 
   return (

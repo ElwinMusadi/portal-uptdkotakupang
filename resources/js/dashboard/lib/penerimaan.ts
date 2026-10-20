@@ -12,7 +12,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { mintaServer } from "@/lib/api/http"
 import { SAMA_ORIGIN } from "@/lib/auth"
 
-import { KOLOM_CSV, teksCsv, unduhTeks } from "../../portal/penerimaan/csv"
+import { KOLOM_CSV, teksCsv, unduhTeks, type TeksAngka } from "../../portal/penerimaan/csv"
 
 export type JenisLoket = "kantor" | "keliling" | "gerai" | "sementara"
 
@@ -133,6 +133,13 @@ export interface PratinjauImpor {
   /** Transaksi yang belum pernah diimpor; hanya ini yang disimpan */
   baru: RingkasanBerkas
   dilewati: number
+  /** Transaksi yang dilewati tetapi diimpor sebelum nomoratur dicatat; nomoraturnya diisi dari berkas ini (D-071) */
+  dilengkapi: number
+}
+
+/** Jawaban impor yang hanya melengkapi nomoratur transaksi lama, tanpa impor baru (D-071) */
+export interface HasilLengkapi {
+  dilengkapi: number
 }
 
 /** Ukuran berkas STS yang diterima server */
@@ -189,7 +196,7 @@ export function useSimpanImpor() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ berkas, loket }: { berkas: File; loket: string }) =>
-      mintaServer<ImporPenerimaan>("/api/penerimaan/impor", "POST", formImpor(berkas, loket)),
+      mintaServer<ImporPenerimaan | HasilLengkapi>("/api/penerimaan/impor", "POST", formImpor(berkas, loket)),
     onSuccess: () => void qc.invalidateQueries({ queryKey: KUNCI }),
   })
 }
@@ -383,4 +390,95 @@ export async function unduhRealisasi(bulan: string, sampai = ""): Promise<void> 
   a.click()
   a.remove()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
+/* ---------- Nomoratur SKPD (D-071) ---------- */
+
+/** Nomor SKPD yang berurutan, dari awal sampai akhir */
+export interface RentangNomoratur {
+  awal: string
+  akhir: string
+  lembar: number
+}
+
+/** Nomor yang tidak muncul di antara dua rentang yang jaraknya paling banyak batasTerlewat */
+export interface TerlewatNomoratur {
+  awal: string
+  akhir: string
+  jumlah: number
+}
+
+export interface JumlahNomoratur {
+  /** Nomor SKPD berbeda yang terpakai */
+  lembar: number
+  /** Transaksi bernomoratur, termasuk nomor yang dipakai lebih dari sekali */
+  transaksi: number
+  /** Transaksi tanpa SKPD, mis. Mutasi keluar dan Tambahan pajak */
+  tanpaNomoratur: number
+  /** Transaksi dari impor sebelum nomoratur dicatat; lengkapi dengan mengimpor ulang berkasnya */
+  belumTercatat: number
+}
+
+export interface HariNomoratur extends JumlahNomoratur {
+  tanggal: string
+  rentang: RentangNomoratur[]
+  terlewat: TerlewatNomoratur[]
+  /** Nomor hari itu yang dipakai lebih dari sekali dalam periode */
+  ganda: string[]
+}
+
+export interface LoketNomoratur extends JumlahNomoratur {
+  nilai: string
+  nama: string
+  /** Banyaknya nomor terlewat */
+  terlewat: number
+  /** Banyaknya nomor loket ini yang dipakai lebih dari sekali dalam periode */
+  ganda: number
+  hari: HariNomoratur[]
+}
+
+export interface LaporanNomoratur {
+  dari: string
+  sampai: string
+  batasTerlewat: number
+  ringkasan: JumlahNomoratur & { terlewat: number; ganda: number }
+  loket: LoketNomoratur[]
+  ganda: { nomor: string; kali: number; pemakaian: { loket: string; tanggal: string; jenisDaftar: string }[] }[]
+}
+
+/** Pemakaian nomoratur SKPD sehari atau sebulan, semua loket atau satu loket */
+export function useNomoratur(dari: string | undefined, sampai: string | undefined, loket: string) {
+  return useQuery({
+    queryKey: [...KUNCI, "nomoratur", dari, sampai, loket],
+    queryFn: () => {
+      const p = new URLSearchParams({ dari: dari!, sampai: sampai! })
+      if (loket) p.set("loket", loket)
+      return mintaServer<LaporanNomoratur>(`/api/penerimaan/nomoratur?${p}`, "GET")
+    },
+    enabled: !!dari && !!sampai,
+    placeholderData: keepPreviousData,
+  })
+}
+
+/** "0000104–0000105" atau "0000104" bila hanya satu nomor */
+export function labelRentang(r: { awal: string; akhir: string }): string {
+  return r.awal === r.akhir ? r.awal : `${r.awal}–${r.akhir}`
+}
+
+/**
+ * Nomoratur sebagai CSV: satu baris per rentang terpakai, nomor terlewat, dan
+ * nomor ganda per loket per tanggal. Nomor ditulis sebagai teks agar Excel
+ * tidak membuang nol di depannya.
+ */
+export function csvNomoratur(l: LaporanNomoratur): string {
+  const nomor = (n: string): TeksAngka => ({ teksAngka: n })
+  const baris: (string | number | TeksAngka)[][] = [["Loket", "Tanggal", "Jenis", "Nomor awal", "Nomor akhir", "Jumlah"]]
+  for (const loket of l.loket) {
+    for (const hari of loket.hari) {
+      for (const r of hari.rentang) baris.push([loket.nama, hari.tanggal, "Terpakai", nomor(r.awal), nomor(r.akhir), r.lembar])
+      for (const t of hari.terlewat) baris.push([loket.nama, hari.tanggal, "Terlewat", nomor(t.awal), nomor(t.akhir), t.jumlah])
+      for (const g of hari.ganda) baris.push([loket.nama, hari.tanggal, "Ganda", nomor(g), nomor(g), 1])
+    }
+  }
+  return teksCsv(baris)
 }

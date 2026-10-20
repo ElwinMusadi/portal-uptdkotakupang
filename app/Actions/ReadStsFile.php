@@ -8,10 +8,11 @@ use Illuminate\Validation\ValidationException;
 /**
  * Reads an STS report exported by BPAD's system (D-047): an HTML table saved
  * with an .xls extension, one row per transaction under two header rows. Only
- * what the revenue report needs is kept; the owner's name, the plate number,
- * the numbering, the vehicle type and value, the due dates and the address
- * below the kelurahan are dropped. The plate number only feeds the keyed
- * "sidik" that recognises a transaction imported twice.
+ * what the revenue report needs is kept, and since D-071 the SKPD form number
+ * ("nomorator"); the owner's name, the plate number, the vehicle type and
+ * value, the due dates and the address below the kelurahan are dropped. The
+ * plate number only feeds the keyed "sidik" that recognises a transaction
+ * imported twice.
  *
  * The table is read with regular expressions rather than DOMDocument: the
  * export is machine-made, and libxml's memory for a month's file (7,000+ rows)
@@ -40,6 +41,11 @@ class ReadStsFile
      * The cells of a transaction row.
      */
     private const int CELLS = 36;
+
+    /**
+     * The digits of an SKPD form number (D-071).
+     */
+    public const int FORM_NUMBER_DIGITS = 7;
 
     /**
      * The column of each amount in a transaction row.
@@ -122,6 +128,7 @@ class ReadStsFile
             $transaction[$name] = $value;
         }
 
+        $transaction['nomoratur'] = $this->formNumber($cells[3], $line);
         $transaction['kepemilikan'] = self::ownership($cells[30]);
         $transaction['tahun_tunggakan'] = $this->wholeNumber($cells[25], $line, 'tahun tunggakan', 'angka bulat');
         foreach (self::AMOUNT_COLUMNS as $name => $column) {
@@ -164,6 +171,25 @@ class ReadStsFile
         $plate = preg_replace('/[^A-Z0-9]/', '', mb_strtoupper($plate));
 
         return hash_hmac('sha256', implode('|', [$plate, $date, mb_strtoupper($type), $amount]), (string) config('app.key'));
+    }
+
+    /**
+     * The SKPD form number, always seven digits (D-071). Excel drops its
+     * leading zeros, so a shorter number gets them back: "12345" is
+     * "0012345". Transactions without a form, such as Mutasi keluar, have
+     * "-".
+     */
+    private function formNumber(string $value, int $line): string
+    {
+        if ($value === '' || $value === '-') {
+            return '-';
+        }
+
+        if (preg_match('/^\d{1,'.self::FORM_NUMBER_DIGITS.'}$/', $value) !== 1) {
+            $this->fail("Baris {$line}: nomoratur \"{$value}\" bukan nomor SKPD 7 digit.");
+        }
+
+        return str_pad($value, self::FORM_NUMBER_DIGITS, '0', STR_PAD_LEFT);
     }
 
     /**

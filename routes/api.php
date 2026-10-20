@@ -21,6 +21,7 @@ use App\Http\Controllers\Dashboard\FaqDeletionController;
 use App\Http\Controllers\Dashboard\FaqOrderController;
 use App\Http\Controllers\Dashboard\FieldActivityController;
 use App\Http\Controllers\Dashboard\FieldActivityDeletionController;
+use App\Http\Controllers\Dashboard\FormNumberReportController;
 use App\Http\Controllers\Dashboard\HomepageController;
 use App\Http\Controllers\Dashboard\MessageController;
 use App\Http\Controllers\Dashboard\MessageDeletionController;
@@ -486,6 +487,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
             ->can('publish', RevenueImport::class)
             ->name('impor.update');
         Route::post('/impor/hapus', [RevenueImportDeletionController::class, 'store'])->can('deleteAny', RevenueImport::class)->name('impor.hapus');
+        // Nomoratur (D-071): the SKPD form numbers used per counter and day
+        Route::get('/nomoratur', FormNumberReportController::class)->can('viewAny', RevenueImport::class)->name('nomoratur');
         // Realisasi target (D-068): Form I of a month against the year's target
         Route::get('/realisasi', [RevenueRealizationController::class, 'show'])->can('viewAny', RevenueImport::class)->name('realisasi');
         Route::get('/realisasi/unduh', [RevenueRealizationController::class, 'download'])->can('viewAny', RevenueImport::class)->name('realisasi.unduh');

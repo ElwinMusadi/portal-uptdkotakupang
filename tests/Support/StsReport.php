@@ -21,7 +21,7 @@ class StsReport
     public static function row(array $overrides = []): array
     {
         $row = [
-            'no' => '1', 'jenis_daftar' => 'Teliti Ulang / Pengesahan', 'nopol' => 'DH1234XY', 'nomorator' => 'A001', 'tanggal' => '2026-10-14',
+            'no' => '1', 'jenis_daftar' => 'Teliti Ulang / Pengesahan', 'nopol' => 'DH1234XY', 'nomorator' => '0012345', 'tanggal' => '2026-10-14',
             'nama' => 'PEMILIK RAHASIA', 'jns_kend' => 'SEPEDA MOTOR', 'tipe' => 'TIPE UJI 125', 'merk' => 'HONDA', 'plat' => 'PUTIH',
             'jt_awal' => '2027-10-14', 'jt_akhir' => '2027-10-14', 'nilai_jual' => '18000000.00',
             'pkb' => '300000', 'bbn' => '0', 'd_pkb' => '0', 'd_bbn' => '0', 'tunggakan' => '0', 'denda_tunggakan' => '0',

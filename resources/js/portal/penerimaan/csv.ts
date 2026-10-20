@@ -24,7 +24,16 @@ export const KOLOM_CSV = [
 
 export type KunciJumlah = (typeof KOLOM_CSV)[number][1]
 
-function sel(teks: string | number): string {
+/** Deret angka yang harus tetap teks di Excel, mis. nomoratur "0012345" yang nol di depannya akan dibuang bila dibaca sebagai angka */
+export interface TeksAngka {
+  teksAngka: string
+}
+
+function sel(teks: string | number | TeksAngka): string {
+  if (typeof teks === "object") {
+    // ="0012345" dibaca Excel sebagai teks; hanya untuk deret angka, selain itu sel biasa
+    return /^\d+$/.test(teks.teksAngka) ? `"=""${teks.teksAngka}"""` : sel(teks.teksAngka)
+  }
   const s = String(teks)
   // Teks yang diawali =, +, -, atau @ dibaca Excel sebagai rumus
   const aman = typeof teks === "string" && s.length > 1 && /^[=+\-@\t\r]/.test(s) ? `'${s}` : s
@@ -32,7 +41,7 @@ function sel(teks: string | number): string {
 }
 
 /** Baris-baris tabel sebagai teks CSV */
-export function teksCsv(baris: (string | number)[][]): string {
+export function teksCsv(baris: (string | number | TeksAngka)[][]): string {
   return "﻿" + baris.map((b) => b.map(sel).join(";")).join("\r\n") + "\r\n"
 }
 

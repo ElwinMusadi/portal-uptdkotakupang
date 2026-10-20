@@ -64,6 +64,7 @@ export const router = createHashRouter([
       { path: "statistik", ...halaman("Statistik Layanan", () => import("@/pages/statistik")) },
       { path: "penerimaan", ...halaman("Laporan Penerimaan", () => import("@/pages/penerimaan/laporan")) },
       { path: "penerimaan/realisasi", ...halaman("Laporan Penerimaan · Realisasi Target", () => import("@/pages/penerimaan/realisasi")) },
+      { path: "penerimaan/nomoratur", ...halaman("Laporan Penerimaan · Nomoratur", () => import("@/pages/penerimaan/nomoratur")) },
       { path: "pemetaan", ...halaman("Pemetaan PKB", () => import("@/pages/pemetaan")) },
       { path: "berita", ...halaman("Berita & Pengumuman", () => import("@/pages/berita/daftar")) },
       { path: "berita/baru", ...halaman("Tulis berita", () => import("@/pages/berita/editor")) },
