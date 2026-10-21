@@ -44,10 +44,11 @@ class ThemeControllerTest extends TestCase
 
     public function test_saves_both_parts_with_the_accent_in_capitals_and_without_unknown_keys(): void
     {
-        $theme = $this->theme(['aksen' => '#2f7d4f', 'latar' => 'sejuk', 'hurufTeks' => 'inter', 'hurufJudul' => 'lexend', 'sudut' => 'tegas', 'tebalJudul' => 800, 'gelap' => '#0f1b3d', 'panel' => '#0c1839', 'navbar' => '#ffffff', 'kaca' => 'kuat', 'mode' => 'gelap', 'motif' => 'titik'], ['hurufTeks' => 'nunito-sans', 'tebalJudul' => 700]);
+        $theme = $this->theme(['aksen' => '#2f7d4f', 'latar' => 'sejuk', 'hurufTeks' => 'inter', 'hurufJudul' => 'lexend', 'sudut' => 'tegas', 'tebalJudul' => 800, 'gelap' => '#0f1b3d', 'panel' => '#0c1839', 'navbar' => '#ffffff', 'kaca' => 'kuat', 'mode' => 'gelap', 'motif' => 'titik', 'kejelasanMotif' => 70], ['hurufTeks' => 'nunito-sans', 'tebalJudul' => 700]);
         $theme['portal']['css'] = 'body { display: none }';
         $theme['dashboard']['mode'] = 'gelap';
         $theme['dashboard']['motif'] = 'titik';
+        $theme['dashboard']['kejelasanMotif'] = 70;
         $theme['dashboard']['panel'] = '#000000';
         $theme['dashboard']['navbar'] = '#FFFFFF';
         $theme['dashboard']['kaca'] = 'kuat';
@@ -56,7 +57,7 @@ class ThemeControllerTest extends TestCase
         $response = $this->actingAs(User::factory()->administrator()->create())->putJson('/api/pengaturan/tema', $theme);
 
         $expected = [
-            'portal' => ['aksen' => '#2F7D4F', 'latar' => 'sejuk', 'hurufTeks' => 'inter', 'hurufJudul' => 'lexend', 'sudut' => 'tegas', 'skala' => 100, 'tebalJudul' => 800, 'gelap' => '#0F1B3D', 'panel' => '#0C1839', 'navbar' => '#FFFFFF', 'kaca' => 'kuat', 'mode' => 'gelap', 'motif' => 'titik'],
+            'portal' => ['aksen' => '#2F7D4F', 'latar' => 'sejuk', 'hurufTeks' => 'inter', 'hurufJudul' => 'lexend', 'sudut' => 'tegas', 'skala' => 100, 'tebalJudul' => 800, 'gelap' => '#0F1B3D', 'panel' => '#0C1839', 'navbar' => '#FFFFFF', 'kaca' => 'kuat', 'mode' => 'gelap', 'motif' => 'titik', 'kejelasanMotif' => 70],
             'dashboard' => [...Setting::DEFAULT_THEME_SECTION, 'hurufTeks' => 'nunito-sans', 'tebalJudul' => 700],
         ];
         $response->assertOk()->assertExactJson($expected);
@@ -95,6 +96,11 @@ class ThemeControllerTest extends TestCase
     #[TestWith([['kaca' => null], 'portal.kaca', 'Efek glass navbar portal wajib diisi.'])]
     #[TestWith([['motif' => 'garis'], 'portal.motif', 'Motif latar portal tidak tersedia.'])]
     #[TestWith([['motif' => null], 'portal.motif', 'Motif latar portal wajib diisi.'])]
+    #[TestWith([['kejelasanMotif' => 45], 'portal.kejelasanMotif', 'Kejelasan motif portal tidak tersedia.'])]
+    #[TestWith([['kejelasanMotif' => 0], 'portal.kejelasanMotif', 'Kejelasan motif portal tidak tersedia.'])]
+    #[TestWith([['kejelasanMotif' => 110], 'portal.kejelasanMotif', 'Kejelasan motif portal tidak tersedia.'])]
+    #[TestWith([['kejelasanMotif' => 'samar'], 'portal.kejelasanMotif', 'Kejelasan motif portal tidak valid.'])]
+    #[TestWith([['kejelasanMotif' => null], 'portal.kejelasanMotif', 'Kejelasan motif portal wajib diisi.'])]
     #[TestWith([['tebalJudul' => 650], 'portal.tebalJudul', 'Ketebalan judul portal tidak tersedia.'])]
     #[TestWith([['tebalJudul' => 'tebal'], 'portal.tebalJudul', 'Ketebalan judul portal tidak valid.'])]
     #[TestWith([['tebalJudul' => null], 'portal.tebalJudul', 'Ketebalan judul portal wajib diisi.'])]

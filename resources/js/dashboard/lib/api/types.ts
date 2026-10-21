@@ -377,6 +377,9 @@ export type KacaNavbar = "mati" | "halus" | "sedang" | "kuat"
 /** Motif latar halaman portal berheader (D-073): polos (bawaan) atau titik */
 export type MotifLatar = "polos" | "titik"
 
+/** Kejelasan motif dalam persen (D-074): 100 = titik seperti D-073, makin kecil makin samar */
+export type KejelasanMotif = 10 | 20 | 30 | 40 | 50 | 60 | 70 | 80 | 90 | 100
+
 export interface BagianTemaPortal extends BagianTema {
   /** Warna panel gelap #RRGGBB: papan layanan, dasbor layanan, kotak cek pajak, media, layar TV */
   panel: string
@@ -385,6 +388,7 @@ export interface BagianTemaPortal extends BagianTema {
   kaca: KacaNavbar
   mode: ModePortal
   motif: MotifLatar
+  kejelasanMotif: KejelasanMotif
 }
 
 /** Pengaturan › Tampilan (D-057): tema portal dan dashboard masing-masing */

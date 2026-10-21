@@ -333,12 +333,13 @@ class Setting extends Model
      * The portal part of the theme as the built-in look: the dashboard part
      * plus the portal's dark panels, near black, its navbar, in the dark of
      * the buttons and navigation without glass, its mode, light for every
-     * visitor, and its page background without a pattern (D-073). The
-     * dashboard's dark mode stays each employee's choice.
+     * visitor, and its page background without a pattern (D-073), whose
+     * pattern shows at 40% when one is chosen (D-074). The dashboard's dark
+     * mode stays each employee's choice.
      *
-     * @var array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, gelap: string, panel: string, navbar: string, kaca: string, mode: string, motif: string}
+     * @var array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, gelap: string, panel: string, navbar: string, kaca: string, mode: string, motif: string, kejelasanMotif: int}
      */
-    public const array DEFAULT_PORTAL_THEME = [...self::DEFAULT_THEME_SECTION, 'panel' => '#0A0A0C', 'navbar' => 'gelap', 'kaca' => 'mati', 'mode' => 'terang', 'motif' => 'polos'];
+    public const array DEFAULT_PORTAL_THEME = [...self::DEFAULT_THEME_SECTION, 'panel' => '#0A0A0C', 'navbar' => 'gelap', 'kaca' => 'mati', 'mode' => 'terang', 'motif' => 'polos', 'kejelasanMotif' => 40];
 
     /**
      * The modes the administrator sets the portal to (D-057): light or dark
@@ -369,6 +370,14 @@ class Setting extends Model
      * @var list<int>
      */
     public const array THEME_HEADING_WEIGHTS = [600, 700, 800];
+
+    /**
+     * How clearly the portal's background pattern shows (D-074), in percent
+     * of the dots D-073 introduced: 10% steps, fainter below 100%.
+     *
+     * @var list<int>
+     */
+    public const array THEME_PATTERN_STRENGTHS = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
 
     public const string POTENTIAL_MAP = 'pemetaan';
 
@@ -496,7 +505,7 @@ class Setting extends Model
      * built-in look until they are first saved. A setting added later, such
      * as the scale, takes its built-in value in a document saved before it.
      *
-     * @return array{portal: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, gelap: string, panel: string, navbar: string, kaca: string, mode: string, motif: string}, dashboard: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, gelap: string}}
+     * @return array{portal: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, gelap: string, panel: string, navbar: string, kaca: string, mode: string, motif: string, kejelasanMotif: int}, dashboard: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, gelap: string}}
      */
     public static function theme(): array
     {

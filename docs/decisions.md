@@ -1005,3 +1005,13 @@ Pemilik ingin latar polos portal publik bisa diganti dari *Pengaturan › Tampil
 | Sebaran | **Merata dan ikut bergulir** (pemilik): seluruh latar halaman, di belakang kartu dan teks; kartu, panel gelap, dan kotak abu tetap dengan warnanya. |
 | Halaman | **Semua halaman berheader** (pemilik): beranda, halaman informasi dan layanan, halaman lacak, dan 404 (`body:has(.nav-wrap)`); Login Pegawai, Aktivasi, dan layar TV antrean tetap polos. |
 | Cara | Portal bukan aplikasi React, jadi motifnya CSS dari `/tema-portal.css` (gambar SVG kecil sebagai `background-image` `body`), dibuat server dari daftar tertutup tanpa teks bebas. Komponen DotPattern 21st.dev dipasang di dashboard (`components/ui/dot-pattern.tsx`, versi bertipe) untuk contoh pilihan dan contoh portal, dengan petak dan warna yang sama. |
+
+## D-074 · 2026-10-21 · Kejelasan motif latar portal
+
+Setelah memilih motif Titik di produksi, pemilik menilai titiknya terlalu jelas sehingga di bagian yang banyak teks titik seperti menyatu dengan huruf dan mengganggu baca. Keputusan ini mengubah [D-073](#d-073--2026-10-21--motif-latar-portal), yang menetapkan satu gaya titik tetap.
+
+| Hal | Keputusan |
+|---|---|
+| Pengaturan | **Penggeser 10–100%** (pemilik) bernama *Kejelasan titik* di bawah pilihan *Motif latar*, langkah 10%, tampil selama motifnya bukan Polos; contoh pilihan dan contoh portal di dashboard langsung mengikuti. Disimpan sebagai `portal.kejelasanMotif` (bilangan bulat kelipatan 10). |
+| Skala | 100% = titik seperti D-073 (kepekatan 0,8, kontras ±1,9 : 1); makin kecil makin samar: kepekatan = 0,8 × persen, warna dan ukuran titik tetap. |
+| Nilai awal | **40%** (pemilik): kepekatan 0,32, kontras ±1,3 : 1. Tema yang disimpan sebelum pengaturan ini, termasuk tema produksi yang sudah memakai Titik, langsung dibaca 40% begitu tayang; *Kembalikan tampilan bawaan PINTU* juga kembali ke 40%. |

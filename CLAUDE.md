@@ -130,7 +130,7 @@ Build di Laravel Cloud: `composer install --no-dev && npm ci && npm run build &&
   - posisi tujuan sudah memperhitungkan `scroll-padding-top`, jadi jangan menambah offset sendiri;
   - versi baru berarti folder baru, karena aset portal tidak berversi.
 - **Motif latar portal (D-073):**
-  - `portal.motif` (`polos` bawaan, `titik`) dipilih di Pengaturan › Tampilan;
+  - `portal.motif` (`polos` bawaan, `titik`) dipilih di Pengaturan › Tampilan, dengan `portal.kejelasanMotif` 10–100% (bawaan 40%; kepekatan titik 0,8 × persen, D-074);
   - titiknya berupa CSS dari `/tema-portal.css` (`App\Enums\ThemePattern`) di halaman berheader, karena portal bukan React;
   - komponen DotPattern 21st.dev (`components/ui/dot-pattern.tsx`) hanya dipakai dashboard untuk contohnya;
   - motif baru ditambahkan di `ThemePattern` dan `MOTIF`.

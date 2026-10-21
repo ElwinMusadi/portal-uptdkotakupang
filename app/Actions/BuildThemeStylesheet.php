@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Enums\ThemeFont;
 use App\Enums\ThemePattern;
+use App\Models\Setting;
 use App\Support\ThemeVariables;
 
 /**
@@ -121,7 +122,7 @@ class BuildThemeStylesheet
      * :root block overrides tokens.css. The scale zooms every page but the
      * TV display; the dark mode, set by the administrator, applies to every
      * visitor; the background pattern covers the pages with the shared
-     * header, in the grey of the mode.
+     * header, in the grey of the mode at the chosen clarity.
      *
      * @param  ThemeSection  $section
      */
@@ -129,7 +130,8 @@ class BuildThemeStylesheet
     {
         $variables = ThemeVariables::portal($section);
         $zoom = ThemeVariables::portalZoom($section);
-        $pattern = ThemePattern::from($section['motif'] ?? ThemePattern::Polos->value)->declarations(ThemeVariables::isDark($section));
+        $pattern = ThemePattern::from($section['motif'] ?? ThemePattern::Polos->value)
+            ->declarations(ThemeVariables::isDark($section), $section['kejelasanMotif'] ?? Setting::DEFAULT_PORTAL_THEME['kejelasanMotif']);
 
         if ($variables === [] && $zoom === [] && $pattern === []) {
             return $this->unchanged('portal');

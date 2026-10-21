@@ -63,6 +63,7 @@ class UpdateThemeRequest extends FormRequest
         $rules['portal.kaca'] = ['required', 'string', Rule::in(Setting::THEME_GLASS)];
         $rules['portal.mode'] = ['required', 'string', Rule::in(Setting::THEME_MODES)];
         $rules['portal.motif'] = ['required', 'string', Rule::in(array_column(ThemePattern::cases(), 'value'))];
+        $rules['portal.kejelasanMotif'] = ['required', 'integer', Rule::in(Setting::THEME_PATTERN_STRENGTHS)];
 
         return $rules;
     }
@@ -108,6 +109,7 @@ class UpdateThemeRequest extends FormRequest
         $attributes['portal.kaca'] = 'efek glass navbar portal';
         $attributes['portal.mode'] = 'mode tampilan portal';
         $attributes['portal.motif'] = 'motif latar portal';
+        $attributes['portal.kejelasanMotif'] = 'kejelasan motif portal';
 
         return $attributes;
     }
@@ -117,7 +119,7 @@ class UpdateThemeRequest extends FormRequest
      * has dark panels, a navbar, a mode and a background pattern: the
      * dashboard's dark mode is each employee's choice.
      *
-     * @return array{portal: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, gelap: string, panel: string, navbar: string, kaca: string, mode: string, motif: string}, dashboard: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, gelap: string}}
+     * @return array{portal: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, gelap: string, panel: string, navbar: string, kaca: string, mode: string, motif: string, kejelasanMotif: int}, dashboard: array{aksen: string, latar: string, hurufTeks: string, hurufJudul: string, sudut: string, skala: int, tebalJudul: int, gelap: string}}
      */
     public function theme(): array
     {
@@ -141,6 +143,7 @@ class UpdateThemeRequest extends FormRequest
                 'kaca' => $this->string('portal.kaca')->value(),
                 'mode' => $this->string('portal.mode')->value(),
                 'motif' => $this->string('portal.motif')->value(),
+                'kejelasanMotif' => $this->integer('portal.kejelasanMotif'),
             ],
             'dashboard' => $section('dashboard'),
         ];

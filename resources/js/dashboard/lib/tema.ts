@@ -7,6 +7,7 @@ import type {
   HurufTema,
   IsoDateTime,
   KacaNavbar,
+  KejelasanMotif,
   LatarTema,
   ModePortal,
   MotifLatar,
@@ -37,6 +38,7 @@ export const TEMA_BAWAAN_PORTAL: BagianTemaPortal = {
   kaca: "mati",
   mode: "terang",
   motif: "polos",
+  kejelasanMotif: 40,
 }
 
 /** Motif latar halaman portal berheader (D-073); titik = DotPattern 21st.dev, petak 16 px */
@@ -45,8 +47,16 @@ export const MOTIF: { nilai: MotifLatar; label: string; keterangan: string }[] =
   { nilai: "titik", label: "Titik", keterangan: "Titik halus tiap 16 px, ikut bergulir" },
 ]
 
-/** Warna titik tiap mode, sama dengan ThemePattern di server: neutral-400 dan neutral-600, 80% */
-export const WARNA_TITIK: Record<ModePortal, string> = { terang: "rgba(163,163,163,0.8)", gelap: "rgba(82,82,82,0.8)" }
+/** Kejelasan motif yang bisa dipilih (D-074), langkah 10% */
+export const KEJELASAN_MOTIF: KejelasanMotif[] = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+
+/**
+ * Warna titik, sama dengan ThemePattern di server: neutral-400 (terang) atau
+ * neutral-600 (gelap) dengan kepekatan 0,8 × kejelasan, dua desimal.
+ */
+export function warnaTitik(mode: ModePortal, kejelasan: KejelasanMotif) {
+  return `rgba(${mode === "gelap" ? "82,82,82" : "163,163,163"},${Math.round(0.8 * kejelasan) / 100})`
+}
 
 /** contoh = [latar, teks] tiap mode, sama dengan tokens.css dan mode gelap di ThemeVariables */
 export const MODE_PORTAL: { nilai: ModePortal; label: string; keterangan: string; contoh: [string, string] }[] = [

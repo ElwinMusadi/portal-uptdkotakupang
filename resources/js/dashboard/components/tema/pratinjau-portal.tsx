@@ -1,8 +1,8 @@
 import type * as React from "react"
 
 import { DotPattern } from "@/components/ui/dot-pattern"
-import type { ModePortal, MotifLatar } from "@/lib/api"
-import { WARNA_TITIK } from "@/lib/tema"
+import type { KejelasanMotif, ModePortal, MotifLatar } from "@/lib/api"
+import { warnaTitik } from "@/lib/tema"
 
 /** Warna portal yang tidak diatur tema (tokens.css), untuk melengkapi contoh */
 const TETAP: Record<string, string> = {
@@ -21,18 +21,20 @@ const BATANG = [38, 52, 44, 70, 86, 61]
  * dengan --chrome untuk permukaan yang tetap gelap dan --on-ink untuk teks
  * di atas tombol yang dibalik. Tombol gelap memakai --ink-fill (warna gelap);
  * navbar memakai --nav-surface dan teks --nav-tint (warna navbar). Motif
- * titik digambar DotPattern di belakang isi, dengan petak dan warna yang
- * sama dengan /tema-portal.css (D-073).
+ * titik digambar DotPattern di belakang isi, dengan petak, warna, dan
+ * kejelasan yang sama dengan /tema-portal.css (D-073, D-074).
  */
 export function PratinjauPortal({
   variabel,
   skala,
   motif,
+  kejelasan,
   mode,
 }: {
   variabel: Record<string, string>
   skala: number
   motif: MotifLatar
+  kejelasan: KejelasanMotif
   mode: ModePortal
 }) {
   const gaya = Object.fromEntries(
@@ -48,7 +50,7 @@ export function PratinjauPortal({
       role="img"
       className="relative isolate grid gap-4 overflow-hidden rounded-xl border bg-(--p-paper) p-4 font-(family-name:--p-font-sans) text-(--p-ink)"
     >
-      {motif === "titik" && <DotPattern className="-z-10" style={{ fill: WARNA_TITIK[mode] }} />}
+      {motif === "titik" && <DotPattern className="-z-10" style={{ fill: warnaTitik(mode, kejelasan) }} />}
       <div className="flex items-center justify-between rounded-full bg-(--p-nav-surface) py-2 pr-2 pl-4 text-xs text-[rgb(var(--p-nav-tint))]">
         <span className="flex items-center gap-2 font-semibold tracking-[0.08em]">
           <span aria-hidden="true" className="size-3 rotate-45 rounded-[3px] bg-(--p-logo-leaf-night)" />

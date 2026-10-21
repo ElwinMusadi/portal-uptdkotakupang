@@ -84,6 +84,7 @@ class ThemeRevisionTest extends TestCase
             ->assertJsonPath('0.tema.portal.navbar', 'gelap')
             ->assertJsonPath('0.tema.portal.kaca', 'mati')
             ->assertJsonPath('0.tema.portal.motif', 'polos')
+            ->assertJsonPath('0.tema.portal.kejelasanMotif', 40)
             ->assertJsonPath('0.tema.portal.sudut', 'tegas')
             ->assertJsonPath('0.oleh', null);
     }
@@ -104,7 +105,9 @@ class ThemeRevisionTest extends TestCase
             ->assertJsonPath('portal.navbar', 'gelap')
             ->assertJsonPath('portal.kaca', 'mati')
             ->assertJsonPath('portal.motif', 'polos')
+            ->assertJsonPath('portal.kejelasanMotif', 40)
             ->assertJsonMissingPath('dashboard.motif')
+            ->assertJsonMissingPath('dashboard.kejelasanMotif')
             ->assertJsonMissingPath('dashboard.panel')
             ->assertJsonMissingPath('dashboard.navbar')
             ->assertJsonMissingPath('dashboard.mode')

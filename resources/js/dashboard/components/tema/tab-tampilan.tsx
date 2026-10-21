@@ -18,10 +18,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Slider } from "@/components/ui/slider"
 import { Spinner } from "@/components/ui/spinner"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import type { BagianTema, BagianTemaPortal, Tema } from "@/lib/api"
+import type { BagianTema, BagianTemaPortal, KejelasanMotif, Tema } from "@/lib/api"
 import { sesi } from "@/lib/auth"
 import { tanggalJam } from "@/lib/format"
 import { laporGalat } from "@/lib/queries"
@@ -31,6 +32,7 @@ import {
   GELAP,
   HURUF,
   hurufJudulDipakai,
+  KEJELASAN_MOTIF,
   hurufPratinjauPortal,
   KACA,
   keluargaHuruf,
@@ -52,7 +54,7 @@ import {
   temaSiapPakai,
   usePratinjauTema,
   useRiwayatTema,
-  WARNA_TITIK,
+  warnaTitik,
   type Kontras,
   type RiwayatTema,
 } from "@/lib/tema"
@@ -76,6 +78,7 @@ const skemaTema = z.object({
     kaca: z.enum(["mati", "halus", "sedang", "kuat"]),
     mode: z.enum(["terang", "gelap"]),
     motif: z.enum(["polos", "titik"]),
+    kejelasanMotif: z.custom<KejelasanMotif>((v) => KEJELASAN_MOTIF.includes(v as KejelasanMotif), "Pilih kejelasan 10–100%."),
   }),
   dashboard: skemaBagian,
 })
@@ -200,6 +203,7 @@ function IsiTampilan({ form, admin }: { form: UseFormReturn<Tema>; admin: boolea
                   variabel={pratinjau.portal.variabel}
                   skala={tema.portal.skala}
                   motif={tema.portal.motif}
+                  kejelasan={tema.portal.kejelasanMotif}
                   mode={tema.portal.mode}
                 />
               ) : (
@@ -504,7 +508,10 @@ function FormBagian({
                           style={{ background: kertasJadi ?? LATAR.find((l) => l.nilai === nilai.latar)?.contoh[0] }}
                         >
                           {m.nilai === "titik" && (
-                            <DotPattern className="-z-10" style={{ fill: WARNA_TITIK[(nilai as BagianTemaPortal).mode] }} />
+                            <DotPattern
+                              className="-z-10"
+                              style={{ fill: warnaTitik((nilai as BagianTemaPortal).mode, (nilai as BagianTemaPortal).kejelasanMotif) }}
+                            />
                           )}
                         </span>
                         <span className="grid gap-0.5">
@@ -519,6 +526,36 @@ function FormBagian({
               </FormItem>
             )}
           />
+          {(nilai as BagianTemaPortal).motif !== "polos" && (
+            <FormField
+              control={form.control}
+              name="portal.kejelasanMotif"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="flex items-center justify-between gap-3">
+                    <FormLabel>Kejelasan titik</FormLabel>
+                    <span className="text-sm text-muted-foreground tabular-nums" aria-hidden="true">
+                      {field.value}%
+                    </span>
+                  </div>
+                  <FormControl>
+                    <Slider
+                      min={10}
+                      max={100}
+                      step={10}
+                      value={[field.value]}
+                      onValueChange={([v]) => field.onChange(v)}
+                      aria-label="Kejelasan titik dalam persen"
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    100% = titik seperti semula; makin kecil makin samar sehingga teks di atasnya lebih mudah dibaca. Bawaan 40%.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
         </Bagian>
       )}
 
@@ -938,7 +975,7 @@ function RingkasanBagian({ judul, bagian }: { judul: string; bagian: BagianTema 
       <span>
         <span className="text-muted-foreground">{judul}:</span> {temaSiapPakai(bagian)?.nama ?? "Kustom"} · {bagian.skala}%
         {"mode" in bagian && bagian.mode === "gelap" ? " · gelap" : ""}
-        {"motif" in bagian && bagian.motif === "titik" ? " · titik" : ""}
+        {"motif" in bagian && bagian.motif === "titik" ? ` · titik ${bagian.kejelasanMotif}%` : ""}
       </span>
     </span>
   )

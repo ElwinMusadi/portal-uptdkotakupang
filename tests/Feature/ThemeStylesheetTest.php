@@ -87,7 +87,7 @@ class ThemeStylesheetTest extends TestCase
         $this->assertSame(
             "/* Tema portal PINTU, diatur Administrator di Pengaturan › Tampilan (D-057). */\n"
             ."body:has(.nav-wrap) {\n"
-            ."  background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Ccircle cx='1' cy='1' r='1' fill='rgba(163,163,163,0.8)'/%3E%3C/svg%3E\");\n"
+            ."  background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Ccircle cx='1' cy='1' r='1' fill='rgba(163,163,163,0.32)'/%3E%3C/svg%3E\");\n"
             ."  background-size: 16px 16px;\n"
             ."}\n",
             $this->get('/tema-portal.css')->assertOk()->getContent(),
@@ -105,13 +105,27 @@ class ThemeStylesheetTest extends TestCase
 
         $css = $this->get('/tema-portal.css')->assertOk()->getContent();
 
-        $this->assertStringEndsWith("r='1' fill='rgba(82,82,82,0.8)'/%3E%3C/svg%3E\");\n  background-size: 16px 16px;\n}\n", $css);
+        $this->assertStringEndsWith("r='1' fill='rgba(82,82,82,0.32)'/%3E%3C/svg%3E\");\n  background-size: 16px 16px;\n}\n", $css);
         $this->assertStringNotContainsString('163,163,163', $css);
     }
 
-    public function test_reads_a_portal_theme_without_a_pattern_such_as_an_earlier_preview_as_plain(): void
+    #[TestWith([10, 'rgba(163,163,163,0.08)'])]
+    #[TestWith([30, 'rgba(163,163,163,0.24)'])]
+    #[TestWith([70, 'rgba(163,163,163,0.56)'])]
+    #[TestWith([100, 'rgba(163,163,163,0.8)'])]
+    public function test_fades_the_dots_by_the_chosen_clarity_from_their_look_at_100_percent(int $clarity, string $fill): void
     {
-        $this->assertSame("/* Tema portal PINTU: tampilan bawaan (D-057). */\n", app(BuildThemeStylesheet::class)->portal(Setting::DEFAULT_THEME_SECTION));
+        $this->saveTheme(['motif' => 'titik', 'kejelasanMotif' => $clarity]);
+
+        $this->assertStringContainsString("r='1' fill='{$fill}'/%3E", $this->get('/tema-portal.css')->assertOk()->getContent());
+    }
+
+    public function test_reads_a_portal_theme_without_a_pattern_or_its_clarity_such_as_an_earlier_preview_as_plain_or_at_40_percent(): void
+    {
+        $build = app(BuildThemeStylesheet::class);
+
+        $this->assertSame("/* Tema portal PINTU: tampilan bawaan (D-057). */\n", $build->portal(Setting::DEFAULT_THEME_SECTION));
+        $this->assertStringContainsString("fill='rgba(163,163,163,0.32)'", $build->portal([...Setting::DEFAULT_THEME_SECTION, 'motif' => 'titik']));
     }
 
     public function test_enlarges_the_dashboard_only_on_screens_from_64rem_wide(): void
