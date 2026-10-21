@@ -308,6 +308,48 @@ class PortalPagesTest extends TestCase
         $this->assertStringContainsString('<script src="assets/js/main.js" defer></script>', $html);
     }
 
+    /**
+     * Every portal page with the shared header, including those served with
+     * addresses from the site root and the 404 page, with its status.
+     *
+     * @return array<string, array{string, int}>
+     */
+    public static function pagesWithLenis(): array
+    {
+        $pages = array_filter(
+            self::pages(),
+            fn (array $page): bool => str_contains((string) file_get_contents(dirname(__DIR__, 2)."/resources/views/portal/{$page[1]}.blade.php"), '<!-- @header -->'),
+        );
+
+        return [...array_map(fn (array $page): array => [$page[0], 200], $pages), '404' => ['/halaman-tidak-ada', 404]];
+    }
+
+    #[DataProvider('pagesWithLenis')]
+    public function test_loads_lenis_before_the_theme_and_the_portal_script_on_every_page_with_the_header(string $uri, int $status): void
+    {
+        $html = $this->get($uri)->assertStatus($status)->getContent();
+
+        $this->assertMatchesRegularExpression('#<link rel="stylesheet" href="/?assets/vendor/lenis-1\.3\.27/lenis\.css"( /)?>\s*<link rel="stylesheet" href="/?tema-portal\.css"( /)?>#', $html);
+        $this->assertMatchesRegularExpression('#<script src="/?assets/vendor/lenis-1\.3\.27/lenis\.min\.js" defer></script>\s*<script src="/?assets/js/main\.js" defer></script>#', $html);
+        $this->assertSame(2, substr_count($html, 'assets/vendor/lenis-'));
+    }
+
+    #[TestWith(['/login'])]
+    #[TestWith(['/dashboard-pegawai'])]
+    public function test_leaves_the_pages_without_the_header_without_lenis(string $uri): void
+    {
+        $this->assertStringNotContainsString('lenis', $this->get($uri)->assertOk()->getContent());
+    }
+
+    public function test_keeps_the_lenis_build_of_the_version_in_its_folder_name_with_its_licence(): void
+    {
+        $folder = public_path('assets/vendor/lenis-1.3.27');
+
+        $this->assertStringStartsWith('(function(){var e=`1.3.27`;', (string) file_get_contents("{$folder}/lenis.min.js"));
+        $this->assertStringContainsString('.lenis:not(.lenis-autoToggle).lenis-stopped', (string) file_get_contents("{$folder}/lenis.css"));
+        $this->assertStringContainsString('Copyright (c) 2024 darkroom.engineering', (string) file_get_contents("{$folder}/LICENSE"));
+    }
+
     public function test_leaves_the_service_guide_to_its_component_above_the_services(): void
     {
         $html = $this->get('/layanan')->assertOk()->getContent();

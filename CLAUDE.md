@@ -123,6 +123,12 @@ Build di Laravel Cloud: `composer install --no-dev && npm ci && npm run build &&
   - "terlewat" hanya dihitung untuk celah ≤ 50 nomor, karena lompatan lebih lebar dianggap tumpukan formulir lain;
   - CSV menulis `="0012345"` agar Excel mempertahankan nol.
 - **Tema (D-057):** stylesheet dibuat server di `/tema-portal.css` dan `/tema-dashboard.css`, dengan huruf yang di-host sendiri.
+- **Gulir halus Lenis (D-072):**
+  - Lenis 1.3.27 dilayani sendiri dari `public/assets/vendor/lenis-1.3.27/`, hanya di halaman portal berheader;
+  - tidak berjalan saat gerak dikurangi, dan sentuhan tetap native;
+  - gulir dari kode lewat `window.pintuScrollTo` (React: `gulirKe()` di `resources/js/portal/gulir.ts`);
+  - posisi tujuan sudah memperhitungkan `scroll-padding-top`, jadi jangan menambah offset sendiri;
+  - versi baru berarti folder baru, karena aset portal tidak berversi.
 
 ## Masalah yang sudah diselesaikan
 
@@ -138,6 +144,8 @@ Build di Laravel Cloud: `composer install --no-dev && npm ci && npm run build &&
 | Tes: `JsonResource` menjawab 201 untuk model baru; JSON menulis `15.0` sebagai `15` | Pakai `assertCreated`; harapkan bilangan bulat |
 | Halaman dashboard melebar | `grid-cols-[minmax(0,1fr)]`; `min-w-0` di `SidebarInset`; `whitespace-normal` di sel tabel shadcn; wadah gulir `relative` untuk `sr-only` |
 | Panel browser tersembunyi tidak menjalankan transisi atau `ResizeObserver` | Matikan transisi lewat CSS sisipan, ukur dengan `getBoundingClientRect` |
+| Panel browser tersembunyi juga tidak menjalankan `requestAnimationFrame`, jadi Lenis diam | Uji di Edge headless lewat CDP (`--headless=new --remote-debugging-port`); hentikan proses Edge uji menurut folder profilnya, bukan semua `msedge.exe` |
+| Hash saat dibuka meleset dengan Lenis karena isi muncul di atas tujuan selama animasi | Lompat langsung (`immediate`), lalu scroll anchoring peramban yang menahan posisinya |
 | Worktree dengan `vendor` berupa junction menguji kode checkout utama | Jalankan PHPUnit dengan `--bootstrap` sementara yang memuat autoloader worktree |
 | Form I produksi berbeda dari contoh pemilik | Berkas Loket SAMSAT Oktober belum diimpor, dan contoh dibuat per 7 Oktober; diselesaikan dengan pilihan *Sampai tanggal* (D-070) |
 
@@ -157,6 +165,7 @@ Daftar lengkapnya di `KONTEKS-PROYEK.md` §15 dan §18.
   - cadangan bucket dan database;
   - uji Absensi di HTTPS.
 - **Pekerjaan lain:**
+  - pemilik mencoba rasa gulir Lenis dengan mouse, touchpad, dan ponsel di situs lokal Herd atau produksi (D-072);
   - Kebijakan Privasi perlu menyebut Google Maps di halaman Kontak (D-063);
   - persyaratan balik nama dan mutasi masuk perlu dicocokkan petugas dengan papan loket (D-061, D-062);
   - Antrean Online: keputusan tersisa, perangkat, uji QR, kamera, dan suara, uji coba paralel, lalu Irisan 5–6.

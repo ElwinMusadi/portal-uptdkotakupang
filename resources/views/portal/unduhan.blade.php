@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="assets/css/base.css">
   <link rel="stylesheet" href="assets/css/components.css">
   <link rel="stylesheet" href="assets/css/pages.css">
+  <link rel="stylesheet" href="assets/vendor/lenis-1.3.27/lenis.css">
   <link rel="stylesheet" href="tema-portal.css">
   <script>document.documentElement.classList.replace("no-js", "js");</script>
 </head>
@@ -291,6 +292,7 @@
 </footer>
 <div class="toast" role="status" aria-live="polite" id="toast"></div>
 <!-- /@footer -->
+<script src="assets/vendor/lenis-1.3.27/lenis.min.js" defer></script>
 <script src="assets/js/main.js" defer></script>
 </body>
 </html>

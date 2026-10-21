@@ -25,6 +25,7 @@ import {
   BOBOT_MAP,
   type DataKendaraan,
 } from "../pkb"
+import { gulirKe } from "./gulir"
 
 const POLA_NOPOL = /^([A-Z]{1,2})(\d{1,4})([A-Z]{0,3})$/
 const normal = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, "")
@@ -222,7 +223,7 @@ function cekPajak(root: HTMLElement) {
       if (k) {
         tulisPesan("Data kendaraan ditemukan.")
         tampilkan(k)
-        hasil.scrollIntoView({ block: "nearest" })
+        gulirKe(hasil, "nearest")
       } else if (res.status === 422 && jawaban.errors) {
         const [nama, daftar] = Object.entries(jawaban.errors)[0] ?? []
         galat(daftar?.[0] ?? "Periksa isian Anda.", nama === "rangka" ? inRangka : nama === "nopol" ? inNopol : undefined)

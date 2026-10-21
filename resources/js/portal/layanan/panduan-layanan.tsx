@@ -9,6 +9,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { createRoot } from "react-dom/client"
 
+import { gulirKe } from "../gulir"
 import "./panduan-layanan.css"
 
 interface Layanan {
@@ -133,8 +134,7 @@ function PanduanLayanan() {
     requestAnimationFrame(() => {
       const el = hasil.current
       if (!el || el.getBoundingClientRect().top < window.innerHeight * 0.6) return
-      const halus = !window.matchMedia("(prefers-reduced-motion: reduce)").matches
-      window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 96, behavior: halus ? "smooth" : "auto" })
+      gulirKe(el)
     })
   }
   const alihTambahan = (slug: string) => setTambahan((t) => (t.includes(slug) ? t.filter((s) => s !== slug) : [...t, slug]))

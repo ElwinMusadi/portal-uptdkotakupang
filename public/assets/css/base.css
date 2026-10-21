@@ -4,6 +4,13 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 96px; }
+/* Selama Lenis aktif (D-072) gulir halusnya dari Lenis, jadi gulir halus peramban dimatikan agar tidak bertabrakan.
+   Tanpa JavaScript atau dengan gerak dikurangi Lenis tidak berjalan dan aturan di atas tetap berlaku. scroll-padding-top
+   (tinggi header lengket) tetap dipakai: lenis.scrollTo ke elemen menghitungnya seperti scrollIntoView. */
+html.lenis { scroll-behavior: auto; }
+/* Selama dialog atau menu ponsel terbuka Lenis berhenti; lenis.css memakai overflow: clip, yang menghilangkan scrollbar
+   sehingga halaman di belakangnya bergeser ke kanan. hidden dengan scrollbar-gutter tetap menyisakan tempat scrollbar. */
+html.lenis.lenis-stopped:not(.lenis-autoToggle) { overflow: hidden; scrollbar-gutter: stable; }
 body {
   margin: 0;
   background: var(--paper);

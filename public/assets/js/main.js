@@ -35,6 +35,89 @@
   }
   window.PINTU = { toast };
 
+  /* ---------- Gulir halus (Lenis, D-072) ----------
+     Rasa gulir sama dengan portfolio pemilik: Lenis 1.3.27, durasi 1,2 detik, untuk roda mouse dan touchpad; sentuhan
+     di ponsel tetap native. Lenis hanya dimuat halaman portal berheader (assets/vendor/lenis-1.3.27) dan tidak dijalankan
+     bila pengunjung memilih gerak dikurangi. Area yang punya gulir sendiri digulir native: dialog, panel navbar, dan tabel
+     laporan selalu (isinya berganti, sedangkan pemeriksaan bawaan Lenis menyimpan ukurannya 2 detik), sisanya (tabel
+     lebar, deretan pilihan yang digeser) lewat allowNestedScroll selama masih bisa digulir ke arah itu. */
+  const gerakDikurangi = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const GULIR_SENDIRI = ".mobile-menu, .cari-panel, .lp-rincian__tabel";
+  const lenis = typeof window.Lenis === "function" && !gerakDikurangi
+    ? new window.Lenis({
+      duration: 1.2,
+      smoothWheel: true,
+      allowNestedScroll: true,
+      prevent: (node) => node.tagName === "DIALOG"
+        || (node.matches(GULIR_SENDIRI) && (node.scrollHeight > node.clientHeight + 1 || node.scrollWidth > node.clientWidth + 1)),
+    })
+    : null;
+  if (lenis) {
+    const raf = (time) => { lenis.raf(time); requestAnimationFrame(raf); };
+    requestAnimationFrame(raf);
+  }
+
+  /** Gulir ke elemen atau ke posisi Y. Posisi elemen memperhitungkan header lengket (scroll-padding-top) dan
+      scroll-margin-top, baik lewat Lenis maupun native. { block: "nearest" } hanya menggulir bila elemen belum
+      terlihat utuh; { immediate: true } melompat tanpa animasi Lenis. Dipakai juga komponen React portal lewat
+      window.pintuScrollTo. */
+  function gulirKe(sasaran, { block = "start", immediate = false } = {}) {
+    if (sasaran == null) return;
+    if (!lenis) {
+      if (typeof sasaran === "number") window.scrollTo({ top: sasaran });
+      else sasaran.scrollIntoView({ block });
+      return;
+    }
+    if (block === "nearest" && typeof sasaran !== "number") {
+      const kotak = sasaran.getBoundingClientRect();
+      const atas = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
+      const bawah = document.documentElement.clientHeight;
+      if (kotak.top >= atas && kotak.bottom <= bawah) return;
+      // Di bawah layar dan muat: rata bawah; di atas layar atau lebih tinggi dari layar: rata atas
+      if (kotak.top >= atas && kotak.height <= bawah - atas) sasaran = window.scrollY + kotak.bottom - bawah;
+    }
+    lenis.dimensions.resize(); // isi dari API bisa baru dipasang; batas gulir Lenis baru diukur ulang 250 ms kemudian
+    lenis.scrollTo(sasaran, { immediate });
+  }
+  /** Bagian dari #hash alamat yang baru tampil setelah isinya dimuat. Langsung, seperti peramban membuka alamat
+      bertanda #: isi yang dipasang sesudahnya di atas bagian itu (mis. panduan layanan) lalu ditahan scroll anchoring
+      peramban, sedangkan animasi Lenis akan berhenti di posisi lama. */
+  function gulirKeHash() {
+    if (location.hash) gulirKe(document.getElementById(decodeURIComponent(location.hash.slice(1))), { immediate: true });
+  }
+  window.pintuScrollTo = gulirKe;
+
+  // Tautan #bagian di halaman yang sama digulir Lenis dan tetap mengubah alamat. Tautan yang diaktifkan lewat
+  // keyboard (detail 0) dibiarkan native supaya fokus ikut pindah, mis. "Lewati ke konten utama".
+  if (lenis) document.addEventListener("click", (e) => {
+    if (e.defaultPrevented || e.button !== 0 || e.detail === 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const a = e.target.closest?.("a[href*='#']");
+    if (!a || (a.target && a.target !== "_self") || a.hasAttribute("download")) return;
+    const url = new URL(a.href, location.href);
+    if (!url.hash || url.origin + url.pathname + url.search !== location.origin + location.pathname + location.search) return;
+    const el = document.getElementById(decodeURIComponent(url.hash.slice(1)));
+    if (!el) return;
+    e.preventDefault();
+    if (url.hash !== location.hash) history.pushState(null, "", url.hash);
+    gulirKe(el);
+  });
+
+  // Selama dialog modal atau menu ponsel terbuka, halaman di belakangnya tidak ikut digulir. Menu ponsel
+  // tersembunyi CSS mulai 1001 px walau masih terbuka, jadi lebar layar ikut dinilai.
+  const menuPonselTampil = window.matchMedia("(max-width: 1000px)");
+  function sesuaikanGulir() {
+    if (!lenis) return;
+    const menu = $("#mobile-menu");
+    const tahan = $$("dialog[open]").length > 0 || (menu !== null && !menu.hidden && menuPonselTampil.matches);
+    if (tahan) lenis.stop(); else lenis.start();
+  }
+  function bukaDialog(dlg) {
+    dlg.showModal();
+    sesuaikanGulir();
+  }
+  document.addEventListener("close", (e) => { if (e.target instanceof HTMLDialogElement) sesuaikanGulir(); }, true);
+  menuPonselTampil.addEventListener("change", sesuaikanGulir);
+
   /* ---------- Navigasi: dropdown pil & menu seluler ---------- */
   function initNav() {
     const items = $$(".nav__item.has-menu");
@@ -69,9 +152,10 @@
         const on = toggle.getAttribute("aria-expanded") !== "true";
         toggle.setAttribute("aria-expanded", String(on));
         panel.hidden = !on;
+        sesuaikanGulir();
       });
       document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && !panel.hidden) { panel.hidden = true; toggle.setAttribute("aria-expanded", "false"); toggle.focus(); }
+        if (e.key === "Escape" && !panel.hidden) { panel.hidden = true; toggle.setAttribute("aria-expanded", "false"); toggle.focus(); sesuaikanGulir(); }
       });
     }
   }
@@ -917,7 +1001,7 @@
 
       status.hidden = true;
       // Tautan seperti visi-misi.html#maklumat baru bisa dituju setelah bagiannya tampil
-      if (location.hash) document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView();
+      gulirKeHash();
     };
 
     const muat = async (fokus) => {
@@ -1134,7 +1218,7 @@
         const w = nowWita(new Date(terakhir));
         verifikasi.textContent = ` · diverifikasi petugas, ${BULAN_PENUH[w.mo - 1]} ${w.y}`;
       }
-      if (location.hash) document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView();
+      gulirKeHash();
     };
 
     // Beranda: tab layanan unggulan dengan daftar centang
@@ -1626,7 +1710,7 @@
       if (!c) return;
       periode = c.dataset.pilihPeriode;
       terapkan();
-      galeri.closest("section").scrollIntoView();
+      gulirKe(galeri.closest("section"));
     });
 
     const muat = async (fokus) => {
@@ -2504,7 +2588,7 @@
   function initDialogs() {
     $$("[data-open-dialog]").forEach((b) => b.addEventListener("click", () => {
       const dlg = document.getElementById(b.dataset.openDialog);
-      if (dlg?.showModal) dlg.showModal();
+      if (dlg?.showModal) bukaDialog(dlg);
     }));
     $$("dialog").forEach((dlg) => {
       dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
@@ -2582,7 +2666,7 @@
       const it = e.target.closest(".gallery__item");
       if (!it) return;
       show(items().indexOf(it));
-      dlg.showModal();
+      bukaDialog(dlg);
     }));
     $("[data-lb-prev]", dlg).addEventListener("click", () => show(idx - 1));
     $("[data-lb-next]", dlg).addEventListener("click", () => show(idx + 1));
