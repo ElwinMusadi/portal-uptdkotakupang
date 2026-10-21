@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Actions\BuildThemeStylesheet;
 use App\Enums\ThemeFont;
 use App\Models\Setting;
 use App\Models\User;
@@ -77,6 +78,40 @@ class ThemeStylesheetTest extends TestCase
         );
         $this->assertStringEndsWith("\nhtml:root {\n  font-size: 90%;\n}\n", $this->get('/tema-dashboard.css')->getContent());
         $this->assertStringContainsString('<div data-react="layar-antrean">', $this->get('/layar')->getContent());
+    }
+
+    public function test_covers_the_background_of_the_pages_with_the_header_in_dots_that_scroll_with_them(): void
+    {
+        $this->saveTheme(['motif' => 'titik']);
+
+        $this->assertSame(
+            "/* Tema portal PINTU, diatur Administrator di Pengaturan › Tampilan (D-057). */\n"
+            ."body:has(.nav-wrap) {\n"
+            ."  background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Ccircle cx='1' cy='1' r='1' fill='rgba(163,163,163,0.8)'/%3E%3C/svg%3E\");\n"
+            ."  background-size: 16px 16px;\n"
+            ."}\n",
+            $this->get('/tema-portal.css')->assertOk()->getContent(),
+        );
+        $this->assertStringContainsString('<header class="nav-wrap">', $this->get('/layanan')->getContent());
+        $this->assertStringContainsString('<header class="nav-wrap">', $this->get('/halaman-tidak-ada')->getContent());
+        $this->assertStringNotContainsString('nav-wrap', $this->get('/login')->getContent());
+        $this->assertStringNotContainsString('nav-wrap', $this->get('/layar')->getContent());
+        $this->assertStringNotContainsString('nav-wrap', (string) file_get_contents(resource_path('views/auth/aktivasi.blade.php')));
+    }
+
+    public function test_draws_the_dots_in_a_darker_grey_on_the_dark_portal(): void
+    {
+        $this->saveTheme(['motif' => 'titik', 'mode' => 'gelap']);
+
+        $css = $this->get('/tema-portal.css')->assertOk()->getContent();
+
+        $this->assertStringEndsWith("r='1' fill='rgba(82,82,82,0.8)'/%3E%3C/svg%3E\");\n  background-size: 16px 16px;\n}\n", $css);
+        $this->assertStringNotContainsString('163,163,163', $css);
+    }
+
+    public function test_reads_a_portal_theme_without_a_pattern_such_as_an_earlier_preview_as_plain(): void
+    {
+        $this->assertSame("/* Tema portal PINTU: tampilan bawaan (D-057). */\n", app(BuildThemeStylesheet::class)->portal(Setting::DEFAULT_THEME_SECTION));
     }
 
     public function test_enlarges_the_dashboard_only_on_screens_from_64rem_wide(): void

@@ -12,6 +12,7 @@ import { PratinjauPortal } from "@/components/tema/pratinjau-portal"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { DotPattern } from "@/components/ui/dot-pattern"
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -35,6 +36,7 @@ import {
   keluargaHuruf,
   LATAR,
   MODE_PORTAL,
+  MOTIF,
   muatUlangTemaDashboard,
   NAVBAR,
   PANEL,
@@ -50,6 +52,7 @@ import {
   temaSiapPakai,
   usePratinjauTema,
   useRiwayatTema,
+  WARNA_TITIK,
   type Kontras,
   type RiwayatTema,
 } from "@/lib/tema"
@@ -72,6 +75,7 @@ const skemaTema = z.object({
     navbar: z.union([z.literal("gelap"), z.string().regex(POLA_WARNA, "Tulis kode warna #RRGGBB, mis. #FFFFFF.")]),
     kaca: z.enum(["mati", "halus", "sedang", "kuat"]),
     mode: z.enum(["terang", "gelap"]),
+    motif: z.enum(["polos", "titik"]),
   }),
   dashboard: skemaBagian,
 })
@@ -183,6 +187,7 @@ function IsiTampilan({ form, admin }: { form: UseFormReturn<Tema>; admin: boolea
               panelJadi={pratinjau?.portal.panel}
               navbarJadi={pratinjau?.portal.navbar ?? undefined}
               tutupanKaca={pratinjau?.portal.tutupanKaca ?? undefined}
+              kertasJadi={pratinjau?.portal.variabel["--paper"]}
               kontras={pratinjau?.portal.kontras}
               admin={admin}
             />
@@ -191,7 +196,12 @@ function IsiTampilan({ form, admin }: { form: UseFormReturn<Tema>; admin: boolea
             <div className="grid gap-2 xl:sticky xl:top-4">
               <p className="text-sm font-medium">Contoh portal</p>
               {pratinjau ? (
-                <PratinjauPortal variabel={pratinjau.portal.variabel} skala={tema.portal.skala} />
+                <PratinjauPortal
+                  variabel={pratinjau.portal.variabel}
+                  skala={tema.portal.skala}
+                  motif={tema.portal.motif}
+                  mode={tema.portal.mode}
+                />
               ) : (
                 <Skeleton className="h-[34rem] rounded-xl" />
               )}
@@ -244,6 +254,7 @@ function FormBagian({
   panelJadi,
   navbarJadi,
   tutupanKaca,
+  kertasJadi,
   kontras,
   admin,
 }: {
@@ -256,6 +267,8 @@ function FormBagian({
   panelJadi?: string
   navbarJadi?: string
   tutupanKaca?: number
+  /** Warna latar halaman portal sesudah nuansa dan mode diterapkan, untuk contoh motif */
+  kertasJadi?: string
   kontras?: Kontras[]
   admin: boolean
 }) {
@@ -464,6 +477,50 @@ function FormBagian({
           )}
         />
       </Bagian>
+
+      {bagian === "portal" && (
+        <Bagian
+          judul="Motif latar"
+          deskripsi="Motif di latar halaman portal yang berheader (beranda, halaman informasi dan layanan, halaman lacak, dan 404), di belakang kartu dan teks, dan ikut bergulir. Login Pegawai, Aktivasi, dan layar TV antrean tetap polos."
+        >
+          <FormField
+            control={form.control}
+            name="portal.motif"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="sr-only">Motif latar</FormLabel>
+                <FormControl>
+                  <RadioGroup value={field.value} onValueChange={field.onChange} className="grid gap-2 sm:grid-cols-2">
+                    {MOTIF.map((m) => (
+                      <Label
+                        key={m.nilai}
+                        htmlFor={`${id}-portal-motif-${m.nilai}`}
+                        className="gap-3 rounded-lg border p-3 font-normal has-[[data-state=checked]]:border-ring has-[[data-state=checked]]:bg-muted/50"
+                      >
+                        <RadioGroupItem value={m.nilai} id={`${id}-portal-motif-${m.nilai}`} />
+                        <span
+                          aria-hidden="true"
+                          className="relative isolate size-12 shrink-0 overflow-hidden rounded-md border"
+                          style={{ background: kertasJadi ?? LATAR.find((l) => l.nilai === nilai.latar)?.contoh[0] }}
+                        >
+                          {m.nilai === "titik" && (
+                            <DotPattern className="-z-10" style={{ fill: WARNA_TITIK[(nilai as BagianTemaPortal).mode] }} />
+                          )}
+                        </span>
+                        <span className="grid gap-0.5">
+                          <span className="font-medium">{m.label}</span>
+                          <span className="text-xs text-muted-foreground">{m.keterangan}</span>
+                        </span>
+                      </Label>
+                    ))}
+                  </RadioGroup>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </Bagian>
+      )}
 
       <Bagian
         judul="Huruf"
@@ -881,6 +938,7 @@ function RingkasanBagian({ judul, bagian }: { judul: string; bagian: BagianTema 
       <span>
         <span className="text-muted-foreground">{judul}:</span> {temaSiapPakai(bagian)?.nama ?? "Kustom"} · {bagian.skala}%
         {"mode" in bagian && bagian.mode === "gelap" ? " · gelap" : ""}
+        {"motif" in bagian && bagian.motif === "titik" ? " · titik" : ""}
       </span>
     </span>
   )

@@ -129,6 +129,11 @@ Build di Laravel Cloud: `composer install --no-dev && npm ci && npm run build &&
   - gulir dari kode lewat `window.pintuScrollTo` (React: `gulirKe()` di `resources/js/portal/gulir.ts`);
   - posisi tujuan sudah memperhitungkan `scroll-padding-top`, jadi jangan menambah offset sendiri;
   - versi baru berarti folder baru, karena aset portal tidak berversi.
+- **Motif latar portal (D-073):**
+  - `portal.motif` (`polos` bawaan, `titik`) dipilih di Pengaturan › Tampilan;
+  - titiknya berupa CSS dari `/tema-portal.css` (`App\Enums\ThemePattern`) di halaman berheader, karena portal bukan React;
+  - komponen DotPattern 21st.dev (`components/ui/dot-pattern.tsx`) hanya dipakai dashboard untuk contohnya;
+  - motif baru ditambahkan di `ThemePattern` dan `MOTIF`.
 
 ## Masalah yang sudah diselesaikan
 
@@ -146,6 +151,7 @@ Build di Laravel Cloud: `composer install --no-dev && npm ci && npm run build &&
 | Panel browser tersembunyi tidak menjalankan transisi atau `ResizeObserver` | Matikan transisi lewat CSS sisipan, ukur dengan `getBoundingClientRect` |
 | Panel browser tersembunyi juga tidak menjalankan `requestAnimationFrame`, jadi Lenis diam | Uji di Edge headless lewat CDP (`--headless=new --remote-debugging-port`); hentikan proses Edge uji menurut folder profilnya, bukan semua `msedge.exe` |
 | Hash saat dibuka meleset dengan Lenis karena isi muncul di atas tujuan selama animasi | Lompat langsung (`immediate`), lalu scroll anchoring peramban yang menahan posisinya |
+| Edge headless tertahan sampai 2 menit di `php artisan serve` (satu permintaan sekaligus) setelah sesi dashboard | Pisahkan: satu peramban untuk dashboard, peramban lain berprofil baru untuk portal; beri batas waktu tiap perintah CDP |
 | Worktree dengan `vendor` berupa junction menguji kode checkout utama | Jalankan PHPUnit dengan `--bootstrap` sementara yang memuat autoloader worktree |
 | Form I produksi berbeda dari contoh pemilik | Berkas Loket SAMSAT Oktober belum diimpor, dan contoh dibuat per 7 Oktober; diselesaikan dengan pilihan *Sampai tanggal* (D-070) |
 

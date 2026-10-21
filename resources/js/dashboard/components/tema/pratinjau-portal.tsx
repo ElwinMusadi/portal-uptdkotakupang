@@ -1,5 +1,9 @@
 import type * as React from "react"
 
+import { DotPattern } from "@/components/ui/dot-pattern"
+import type { ModePortal, MotifLatar } from "@/lib/api"
+import { WARNA_TITIK } from "@/lib/tema"
+
 /** Warna portal yang tidak diatur tema (tokens.css), untuk melengkapi contoh */
 const TETAP: Record<string, string> = {
   "--night-muted": "#9BA0A8",
@@ -16,9 +20,21 @@ const BATANG = [38, 52, 44, 70, 86, 61]
  * diterapkan dengan zoom, seperti di portal; mode gelap lewat variabelnya,
  * dengan --chrome untuk permukaan yang tetap gelap dan --on-ink untuk teks
  * di atas tombol yang dibalik. Tombol gelap memakai --ink-fill (warna gelap);
- * navbar memakai --nav-surface dan teks --nav-tint (warna navbar).
+ * navbar memakai --nav-surface dan teks --nav-tint (warna navbar). Motif
+ * titik digambar DotPattern di belakang isi, dengan petak dan warna yang
+ * sama dengan /tema-portal.css (D-073).
  */
-export function PratinjauPortal({ variabel, skala }: { variabel: Record<string, string>; skala: number }) {
+export function PratinjauPortal({
+  variabel,
+  skala,
+  motif,
+  mode,
+}: {
+  variabel: Record<string, string>
+  skala: number
+  motif: MotifLatar
+  mode: ModePortal
+}) {
   const gaya = Object.fromEntries(
     Object.entries({ ...TETAP, ...variabel }).map(([nama, nilai]) => [`--p-${nama.slice(2)}`, nilai])
   ) as React.CSSProperties
@@ -30,8 +46,9 @@ export function PratinjauPortal({ variabel, skala }: { variabel: Record<string, 
       style={gaya}
       aria-label="Contoh portal dengan tema ini"
       role="img"
-      className="grid gap-4 overflow-hidden rounded-xl border bg-(--p-paper) p-4 font-(family-name:--p-font-sans) text-(--p-ink)"
+      className="relative isolate grid gap-4 overflow-hidden rounded-xl border bg-(--p-paper) p-4 font-(family-name:--p-font-sans) text-(--p-ink)"
     >
+      {motif === "titik" && <DotPattern className="-z-10" style={{ fill: WARNA_TITIK[mode] }} />}
       <div className="flex items-center justify-between rounded-full bg-(--p-nav-surface) py-2 pr-2 pl-4 text-xs text-[rgb(var(--p-nav-tint))]">
         <span className="flex items-center gap-2 font-semibold tracking-[0.08em]">
           <span aria-hidden="true" className="size-3 rotate-45 rounded-[3px] bg-(--p-logo-leaf-night)" />

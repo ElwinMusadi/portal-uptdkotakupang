@@ -888,7 +888,7 @@ Dipakai tab *Tampilan* di halaman Pengaturan ([D-057](decisions.md#d-057--2026-1
 
 ```json
 {
-  "portal":    { "aksen": "#2B63F6", "latar": "hangat", "hurufTeks": "sistem", "hurufJudul": "sama", "sudut": "sedang", "skala": 100, "tebalJudul": 600, "gelap": "#0F1319", "panel": "#0A0A0C", "navbar": "gelap", "kaca": "mati", "mode": "terang" },
+  "portal":    { "aksen": "#2B63F6", "latar": "hangat", "hurufTeks": "sistem", "hurufJudul": "sama", "sudut": "sedang", "skala": 100, "tebalJudul": 600, "gelap": "#0F1319", "panel": "#0A0A0C", "navbar": "gelap", "kaca": "mati", "mode": "terang", "motif": "polos" },
   "dashboard": { "aksen": "#2B63F6", "latar": "hangat", "hurufTeks": "sistem", "hurufJudul": "sama", "sudut": "sedang", "skala": 100, "tebalJudul": 600, "gelap": "#0F1319" }
 }
 ```
@@ -898,6 +898,7 @@ Dipakai tab *Tampilan* di halaman Pengaturan ([D-057](decisions.md#d-057--2026-1
 - `gelap`: `#RRGGBB`, disimpan dengan huruf kapital; bawaan `#0F1319`, dokumen lama dibaca bawaan. Warna latar tombol gelap dan navigasi (portal) atau tombol utama (dashboard); server memakainya sebagai warna gelap dengan kecerahan OKLCH paling tinggi 0,28 yang terbaca di bawah teks putih (portal juga teks abu dan aksen panel).
 - `panel` (hanya bagian `portal`): `#RRGGBB`, huruf kapital; bawaan `#0A0A0C`, dokumen lama dibaca bawaan. Warna panel gelap (papan layanan, dasbor layanan, kotak cek pajak, media, layar TV); server memakainya dengan kecerahan OKLCH paling tinggi 0,22 dan menjaga teks putih, teks abu, dan aksen panel terbaca. Bagian `dashboard` tidak punya `panel`; kunci itu dibuang bila dikirim.
 - `navbar` (hanya bagian `portal`): `gelap` (bawaan, mengikuti warna gelap) atau `#RRGGBB` (huruf kapital); navbar terang membuat teks, logo, dan tombolnya gelap; server menyesuaikan warnanya bila tautan navbar kurang terbaca. `kaca` (hanya bagian `portal`): `mati` (bawaan), `halus`, `sedang`, `kuat`. Dokumen lama dibaca `gelap` dan `mati`; bagian `dashboard` tidak punya keduanya.
+- `motif` (hanya bagian `portal`, [D-073](decisions.md#d-073--2026-10-21--motif-latar-portal)): `polos` (bawaan) atau `titik`; dokumen lama dibaca `polos`. Motif latar halaman portal yang berheader bersama (`body:has(.nav-wrap)`): Login Pegawai, Aktivasi, dan layar TV tetap polos.
 - `mode` (hanya bagian `portal`): `terang` (bawaan) atau `gelap`, untuk semua pengunjung; dokumen lama dibaca `terang`. Bagian `dashboard` tidak punya `mode` (mode gelap dashboard pilihan tiap pegawai); kunci itu dibuang bila dikirim.
 - `hurufTeks`: `sistem` (bawaan), `inter`, `plus-jakarta-sans`, `source-sans-3`, `ibm-plex-sans`, `nunito-sans` (huruf yang punya angka berlebar sama). `hurufJudul`: `sama` (mengikuti huruf teks), `sistem`, salah satu huruf teks, `dm-sans`, `manrope`, atau `lexend`.
 
@@ -1041,6 +1042,7 @@ Bukan rute API (`routes/web.php`, `ThemeStylesheetController`), tetapi bagian da
 - Warna panel gelap (bila bukan `#0A0A0C`): portal `--night`, `--night-2`, `--night-3`, `--night-line`, `--night-hover`, dan aksen panel (`--night-accent` dengan latar tipis dan cincinnya), di kedua mode.
 - Ketebalan judul: portal `--fw-display` (judul dan angka besar berhuruf judul), dashboard `--fw-heading`; keduanya hanya bila bukan 600. Dashboard juga mendapat `--font-heading` (huruf judul kartu, dialog, dan lembar samping) bila huruf judul bukan `sama`; tanpa itu judul tersebut memakai huruf teks.
 - Mode gelap portal menimpa latar, garis, teks, `--on-ink`, `--chrome`, warna status, bayangan, dan aksen di `:root`, menambah `color-scheme: dark`, dan mengganti logo kaki halaman dengan versi putih (`.footer__logo { content: url(…) }`). Panel gelap (`--night*`) tidak berubah.
+- Motif `titik` (D-073): `body:has(.nav-wrap) { background-image: url("data:image/svg+xml,…"); background-size: 16px 16px; }`, satu titik berjari-jari 1 px di (1, 1) tiap petak 16 px seperti DotPattern 21st.dev, abu `rgba(163,163,163,0.8)` di mode terang dan `rgba(82,82,82,0.8)` di mode gelap; ikut bergulir bersama halaman. Motif `polos` tidak menambah aturan, dan tema yang hanya berbeda motifnya tetap menghasilkan stylesheet (tanpa blok `:root`).
 - `tema-portal.css` menyajikan tema pratinjau bila peramban memegang cookie pratinjau yang masih berlaku (lihat `tautan-pratinjau` di [Tampilan](#tampilan-di-dashboard)).
 - Selama tema belum disimpan atau sama dengan tampilan bawaan, isinya hanya komentar, jadi tampilan bawaan PINTU yang berlaku.
 

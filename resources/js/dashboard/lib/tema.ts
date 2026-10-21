@@ -9,6 +9,7 @@ import type {
   KacaNavbar,
   LatarTema,
   ModePortal,
+  MotifLatar,
   SkalaTema,
   SudutTema,
   TebalJudul,
@@ -28,8 +29,24 @@ export const TEMA_BAWAAN: BagianTema = {
   gelap: "#0F1319",
 }
 
-/** Bagian portal tampilan bawaan: panel gelap hampir hitam, terang untuk semua pengunjung */
-export const TEMA_BAWAAN_PORTAL: BagianTemaPortal = { ...TEMA_BAWAAN, panel: "#0A0A0C", navbar: "gelap", kaca: "mati", mode: "terang" }
+/** Bagian portal tampilan bawaan: panel gelap hampir hitam, terang untuk semua pengunjung, latar polos */
+export const TEMA_BAWAAN_PORTAL: BagianTemaPortal = {
+  ...TEMA_BAWAAN,
+  panel: "#0A0A0C",
+  navbar: "gelap",
+  kaca: "mati",
+  mode: "terang",
+  motif: "polos",
+}
+
+/** Motif latar halaman portal berheader (D-073); titik = DotPattern 21st.dev, petak 16 px */
+export const MOTIF: { nilai: MotifLatar; label: string; keterangan: string }[] = [
+  { nilai: "polos", label: "Polos", keterangan: "Latar rata tanpa motif (bawaan)" },
+  { nilai: "titik", label: "Titik", keterangan: "Titik halus tiap 16 px, ikut bergulir" },
+]
+
+/** Warna titik tiap mode, sama dengan ThemePattern di server: neutral-400 dan neutral-600, 80% */
+export const WARNA_TITIK: Record<ModePortal, string> = { terang: "rgba(163,163,163,0.8)", gelap: "rgba(82,82,82,0.8)" }
 
 /** contoh = [latar, teks] tiap mode, sama dengan tokens.css dan mode gelap di ThemeVariables */
 export const MODE_PORTAL: { nilai: ModePortal; label: string; keterangan: string; contoh: [string, string] }[] = [

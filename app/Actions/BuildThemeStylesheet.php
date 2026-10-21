@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Enums\ThemeFont;
+use App\Enums\ThemePattern;
 use App\Support\ThemeVariables;
 
 /**
@@ -19,6 +20,12 @@ class BuildThemeStylesheet
      * its screen with lengths relative to the viewport.
      */
     private const string SCALED_PAGES = ':root:not(:has([data-react="layar-antrean"]))';
+
+    /**
+     * The pages whose background takes the pattern (D-073): those with the
+     * shared header. Sign-in, activation and the TV display stay plain.
+     */
+    private const string PATTERNED_PAGES = 'body:has(.nav-wrap)';
 
     /**
      * What the portal's dark mode changes beyond its variables: the footer's
@@ -113,7 +120,8 @@ class BuildThemeStylesheet
      * The portal's theme, loaded after the portal's own stylesheets, so its
      * :root block overrides tokens.css. The scale zooms every page but the
      * TV display; the dark mode, set by the administrator, applies to every
-     * visitor.
+     * visitor; the background pattern covers the pages with the shared
+     * header, in the grey of the mode.
      *
      * @param  ThemeSection  $section
      */
@@ -121,8 +129,9 @@ class BuildThemeStylesheet
     {
         $variables = ThemeVariables::portal($section);
         $zoom = ThemeVariables::portalZoom($section);
+        $pattern = ThemePattern::from($section['motif'] ?? ThemePattern::Polos->value)->declarations(ThemeVariables::isDark($section));
 
-        if ($variables === [] && $zoom === []) {
+        if ($variables === [] && $zoom === [] && $pattern === []) {
             return $this->unchanged('portal');
         }
 
@@ -132,7 +141,8 @@ class BuildThemeStylesheet
             .$this->block(self::SCALED_PAGES, $zoom)
             .(ThemeVariables::isDark($section) ? self::DARK_RULES : '')
             .(($variables['--nav-tint'] ?? null) === '15, 19, 25' ? self::LIGHT_NAVBAR_RULES : '')
-            .(isset($variables['--nav-blur']) ? self::NAVBAR_GLASS_RULES.$this->block('.nav::before', ['clip-path' => $this->notchOutline()]) : '');
+            .(isset($variables['--nav-blur']) ? self::NAVBAR_GLASS_RULES.$this->block('.nav::before', ['clip-path' => $this->notchOutline()]) : '')
+            .$this->block(self::PATTERNED_PAGES, $pattern);
     }
 
     /**
