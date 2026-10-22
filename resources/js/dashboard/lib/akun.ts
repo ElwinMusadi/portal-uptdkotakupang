@@ -11,7 +11,7 @@ import {
   IconPlayerPauseFilled,
   type Icon,
 } from "@tabler/icons-react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { mintaServer } from "@/lib/api/http"
 import type { Modul, Peran } from "@/lib/auth"
@@ -32,6 +32,9 @@ export interface Akun {
   diperbarui: string
 }
 
+/** Asal NIP dan nama akun baru: dipilih dari SIKAP atau diketik sendiri (D-075) */
+export type SumberAkun = "manual" | "sikap"
+
 /** Isian akun baru; surel boleh kosong */
 export interface DataAkun {
   nip: string
@@ -39,6 +42,28 @@ export interface DataAkun {
   surel: string
   peran: Peran
   modul: Modul[]
+  /** Untuk "sikap", server mengambil ulang nama dari SIKAP dan mengabaikan nama dari peramban */
+  sumber?: SumberAkun
+}
+
+/**
+ * Pegawai aktif SIKAP untuk formulir Tambah akun (D-075). Akun hanya memakai
+ * NIP dan nama; jabatan dan unit hanya ditampilkan di pemilih (D-027).
+ */
+export interface PegawaiSikap {
+  nip: string
+  nama: string
+  jabatan: string | null
+  unit: string | null
+  /** NIP ini sudah punya akun PINTU, apa pun statusnya */
+  sudahPunyaAkun: boolean
+}
+
+export interface HasilCariSikap {
+  /** Paling banyak 20 pegawai, urut nama */
+  pegawai: PegawaiSikap[]
+  /** Jumlah semua pegawai yang cocok */
+  total: number
 }
 
 /** Tautan aktivasi yang baru diterbitkan. Hanya ditampilkan sekali; server tidak menyimpannya. */
@@ -98,6 +123,36 @@ export function useUbahStatusAkun() {
     mutationFn: ({ id, status }: { id: string; status: Exclude<StatusAkun, "pending"> }) =>
       mintaServer<Akun>(url(id, "/status"), "PUT", { status }),
     onSuccess: tulis,
+  })
+}
+
+/** Minimal karakter pencarian pegawai SIKAP, sama dengan server */
+export const MIN_CARI_SIKAP = 2
+
+/**
+ * Cari pegawai SIKAP lewat server PINTU; kunci API SIKAP tidak pernah sampai
+ * ke peramban. Pencarian tidak dicatat SIKAP, jadi aman dipanggil sambil mengetik.
+ */
+export function useCariPegawaiSikap(kataKunci: string) {
+  const q = kataKunci.trim()
+  return useQuery({
+    queryKey: [...KUNCI, "pegawai-sikap", q],
+    queryFn: () => mintaServer<HasilCariSikap>(`${url()}/pegawai-sikap?q=${encodeURIComponent(q)}`, "GET"),
+    enabled: q.length >= MIN_CARI_SIKAP,
+    placeholderData: keepPreviousData,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+    retry: false,
+  })
+}
+
+/**
+ * Ambil satu pegawai SIKAP saat dipilih. SIKAP mencatat setiap pembacaan
+ * ini di Log Aktivitasnya, jadi hanya dipanggil untuk pegawai yang dipilih.
+ */
+export function useAmbilPegawaiSikap() {
+  return useMutation({
+    mutationFn: (nip: string) => mintaServer<PegawaiSikap>(`${url()}/pegawai-sikap/${encodeURIComponent(nip)}`, "GET"),
   })
 }
 

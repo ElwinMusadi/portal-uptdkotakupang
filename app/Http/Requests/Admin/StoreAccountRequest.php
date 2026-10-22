@@ -20,15 +20,19 @@ class StoreAccountRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
+     * Get the validation rules that apply to the request. An account picked
+     * from SIKAP (D-075) takes its name from SIKAP, so a name sent with it is
+     * ignored; without "sumber" the account is entered by hand, as for staff
+     * from outside UPTD (D-051).
      *
      * @return array<string, array<int, mixed>>
      */
     public function rules(): array
     {
         return [
+            'sumber' => ['sometimes', 'nullable', Rule::in(['manual', 'sikap'])],
             'nip' => ['required', 'string', 'regex:/^\d{18}\z/', Rule::unique(User::class, 'nip')],
-            'nama' => ['required', 'string', 'max:255'],
+            'nama' => [Rule::excludeIf(fn (): bool => $this->input('sumber') === 'sikap'), 'required', 'string', 'max:255'],
             'surel' => ['nullable', 'string', 'email', 'max:255', Rule::unique(User::class, 'email')],
             'peran' => ['required', Rule::enum(UserRole::class)],
             'modul' => ['sometimes', 'list'],
@@ -42,6 +46,7 @@ class StoreAccountRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'sumber.in' => 'Sumber data akun tidak dikenal.',
             'nip.required' => 'NIP wajib diisi.',
             'nip.string' => 'NIP harus 18 digit angka.',
             'nip.regex' => 'NIP harus 18 digit angka.',
@@ -59,5 +64,13 @@ class StoreAccountRequest extends FormRequest
             'modul.*.string' => 'Modul tidak dikenal.',
             'modul.*.enum' => 'Modul tidak dikenal.',
         ];
+    }
+
+    /**
+     * Whether the administrator picked the employee from SIKAP.
+     */
+    public function fromSikap(): bool
+    {
+        return $this->validated('sumber') === 'sikap';
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\AmbilPegawaiSikap;
 use App\Actions\IssueActivationLink;
 use App\Enums\DashboardModule;
 use App\Enums\UserRole;
@@ -14,6 +15,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Accounts that administrators manage from the dashboard. A new account
@@ -31,13 +33,33 @@ class AccountController extends Controller
     }
 
     /**
-     * Create a pending account and return its activation link.
+     * Create a pending account and return its activation link. For an
+     * employee picked from SIKAP the server reads them again by NIP and uses
+     * SIKAP's name, not the one the browser sent (D-075).
+     *
+     * @throws ValidationException
      */
-    public function store(StoreAccountRequest $request, IssueActivationLink $issueActivationLink): JsonResponse
+    public function store(StoreAccountRequest $request, IssueActivationLink $issueActivationLink, AmbilPegawaiSikap $ambilPegawaiSikap): JsonResponse
     {
+        $name = $request->validated('nama');
+
+        if ($request->fromSikap()) {
+            $employee = $ambilPegawaiSikap->handle($request->validated('nip'));
+
+            if ($employee['status'] === 'not_found') {
+                throw ValidationException::withMessages(['nip' => 'Pegawai dengan NIP ini tidak ditemukan atau tidak aktif di SIKAP.']);
+            }
+
+            if ($employee['status'] === 'unavailable') {
+                return response()->json(['message' => $employee['message']], 503);
+            }
+
+            $name = $employee['pegawai']['nama'];
+        }
+
         $account = (new User)->forceFill([
             'nip' => $request->validated('nip'),
-            'name' => $request->validated('nama'),
+            'name' => $name,
             'email' => $request->validated('surel'),
             'role' => $request->enum('peran', UserRole::class),
             'modules' => DashboardModule::ordered($request->validated('modul', [])),
@@ -49,6 +71,7 @@ class AccountController extends Controller
             'user' => $account->getKey(),
             'role' => $account->role->value,
             'modules' => $account->assignedModules(),
+            'source' => $request->fromSikap() ? 'sikap' : 'manual',
             'ip' => $request->ip(),
         ]);
 

@@ -128,6 +128,7 @@ class AccountControllerTest extends TestCase
             'user' => $account->id,
             'role' => 'pegawai',
             'modules' => ['berita', 'faq'],
+            'source' => 'manual',
             'ip' => '127.0.0.1',
         ]);
     }

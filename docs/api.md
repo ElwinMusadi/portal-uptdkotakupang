@@ -36,6 +36,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `PATCH` | `/api/akun/{id}` | Administrator | tersedia |
 | `PUT` | `/api/akun/{id}/status` | Administrator, bukan untuk akun sendiri | tersedia |
 | `POST` | `/api/akun/{id}/tautan-aktivasi` | Administrator, bukan untuk akun sendiri | tersedia |
+| `GET` | `/api/akun/pegawai-sikap`, `/api/akun/pegawai-sikap/{nip}` | Administrator, pemilih pegawai SIKAP | tersedia |
 | `GET`, `POST` | `/api/koleksi/faq` | Administrator, pengelola Tanya Jawab | tersedia |
 | `GET`, `PATCH` | `/api/koleksi/faq/{id}` | Administrator, pengelola Tanya Jawab | tersedia |
 | `PUT` | `/api/koleksi/faq/urutan` | Administrator, pengelola Tanya Jawab | tersedia |
@@ -167,12 +168,49 @@ Data akun:
 | Alamat | Permintaan | Respons |
 |---|---|---|
 | `GET /api/akun` | — | `200` daftar semua akun, urut nama. |
-| `POST /api/akun` | `{"nip": "18 digit", "nama": "…", "surel": "…" atau null, "peran": "pegawai", "modul": ["berita"]}`; `modul` boleh tidak dikirim | `201` `{"akun": {…}, "tautan": "https://…/aktivasi/…", "kedaluwarsa": "…"}`. Akun dibuat `pending`; tautan berlaku 60 menit, sekali pakai, dan tidak bisa diminta lagi. `422` bila NIP bukan 18 digit atau sudah terdaftar, nama kosong, surel tidak valid atau dipakai akun lain, peran tidak dikenal, `modul` bukan daftar, atau ada modul yang tidak dikenal atau sudah dipensiunkan (galat per butir, mis. `modul.1`). Isian lain, seperti `status` atau `password`, diabaikan. |
+| `POST /api/akun` | `{"nip": "18 digit", "nama": "…", "surel": "…" atau null, "peran": "pegawai", "modul": ["berita"]}`; `modul` boleh tidak dikirim; `"sumber": "sikap"` untuk pegawai yang dipilih dari SIKAP (lihat [Pegawai dari SIKAP](#pegawai-dari-sikap)) | `201` `{"akun": {…}, "tautan": "https://…/aktivasi/…", "kedaluwarsa": "…"}`. Akun dibuat `pending`; tautan berlaku 60 menit, sekali pakai, dan tidak bisa diminta lagi. `422` bila NIP bukan 18 digit atau sudah terdaftar, nama kosong, surel tidak valid atau dipakai akun lain, peran tidak dikenal, `modul` bukan daftar, atau ada modul yang tidak dikenal atau sudah dipensiunkan (galat per butir, mis. `modul.1`). Isian lain, seperti `status` atau `password`, diabaikan. |
 | `PATCH /api/akun/{id}` | sebagian dari `{"nama", "surel", "peran", "modul"}` | `200` data akun. `modul` mengganti seluruh daftar modul; `[]` mencabut semuanya. NIP, status, dan kata sandi tidak bisa diubah di sini. `422` bila Administrator mengubah peran akunnya sendiri. |
 | `PUT /api/akun/{id}/status` | `{"status": "active" \| "suspended" \| "deactivated"}` | `200` data akun. Hanya `active` → `suspended`/`deactivated`, `suspended` → `active`/`deactivated`, dan `pending` → `deactivated`; transisi lain `422`. Akun yang tidak lagi aktif kehilangan perangkat yang diingat dan keluar pada permintaan berikutnya. `403` untuk akun sendiri. |
 | `POST /api/akun/{id}/tautan-aktivasi` | — | `201` seperti `POST /api/akun`. Akun menjadi `pending` dengan kata sandi baru yang tidak bisa dipakai: tautan sebelumnya, sesi, dan perangkat yang diingat tidak berlaku lagi. Untuk akun yang sudah aktif ini berarti atur ulang kata sandi; untuk akun yang dinonaktifkan, cara memakainya lagi. `403` untuk akun sendiri. |
 
-Setiap perubahan dicatat di log aplikasi (`account.created`, `account.updated`, `account.status`, `account.activation-link`) dengan ID Administrator yang melakukannya.
+Setiap perubahan dicatat di log aplikasi (`account.created`, `account.updated`, `account.status`, `account.activation-link`) dengan ID Administrator yang melakukannya. `account.created` juga mencatat `source`: `sikap` atau `manual`.
+
+### Pegawai dari SIKAP
+
+Dipakai pemilih *Pegawai SIKAP* di formulir *Tambah akun* ([D-075](decisions.md#d-075--2026-10-22--pegawai-dari-sikap-di-tambah-akun)). Aksesnya sama dengan `POST /api/akun`: tamu `401`, Pegawai UPTD `403`. PINTU meneruskan permintaan ke API integrasi SIKAP v1 (`GET {SIKAP_API_BASE_URL}/pegawai` dan `/pegawai/{nip}`) dengan kunci API miliknya sendiri (`Authorization: Bearer`). Kunci itu tidak pernah sampai ke peramban, dan hanya pegawai aktif SIKAP yang muncul.
+
+```json
+{ "nip": "199001012020011001", "nama": "Contoh Pegawai", "jabatan": "Pengelola Kepegawaian", "unit": "Subbagian Tata Usaha", "sudahPunyaAkun": false }
+```
+
+`jabatan` dan `unit` boleh `null`. Keduanya hanya ditampilkan di pemilih; akun tetap diisi pegawai sendiri ([D-027](decisions.md#d-027--2026-10-14--profil-akun-tersimpan-di-server-nama-dan-surel-mengikuti-akun)). `sudahPunyaAkun` bernilai `true` bila NIP itu sudah punya akun PINTU, apa pun statusnya. Email dan no HP dari SIKAP tidak dipakai di PINTU v1 (D-075): keduanya tidak dikirim ke peramban, tidak disimpan, dan tidak dicatat.
+
+| Alamat | Respons |
+|---|---|
+| `GET /api/akun/pegawai-sikap?q=…` | `200` `{"pegawai": [P, …], "total": 57}`: paling banyak 20 pegawai urut nama yang nama atau NIP-nya memuat `q`. `total` adalah jumlah semua pegawai yang cocok. `422` bila `q` kurang dari 2 karakter ("Ketik minimal 2 huruf nama atau angka NIP.") atau lebih dari 100 ("Pencarian maksimal 100 karakter."), tanpa menghubungi SIKAP. SIKAP tidak mencatat pencarian. |
+| `GET /api/akun/pegawai-sikap/{nip}` | `200` satu pegawai P. `404` `{"message": "Pegawai tidak ditemukan atau tidak aktif di SIKAP."}` bila SIKAP tidak mengenalnya, atau bila NIP bukan 18 digit (tanpa menghubungi SIKAP). SIKAP mencatat setiap pembacaan ini di Log Aktivitasnya (`API_PEGAWAI_READ`), jadi dashboard hanya memanggilnya untuk pegawai yang dipilih. |
+
+Galat yang berlaku untuk keduanya:
+
+- `429` setelah 30 permintaan per menit per Administrator ("Terlalu banyak pencarian pegawai SIKAP. Coba lagi sebentar lagi.").
+- `503` dengan pesan bila:
+  - SIKAP belum dikonfigurasi: "Pencarian pegawai SIKAP belum dikonfigurasi.";
+  - SIKAP menolak kunci (HTTP 401): "Kunci API SIKAP ditolak: tidak valid, sudah dihapus, atau kedaluwarsa. …";
+  - kunci tidak punya izin (HTTP 403): "Kunci API SIKAP tidak punya izin membaca data pegawai. …";
+  - SIKAP membatasi permintaan (HTTP 429): "SIKAP sedang membatasi permintaan. Coba lagi dalam 40 detik." Selama `Retry-After` (maks. 1 jam) PINTU tidak bertanya lagi;
+  - SIKAP tidak terjangkau, lambat, atau jawabannya tidak dikenal: "SIKAP sedang tidak dapat dihubungi. Coba lagi beberapa saat lagi."
+
+**Menyimpan akun dari SIKAP:** `POST /api/akun` dengan `"sumber": "sikap"` mengambil ulang pegawai itu per NIP dari SIKAP setelah validasi lain lulus, lalu memakai nama dari SIKAP. `nama` dari peramban diabaikan dan boleh tidak dikirim. Bila SIKAP tidak mengenal NIP itu, server menjawab `422` `nip` "Pegawai dengan NIP ini tidak ditemukan atau tidak aktif di SIKAP." Bila SIKAP gagal, server menjawab `503` seperti di atas, dan akun tidak dibuat. Tanpa `sumber`, atau dengan `"manual"`, akun diisi manual seperti biasa, misalnya untuk petugas dari luar UPTD ([D-051](decisions.md#d-051--2026-10-15--antrean-online-rencana-dan-keputusan-awal)). `sumber` lain ditolak `422` "Sumber data akun tidak dikenal."
+
+**Konfigurasi dan log:**
+
+- `SIKAP_API_BASE_URL` berupa `https://…/api/v1`. `http://` hanya diterima ke `localhost`, `127.0.0.1`, atau `[::1]` saat `APP_ENV=local` (SIKAP lokal, `npm run dev:api`).
+- `SIKAP_API_KEY` adalah kunci "PINTU" dari *Pengaturan Sistem › Integrasi API* SIKAP.
+- `SIKAP_API_TIMEOUT_SECONDS` bawaan 8 detik, dengan batas koneksi 3 detik.
+- Permintaan tidak mengikuti pengalihan. Permintaan diulang paling banyak dua kali, hanya untuk koneksi terputus atau `502`/`503`/`504`; batas waktu yang terlewati tidak diulang.
+- Kegagalan dicatat sebagai `SIKAP API request failed` dengan alasan, status HTTP, dan kode galat SIKAP saja. Kunci, kata pencarian, NIP, email, dan no HP tidak pernah dicatat.
+
+Kode: `app/Support/SikapClient.php`, `app/Actions/CariPegawaiSikap.php`, `app/Actions/AmbilPegawaiSikap.php`, `app/Http/Controllers/Admin/SikapEmployeeController.php`. Tes: `tests/Feature/SikapEmployeeTest.php`. Kontrak SIKAP: `docs/API-INTEGRASI.md` di repository SIKAP.
 
 ### Modul dashboard
 

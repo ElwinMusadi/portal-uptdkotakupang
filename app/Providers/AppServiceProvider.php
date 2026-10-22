@@ -113,6 +113,16 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        // Employee searches and reads in SIKAP (D-075), which allows PINTU's key 60 calls a
+        // minute: 30 a minute for each administrator.
+        RateLimiter::for('sikap', function (Request $request): Limit {
+            return Limit::perMinute(30)
+                ->by($request->user()?->getAuthIdentifier() ?? $request->ip())
+                ->response(fn (Request $request, array $headers): JsonResponse => response()->json([
+                    'message' => 'Terlalu banyak pencarian pegawai SIKAP. Coba lagi sebentar lagi.',
+                ], 429, $headers));
+        });
+
         // Dashboard uploads (D-028): at most 30 files per minute for each employee.
         RateLimiter::for('uploads', function (Request $request): Limit {
             return Limit::perMinute(30)

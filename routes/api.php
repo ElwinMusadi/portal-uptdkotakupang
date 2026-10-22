@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AccountActivationLinkController;
 use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\AccountStatusController;
+use App\Http\Controllers\Admin\SikapEmployeeController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Dashboard\ActivityController;
 use App\Http\Controllers\Dashboard\AgencyAppController;
@@ -159,6 +160,15 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::prefix('akun')->name('akun.')->whereUlid('user')->group(function (): void {
         Route::get('/', [AccountController::class, 'index'])->can('viewAny', User::class)->name('index');
         Route::post('/', [AccountController::class, 'store'])->can('create', User::class)->name('store');
+        // Employees of SIKAP to make an account for (D-075), asked with PINTU's own key
+        Route::get('/pegawai-sikap', [SikapEmployeeController::class, 'index'])
+            ->can('create', User::class)
+            ->middleware('throttle:sikap')
+            ->name('pegawai-sikap.index');
+        Route::get('/pegawai-sikap/{nip}', [SikapEmployeeController::class, 'show'])
+            ->can('create', User::class)
+            ->middleware('throttle:sikap')
+            ->name('pegawai-sikap.show');
         Route::patch('/{user}', [AccountController::class, 'update'])->can('update', 'user')->name('update');
         Route::put('/{user}/status', [AccountStatusController::class, 'update'])->can('changeStatus', 'user')->name('status');
         Route::post('/{user}/tautan-aktivasi', [AccountActivationLinkController::class, 'store'])

@@ -50,4 +50,16 @@ return [
         'closes_at' => env('NJKB_SERVICE_CLOSES_AT', '21:00'),
     ],
 
+    /*
+    | Read-only employee API of SIKAP, the staffing system of UPTD, reached
+    | server to server with PINTU's own API key (D-075). The key never
+    | reaches the browser; without an https:// address or a key the employee
+    | picker of Akun Pegawai reports that it is not configured.
+    */
+    'sikap' => [
+        'base_url' => env('SIKAP_API_BASE_URL'),
+        'key' => env('SIKAP_API_KEY'),
+        'timeout' => (int) env('SIKAP_API_TIMEOUT_SECONDS', 8),
+    ],
+
 ];
