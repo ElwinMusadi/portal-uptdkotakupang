@@ -12,9 +12,9 @@ use Illuminate\Support\Sleep;
 /**
  * Look a vehicle up in the private vehicle API (D-041), following the
  * server-side adapter of kalkulator-pajak (src/services/vehicle-data):
- * PINTU's own Data Potensi API key as a Bearer token, which only covers
- * vehicles of UPT 010 Kota Kupang (D-076), and PINTU's own Cloudflare Access
- * Service Token while Access still guards the host; an 8-second timeout, at most
+ * PINTU's own Data Potensi API key as a Bearer token, which covers every UPT
+ * in NTT (D-076, D-077), and PINTU's own Cloudflare Access Service Token
+ * while Access still guards the host; an 8-second timeout, at most
  * one retry and only for network failures and HTTP 502/503/504, no
  * redirects (the token must never follow one), and Retry-After honoured
  * after HTTP 429. Outside BPAD's service hours the API is not asked at all
@@ -30,9 +30,15 @@ class LookUpVehicle
 
     /**
      * What a vehicle the API knows but PINTU's key may not read is (HTTP 403
-     * region_not_allowed, D-076).
+     * region_not_allowed). PINTU's key covers every UPT (D-077), so this
+     * means its regions were set wrongly on the Data Potensi website.
      */
-    public const string OUTSIDE_REGION = 'Kendaraan terdaftar di luar wilayah Kota Kupang.';
+    public const string OUTSIDE_REGION = 'Wilayah kendaraan ini belum tercakup kunci API PINTU.';
+
+    /**
+     * The answer whenever the vehicle data cannot be had.
+     */
+    public const string UNAVAILABLE = 'Data kendaraan sedang tidak dapat diambil. Coba lagi beberapa saat lagi.';
 
     /**
      * Time zone of BPAD's service hours.
@@ -88,8 +94,8 @@ class LookUpVehicle
     /**
      * The vehicle behind a plate number. "vehicle" is what the tax calculator
      * needs; "chassis" is only for checking a visitor's chassis digits and is
-     * never sent to a browser. A vehicle registered outside Kota Kupang comes
-     * back without any data at all.
+     * never sent to a browser. A vehicle in a region PINTU's key does not
+     * cover comes back without any data at all.
      *
      * @return array{status: 'found', vehicle: array{nopol: string, nama: ?string, jenis: ?string, jatuhTempoStnk: ?string, jatuhTempoPajak: ?string, njkb: int, njub: int, bobot: float, warnaPlat: ?string, njkbStatus: string}, chassis: ?string}|array{status: 'reference_problem', message: string, chassis: ?string}|array{status: 'outside_region', message: string}|array{status: 'not_found'}|array{status: 'unavailable', message: string}
      */
@@ -153,6 +159,9 @@ class LookUpVehicle
             }
 
             if ($response->status() === 403 && data_get($this->json($response), 'error.code') === 'region_not_allowed') {
+                // Logged like any failure, so a key with the wrong regions gets noticed
+                $this->failed($response, 'region_not_allowed');
+
                 return ['status' => 'outside_region', 'message' => self::OUTSIDE_REGION];
             }
 
@@ -408,7 +417,7 @@ class LookUpVehicle
             'error_code' => is_array($body) ? data_get($body, 'error.code') : null,
         ]);
 
-        return ['status' => 'unavailable', 'message' => 'Data kendaraan sedang tidak dapat diambil. Coba lagi beberapa saat lagi.'];
+        return ['status' => 'unavailable', 'message' => self::UNAVAILABLE];
     }
 
     /**

@@ -259,19 +259,22 @@ class VehicleLookupTest extends TestCase
         Http::assertSentCount(1);
     }
 
-    public function test_tells_an_employee_when_the_vehicle_is_registered_outside_kota_kupang(): void
+    public function test_tells_an_employee_when_the_api_key_leaves_the_vehicles_region_out(): void
     {
         Log::spy();
         Http::fake([self::UPSTREAM => Http::response($this->outsideRegion(), 403, ['Content-Type' => 'application/json', 'X-Request-ID' => 'req-1'])]);
 
         $this->actingAs(User::factory()->create())->getJson('/api/kendaraan/DH1234AB')
             ->assertUnprocessable()
-            ->assertExactJson(['message' => 'Kendaraan terdaftar di luar wilayah Kota Kupang. Lengkapi data kendaraan secara manual.']);
+            ->assertExactJson(['message' => 'Wilayah kendaraan ini belum tercakup kunci API PINTU. Lengkapi data kendaraan secara manual dan laporkan ke Administrator.']);
 
         Http::assertSentCount(1);
-        Log::shouldNotHaveReceived('warning');
-        Log::shouldNotHaveReceived('error');
-        $this->assertSame(['status' => 'outside_region', 'message' => 'Kendaraan terdaftar di luar wilayah Kota Kupang.'], app(LookUpVehicle::class)->handle('DH1234AB'));
+        Log::shouldHaveReceived('warning')->once()->withArgs(function (string $message, array $context): bool {
+            $this->assertSame(['reason' => 'region_not_allowed', 'request_id' => 'req-1', 'http_status' => 403, 'status' => 'forbidden', 'error_code' => 'region_not_allowed'], $context);
+
+            return $message === 'NJKB API request failed';
+        });
+        $this->assertSame(['status' => 'outside_region', 'message' => 'Wilayah kendaraan ini belum tercakup kunci API PINTU.'], app(LookUpVehicle::class)->handle('DH1234AB'));
     }
 
     /**
@@ -482,13 +485,13 @@ class VehicleLookupTest extends TestCase
 
     #[TestWith(['A5678'])]
     #[TestWith(['B0000'])]
-    public function test_sends_a_visitor_with_a_vehicle_from_outside_kota_kupang_to_its_samsat(string $chassis): void
+    public function test_tells_a_visitor_nothing_about_a_region_the_api_key_leaves_out(string $chassis): void
     {
         Http::fake([self::UPSTREAM => Http::response($this->outsideRegion(), 403, ['Content-Type' => 'application/json'])]);
 
         $this->postJson('/api/public/kendaraan', ['nopol' => 'EB1234AB', 'rangka' => $chassis])
-            ->assertUnprocessable()
-            ->assertExactJson(['message' => 'Kendaraan terdaftar di luar wilayah Kota Kupang. Silakan cek biaya pajak di Samsat tempat kendaraan terdaftar.'])
+            ->assertServiceUnavailable()
+            ->assertExactJson(['message' => 'Data kendaraan sedang tidak dapat diambil. Coba lagi beberapa saat lagi.'])
             ->assertHeader('Cache-Control', 'no-store, private');
     }
 
@@ -550,7 +553,7 @@ class VehicleLookupTest extends TestCase
 
     /**
      * The private vehicle API's answer for a vehicle outside the regions of
-     * PINTU's key: no vehicle data at all, not even its region.
+     * the key: no vehicle data at all, not even its region.
      *
      * @return array<string, mixed>
      */

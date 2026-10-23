@@ -27,7 +27,7 @@ class VehicleController extends Controller
             'found' => response()->json($result['vehicle']),
             'not_found' => response()->json(['message' => 'Data kendaraan tidak ditemukan.'], 404),
             'reference_problem' => response()->json(['message' => "{$result['message']} Isi NJKB secara manual."], 422),
-            'outside_region' => response()->json(['message' => "{$result['message']} Lengkapi data kendaraan secara manual."], 422),
+            'outside_region' => response()->json(['message' => "{$result['message']} Lengkapi data kendaraan secara manual dan laporkan ke Administrator."], 422),
             'unavailable' => response()->json(['message' => $result['message']], 503),
         };
     }

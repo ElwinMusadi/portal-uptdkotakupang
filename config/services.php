@@ -42,7 +42,7 @@ return [
     */
     'njkb' => [
         'base_url' => env('NJKB_API_BASE_URL', 'https://api.uptdpenda-kupang.web.id'),
-        // PINTU's Data Potensi API key "ptn_…", limited to UPT 010 Kota Kupang (D-076)
+        // PINTU's Data Potensi API key "ptn_…", covering every UPT in NTT (D-076, D-077)
         'api_key' => env('NJKB_API_KEY'),
         // Cloudflare Access still guards the API host until the key alone is enough (Fase 5)
         'client_id' => env('NJKB_ACCESS_CLIENT_ID'),
