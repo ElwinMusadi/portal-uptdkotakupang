@@ -13,7 +13,9 @@ class PublicVehicleController extends Controller
      * last five characters of the vehicle's chassis number match. A wrong
      * plate, wrong chassis characters and an unknown vehicle get the same
      * answer, so the check reveals nothing about plates it does not confirm.
-     * The chassis number itself is never sent.
+     * The chassis number itself is never sent. The one exception is a vehicle
+     * registered outside Kota Kupang, which PINTU's API key may not read
+     * (D-076): the visitor is sent to the Samsat of its region instead.
      */
     public function __invoke(CheckPublicVehicleRequest $request, LookUpVehicle $lookUpVehicle): JsonResponse
     {
@@ -21,6 +23,10 @@ class PublicVehicleController extends Controller
 
         if ($result['status'] === 'unavailable') {
             return response()->json(['message' => $result['message']], 503);
+        }
+
+        if ($result['status'] === 'outside_region') {
+            return response()->json(['message' => "{$result['message']} Silakan cek biaya pajak di Samsat tempat kendaraan terdaftar."], 422);
         }
 
         $chassis = LookUpVehicle::normalise($result['chassis'] ?? '');

@@ -21,12 +21,18 @@ class VehicleLookupTest extends TestCase
 
     private const string UPSTREAM = 'https://api.uptdpenda-kupang.web.id/api/v1/vehicle/*';
 
+    /**
+     * A made-up Data Potensi API key in the documented "ptn_…" form.
+     */
+    private const string API_KEY = 'ptn_Uji00001_contohKunciFiktifUntukTesPintuSaja000000000';
+
     protected function setUp(): void
     {
         parent::setUp();
 
         config([
             'services.njkb.base_url' => 'https://api.uptdpenda-kupang.web.id',
+            'services.njkb.api_key' => self::API_KEY,
             'services.njkb.client_id' => 'pintu-uji.access',
             'services.njkb.client_secret' => 'rahasia-uji',
             'services.njkb.opens_at' => null,
@@ -64,10 +70,35 @@ class VehicleLookupTest extends TestCase
         ]);
         Http::assertSent(fn (Request $request): bool => $request->url() === 'https://api.uptdpenda-kupang.web.id/api/v1/vehicle/DH1234AB'
             && $request->method() === 'GET'
+            && $request->header('Authorization') === ['Bearer '.self::API_KEY]
             && $request->header('CF-Access-Client-Id') === ['pintu-uji.access']
             && $request->header('CF-Access-Client-Secret') === ['rahasia-uji']
             && $request->header('Accept') === ['application/json']);
         $this->assertStringNotContainsString('SYNTHETIC', $response->getContent());
+    }
+
+    /**
+     * @param  array<string, ?string>  $config
+     * @param  array<string, ?list<string>>  $headers
+     */
+    #[TestWith([['services.njkb.client_id' => null], ['Authorization' => ['Bearer '.self::API_KEY], 'CF-Access-Client-Id' => null, 'CF-Access-Client-Secret' => null]])]
+    #[TestWith([['services.njkb.client_secret' => ' '], ['Authorization' => ['Bearer '.self::API_KEY], 'CF-Access-Client-Id' => null, 'CF-Access-Client-Secret' => null]])]
+    #[TestWith([['services.njkb.api_key' => null], ['Authorization' => null, 'CF-Access-Client-Id' => ['pintu-uji.access'], 'CF-Access-Client-Secret' => ['rahasia-uji']]])]
+    #[TestWith([['services.njkb.api_key' => ' '.self::API_KEY.' '], ['Authorization' => ['Bearer '.self::API_KEY], 'CF-Access-Client-Id' => ['pintu-uji.access'], 'CF-Access-Client-Secret' => ['rahasia-uji']]])]
+    public function test_sends_the_api_key_and_the_access_token_that_are_configured(array $config, array $headers): void
+    {
+        config($config);
+        Http::fake([self::UPSTREAM => Http::response($this->vehicle(), 200, ['Content-Type' => 'application/json'])]);
+
+        $this->actingAs(User::factory()->create())->getJson('/api/kendaraan/DH1234AB')->assertOk();
+
+        Http::assertSent(function (Request $request) use ($headers): bool {
+            foreach ($headers as $name => $value) {
+                $this->assertSame($value ?? [], $request->header($name), $name);
+            }
+
+            return true;
+        });
     }
 
     public function test_uses_the_vehicle_kind_weight_when_the_api_has_no_njkb_reference(): void
@@ -228,6 +259,40 @@ class VehicleLookupTest extends TestCase
         Http::assertSentCount(1);
     }
 
+    public function test_tells_an_employee_when_the_vehicle_is_registered_outside_kota_kupang(): void
+    {
+        Log::spy();
+        Http::fake([self::UPSTREAM => Http::response($this->outsideRegion(), 403, ['Content-Type' => 'application/json', 'X-Request-ID' => 'req-1'])]);
+
+        $this->actingAs(User::factory()->create())->getJson('/api/kendaraan/DH1234AB')
+            ->assertUnprocessable()
+            ->assertExactJson(['message' => 'Kendaraan terdaftar di luar wilayah Kota Kupang. Lengkapi data kendaraan secara manual.']);
+
+        Http::assertSentCount(1);
+        Log::shouldNotHaveReceived('warning');
+        Log::shouldNotHaveReceived('error');
+        $this->assertSame(['status' => 'outside_region', 'message' => 'Kendaraan terdaftar di luar wilayah Kota Kupang.'], app(LookUpVehicle::class)->handle('DH1234AB'));
+    }
+
+    /**
+     * @param  array<string, mixed>  $body
+     */
+    #[TestWith([403, ['status' => 'forbidden', 'error' => ['code' => 'forbidden']], 'application/json', 'forbidden'])]
+    #[TestWith([403, ['status' => 'forbidden', 'error' => ['code' => 'region_not_allowed']], 'text/html', null])]
+    #[TestWith([401, ['status' => 'unauthorized', 'error' => ['code' => 'region_not_allowed']], 'application/json', 'region_not_allowed'])]
+    #[TestWith([200, ['status' => 'forbidden', 'error' => ['code' => 'region_not_allowed']], 'application/json', 'region_not_allowed'])]
+    public function test_treats_any_other_refusal_as_unavailable(int $status, array $body, string $type, ?string $errorCode): void
+    {
+        Log::spy();
+        Http::fake([self::UPSTREAM => Http::response(json_encode($body), $status, ['Content-Type' => $type])]);
+
+        $this->actingAs(User::factory()->create())->getJson('/api/kendaraan/DH1234AB')
+            ->assertServiceUnavailable()
+            ->assertExactJson(['message' => 'Data kendaraan sedang tidak dapat diambil. Coba lagi beberapa saat lagi.']);
+
+        Log::shouldHaveReceived('warning')->once()->withArgs(fn (string $message, array $context): bool => $context['error_code'] === $errorCode);
+    }
+
     public function test_does_not_retry_a_timeout(): void
     {
         Http::fake([self::UPSTREAM => fn () => throw new ConnectionException('cURL error 28: Operation timed out')]);
@@ -269,12 +334,16 @@ class VehicleLookupTest extends TestCase
             ->assertExactJson(['message' => "Layanan data kendaraan sedang sibuk. Coba lagi dalam {$seconds} detik."]);
     }
 
-    #[TestWith(['services.njkb.client_secret', ''])]
-    #[TestWith(['services.njkb.client_id', null])]
-    #[TestWith(['services.njkb.base_url', 'http://api.uptdpenda-kupang.web.id'])]
-    public function test_asks_nothing_while_the_api_is_not_configured(string $key, ?string $value): void
+    /**
+     * @param  array<string, ?string>  $config
+     */
+    #[TestWith([['services.njkb.api_key' => null, 'services.njkb.client_secret' => '']])]
+    #[TestWith([['services.njkb.api_key' => ' ', 'services.njkb.client_id' => null]])]
+    #[TestWith([['services.njkb.api_key' => '', 'services.njkb.client_id' => null, 'services.njkb.client_secret' => null]])]
+    #[TestWith([['services.njkb.base_url' => 'http://api.uptdpenda-kupang.web.id']])]
+    public function test_asks_nothing_while_the_api_is_not_configured(array $config): void
     {
-        config([$key => $value]);
+        config($config);
         Http::fake();
         Log::spy();
         // A missing configuration is reported even outside BPAD's service hours
@@ -411,6 +480,18 @@ class VehicleLookupTest extends TestCase
             ->assertExactJson(['message' => 'Referensi NJKB kendaraan ini perlu diperiksa petugas. Silakan cek biaya pajak di loket Samsat.']);
     }
 
+    #[TestWith(['A5678'])]
+    #[TestWith(['B0000'])]
+    public function test_sends_a_visitor_with_a_vehicle_from_outside_kota_kupang_to_its_samsat(string $chassis): void
+    {
+        Http::fake([self::UPSTREAM => Http::response($this->outsideRegion(), 403, ['Content-Type' => 'application/json'])]);
+
+        $this->postJson('/api/public/kendaraan', ['nopol' => 'EB1234AB', 'rangka' => $chassis])
+            ->assertUnprocessable()
+            ->assertExactJson(['message' => 'Kendaraan terdaftar di luar wilayah Kota Kupang. Silakan cek biaya pajak di Samsat tempat kendaraan terdaftar.'])
+            ->assertHeader('Cache-Control', 'no-store, private');
+    }
+
     public function test_validates_a_visitors_check(): void
     {
         Http::fake();
@@ -465,6 +546,20 @@ class VehicleLookupTest extends TestCase
         }
 
         $this->postJson('/api/public/kendaraan', ['nopol' => 'DH1234AB', 'rangka' => 'A5678'])->assertTooManyRequests();
+    }
+
+    /**
+     * The private vehicle API's answer for a vehicle outside the regions of
+     * PINTU's key: no vehicle data at all, not even its region.
+     *
+     * @return array<string, mixed>
+     */
+    private function outsideRegion(): array
+    {
+        return [
+            'status' => 'forbidden',
+            'error' => ['code' => 'region_not_allowed', 'message' => 'Kendaraan terdaftar di luar wilayah yang diizinkan untuk kunci ini', 'request_id' => 'req-1'],
+        ];
     }
 
     /**

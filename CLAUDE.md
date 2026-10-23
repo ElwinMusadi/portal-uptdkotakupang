@@ -1,6 +1,6 @@
 # PINTU — ringkasan untuk Claude Code
 
-Ringkasan singkat per 2026-10-22. Status terbaru, rincian, dan riwayat ada di [`KONTEKS-PROYEK.md`](KONTEKS-PROYEK.md): baca lebih dulu, dan perbarui di commit yang sama dengan setiap perubahan (prosedurnya di §19). Bila ada yang bertentangan, ikuti urutan ini: instruksi pemilik, lalu [`AGENTS.md`](AGENTS.md) (batasan alat AI), [`docs/decisions.md`](docs/decisions.md) (keputusan D-001 dst.), `KONTEKS-PROYEK.md`, baru berkas ini. Jangan menulis rahasia di berkas ini.
+Ringkasan singkat per 2026-10-23. Status terbaru, rincian, dan riwayat ada di [`KONTEKS-PROYEK.md`](KONTEKS-PROYEK.md): baca lebih dulu, dan perbarui di commit yang sama dengan setiap perubahan (prosedurnya di §19). Bila ada yang bertentangan, ikuti urutan ini: instruksi pemilik, lalu [`AGENTS.md`](AGENTS.md) (batasan alat AI), [`docs/decisions.md`](docs/decisions.md) (keputusan D-001 dst.), `KONTEKS-PROYEK.md`, baru berkas ini. Jangan menulis rahasia di berkas ini.
 
 ## Tujuan dan arsitektur
 
@@ -17,7 +17,7 @@ Semuanya satu aplikasi Laravel di root repository, satu origin (D-002):
 
 - Produksi: https://uptdpenda-kupang.web.id di Laravel Cloud, region Singapura, MySQL 8.4, bucket privat dan publik. Push ke `main` langsung di-deploy (Push to deploy, deploy menjalankan `php artisan migrate --force`). Cloudflare hanya untuk DNS dan pengalihan `pintu.` → domain utama.
 - Database produksi terpisah dari lokal: data yang diisi di lokal tidak sampai ke produksi.
-- Modul utama: konten portal (Beranda, Layanan, Berita, Regulasi, dll.), Layanan Luar Kantor, Antrean Online (D-051), Pemetaan PKB (D-052, D-064), Laporan Penerimaan dari berkas STS (D-047–D-049), Realisasi Target Form I (D-068, D-070), Nomoratur SKPD (D-071), tema (D-057), Kalkulator PKB + API NJKB (D-041), dan pemilih pegawai SIKAP di Tambah akun (D-075).
+- Modul utama: konten portal (Beranda, Layanan, Berita, Regulasi, dll.), Layanan Luar Kantor, Antrean Online (D-051), Pemetaan PKB (D-052, D-064), Laporan Penerimaan dari berkas STS (D-047–D-049), Realisasi Target Form I (D-068, D-070), Nomoratur SKPD (D-071), tema (D-057), Kalkulator PKB + API data kendaraan (D-041, kunci API Data Potensi D-076), dan pemilih pegawai SIKAP di Tambah akun (D-075).
 
 ## Stack, versi, dan perintah
 
@@ -28,7 +28,7 @@ Semuanya satu aplikasi Laravel di root repository, satu origin (D-002):
 
 | Perintah | Kegunaan |
 |---|---|
-| `composer test` | Semua tes PHPUnit di SQLite memori (±70 detik, 1738 tes) |
+| `composer test` | Semua tes PHPUnit di SQLite memori (±70 detik, 1750 tes) |
 | `php artisan test --compact <berkas> --filter=<tes>` | Tes tertentu |
 | `composer test:mysql` | **Mereset database `pintu`** (berisi data pemilik); hanya dengan izin pemilik dan cadangan |
 | `npm run typecheck` / `npm run lint` / `npm run build` | `tsc -b` / `oxlint resources/js` / `tsc -b && vite build` |
@@ -116,6 +116,7 @@ Build di Laravel Cloud: `composer install --no-dev && npm ci && npm run build &&
   Identitas wajib pajak hanya ada di dashboard, untuk sasaran penagihan.
 - **Produksi tetap MySQL, bukan Cloudflare D1 (D-065):** D1 dari luar Workers hanya lewat REST berbatas, tanpa transaksi interaktif, dan tanpa driver Laravel.
 - **Pegawai dari SIKAP (D-075):** kunci API SIKAP hanya ada di server (proxy `/api/akun/pegawai-sikap`, khusus Administrator). Akun hanya mengambil NIP + Nama, dan saat disimpan server membaca ulang nama per NIP, karena nama dari browser tidak dipercaya. Input manual tetap ada untuk petugas di luar UPTD. Email dan no HP SIKAP tidak dipakai di v1 (pemilik): dibuang di server, tidak disimpan.
+- **Data kendaraan dengan kunci API Data Potensi (D-076):** `api.uptdpenda-kupang.web.id` kini Worker `api-potensi-ntt`. PINTU mengirim `NJKB_API_KEY` sebagai `Authorization: Bearer` dan tetap mengirim header Cloudflare Access sampai Fase 5 (Access dilepas). Kunci "PINTU" hanya untuk UPT 010 Kota Kupang, jadi `403 region_not_allowed` menjadi pesan "Kendaraan terdaftar di luar wilayah Kota Kupang", di portal tanpa pemeriksaan nomor rangka karena API tidak memberi data. Nomor polisi tidak pernah dicatat.
 - **Form I (D-068, D-070):** realisasi dihitung dari STS semua loket, tanpa opsen. Saldo awal diisi manual untuk bulan sebelum STS lengkap, dan transaksi di bulan-bulan itu tidak dihitung. Ada satu target per tahun. Laporan bisa dibatasi sampai tanggal tertentu.
 - **Nomoratur (D-071):**
   - nomor selalu 7 digit; nol di depan yang hilang di Excel dikembalikan;
@@ -179,6 +180,7 @@ Daftar lengkapnya di `KONTEKS-PROYEK.md` §15 dan §18.
   - Antrean Online: keputusan tersisa, perangkat, uji QR, kamera, dan suara, uji coba paralel, lalu Irisan 5–6.
 - **Integrasi:**
   - API SIKAP (D-075): pemilih pegawai di Tambah akun sudah dibuat; menunggu kunci "PINTU (produksi)" sebagai env `SIKAP_API_*` di Laravel Cloud dan uji ujung-ke-ujung; data pejabat menyusul (endpoint `pejabat` SIKAP);
+  - kunci API Data Potensi (D-076): pemilik membuat kunci "PINTU" (hanya UPT 010) di https://potensi.uptdpenda-kupang.web.id/#kunci dan memasang `NJKB_API_KEY` di Laravel Cloud; token Access dihapus baru setelah Fase 5;
   - uji cek kendaraan NJKB dengan kendaraan sungguhan;
   - jam mulai layanan BPAD (`NJKB_SERVICE_OPENS_AT`).
 - **Konten draf:** regulasi, dokumentasi, artikel peluncuran, statistik berstatus Ilustrasi, foto dan nama pejabat.

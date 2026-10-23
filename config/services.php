@@ -36,12 +36,15 @@ return [
     ],
 
     /*
-    | Private vehicle API of BPAD NTT (NJKB API NTT), reached server to server
-    | with PINTU's own Cloudflare Access Service Token (D-041). The secret
-    | never reaches the browser.
+    | Private vehicle API (api-potensi-ntt, Data Potensi BPAD NTT), reached
+    | server to server with PINTU's own API key and Cloudflare Access Service
+    | Token (D-041, D-076). Neither ever reaches the browser.
     */
     'njkb' => [
         'base_url' => env('NJKB_API_BASE_URL', 'https://api.uptdpenda-kupang.web.id'),
+        // PINTU's Data Potensi API key "ptn_…", limited to UPT 010 Kota Kupang (D-076)
+        'api_key' => env('NJKB_API_KEY'),
+        // Cloudflare Access still guards the API host until the key alone is enough (Fase 5)
         'client_id' => env('NJKB_ACCESS_CLIENT_ID'),
         'client_secret' => env('NJKB_ACCESS_CLIENT_SECRET'),
         'timeout' => (int) env('NJKB_API_TIMEOUT_SECONDS', 8),

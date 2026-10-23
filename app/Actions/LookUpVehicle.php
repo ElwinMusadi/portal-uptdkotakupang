@@ -10,9 +10,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Sleep;
 
 /**
- * Look a vehicle up in the private NJKB API of BPAD NTT (D-041), following
- * the server-side adapter of kalkulator-pajak (src/services/vehicle-data):
- * PINTU's own Cloudflare Access Service Token, an 8-second timeout, at most
+ * Look a vehicle up in the private vehicle API (D-041), following the
+ * server-side adapter of kalkulator-pajak (src/services/vehicle-data):
+ * PINTU's own Data Potensi API key as a Bearer token, which only covers
+ * vehicles of UPT 010 Kota Kupang (D-076), and PINTU's own Cloudflare Access
+ * Service Token while Access still guards the host; an 8-second timeout, at most
  * one retry and only for network failures and HTTP 502/503/504, no
  * redirects (the token must never follow one), and Retry-After honoured
  * after HTTP 429. Outside BPAD's service hours the API is not asked at all
@@ -25,6 +27,12 @@ class LookUpVehicle
      * Cache key holding the time until which the API asked PINTU to wait (HTTP 429).
      */
     public const string WAIT_UNTIL = 'njkb:tunggu-sampai';
+
+    /**
+     * What a vehicle the API knows but PINTU's key may not read is (HTTP 403
+     * region_not_allowed, D-076).
+     */
+    public const string OUTSIDE_REGION = 'Kendaraan terdaftar di luar wilayah Kota Kupang.';
 
     /**
      * Time zone of BPAD's service hours.
@@ -80,9 +88,10 @@ class LookUpVehicle
     /**
      * The vehicle behind a plate number. "vehicle" is what the tax calculator
      * needs; "chassis" is only for checking a visitor's chassis digits and is
-     * never sent to a browser.
+     * never sent to a browser. A vehicle registered outside Kota Kupang comes
+     * back without any data at all.
      *
-     * @return array{status: 'found', vehicle: array{nopol: string, nama: ?string, jenis: ?string, jatuhTempoStnk: ?string, jatuhTempoPajak: ?string, njkb: int, njub: int, bobot: float, warnaPlat: ?string, njkbStatus: string}, chassis: ?string}|array{status: 'reference_problem', message: string, chassis: ?string}|array{status: 'not_found'}|array{status: 'unavailable', message: string}
+     * @return array{status: 'found', vehicle: array{nopol: string, nama: ?string, jenis: ?string, jatuhTempoStnk: ?string, jatuhTempoPajak: ?string, njkb: int, njub: int, bobot: float, warnaPlat: ?string, njkbStatus: string}, chassis: ?string}|array{status: 'reference_problem', message: string, chassis: ?string}|array{status: 'outside_region', message: string}|array{status: 'not_found'}|array{status: 'unavailable', message: string}
      */
     public function handle(string $nopol): array
     {
@@ -98,10 +107,14 @@ class LookUpVehicle
         }
 
         $baseUrl = rtrim((string) config('services.njkb.base_url'), '/');
+        $apiKey = trim((string) config('services.njkb.api_key'));
         $clientId = trim((string) config('services.njkb.client_id'));
         $clientSecret = trim((string) config('services.njkb.client_secret'));
+        $accessHeaders = $clientId !== '' && $clientSecret !== ''
+            ? ['CF-Access-Client-Id' => $clientId, 'CF-Access-Client-Secret' => $clientSecret]
+            : [];
 
-        if (! str_starts_with($baseUrl, 'https://') || $clientId === '' || $clientSecret === '') {
+        if (! str_starts_with($baseUrl, 'https://') || ($apiKey === '' && $accessHeaders === [])) {
             Log::error('NJKB API is not configured');
 
             return ['status' => 'unavailable', 'message' => 'Pencarian data kendaraan belum dikonfigurasi.'];
@@ -117,8 +130,8 @@ class LookUpVehicle
 
         for ($attempt = 0; $attempt < 2; $attempt++) {
             try {
-                $response = Http::acceptJson()
-                    ->withHeaders(['CF-Access-Client-Id' => $clientId, 'CF-Access-Client-Secret' => $clientSecret])
+                $request = Http::acceptJson()->withHeaders($accessHeaders);
+                $response = ($apiKey === '' ? $request : $request->withToken($apiKey))
                     ->withOptions(['allow_redirects' => false])
                     ->connectTimeout(3)
                     ->timeout($timeout >= 1 && $timeout <= 60 ? $timeout : 8)
@@ -139,6 +152,10 @@ class LookUpVehicle
                 return ['status' => 'not_found'];
             }
 
+            if ($response->status() === 403 && data_get($this->json($response), 'error.code') === 'region_not_allowed') {
+                return ['status' => 'outside_region', 'message' => self::OUTSIDE_REGION];
+            }
+
             if ($response->status() === 429) {
                 $seconds = $this->retryAfter($response->header('Retry-After'));
                 Cache::put(self::WAIT_UNTIL, now()->getTimestamp() + $seconds, $seconds);
@@ -157,7 +174,7 @@ class LookUpVehicle
                 return $this->failed($response, 'http');
             }
 
-            $body = str_contains(strtolower($response->header('Content-Type')), 'application/json') ? $response->json() : null;
+            $body = $this->json($response);
 
             return is_array($body)
                 ? $this->map($body, $nopol, $response)
@@ -381,7 +398,7 @@ class LookUpVehicle
      */
     private function failed(?Response $response, string $reason): array
     {
-        $body = $response !== null && str_contains(strtolower($response->header('Content-Type')), 'application/json') ? $response->json() : null;
+        $body = $response === null ? null : $this->json($response);
 
         Log::warning('NJKB API request failed', [
             'reason' => $reason,
@@ -392,6 +409,14 @@ class LookUpVehicle
         ]);
 
         return ['status' => 'unavailable', 'message' => 'Data kendaraan sedang tidak dapat diambil. Coba lagi beberapa saat lagi.'];
+    }
+
+    /**
+     * The body of an answer that says it is JSON, or null.
+     */
+    private function json(Response $response): mixed
+    {
+        return str_contains(strtolower($response->header('Content-Type')), 'application/json') ? $response->json() : null;
     }
 
     /**
