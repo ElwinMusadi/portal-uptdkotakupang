@@ -1051,3 +1051,13 @@ Pemilik meralat wilayah kunci di [D-076](#d-076--2026-10-23--kunci-api-data-pote
 | Di luar wilayah | Dengan kunci semua UPT, `403 region_not_allowed` hanya terjadi bila wilayah kunci salah diatur di website Data Potensi. PINTU tetap membacanya sebagai hasil tersendiri untuk berjaga-jaga, seperti kalkulator-pajak, dan **mencatatnya di log** seperti kegagalan lain (alasan `region_not_allowed`, ID permintaan, status, dan kode galat; tanpa nomor polisi) agar salah atur cepat diketahui. Tidak diulang. |
 | Dashboard | `422` "Wilayah kendaraan ini belum tercakup kunci API PINTU. Lengkapi data kendaraan secara manual dan laporkan ke Administrator." |
 | Portal | `503` "Data kendaraan sedang tidak dapat diambil. Coba lagi beberapa saat lagi.", sama dengan saat API gagal, tanpa menyebut wilayah. Pengecualian pesan seragam D-041 dari D-076 dicabut: pengunjung tidak lagi diberi tahu bahwa nomor polisi terdaftar di wilayah lain. |
+
+## D-078 · 2026-10-24 · Kunci API satu-satunya kredensial data kendaraan
+
+Fase 5 rencana kunci API proyek potensi-tarik selesai pada 2026-10-24: aplikasi Cloudflare Access untuk `api.uptdpenda-kupang.web.id` dihapus, dan Worker `api-potensi-ntt` hanya menerima kunci API. **Menggantikan** bagian *Masa peralihan* [D-076](#d-076--2026-10-23--kunci-api-data-potensi-untuk-data-kendaraan-khusus-kota-kupang) dan bagian *Akses API* [D-041](#d-041--2026-10-14--kalkulator-pkb-dan-cek-biaya-pajak-memakai-mesin-kalkulator-pajak-tarif--simulasi-dipensiunkan).
+
+| Hal | Keputusan |
+|---|---|
+| Kredensial | PINTU hanya mengirim `Authorization: Bearer` dengan kunci "PINTU" dari env `NJKB_API_KEY` (D-076, D-077). Header `CF-Access-Client-Id` dan `CF-Access-Client-Secret` tidak dikirim lagi, dan konfigurasi `services.njkb.client_id` / `client_secret` dihapus. |
+| Tanpa kunci | `NJKB_API_KEY` kosong berarti "Pencarian data kendaraan belum dikonfigurasi." (`503`), dicatat `NJKB API is not configured`, tanpa permintaan ke API; token Access saja tidak lagi cukup. |
+| Env lama | `NJKB_ACCESS_CLIENT_ID` dan `NJKB_ACCESS_CLIENT_SECRET` tidak dibaca lagi. Pemilik menghapus keduanya dari env Laravel Cloud, lalu menghapus service token PINTU di Cloudflare Zero Trust; urutannya tidak memengaruhi PINTU. |

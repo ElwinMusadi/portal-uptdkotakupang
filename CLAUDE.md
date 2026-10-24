@@ -1,6 +1,6 @@
 # PINTU — ringkasan untuk Claude Code
 
-Ringkasan singkat per 2026-10-23. Status terbaru, rincian, dan riwayat ada di [`KONTEKS-PROYEK.md`](KONTEKS-PROYEK.md): baca lebih dulu, dan perbarui di commit yang sama dengan setiap perubahan (prosedurnya di §19). Bila ada yang bertentangan, ikuti urutan ini: instruksi pemilik, lalu [`AGENTS.md`](AGENTS.md) (batasan alat AI), [`docs/decisions.md`](docs/decisions.md) (keputusan D-001 dst.), `KONTEKS-PROYEK.md`, baru berkas ini. Jangan menulis rahasia di berkas ini.
+Ringkasan singkat per 2026-10-24. Status terbaru, rincian, dan riwayat ada di [`KONTEKS-PROYEK.md`](KONTEKS-PROYEK.md): baca lebih dulu, dan perbarui di commit yang sama dengan setiap perubahan (prosedurnya di §19). Bila ada yang bertentangan, ikuti urutan ini: instruksi pemilik, lalu [`AGENTS.md`](AGENTS.md) (batasan alat AI), [`docs/decisions.md`](docs/decisions.md) (keputusan D-001 dst.), `KONTEKS-PROYEK.md`, baru berkas ini. Jangan menulis rahasia di berkas ini.
 
 ## Tujuan dan arsitektur
 
@@ -28,7 +28,7 @@ Semuanya satu aplikasi Laravel di root repository, satu origin (D-002):
 
 | Perintah | Kegunaan |
 |---|---|
-| `composer test` | Semua tes PHPUnit di SQLite memori (±70 detik, 1750 tes) |
+| `composer test` | Semua tes PHPUnit di SQLite memori (±70 detik, 1747 tes) |
 | `php artisan test --compact <berkas> --filter=<tes>` | Tes tertentu |
 | `composer test:mysql` | **Mereset database `pintu`** (berisi data pemilik); hanya dengan izin pemilik dan cadangan |
 | `npm run typecheck` / `npm run lint` / `npm run build` | `tsc -b` / `oxlint resources/js` / `tsc -b && vite build` |
@@ -116,7 +116,7 @@ Build di Laravel Cloud: `composer install --no-dev && npm ci && npm run build &&
   Identitas wajib pajak hanya ada di dashboard, untuk sasaran penagihan.
 - **Produksi tetap MySQL, bukan Cloudflare D1 (D-065):** D1 dari luar Workers hanya lewat REST berbatas, tanpa transaksi interaktif, dan tanpa driver Laravel.
 - **Pegawai dari SIKAP (D-075):** kunci API SIKAP hanya ada di server (proxy `/api/akun/pegawai-sikap`, khusus Administrator). Akun hanya mengambil NIP + Nama, dan saat disimpan server membaca ulang nama per NIP, karena nama dari browser tidak dipercaya. Input manual tetap ada untuk petugas di luar UPTD. Email dan no HP SIKAP tidak dipakai di v1 (pemilik): dibuang di server, tidak disimpan.
-- **Data kendaraan dengan kunci API Data Potensi (D-076, D-077):** `api.uptdpenda-kupang.web.id` kini Worker `api-potensi-ntt`. PINTU mengirim `NJKB_API_KEY` sebagai `Authorization: Bearer` dan tetap mengirim header Cloudflare Access sampai Fase 5 (Access dilepas). Kunci "PINTU" mencakup **semua UPT**, karena kalkulator di dashboard dan portal harus bisa menghitung semua nomor polisi NTT. `403 region_not_allowed` berarti wilayah kunci salah diatur: dicatat di log (tanpa nomor polisi), dashboard memberi pesan wilayah, portal memberi pesan gagal biasa tanpa menyebut wilayah.
+- **Data kendaraan dengan kunci API Data Potensi (D-076, D-077, D-078):** `api.uptdpenda-kupang.web.id` kini Worker `api-potensi-ntt`, tanpa Cloudflare Access sejak 2026-10-24. PINTU hanya mengirim `NJKB_API_KEY` sebagai `Authorization: Bearer`; tanpa kunci, pencarian "belum dikonfigurasi". Header dan env Access (`NJKB_ACCESS_*`) sudah dibuang (D-078). Kunci "PINTU" mencakup **semua UPT**, karena kalkulator di dashboard dan portal harus bisa menghitung semua nomor polisi NTT. `403 region_not_allowed` berarti wilayah kunci salah diatur: dicatat di log (tanpa nomor polisi), dashboard memberi pesan wilayah, portal memberi pesan gagal biasa tanpa menyebut wilayah.
 - **Form I (D-068, D-070):** realisasi dihitung dari STS semua loket, tanpa opsen. Saldo awal diisi manual untuk bulan sebelum STS lengkap, dan transaksi di bulan-bulan itu tidak dihitung. Ada satu target per tahun. Laporan bisa dibatasi sampai tanggal tertentu.
 - **Nomoratur (D-071):**
   - nomor selalu 7 digit; nol di depan yang hilang di Excel dikembalikan;
@@ -180,7 +180,7 @@ Daftar lengkapnya di `KONTEKS-PROYEK.md` §15 dan §18.
   - Antrean Online: keputusan tersisa, perangkat, uji QR, kamera, dan suara, uji coba paralel, lalu Irisan 5–6.
 - **Integrasi:**
   - API SIKAP (D-075): pemilih pegawai di Tambah akun sudah dibuat; menunggu kunci "PINTU (produksi)" sebagai env `SIKAP_API_*` di Laravel Cloud dan uji ujung-ke-ujung; data pejabat menyusul (endpoint `pejabat` SIKAP);
-  - kunci API Data Potensi (D-076): pemilik membuat kunci "PINTU" (semua UPT, D-077) di https://potensi.uptdpenda-kupang.web.id/#kunci dan memasang `NJKB_API_KEY` di Laravel Cloud; token Access dihapus baru setelah Fase 5;
+  - kunci API Data Potensi (D-076): pemilik membuat kunci "PINTU" (semua UPT, D-077) di https://potensi.uptdpenda-kupang.web.id/#kunci dan memasang `NJKB_API_KEY` di Laravel Cloud (tercatat dipakai 2026-10-23); sisa: pemilik menghapus env `NJKB_ACCESS_*` di Laravel Cloud dan `.env` lokal, mengisi `NJKB_API_KEY` di `.env` lokal bila ingin menguji lokal, dan menghapus service token PINTU di Zero Trust (D-078);
   - uji cek kendaraan NJKB dengan kendaraan sungguhan;
   - jam mulai layanan BPAD (`NJKB_SERVICE_OPENS_AT`).
 - **Konten draf:** regulasi, dokumentasi, artikel peluncuran, statistik berstatus Ilustrasi, foto dan nama pejabat.

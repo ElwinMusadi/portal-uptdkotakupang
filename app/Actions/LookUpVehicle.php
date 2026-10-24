@@ -113,14 +113,10 @@ class LookUpVehicle
         }
 
         $baseUrl = rtrim((string) config('services.njkb.base_url'), '/');
+        // The key is the only credential since Cloudflare Access left the API host (D-078)
         $apiKey = trim((string) config('services.njkb.api_key'));
-        $clientId = trim((string) config('services.njkb.client_id'));
-        $clientSecret = trim((string) config('services.njkb.client_secret'));
-        $accessHeaders = $clientId !== '' && $clientSecret !== ''
-            ? ['CF-Access-Client-Id' => $clientId, 'CF-Access-Client-Secret' => $clientSecret]
-            : [];
 
-        if (! str_starts_with($baseUrl, 'https://') || ($apiKey === '' && $accessHeaders === [])) {
+        if (! str_starts_with($baseUrl, 'https://') || $apiKey === '') {
             Log::error('NJKB API is not configured');
 
             return ['status' => 'unavailable', 'message' => 'Pencarian data kendaraan belum dikonfigurasi.'];
@@ -136,8 +132,8 @@ class LookUpVehicle
 
         for ($attempt = 0; $attempt < 2; $attempt++) {
             try {
-                $request = Http::acceptJson()->withHeaders($accessHeaders);
-                $response = ($apiKey === '' ? $request : $request->withToken($apiKey))
+                $response = Http::acceptJson()
+                    ->withToken($apiKey)
                     ->withOptions(['allow_redirects' => false])
                     ->connectTimeout(3)
                     ->timeout($timeout >= 1 && $timeout <= 60 ? $timeout : 8)

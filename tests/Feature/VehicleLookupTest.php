@@ -33,8 +33,6 @@ class VehicleLookupTest extends TestCase
         config([
             'services.njkb.base_url' => 'https://api.uptdpenda-kupang.web.id',
             'services.njkb.api_key' => self::API_KEY,
-            'services.njkb.client_id' => 'pintu-uji.access',
-            'services.njkb.client_secret' => 'rahasia-uji',
             'services.njkb.opens_at' => null,
             'services.njkb.closes_at' => '21:00',
         ]);
@@ -71,34 +69,20 @@ class VehicleLookupTest extends TestCase
         Http::assertSent(fn (Request $request): bool => $request->url() === 'https://api.uptdpenda-kupang.web.id/api/v1/vehicle/DH1234AB'
             && $request->method() === 'GET'
             && $request->header('Authorization') === ['Bearer '.self::API_KEY]
-            && $request->header('CF-Access-Client-Id') === ['pintu-uji.access']
-            && $request->header('CF-Access-Client-Secret') === ['rahasia-uji']
+            && ! $request->hasHeader('CF-Access-Client-Id')
+            && ! $request->hasHeader('CF-Access-Client-Secret')
             && $request->header('Accept') === ['application/json']);
         $this->assertStringNotContainsString('SYNTHETIC', $response->getContent());
     }
 
-    /**
-     * @param  array<string, ?string>  $config
-     * @param  array<string, ?list<string>>  $headers
-     */
-    #[TestWith([['services.njkb.client_id' => null], ['Authorization' => ['Bearer '.self::API_KEY], 'CF-Access-Client-Id' => null, 'CF-Access-Client-Secret' => null]])]
-    #[TestWith([['services.njkb.client_secret' => ' '], ['Authorization' => ['Bearer '.self::API_KEY], 'CF-Access-Client-Id' => null, 'CF-Access-Client-Secret' => null]])]
-    #[TestWith([['services.njkb.api_key' => null], ['Authorization' => null, 'CF-Access-Client-Id' => ['pintu-uji.access'], 'CF-Access-Client-Secret' => ['rahasia-uji']]])]
-    #[TestWith([['services.njkb.api_key' => ' '.self::API_KEY.' '], ['Authorization' => ['Bearer '.self::API_KEY], 'CF-Access-Client-Id' => ['pintu-uji.access'], 'CF-Access-Client-Secret' => ['rahasia-uji']]])]
-    public function test_sends_the_api_key_and_the_access_token_that_are_configured(array $config, array $headers): void
+    public function test_sends_the_api_key_without_the_spaces_around_it(): void
     {
-        config($config);
+        config(['services.njkb.api_key' => " \t".self::API_KEY." \n"]);
         Http::fake([self::UPSTREAM => Http::response($this->vehicle(), 200, ['Content-Type' => 'application/json'])]);
 
         $this->actingAs(User::factory()->create())->getJson('/api/kendaraan/DH1234AB')->assertOk();
 
-        Http::assertSent(function (Request $request) use ($headers): bool {
-            foreach ($headers as $name => $value) {
-                $this->assertSame($value ?? [], $request->header($name), $name);
-            }
-
-            return true;
-        });
+        Http::assertSent(fn (Request $request): bool => $request->header('Authorization') === ['Bearer '.self::API_KEY]);
     }
 
     public function test_uses_the_vehicle_kind_weight_when_the_api_has_no_njkb_reference(): void
@@ -340,9 +324,9 @@ class VehicleLookupTest extends TestCase
     /**
      * @param  array<string, ?string>  $config
      */
-    #[TestWith([['services.njkb.api_key' => null, 'services.njkb.client_secret' => '']])]
-    #[TestWith([['services.njkb.api_key' => ' ', 'services.njkb.client_id' => null]])]
-    #[TestWith([['services.njkb.api_key' => '', 'services.njkb.client_id' => null, 'services.njkb.client_secret' => null]])]
+    #[TestWith([['services.njkb.api_key' => null]])]
+    #[TestWith([['services.njkb.api_key' => '']])]
+    #[TestWith([['services.njkb.api_key' => " \n"]])]
     #[TestWith([['services.njkb.base_url' => 'http://api.uptdpenda-kupang.web.id']])]
     public function test_asks_nothing_while_the_api_is_not_configured(array $config): void
     {
