@@ -7,11 +7,13 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Reads an STS report exported by BPAD's system (D-047): an HTML table saved
- * with an .xls extension, one row per transaction under two header rows. Only
- * what the revenue report needs is kept, and since D-071 the SKPD form number
- * ("nomorator"); the owner's name, the plate number, the vehicle type and
- * value, the due dates and the address below the kelurahan are dropped. The
- * plate number only feeds the keyed "sidik" that recognises a transaction
+ * with an .xls extension, one row per transaction under two header rows. The
+ * columns the revenue report needs are checked and kept as they are, and
+ * since D-071 the SKPD form number ("nomorator"). Since D-079 the other
+ * columns, the plate number, the owner's name and the RT/RW among them, are
+ * read as text into "rincian" for the dashboard's Rincian penerimaan, which
+ * keeps them for the last 7 days only; only the row number is dropped. The
+ * plate number also feeds the keyed "sidik" that recognises a transaction
  * imported twice.
  *
  * The table is read with regular expressions rather than DOMDocument: the
@@ -65,9 +67,18 @@ class ReadStsFile
         'upt_asal' => [27, 80], 'kelurahan' => [33, 80], 'kecamatan' => [34, 80]];
 
     /**
+     * The columns of "rincian" (D-079), in the file's order. They are shown as
+     * the file has them, so they are not checked: an empty cell is null.
+     *
+     * @var array<string, int>
+     */
+    public const array DETAIL_COLUMNS = ['nopol' => 2, 'nama' => 5, 'tipeKendaraan' => 7, 'jatuhTempoAwal' => 10, 'jatuhTempoAkhir' => 11,
+        'nilaiJual' => 12, 'uptBayar' => 28, 'kodeJenisKendaraan' => 29, 'jenisKendaraan' => 30, 'rt' => 31, 'rw' => 32, 'ubahBentuk' => 35];
+
+    /**
      * The file's transactions, in its order.
      *
-     * @return list<array<string, int|string>>
+     * @return list<array<string, int|string|array<string, ?string>>>
      *
      * @throws ValidationException when the file is not an STS report or a row cannot be read
      */
@@ -108,10 +119,11 @@ class ReadStsFile
     }
 
     /**
-     * A transaction row as stored, without the identifying columns.
+     * A transaction row: the report's columns, checked, and the others as
+     * "rincian".
      *
      * @param  list<string>  $cells
-     * @return array<string, int|string>
+     * @return array<string, int|string|array<string, ?string>>
      */
     private function transaction(array $cells, int $line): array
     {
@@ -141,6 +153,7 @@ class ReadStsFile
         }
 
         $transaction['sidik'] = self::fingerprint($cells[2], $cells[4], $cells[1], $transaction['jumlah']);
+        $transaction['rincian'] = array_map(fn (int $column): ?string => $cells[$column] === '' ? null : $cells[$column], self::DETAIL_COLUMNS);
 
         return $transaction;
     }

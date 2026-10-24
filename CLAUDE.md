@@ -28,7 +28,7 @@ Semuanya satu aplikasi Laravel di root repository, satu origin (D-002):
 
 | Perintah | Kegunaan |
 |---|---|
-| `composer test` | Semua tes PHPUnit di SQLite memori (±70 detik, 1747 tes) |
+| `composer test` | Semua tes PHPUnit di SQLite memori (±70 detik, 1767 tes) |
 | `php artisan test --compact <berkas> --filter=<tes>` | Tes tertentu |
 | `composer test:mysql` | **Mereset database `pintu`** (berisi data pemilik); hanya dengan izin pemilik dan cadangan |
 | `npm run typecheck` / `npm run lint` / `npm run build` | `tsc -b` / `oxlint resources/js` / `tsc -b && vite build` |
@@ -108,7 +108,9 @@ Build di Laravel Cloud: `composer install --no-dev && npm ci && npm run build &&
 - **React SPA + JSON API dalam satu aplikasi Laravel (D-001, D-002):** tanpa CORS, sesi cookie Sanctum, dan satu deploy.
 - **Portal berupa HTML lengkap dari server yang diisi API publik (D-023):** teks HTML menjadi isi awal yang terbaca mesin pencari dan tetap tampil bila API gagal.
 - **React di portal dipasang bertahap di atas Blade (D-045):** tanpa SPA atau SSR.
-- **Impor STS tanpa identitas wajib pajak (D-047):** transaksi dikenali lewat sidik HMAC (nopol, tanggal, jenis daftar, jumlah) dengan `APP_KEY`, jadi impor ulang tidak menggandakan penerimaan. Karena itu `APP_KEY` produksi sama dengan lokal (D-065).
+- **Impor STS (D-047, D-079):** laporan dihitung tanpa identitas wajib pajak; transaksi dikenali lewat sidik HMAC (nopol, tanggal, jenis daftar, jumlah) dengan `APP_KEY`, jadi impor ulang tidak menggandakan penerimaan. Karena itu `APP_KEY` produksi sama dengan lokal (D-065).
+  - NOPOL, nama, RT/RW, dan kolom STS lain hanya disimpan di `revenue_transactions.rincian` (JSON terenkripsi) untuk transaksi 7 hari terakhir (WITA), untuk tabel *Rincian penerimaan* di dashboard; setiap impor mengosongkan yang lebih lama, dan impor ulang melengkapi yang kosong;
+  - `insert()` melewati cast, jadi rincian dienkripsi lewat `RevenueTransaction::encryptDetails()`; portal dan API publik tidak pernah menerimanya.
 - **Angka publik disamarkan di server:**
   - kelompok di bawah 3 transaksi pada Laporan Penerimaan portal (D-048, D-049);
   - angka 1–2 kendaraan di Pemetaan PKB, termasuk angka yang bisa dipakai menghitungnya balik (D-052).

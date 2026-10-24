@@ -12,42 +12,51 @@ use Illuminate\Validation\ValidationException;
 /**
  * Turns the transactions read from an STS file into an import for a counter
  * (D-047). A transaction already saved by an earlier import, or listed twice
- * in the file, is skipped, but gets the SKPD form number from the file when
- * it was saved before form numbers were kept (D-071). A file with nothing new
- * and nothing to complete is refused, so importing the same file again adds
- * nothing.
+ * in the file, is skipped, but gets from the file what it was saved without:
+ * the SKPD form number when it was saved before form numbers were kept
+ * (D-071), and its details when it is from the last 7 days and was saved
+ * before details were kept (D-079). A file with nothing new and nothing to
+ * complete is refused, so importing the same file again adds nothing.
  */
 class ImportRevenue
 {
-    public function __construct(private RecordActivity $recordActivity) {}
+    public function __construct(private RecordActivity $recordActivity, private ClearRevenueDetails $clearDetails) {}
 
     /**
      * The transactions not saved yet, in the file's order, how many were
-     * skipped, and the form number of each skipped transaction still without
-     * one, by fingerprint.
+     * skipped, and what each skipped transaction still lacks, by fingerprint:
+     * its form number, its details, or both.
      *
-     * @param  list<array<string, int|string>>  $transactions
-     * @return array{baru: list<array<string, int|string>>, dilewati: int, dilengkapi: array<string, string>}
+     * @param  list<array<string, mixed>>  $transactions
+     * @return array{baru: list<array<string, mixed>>, dilewati: int, dilengkapi: array<string, array{nomoratur: ?string, rincian: ?array<string, ?string>}>}
      */
     public function compare(array $transactions): array
     {
         $saved = [];
         foreach (array_chunk(array_column($transactions, 'sidik'), 1000) as $chunk) {
-            foreach (RevenueTransaction::query()->whereIn('sidik', $chunk)->toBase()->get(['sidik', 'nomoratur']) as $row) {
-                $saved[$row->sidik] = $row->nomoratur;
+            $rows = RevenueTransaction::query()->whereIn('sidik', $chunk)->toBase()->selectRaw('sidik, nomoratur, rincian is null as tanpa_rincian')->get();
+            foreach ($rows as $row) {
+                $saved[$row->sidik] = ['nomoratur' => $row->nomoratur === null, 'rincian' => (bool) $row->tanpa_rincian];
             }
         }
 
+        $since = RevenueTransaction::detailsSince()->toDateString();
         $new = [];
         $completed = [];
         foreach ($transactions as $transaction) {
             $sidik = (string) $transaction['sidik'];
             if (! array_key_exists($sidik, $saved)) {
                 $new[] = $transaction;
-            } elseif ($saved[$sidik] === null) {
-                $completed[$sidik] = (string) $transaction['nomoratur'];
+            } else {
+                $lacks = [
+                    'nomoratur' => $saved[$sidik]['nomoratur'] ? (string) $transaction['nomoratur'] : null,
+                    'rincian' => $saved[$sidik]['rincian'] && $transaction['tanggal'] >= $since ? $transaction['rincian'] : null,
+                ];
+                if ($lacks['nomoratur'] !== null || $lacks['rincian'] !== null) {
+                    $completed[$sidik] = $lacks;
+                }
             }
-            $saved[$sidik] ??= (string) $transaction['nomoratur'];
+            $saved[$sidik] = ['nomoratur' => false, 'rincian' => false];
         }
 
         return ['baru' => $new, 'dilewati' => count($transactions) - count($new), 'dilengkapi' => $completed];
@@ -58,7 +67,7 @@ class ImportRevenue
      * dates, the number of transactions and their total, per registration
      * type with the largest amounts first.
      *
-     * @param  list<array<string, int|string>>  $transactions
+     * @param  list<array<string, mixed>>  $transactions
      * @return array{tanggalAwal: ?string, tanggalAkhir: ?string, transaksi: int, jumlah: int, jenisDaftar: list<array{nilai: string, transaksi: int, jumlah: int}>}
      */
     public function summary(array $transactions): array
@@ -84,12 +93,14 @@ class ImportRevenue
 
     /**
      * Save the new transactions of a file for a counter, logged as one
-     * import, and complete the form numbers of the transactions saved before
-     * form numbers were kept (D-071). The import is not shown on the portal
-     * until checked. A file that only completes form numbers adds no import.
+     * import, with their details when they are from the last 7 days; complete
+     * the form numbers and details of the transactions saved without them;
+     * then drop the details older than 7 days (D-079). The import is not
+     * shown on the portal until checked. A file that only completes adds no
+     * import.
      *
      * @param  array{kunci: string, nama: string, jenis: string}  $counter
-     * @param  list<array<string, int|string>>  $transactions  as read from the file
+     * @param  list<array<string, mixed>>  $transactions  as read from the file
      * @return array{impor: ?RevenueImport, dilengkapi: int}
      *
      * @throws ValidationException when the file neither adds nor completes anything
@@ -116,9 +127,15 @@ class ImportRevenue
 
             if ($new !== []) {
                 $import->save();
+                $since = RevenueTransaction::detailsSince()->toDateString();
                 foreach (array_chunk($new, 500) as $chunk) {
                     RevenueTransaction::query()->insert(array_map(
-                        fn (array $transaction): array => [...$transaction, 'revenue_import_id' => $import->getKey(), 'loket' => $counter['kunci']],
+                        fn (array $transaction): array => [
+                            ...$transaction,
+                            'rincian' => $transaction['tanggal'] >= $since ? RevenueTransaction::encryptDetails($transaction['rincian']) : null,
+                            'revenue_import_id' => $import->getKey(),
+                            'loket' => $counter['kunci'],
+                        ],
                         $chunk,
                     ));
                 }
@@ -126,33 +143,41 @@ class ImportRevenue
             }
 
             if ($completed !== []) {
-                $this->completeFormNumbers($completed);
-                $this->recordActivity->handle($user, DashboardModule::Penerimaan, 'melengkapi', 'nomoratur '.$import->title().' · '.count($completed).' transaksi');
+                $this->completeTransactions($completed);
+                $what = array_filter([
+                    in_array(true, array_map(fn (array $lacks): bool => $lacks['nomoratur'] !== null, $completed), true) ? 'nomoratur' : null,
+                    in_array(true, array_map(fn (array $lacks): bool => $lacks['rincian'] !== null, $completed), true) ? 'rincian' : null,
+                ]);
+                $this->recordActivity->handle($user, DashboardModule::Penerimaan, 'melengkapi', implode(' dan ', $what).' '.$import->title().' · '.count($completed).' transaksi');
             }
+
+            $this->clearDetails->handle();
 
             return ['impor' => $import->exists ? $import : null, 'dilengkapi' => count($completed)];
         });
     }
 
     /**
-     * Give saved transactions without a form number the one from the file,
-     * a few hundred per statement.
+     * Give saved transactions the form number and details they lack, a few
+     * hundred per statement. What a transaction already has is kept.
      *
-     * @param  array<string, string>  $numbers  by fingerprint
+     * @param  array<string, array{nomoratur: ?string, rincian: ?array<string, ?string>}>  $lacking  by fingerprint
      */
-    private function completeFormNumbers(array $numbers): void
+    private function completeTransactions(array $lacking): void
     {
-        foreach (array_chunk($numbers, 500, true) as $chunk) {
+        foreach (array_chunk($lacking, 500, true) as $chunk) {
             $cases = implode(' ', array_fill(0, count($chunk), 'WHEN ? THEN ?'));
             $placeholders = implode(', ', array_fill(0, count($chunk), '?'));
-            $bindings = [];
-            foreach ($chunk as $sidik => $number) {
-                array_push($bindings, (string) $sidik, $number);
+            $numbers = [];
+            $details = [];
+            foreach ($chunk as $sidik => $lacks) {
+                array_push($numbers, (string) $sidik, $lacks['nomoratur']);
+                array_push($details, (string) $sidik, $lacks['rincian'] === null ? null : RevenueTransaction::encryptDetails($lacks['rincian']));
             }
 
             DB::update(
-                "UPDATE revenue_transactions SET nomoratur = CASE sidik {$cases} END WHERE nomoratur IS NULL AND sidik IN ({$placeholders})",
-                [...$bindings, ...array_map('strval', array_keys($chunk))],
+                "UPDATE revenue_transactions SET nomoratur = COALESCE(nomoratur, CASE sidik {$cases} END), rincian = COALESCE(rincian, CASE sidik {$cases} END) WHERE sidik IN ({$placeholders})",
+                [...$numbers, ...$details, ...array_map('strval', array_keys($chunk))],
             );
         }
     }

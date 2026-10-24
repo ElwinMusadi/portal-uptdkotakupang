@@ -3,14 +3,17 @@
  * berkas STS sistem BPAD.
  *
  * Data ini selalu dibaca dari server PINTU, apa pun sumber data konten
- * dashboard. Server tidak menyimpan nama pemilik, nomor polisi, atau alamat di
- * bawah kelurahan; laporan dijumlahkan oleh server. Kontraknya ada di
+ * dashboard. Laporan dijumlahkan oleh server tanpa identitas wajib pajak.
+ * Nomor polisi, nama pemilik, RT/RW, dan kolom STS lain hanya disimpan
+ * (terenkripsi) untuk transaksi 7 hari terakhir dan hanya dibaca Rincian
+ * penerimaan (D-079); portal tidak pernah menerimanya. Kontraknya ada di
  * docs/api.md.
  */
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { mintaServer } from "@/lib/api/http"
 import { SAMA_ORIGIN } from "@/lib/auth"
+import { hariIniIso } from "@/lib/format"
 
 import { KOLOM_CSV, teksCsv, unduhTeks, type TeksAngka } from "../../portal/penerimaan/csv"
 
@@ -133,13 +136,81 @@ export interface PratinjauImpor {
   /** Transaksi yang belum pernah diimpor; hanya ini yang disimpan */
   baru: RingkasanBerkas
   dilewati: number
-  /** Transaksi yang dilewati tetapi diimpor sebelum nomoratur dicatat; nomoraturnya diisi dari berkas ini (D-071) */
+  /**
+   * Transaksi yang dilewati tetapi diimpor tanpa nomoratur (sebelum D-071) atau,
+   * bila dari 7 hari terakhir, tanpa rincian (sebelum D-079); yang kosong diisi dari berkas ini
+   */
   dilengkapi: number
 }
 
-/** Jawaban impor yang hanya melengkapi nomoratur transaksi lama, tanpa impor baru (D-071) */
+/** Jawaban impor yang hanya melengkapi nomoratur atau rincian transaksi lama, tanpa impor baru (D-071, D-079) */
 export interface HasilLengkapi {
   dilengkapi: number
+}
+
+/** Kolom berkas STS yang hanya disimpan untuk Rincian penerimaan, kosong (null) bila tidak tercatat (D-079) */
+export interface RincianStsKolom {
+  nopol: string | null
+  nama: string | null
+  tipeKendaraan: string | null
+  jatuhTempoAwal: string | null
+  jatuhTempoAkhir: string | null
+  nilaiJual: string | null
+  uptBayar: string | null
+  kodeJenisKendaraan: string | null
+  /** Kolom "JENIS KENDARAAN", mis. SEPEDA MOTOR PRIBADI */
+  jenisKendaraan: string | null
+  rt: string | null
+  rw: string | null
+  ubahBentuk: string | null
+}
+
+/** Satu transaksi STS di Rincian penerimaan (GET /api/penerimaan/rincian) */
+export interface TransaksiRincian extends RincianStsKolom {
+  id: string
+  loket: string
+  namaLoket: string
+  tanggal: string
+  jenisDaftar: string
+  nomoratur: string | null
+  /** Kolom JNS_KEND, mis. SEPEDA MOTOR */
+  jnsKend: string
+  merk: string
+  warnaPlat: string
+  uptAsal: string
+  kelurahan: string
+  kecamatan: string
+  tahunTunggakan: number
+  pkb: number
+  bbn: number
+  dendaPkb: number
+  dendaBbn: number
+  tunggakan: number
+  dendaTunggakan: number
+  opsenPkb: number
+  opsenBbn: number
+  opsenDendaPkb: number
+  opsenDendaBbn: number
+  opsenTunggakan: number
+  opsenDendaTunggakan: number
+  jumlah: number
+}
+
+export interface RincianPenerimaan {
+  tanggal: string
+  transaksi: TransaksiRincian[]
+  /** Transaksi hari itu yang diimpor sebelum rinciannya dicatat */
+  belumTercatat: number
+}
+
+/** Banyaknya hari, hari ini termasuk, yang rinciannya disimpan dan bisa dilihat (D-079), sama dengan server */
+export const HARI_RINCIAN = 7
+
+/** Hari pertama dan terakhir yang rinciannya tersedia: 6 hari lalu sampai hari ini (WITA) */
+export function jendelaRincian(hariIni = hariIniIso()): { dari: string; sampai: string } {
+  const d = new Date(`${hariIni}T00:00:00Z`)
+  d.setUTCDate(d.getUTCDate() - (HARI_RINCIAN - 1))
+  return { dari: d.toISOString().slice(0, 10), sampai: hariIni }
 }
 
 /** Ukuran berkas STS yang diterima server */
@@ -160,6 +231,24 @@ export function useLaporanPenerimaan(saringan: Saringan | null) {
     queryFn: () => mintaServer<LaporanPenerimaan>(`/api/penerimaan/laporan?${kueri(saringan!)}`, "GET"),
     enabled: !!saringan,
     placeholderData: keepPreviousData,
+  })
+}
+
+/**
+ * Transaksi satu hari beserta rinciannya, dengan saringan laporan; hanya dimuat
+ * untuk laporan Harian di dalam jendela 7 hari (saringan lain: null).
+ */
+export function useRincianPenerimaan(saringan: Saringan | null) {
+  return useQuery({
+    queryKey: [...KUNCI, "rincian", saringan],
+    queryFn: () => {
+      const p = new URLSearchParams(kueri(saringan!))
+      p.delete("dari")
+      p.delete("sampai")
+      p.set("tanggal", saringan!.dari)
+      return mintaServer<RincianPenerimaan>(`/api/penerimaan/rincian?${p.toString()}`, "GET")
+    },
+    enabled: !!saringan,
   })
 }
 

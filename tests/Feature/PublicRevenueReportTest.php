@@ -89,6 +89,22 @@ class PublicRevenueReportTest extends TestCase
             ->assertJsonPath('pembanding.ringkasan', $this->figures(7));
     }
 
+    public function test_never_shows_the_details_kept_for_rincian_penerimaan(): void
+    {
+        $import = RevenueImport::factory()->create(['tampil' => true]);
+        RevenueTransaction::factory()->recycle($import)->withDetails()->count(4)->create();
+
+        foreach ([[], ['tanggal' => '2026-10-14'], ['bulan' => '2026-10']] as $query) {
+            $content = $this->report($query)->assertOk()->getContent();
+            foreach (['DH1234XY', 'PEMILIK RAHASIA', 'TIPE UJI', 'SEPEDA MOTOR PRIBADI', '"rt"', '"rw"', '"nopol"'] as $secret) {
+                $this->assertStringNotContainsString($secret, $content);
+            }
+        }
+        $summary = $this->getJson('/api/public/penerimaan/ringkasan')->assertOk()->getContent();
+        $this->assertStringNotContainsString('PEMILIK RAHASIA', $summary);
+        $this->assertStringNotContainsString('DH1234XY', $summary);
+    }
+
     public function test_merges_the_groups_of_fewer_than_three_transactions_into_one_masked_row(): void
     {
         $import = RevenueImport::factory()->create(['tampil' => true]);

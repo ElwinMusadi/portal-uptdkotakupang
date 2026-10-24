@@ -50,6 +50,7 @@ use App\Http\Controllers\Dashboard\QueueSummaryController;
 use App\Http\Controllers\Dashboard\QueueTicketCallController;
 use App\Http\Controllers\Dashboard\QueueTicketController;
 use App\Http\Controllers\Dashboard\RevenueCounterController;
+use App\Http\Controllers\Dashboard\RevenueDetailsController;
 use App\Http\Controllers\Dashboard\RevenueImportController;
 use App\Http\Controllers\Dashboard\RevenueImportDeletionController;
 use App\Http\Controllers\Dashboard\RevenueImportPreviewController;
@@ -482,6 +483,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
      */
     Route::prefix('penerimaan')->name('penerimaan.')->group(function (): void {
         Route::get('/laporan', RevenueReportController::class)->can('viewAny', RevenueImport::class)->name('laporan');
+        // Rincian penerimaan (D-079): one of the last 7 days, transaction by transaction, with the owner's identity
+        Route::get('/rincian', RevenueDetailsController::class)->can('viewAny', RevenueImport::class)->name('rincian');
         Route::get('/loket', RevenueCounterController::class)->can('viewAny', RevenueImport::class)->name('loket');
         Route::get('/impor', [RevenueImportController::class, 'index'])->can('viewAny', RevenueImport::class)->name('impor.index');
         Route::post('/impor/pratinjau', RevenueImportPreviewController::class)

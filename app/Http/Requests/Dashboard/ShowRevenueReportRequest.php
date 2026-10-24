@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Dashboard;
 
-use App\Actions\BuildRevenueReport;
+use App\Http\Requests\Dashboard\Concerns\FiltersRevenueTransactions;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Validator;
@@ -14,6 +14,8 @@ use Illuminate\Validation\Validator;
  */
 class ShowRevenueReportRequest extends FormRequest
 {
+    use FiltersRevenueTransactions;
+
     /**
      * Longest period of one report, in days.
      */
@@ -35,18 +37,11 @@ class ShowRevenueReportRequest extends FormRequest
      */
     public function rules(): array
     {
-        $rules = [
+        return [
             'dari' => ['required', 'date_format:Y-m-d'],
             'sampai' => ['required', 'date_format:Y-m-d', 'after_or_equal:dari'],
-            'tunggakan' => ['sometimes', 'string', 'in:ada,tidak'],
+            ...$this->filterRules(),
         ];
-
-        foreach (array_keys(BuildRevenueReport::DIMENSIONS) as $filter) {
-            $rules[$filter] = ['sometimes', 'list', 'max:500'];
-            $rules["{$filter}.*"] = ['string', 'max:80'];
-        }
-
-        return $rules;
     }
 
     /**
@@ -76,30 +71,8 @@ class ShowRevenueReportRequest extends FormRequest
             'sampai.required' => 'Pilih tanggal akhir laporan.',
             'sampai.date_format' => 'Tanggal akhir laporan tidak valid.',
             'sampai.after_or_equal' => 'Tanggal akhir tidak boleh sebelum tanggal awal.',
-            'tunggakan.in' => 'Saringan tunggakan tidak dikenal.',
-            'list' => 'Saringan :attribute tidak valid.',
-            'max' => 'Saringan :attribute terlalu panjang.',
-            'string' => 'Saringan :attribute tidak valid.',
+            ...$this->filterMessages(),
         ];
-    }
-
-    /**
-     * The filters as the messages name them.
-     *
-     * @return array<string, string>
-     */
-    public function attributes(): array
-    {
-        $names = ['loket' => 'loket', 'jenisDaftar' => 'jenis daftar', 'jenisKendaraan' => 'jenis kendaraan', 'kepemilikan' => 'kepemilikan',
-            'warnaPlat' => 'warna plat', 'merk' => 'merek', 'uptAsal' => 'asal UPT', 'kecamatan' => 'kecamatan', 'kelurahan' => 'kelurahan'];
-
-        $attributes = [];
-        foreach ($names as $filter => $name) {
-            $attributes[$filter] = $name;
-            $attributes["{$filter}.*"] = $name;
-        }
-
-        return $attributes;
     }
 
     public function from(): Carbon
@@ -110,18 +83,5 @@ class ShowRevenueReportRequest extends FormRequest
     public function until(): Carbon
     {
         return Carbon::createFromFormat('!Y-m-d', $this->input('sampai'));
-    }
-
-    /**
-     * The chosen values per filter, and the arrears filter when set.
-     *
-     * @return array<string, list<string>|string>
-     */
-    public function filters(): array
-    {
-        return array_filter(
-            $this->safe()->except(['dari', 'sampai']),
-            fn (mixed $value): bool => $value !== [] && $value !== null,
-        );
     }
 }

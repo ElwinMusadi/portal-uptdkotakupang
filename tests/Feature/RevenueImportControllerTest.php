@@ -8,8 +8,11 @@ use App\Models\MobileServiceStop;
 use App\Models\RevenueImport;
 use App\Models\RevenueTransaction;
 use App\Models\User;
+use Illuminate\Console\Scheduling\Event;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\TestWith;
 use Tests\Support\StsReport;
@@ -22,6 +25,7 @@ class RevenueImportControllerTest extends TestCase
     #[TestWith(['GET', '/api/penerimaan/impor'])]
     #[TestWith(['GET', '/api/penerimaan/loket'])]
     #[TestWith(['GET', '/api/penerimaan/laporan?dari=2026-10-14&sampai=2026-10-14'])]
+    #[TestWith(['GET', '/api/penerimaan/rincian?tanggal=2026-10-14'])]
     #[TestWith(['POST', '/api/penerimaan/impor'])]
     #[TestWith(['POST', '/api/penerimaan/impor/pratinjau'])]
     #[TestWith(['POST', '/api/penerimaan/impor/hapus'])]
@@ -255,6 +259,140 @@ class RevenueImportControllerTest extends TestCase
         $this->assertSame(['0000100', '0000101'], DB::table('revenue_transactions')->where('id', '!=', $kept->id)->orderBy('nomoratur')->pluck('nomoratur')->all());
         $this->assertSame('0000999', $kept->fresh()->nomoratur);
         $this->assertDatabaseHas('activities', ['action' => 'melengkapi', 'target' => 'nomoratur STS Loket SAMSAT 2026-10-14 · 1 transaksi']);
+    }
+
+    public function test_keeps_the_details_of_the_last_7_days_encrypted_and_none_of_older_days(): void
+    {
+        $this->travelTo(Carbon::parse('2026-10-20 10:00', 'Asia/Makassar'));
+
+        $this->actingAs($this->revenueEmployee())->post('/api/penerimaan/impor', ['berkas' => StsReport::file([
+            StsReport::row(['no' => '1', 'nopol' => 'DH1001AA', 'tanggal' => '2026-10-14', 'ubah_bentuk' => 'BAK KAYU']),
+            StsReport::row(['no' => '2', 'nopol' => 'DH1002AA', 'nama' => 'PEMILIK LAMA', 'tanggal' => '2026-10-13']),
+        ]), 'loket' => 'kantor'], ['Accept' => 'application/json'])->assertCreated();
+
+        $this->assertSame([
+            'nopol' => 'DH1001AA', 'nama' => 'PEMILIK RAHASIA', 'tipeKendaraan' => 'TIPE UJI 125', 'jatuhTempoAwal' => '2027-10-14',
+            'jatuhTempoAkhir' => '2027-10-14', 'nilaiJual' => '18000000.00', 'uptBayar' => 'Kota Kupang', 'kodeJenisKendaraan' => 'J1',
+            'jenisKendaraan' => 'SEPEDA MOTOR PRIBADI', 'rt' => '007', 'rw' => '003', 'ubahBentuk' => 'BAK KAYU',
+        ], RevenueTransaction::query()->where('tanggal', '2026-10-14')->sole()->rincian);
+        $this->assertNull(RevenueTransaction::query()->where('tanggal', '2026-10-13')->sole()->rincian);
+        $stored = json_encode(DB::table('revenue_transactions')->get());
+        foreach (['PEMILIK', 'DH1001AA', 'DH1002AA', 'TIPE UJI', 'BAK KAYU', 'SEPEDA MOTOR PRIBADI'] as $secret) {
+            $this->assertStringNotContainsString($secret, $stored);
+        }
+        $this->assertStringNotContainsString('PEMILIK', json_encode(DB::table('activities')->get()));
+    }
+
+    public function test_counts_the_last_7_days_in_kupang_time(): void
+    {
+        // 16:30 UTC on 20 October is already 21 October in Kupang, so 14 October is 8 days back
+        $this->travelTo(Carbon::parse('2026-10-20 16:30', 'UTC'));
+
+        $this->actingAs($this->revenueEmployee())->post('/api/penerimaan/impor', ['berkas' => StsReport::file([
+            StsReport::row(['no' => '1', 'nopol' => 'DH1001AA', 'tanggal' => '2026-10-14']),
+            StsReport::row(['no' => '2', 'nopol' => 'DH1002AA', 'tanggal' => '2026-10-15']),
+        ]), 'loket' => 'kantor'], ['Accept' => 'application/json'])->assertCreated();
+
+        $this->assertSame(['2026-10-15'], RevenueTransaction::query()->whereNotNull('rincian')->get()->map->tanggal->map->toDateString()->all());
+    }
+
+    public function test_completes_the_details_of_recent_transactions_imported_before_they_were_kept(): void
+    {
+        $this->travelTo(Carbon::parse('2026-10-20 10:00', 'Asia/Makassar'));
+        $employee = $this->revenueEmployee();
+        $rows = [
+            StsReport::row(['no' => '1', 'nopol' => 'DH1001AA', 'nama' => 'PEMILIK SATU']),
+            StsReport::row(['no' => '2', 'nopol' => 'DH1002AA', 'nama' => 'PEMILIK DUA', 'tanggal' => '2026-10-13']),
+            StsReport::row(['no' => '3', 'nopol' => 'DH1003AA', 'nama' => 'PEMILIK TIGA', 'tanggal' => '2026-10-20']),
+        ];
+        $this->actingAs($employee)->post('/api/penerimaan/impor', ['berkas' => StsReport::file($rows), 'loket' => 'kantor'], ['Accept' => 'application/json'])->assertCreated();
+        DB::table('revenue_transactions')->where('tanggal', '2026-10-14')->update(['rincian' => null]);
+        // Kept details and a missing form number: only the form number is filled
+        RevenueTransaction::query()->where('tanggal', '2026-10-20')->sole()->update(['nomoratur' => null, 'rincian' => ['nopol' => 'DH1003AA', 'nama' => 'NAMA TERCATAT']]);
+
+        $this->actingAs($employee)->post('/api/penerimaan/impor/pratinjau', ['berkas' => StsReport::file($rows), 'loket' => 'kantor'], ['Accept' => 'application/json'])
+            ->assertOk()
+            ->assertJsonPath('baru.transaksi', 0)
+            ->assertJsonPath('dilewati', 3)
+            ->assertJsonPath('dilengkapi', 2);
+        $this->actingAs($employee)->post('/api/penerimaan/impor', ['berkas' => StsReport::file($rows), 'loket' => 'kantor'], ['Accept' => 'application/json'])
+            ->assertOk()
+            ->assertExactJson(['dilengkapi' => 2]);
+
+        $this->assertDatabaseCount('revenue_imports', 1);
+        $this->assertSame(3 * 498000, (int) RevenueTransaction::query()->sum('jumlah'));
+        $completed = RevenueTransaction::query()->where('tanggal', '2026-10-14')->sole();
+        $this->assertSame(['PEMILIK SATU', 'DH1001AA', null], [$completed->rincian['nama'], $completed->rincian['nopol'], $completed->rincian['ubahBentuk']]);
+        $this->assertSame('0012345', $completed->nomoratur);
+        $this->assertNull(RevenueTransaction::query()->where('tanggal', '2026-10-13')->sole()->rincian);
+        $kept = RevenueTransaction::query()->where('tanggal', '2026-10-20')->sole();
+        $this->assertSame(['nopol' => 'DH1003AA', 'nama' => 'NAMA TERCATAT'], $kept->rincian);
+        $this->assertSame('0012345', $kept->nomoratur);
+        $this->assertDatabaseHas('activities', [
+            'user_id' => $employee->id, 'module' => 'penerimaan', 'action' => 'melengkapi', 'target' => 'nomoratur dan rincian STS Loket SAMSAT 2026-10-13 s.d. 2026-10-20 · 2 transaksi',
+        ]);
+        $this->actingAs($employee)->post('/api/penerimaan/impor', ['berkas' => StsReport::file($rows), 'loket' => 'kantor'], ['Accept' => 'application/json'])
+            ->assertUnprocessable()
+            ->assertOnlyJsonValidationErrors(['berkas' => 'Semua transaksi di berkas ini sudah pernah diimpor.']);
+    }
+
+    public function test_names_what_it_completed_in_the_activity_log(): void
+    {
+        $this->travelTo(Carbon::parse('2026-10-14 10:00', 'Asia/Makassar'));
+        $employee = $this->revenueEmployee();
+        $rows = [StsReport::row(['no' => '1', 'nopol' => 'DH1001AA', 'nomorator' => '0000100'])];
+        $import = fn () => $this->actingAs($employee)->post('/api/penerimaan/impor', ['berkas' => StsReport::file($rows), 'loket' => 'kantor'], ['Accept' => 'application/json']);
+        $import()->assertCreated();
+
+        DB::table('revenue_transactions')->update(['rincian' => null]);
+        $import()->assertOk()->assertExactJson(['dilengkapi' => 1]);
+        DB::table('revenue_transactions')->update(['nomoratur' => null, 'rincian' => null]);
+        $import()->assertOk()->assertExactJson(['dilengkapi' => 1]);
+
+        $transaction = RevenueTransaction::query()->sole();
+        $this->assertSame('0000100', $transaction->nomoratur);
+        $this->assertSame('DH1001AA', $transaction->rincian['nopol']);
+        $this->assertSame(
+            ['rincian STS Loket SAMSAT 2026-10-14 · 1 transaksi', 'nomoratur dan rincian STS Loket SAMSAT 2026-10-14 · 1 transaksi'],
+            DB::table('activities')->where('action', 'melengkapi')->orderBy('id')->pluck('target')->all(),
+        );
+    }
+
+    public function test_drops_the_details_older_than_7_days_at_each_import(): void
+    {
+        $employee = $this->revenueEmployee();
+        $this->travelTo(Carbon::parse('2026-10-14 10:00', 'Asia/Makassar'));
+        $this->actingAs($employee)->post('/api/penerimaan/impor', ['berkas' => StsReport::file([
+            StsReport::row(['no' => '1', 'nopol' => 'DH1001AA', 'tanggal' => '2026-10-14']),
+            StsReport::row(['no' => '2', 'nopol' => 'DH1002AA', 'tanggal' => '2026-10-14']),
+        ]), 'loket' => 'kantor'], ['Accept' => 'application/json'])->assertCreated();
+        RevenueTransaction::factory()->withDetails()->create(['tanggal' => '2026-10-15']);
+
+        // On 21 October the last 7 days start on the 15th
+        $this->travelTo(Carbon::parse('2026-10-21 08:00', 'Asia/Makassar'));
+        $this->actingAs($employee)->post('/api/penerimaan/impor', ['berkas' => StsReport::file([
+            StsReport::row(['no' => '1', 'nopol' => 'DH1003AA', 'tanggal' => '2026-10-21']),
+        ], 'STS_Harian_Kota_Kupang_2026-10-21.xls'), 'loket' => 'kantor'], ['Accept' => 'application/json'])->assertCreated();
+
+        $this->assertSame(['2026-10-15', '2026-10-21'], RevenueTransaction::query()->whereNotNull('rincian')->orderBy('tanggal')->get()->map->tanggal->map->toDateString()->all());
+        $this->assertSame(['0012345', '0012345'], RevenueTransaction::query()->where('tanggal', '2026-10-14')->pluck('nomoratur')->all());
+        $this->assertSame(4 * 498000, (int) RevenueTransaction::query()->sum('jumlah'));
+    }
+
+    public function test_drops_the_details_older_than_7_days_every_night_too(): void
+    {
+        $this->travelTo(Carbon::parse('2026-10-21 00:05', 'Asia/Makassar'));
+        RevenueTransaction::factory()->withDetails()->create(['tanggal' => '2026-10-14']);
+        RevenueTransaction::factory()->withDetails()->create(['tanggal' => '2026-10-15']);
+        RevenueTransaction::factory()->create(['tanggal' => '2026-10-13']);
+
+        $this->artisan('pintu:clear-revenue-details')->expectsOutput('Rincian 1 transaksi dikosongkan.')->assertSuccessful();
+
+        $this->assertSame(['2026-10-15'], RevenueTransaction::query()->whereNotNull('rincian')->get()->map->tanggal->map->toDateString()->all());
+        $event = collect(app(Schedule::class)->events())->first(fn (Event $event): bool => str_contains((string) $event->command, 'pintu:clear-revenue-details'));
+        $this->assertNotNull($event);
+        $this->assertSame('5 0 * * *', $event->expression);
+        $this->assertSame('Asia/Makassar', $event->timezone);
     }
 
     public function test_recognises_a_transaction_whatever_the_case_of_its_registration_type(): void

@@ -35,6 +35,7 @@ import {
   createPaginatedRowModel,
   createSortedRowModel,
   FlexRender,
+  metaHelper,
   rowPaginationFeature,
   rowSelectionFeature,
   rowSortingFeature,
@@ -88,7 +89,13 @@ import {
 } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 
+/** Keterangan kolom: label = nama kolom di menu Atur kolom bila judulnya bukan teks biasa */
+export interface MetaKolom {
+  label?: string
+}
+
 export const fiturTabel = tableFeatures({
+  columnMeta: metaHelper<MetaKolom>(),
   columnVisibilityFeature,
   rowPaginationFeature,
   rowSelectionFeature,
@@ -134,6 +141,8 @@ interface DataTableProps<T extends { id: string }> {
   memuat?: boolean
   ukuranHalaman?: number
   sortingAwal?: SortingState
+  /** Kolom yang tersembunyi sejak awal, mis. { merk: false }; tetap bisa dinyalakan lewat Atur kolom */
+  kolomAwal?: ColumnVisibilityState
   pilih?: boolean
   className?: string
 }
@@ -189,13 +198,14 @@ export function DataTable<T extends { id: string }>({
   memuat,
   ukuranHalaman = 10,
   sortingAwal = [],
+  kolomAwal,
   pilih = true,
   className,
 }: DataTableProps<T>) {
   const [kueri, setKueri] = React.useState("")
   const [nilaiFilter, setNilaiFilter] = React.useState<Record<string, string>>(filterAwal ?? {})
   const [rowSelection, setRowSelection] = React.useState({})
-  const [columnVisibility, setColumnVisibility] = React.useState<ColumnVisibilityState>({})
+  const [columnVisibility, setColumnVisibility] = React.useState<ColumnVisibilityState>(kolomAwal ?? {})
   const [sorting, setSorting] = React.useState<SortingState>(sortingAwal)
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: ukuranHalaman })
   const sortableId = React.useId()
@@ -302,7 +312,7 @@ export function DataTable<T extends { id: string }>({
   }
 
   const kolomBisaDisembunyikan = table
-    .getAllColumns()
+    .getAllLeafColumns()
     .filter((c) => typeof c.accessorFn !== "undefined" && c.getCanHide())
 
   const jumlahKolom = table.getVisibleLeafColumns().length
@@ -377,7 +387,8 @@ export function DataTable<T extends { id: string }>({
                 {kolomBisaDisembunyikan.map((column) => {
                   const header = column.columnDef.header
                   const nama =
-                    typeof header === "string" ? header : column.id.charAt(0).toUpperCase() + column.id.slice(1)
+                    column.columnDef.meta?.label ??
+                    (typeof header === "string" ? header : column.id.charAt(0).toUpperCase() + column.id.slice(1))
                   return (
                     <DropdownMenuCheckboxItem
                       key={column.id}
@@ -432,7 +443,9 @@ export function DataTable<T extends { id: string }>({
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
                     <TableHead key={header.id} colSpan={header.colSpan}>
-                      {header.isPlaceholder ? null : !header.column.accessorFn && !["pilih", "seret"].includes(header.column.id) ? (
+                      {header.isPlaceholder ? null : !header.column.accessorFn &&
+                        header.subHeaders.length === 0 &&
+                        !["pilih", "seret"].includes(header.column.id) ? (
                         <span className="sr-only">Tindakan</span>
                       ) : (
                         <FlexRender header={header} />

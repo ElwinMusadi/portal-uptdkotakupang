@@ -23,6 +23,7 @@ import { Halaman, PengantarHalaman } from "@/components/data/page"
 import { MenuBaris } from "@/components/data/row-actions"
 import { NadaBadge } from "@/components/data/status-badge"
 import { NavPenerimaan } from "@/components/penerimaan/nav-penerimaan"
+import { RincianPenerimaan } from "@/components/penerimaan/rincian-penerimaan"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -211,7 +212,7 @@ export default function HalamanPenerimaan() {
   return (
     <Halaman>
       <NavPenerimaan />
-      <PengantarHalaman deskripsi="Penerimaan PKB, BBNKB, dan opsen per loket dari berkas STS sistem BPAD. Impor berkas harian atau bulanan setiap loket; laporan dihitung dari transaksinya tanpa nama pemilik, nomor polisi, atau alamat lengkap.">
+      <PengantarHalaman deskripsi="Penerimaan PKB, BBNKB, dan opsen per loket dari berkas STS sistem BPAD. Impor berkas harian atau bulanan setiap loket; laporan dihitung dari transaksinya. Nomor polisi, nama pemilik, dan RT/RW hanya disimpan 7 hari untuk Rincian penerimaan dan tidak pernah tampil di portal.">
         <Button onClick={() => setImpor(true)}>
           <IconUpload />
           Impor berkas STS
@@ -318,6 +319,7 @@ export default function HalamanPenerimaan() {
                     <GrafikRincian laporan={laporan} dimensi="uptAsal" judul="Per asal UPT" deskripsi="UPT tempat kendaraan terdaftar." />
                   </div>
                   <TabelRincian laporan={laporan} saring={saring} />
+                  {saringan && <RincianPenerimaan saringan={saringan} />}
                 </>
               )}
             </div>
@@ -946,7 +948,7 @@ function TabelRincian({ laporan, saring }: { laporan: LaporanPenerimaan; saring:
   return (
     <Card className="shadow-xs">
       <CardHeader>
-        <CardTitle className="text-base">Rincian penerimaan</CardTitle>
+        <CardTitle className="text-base">Rekap penerimaan</CardTitle>
         <CardDescription>Rupiah setiap komponen. Pilih nama di kolom pertama untuk menyaring laporan dengannya.</CardDescription>
         <CardAction>
           <Button variant="outline" size="sm" onClick={ekspor}>
@@ -969,7 +971,7 @@ function TabelRincian({ laporan, saring }: { laporan: LaporanPenerimaan; saring:
           </div>
         </Tabs>
         <div className="max-h-120 overflow-auto rounded-lg border">
-          <Table aria-label={`Rincian penerimaan per ${judulRincian(dimensi).toLowerCase()}`}>
+          <Table aria-label={`Rekap penerimaan per ${judulRincian(dimensi).toLowerCase()}`}>
             <TableHeader className="sticky top-0 z-10 bg-muted">
               <TableRow>
                 <TableHead>{judulRincian(dimensi)}</TableHead>
@@ -1238,16 +1240,16 @@ function SheetImpor({ tutup, selesai }: { tutup: () => void; selesai: (i: ImporP
     setGalat(null)
     try {
       const i = await simpan.mutateAsync({ berkas, loket })
-      const lengkap = hasil?.dilengkapi ? ` Nomoratur ${angka(hasil.dilengkapi)} transaksi lama juga dilengkapi.` : ""
+      const lengkap = hasil?.dilengkapi ? ` Nomoratur atau rincian ${angka(hasil.dilengkapi)} transaksi lama juga dilengkapi.` : ""
       if ("id" in i) {
         toast.success("Berkas STS diimpor", {
           description: `${angka(i.jumlahTransaksi)} transaksi, ${rupiah(i.total)}, untuk ${i.namaLoket}.${lengkap}`,
         })
         selesai(i)
       } else {
-        // Berkas yang sudah pernah diimpor hanya melengkapi nomoratur (D-071)
-        toast.success("Nomoratur dilengkapi", {
-          description: `${angka(i.dilengkapi)} transaksi yang sudah diimpor kini tercatat nomoraturnya.`,
+        // Berkas yang sudah pernah diimpor hanya melengkapi nomoratur (D-071) atau rincian 7 hari terakhir (D-079)
+        toast.success("Transaksi dilengkapi", {
+          description: `${angka(i.dilengkapi)} transaksi yang sudah diimpor kini tercatat nomoratur atau rinciannya.`,
         })
       }
       tutup()
@@ -1262,8 +1264,8 @@ function SheetImpor({ tutup, selesai }: { tutup: () => void; selesai: (i: ImporP
         <SheetHeader className="border-b pr-12">
           <SheetTitle>Impor berkas STS</SheetTitle>
           <SheetDescription>
-            Berkas .xls hasil ekspor STS harian atau bulanan dari sistem BPAD. Nama pemilik, nomor polisi, dan alamat di bawah
-            kelurahan tidak disimpan.
+            Berkas .xls hasil ekspor STS harian atau bulanan dari sistem BPAD. Nomor polisi, nama pemilik, RT/RW, dan kolom lain
+            untuk Rincian penerimaan hanya disimpan (terenkripsi) untuk transaksi 7 hari terakhir.
           </SheetDescription>
         </SheetHeader>
         <div className="grid flex-1 content-start gap-5 overflow-y-auto p-4">
@@ -1332,7 +1334,7 @@ function SheetImpor({ tutup, selesai }: { tutup: () => void; selesai: (i: ImporP
               {simpan.isPending && <Spinner />}
               {hasil.baru.transaksi > 0 || hasil.dilengkapi === 0
                 ? `Simpan ${angka(hasil.baru.transaksi)} transaksi`
-                : `Lengkapi nomoratur ${angka(hasil.dilengkapi)} transaksi`}
+                : `Lengkapi ${angka(hasil.dilengkapi)} transaksi`}
             </Button>
           ) : (
             <Button type="button" onClick={periksa} disabled={pratinjau.isPending || !berkas}>
@@ -1378,8 +1380,8 @@ function HasilPratinjau({ hasil }: { hasil: PratinjauImpor }) {
         <Alert>
           <IconInfoCircle />
           <AlertDescription>
-            {angka(hasil.dilengkapi)} transaksi yang dilewati diimpor sebelum nomoratur dicatat. Nomoraturnya akan diisi dari berkas ini
-            tanpa menghitung penerimaannya dua kali.
+            {angka(hasil.dilengkapi)} transaksi yang dilewati diimpor sebelum nomoratur atau rinciannya dicatat. Yang kosong akan
+            diisi dari berkas ini tanpa menghitung penerimaannya dua kali.
           </AlertDescription>
         </Alert>
       )}

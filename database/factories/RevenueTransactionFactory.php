@@ -51,4 +51,19 @@ class RevenueTransactionFactory extends Factory
 
         return $this->state([...$parts, 'jumlah' => array_sum($parts)]);
     }
+
+    /**
+     * Made-up details from the STS file (D-079), as kept for the last 7 days.
+     *
+     * @param  array<string, ?string>  $details
+     */
+    public function withDetails(array $details = []): static
+    {
+        return $this->state(['rincian' => [
+            'nopol' => 'DH1234XY', 'nama' => 'PEMILIK RAHASIA', 'tipeKendaraan' => 'TIPE UJI 125', 'jatuhTempoAwal' => '2027-10-14',
+            'jatuhTempoAkhir' => '2027-10-14', 'nilaiJual' => '18000000.00', 'uptBayar' => 'Kota Kupang', 'kodeJenisKendaraan' => 'J1',
+            'jenisKendaraan' => 'SEPEDA MOTOR PRIBADI', 'rt' => '007', 'rw' => '003', 'ubahBentuk' => null,
+            ...$details,
+        ]]);
+    }
 }

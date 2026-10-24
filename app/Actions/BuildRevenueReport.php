@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Models\RevenueImport;
 use App\Models\RevenueTransaction;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -148,6 +149,21 @@ class BuildRevenueReport
             $query->whereIn('revenue_import_id', RevenueImport::query()->where('tampil', true)->select('id'));
         }
 
+        return self::narrow($query, $filters);
+    }
+
+    /**
+     * Keep the transactions matching the filters: the report's, and Rincian
+     * penerimaan's (D-079).
+     *
+     * @template TQuery of Builder|EloquentBuilder<RevenueTransaction>
+     *
+     * @param  TQuery  $query
+     * @param  array<string, list<string>|string>  $filters
+     * @return TQuery
+     */
+    public static function narrow(Builder|EloquentBuilder $query, array $filters): Builder|EloquentBuilder
+    {
         foreach (self::DIMENSIONS as $dimension => $column) {
             if (is_array($filters[$dimension] ?? null) && $filters[$dimension] !== []) {
                 $query->whereIn($column, $filters[$dimension]);
