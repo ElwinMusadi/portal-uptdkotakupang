@@ -76,6 +76,15 @@ table { border-collapse: collapse; width: 100%; }
   align-items: start;
 }
 .split--middle { align-items: center; }
+/* Judul berteks kecil di kiri, paragraf di kanan (D-081): paragraf ditengahkan terhadap judulnya, bukan
+   terhadap teks kecil + judul. Ruang di atas paragraf = baris teks kecil (inline-flex, jadi setinggi satu
+   baris teks badan) + jarak judul 20px. Kolom kanan selain paragraf (mis. kalkulator) tidak digeser. */
+@media (min-width: 961px) {
+  .split--middle:has(> :first-child > .eyebrow:not([hidden]) + .h2) > :last-child:is(.body, :has(> .body:first-child)) {
+    padding-top: calc(var(--fs-body) * var(--lh-body) + 20px);
+  }
+  .split--middle:has(> :first-child > .eyebrow[hidden] + .h2) > :last-child:is(.body, :has(> .body:first-child)) { padding-top: 20px; }
+}
 .split--even { grid-template-columns: 1fr 1fr; }
 .split__sticky { position: sticky; top: 120px; }
 

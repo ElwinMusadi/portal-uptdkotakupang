@@ -1087,3 +1087,12 @@ Pemilik ingin mengubah teks bagian "Layanan di luar kantor" di halaman Jadwal po
 | Menu | **Tab "Teks halaman" di Layanan Luar Kantor** (pemilik), jadi pegawai yang mengelola jadwal luar kantor juga mengelola teks halaman itu. Disimpan sebagai pengaturan `keliling` (nama modulnya), sehingga hak akses dan log aktivitas mengikuti modul Layanan Luar Kantor. |
 | Isi awal | Seperti Beranda ([D-023](#d-023--2026-10-14--teks-beranda-tersimpan-di-server-teks-html-tetap-sebagai-isi-awal)): teks di HTML menjadi isi awal dan tetap tampil sampai dokumen pertama kali disimpan, juga bila API gagal. |
 | Isian | Judul wajib di setiap bagian; teks kecil, lanjutan judul, paragraf, dan catatan boleh dikosongkan dan tidak tampil. Batas sama dengan Beranda (120/80/80/300 karakter, catatan 160), teks polos tanpa karakter kontrol. Ada tombol **Kembalikan teks bawaan**. |
+
+## D-081 · 2026-10-25 · Paragraf di samping judul ditengahkan terhadap judulnya
+
+Di desktop, pemilik menilai judul (kiri) dan paragraf (kanan) bagian *Layanan di luar kantor* halaman Jadwal kurang rapi. Susunan `.split--middle` menengahkan kolom kanan terhadap seluruh kolom kiri, yaitu teks kecil (eyebrow) ditambah judul, sehingga paragraf ±20 px lebih tinggi daripada titik tengah judul.
+
+| Hal | Keputusan |
+|---|---|
+| Perataan | **Titik tengah paragraf = titik tengah judul** (pemilik); teks kecil tetap di atas judul. Kolom kanan diberi ruang atas setinggi baris teks kecil (`.eyebrow` berupa inline-flex, jadi setinggi satu baris teks badan: `--fs-body` × `--lh-body`) ditambah jarak judul 20 px; bila teks kecil disembunyikan (D-080), 20 px saja. Hanya di desktop (≥ 961 px); di layar sempit susunannya satu kolom. |
+| Cakupan | **Semua bagian serupa** (pemilik): kolom kiri berteks kecil + `.h2`, kolom kanan berupa paragraf `.body` atau diawali paragraf. Kini: Jadwal › Layanan di luar kantor, Layanan › Panduan dan Alur non-tunai, Profil › Tugas & fungsi, Visi & Misi › Misi. Bagian Cek biaya pajak (kolom kanan kalkulator) dan Maklumat pelayanan tidak berubah. |
