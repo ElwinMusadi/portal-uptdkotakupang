@@ -308,6 +308,8 @@ class PortalPagesTest extends TestCase
         $this->assertSame(1, preg_match('/<section[^>]*\bid="layanan-utama"[^>]*>.*?<\/section>/s', $home, $section));
         $this->assertStringNotContainsString('role="tab"', $section[0]);
         $this->assertStringContainsString('<p class="muted" role="status">Memuat persyaratan layanan…</p>', $section[0]);
+        // Like Transparansi: the service tabs under the heading on the left, the requirements of the chosen one on the right
+        $this->assertMatchesRegularExpression('/<div class="container split">\s*(?:<!--.*?-->\s*)?<div data-reveal>\s*<p class="eyebrow">Layanan utama<\/p>(?:(?!<\/div>).)*?<div\s+class="numtabs views__tabs"[^>]*\bdata-layanan-tab\s*><\/div>\s*<\/div>\s*<div class="card--sunken views__card" data-layanan-panel data-reveal>/s', $section[0]);
     }
 
     #[DataProvider('pagesWithHeader')]

@@ -449,28 +449,26 @@
         </div>
       </section>
 
-      <!-- 4 · Layanan utama (tab bernomor + kartu tangkapan layar) -->
+      <!-- 4 · Layanan utama: judul dan tab bernomor di kiri, persyaratan layanan terpilih di kanan (seperti Transparansi) -->
       <section class="section section--flush-top views" id="layanan-utama">
-        <div class="container">
-          <div class="split split--middle views__head">
-            <div data-reveal>
-              <p class="eyebrow">Layanan utama</p>
-              <h2 class="h2" style="margin-top: 20px" data-beranda-judul="layananUtama">
-                Dibuat untuk wajib pajak.
-                <span class="tone">Dirancang agar cukup sekali datang.</span>
-              </h2>
-              <p class="body" style="margin-top: 20px" data-beranda-teks="layananUtama.deskripsi">
-                Pilih layanan, siapkan berkas dari rumah, lalu datang ke loket
-                yang tepat.
-              </p>
-            </div>
+        <div class="container split">
+          <!-- Tidak lengket seperti Transparansi: tinggi kedua kolom hampir sama, jadi tab akan bergeser saat berganti layanan -->
+          <div data-reveal>
+            <p class="eyebrow">Layanan utama</p>
+            <h2 class="h2" style="margin-top: 20px" data-beranda-judul="layananUtama">
+              Dibuat untuk wajib pajak.
+              <span class="tone">Dirancang agar cukup sekali datang.</span>
+            </h2>
+            <p class="body" style="margin-top: 20px" data-beranda-teks="layananUtama.deskripsi">
+              Pilih layanan, siapkan berkas dari rumah, lalu datang ke loket
+              yang tepat.
+            </p>
             <div
-              class="numtabs"
+              class="numtabs views__tabs"
               role="tablist"
               aria-label="Layanan utama"
               data-tabs
               data-layanan-tab
-              data-reveal
             ></div>
           </div>
 
