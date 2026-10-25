@@ -484,6 +484,8 @@ class PortalPagesTest extends TestCase
         }
         $this->assertStringContainsString('<h1 class="h-display" style="margin-top:22px" data-berita-judul>Memuat tulisan…</h1>', $article);
         $this->assertStringContainsString('<div class="prose" data-berita-isi></div>', $article);
+        // pages.css closes the gap of an article without a cover through this order: the cover's container, then the body
+        $this->assertMatchesRegularExpression('/<div class="container">\s*<figure class="article-figure" data-berita-foto hidden>.*?<\/figure>\s*<\/div>\s*<div class="section section--tight" data-berita-badan hidden>/s', $article);
 
         $this->assertStringNotContainsString('Berlaku untuk keterlambatan pajak tahunan', $home);
         $this->assertStringContainsString('data-papan-pengumuman-judul>', $home);

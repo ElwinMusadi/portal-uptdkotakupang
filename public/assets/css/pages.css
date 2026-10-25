@@ -490,6 +490,8 @@
 .article-figure { max-width: calc(200px + 56px + 680px); margin-inline: auto; }
 .article-media { border-radius: var(--r-xl); }
 .article-media > img { position: relative; height: auto; }
+/* Tanpa sampul, jarak ke isi cukup ruang bawah kepala artikel, bukan ditambah ruang atas bagian isi */
+.container:has(> .article-figure[hidden]) + .section--tight { padding-top: 0; }
 .article-body { display: grid; grid-template-columns: 200px minmax(0, 680px); gap: 56px; justify-content: center; }
 .article-aside { position: sticky; top: 120px; align-self: start; display: grid; gap: 22px; font-size: 13.5px; }
 .article-aside dt { font-size: var(--fs-eyebrow); letter-spacing: var(--track-eyebrow); text-transform: uppercase; color: var(--text-2); }
