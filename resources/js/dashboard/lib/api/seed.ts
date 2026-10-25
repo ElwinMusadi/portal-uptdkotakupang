@@ -7,6 +7,7 @@
  * dashboard dibuka agar grafik dan status pemutakhiran tetap bermakna.
  */
 import { newId } from "@/lib/id"
+import { TEKS_JADWAL_BAWAAN } from "@/lib/teks-jadwal"
 import { TEMA_BAWAAN, TEMA_BAWAAN_PORTAL } from "@/lib/tema"
 import type {
   Aktivitas,
@@ -1291,6 +1292,7 @@ function pengaturan(sekarang: Date): Pengaturan {
       ],
     },
     tema: { portal: { ...TEMA_BAWAAN_PORTAL }, dashboard: { ...TEMA_BAWAAN } },
+    keliling: structuredClone(TEKS_JADWAL_BAWAAN),
     akun: {
       nama: "Admin PINTU",
       jabatan: "Penata Kelola Sistem dan Teknologi Informasi",
@@ -1356,6 +1358,7 @@ export function seedWaktuPengaturan(sekarang = new Date()): Record<keyof Pengatu
     profil: waktu(sekarang, 40),
     visiMisi: waktu(sekarang, 40),
     kontak: waktu(sekarang, 40),
+    keliling: waktu(sekarang, 40),
     akun: waktu(sekarang, 40),
   }
 }

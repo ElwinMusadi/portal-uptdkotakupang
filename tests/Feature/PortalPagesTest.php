@@ -655,6 +655,23 @@ class PortalPagesTest extends TestCase
         }
     }
 
+    public function test_keeps_the_initial_jadwal_page_texts_in_the_markup_for_the_public_api_to_replace(): void
+    {
+        $html = $this->get('/jadwal')->assertOk()->getContent();
+
+        foreach (Setting::INITIAL_SCHEDULE_PAGE as $section => $texts) {
+            $title = $texts['judul'].' <span class="tone">'.$texts['lanjutan'].'</span>';
+            $this->assertMatchesRegularExpression('#<h[12] [^>]*data-jadwal-judul="'.$section.'"[^>]*>'.preg_quote($title, '#').'</h[12]>#', $html);
+            $this->assertMatchesRegularExpression('#<p class="eyebrow" data-jadwal-teks="'.$section.'\.eyebrow">'.preg_quote($texts['eyebrow'], '#').'</p>#', $html);
+        }
+        foreach (['pembuka', 'luarKantor'] as $section) {
+            $this->assertMatchesRegularExpression('#<p class="[a-z]+" data-jadwal-teks="'.$section.'\.deskripsi"[^>]*>'.preg_quote(Setting::INITIAL_SCHEDULE_PAGE[$section]['deskripsi'], '#').'</p>#', $html);
+        }
+        $this->assertMatchesRegularExpression('#<p class="trust" [^>]*data-jadwal-catatan><svg class="i" aria-hidden="true"><use href="\#i-info"/></svg>'.preg_quote(Setting::INITIAL_SCHEDULE_PAGE['luarKantor']['catatan'], '#').'</p>#', $html);
+        $this->assertSame(5, substr_count($html, 'data-jadwal-teks="'));
+        $this->assertSame(3, substr_count($html, 'data-jadwal-judul="'));
+    }
+
     public function test_fills_the_opening_hours_table_only_from_the_public_api(): void
     {
         $html = $this->get('/jadwal')->assertOk()->getContent();

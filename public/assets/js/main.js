@@ -2003,6 +2003,49 @@
       .catch(() => {});
   }
 
+  /* ---------- Teks halaman Jadwal ----------
+     Teks pembuka halaman Jadwal dikelola di dashboard (Layanan Luar Kantor ›
+     Teks halaman) dan dibaca dari GET /api/public/jadwal (D-080). Teks di
+     HTML sama dengan isi awal di server dan tetap tampil; skrip menggantinya
+     hanya bila dokumen sudah pernah disimpan. Bila API gagal, teks HTML
+     tetap tampil. Isian yang dikosongkan disembunyikan. */
+  const TEKS_JADWAL = {
+    pembuka: ["eyebrow", "judul", "lanjutan", "deskripsi"],
+    jam: ["eyebrow", "judul", "lanjutan"],
+    luarKantor: ["eyebrow", "judul", "lanjutan", "deskripsi", "catatan"],
+  };
+
+  async function muatTeksJadwal() {
+    const j = await ambilJson("/api/public/jadwal");
+    const teks = (x) => typeof x === "string";
+    const valid = Object.entries(TEKS_JADWAL).every(([bagian, isian]) => isian.every((f) => teks(j?.[bagian]?.[f])))
+      && (j.diperbarui === null || teks(j.diperbarui));
+    if (!valid) throw new Error("Respons tidak dikenal");
+    return j;
+  }
+
+  function initTeksJadwal() {
+    if (!$("[data-jadwal-judul]")) return;
+    const tampilkan = (j) => {
+      $$("[data-jadwal-teks]").forEach((el) => {
+        const [bagian, isian] = el.dataset.jadwalTeks.split(".");
+        el.textContent = j[bagian][isian];
+        el.hidden = !j[bagian][isian];
+      });
+      $$("[data-jadwal-judul]").forEach((el) => {
+        const t = j[el.dataset.jadwalJudul];
+        duaNada(el, t.lanjutan ? `${t.judul} ` : t.judul, t.lanjutan);
+      });
+      const catatan = $("[data-jadwal-catatan]");
+      catatan.replaceChildren($("svg", catatan), j.luarKantor.catatan);
+      catatan.hidden = !j.luarKantor.catatan;
+    };
+
+    muatTeksJadwal()
+      .then((j) => { if (typeof j.diperbarui === "string") tampilkan(j); })
+      .catch(() => {});
+  }
+
   /* ---------- Halaman statis ----------
      Kebijakan Privasi dan Syarat & Ketentuan dikelola di dashboard (Halaman
      Statis) dan dibaca dari GET /api/public/halaman/{slug} (D-024). Teks di
@@ -3027,7 +3070,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    initNav(); initCari(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil(); initLayanan(); initDokumen(); initInformasi(); initBerita(); initPengumumanBeranda(); initDokumentasi(); initStruktur(); initAplikasi(); initBeranda(); initHalaman(); initSitus();
+    initNav(); initCari(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil(); initLayanan(); initDokumen(); initInformasi(); initBerita(); initPengumumanBeranda(); initDokumentasi(); initStruktur(); initAplikasi(); initBeranda(); initTeksJadwal(); initHalaman(); initSitus();
     initDash(); initDialogs(); initGag(); initFilters(); initGallery(); initFaq(); initForms(); initPesanForm(); initLacakPesanForm(); initAuthFit(); initUtilities(); initWarnaBilah();
   });
 })();

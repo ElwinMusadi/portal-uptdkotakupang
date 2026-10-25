@@ -59,6 +59,7 @@ use App\Http\Controllers\Dashboard\RevenueReportController;
 use App\Http\Controllers\Dashboard\RevenueTargetController;
 use App\Http\Controllers\Dashboard\ScheduleAdjustmentController;
 use App\Http\Controllers\Dashboard\ScheduleAdjustmentDeletionController;
+use App\Http\Controllers\Dashboard\SchedulePageController;
 use App\Http\Controllers\Dashboard\ServiceBoardController;
 use App\Http\Controllers\Dashboard\ServiceBoardOrderController;
 use App\Http\Controllers\Dashboard\ServiceController;
@@ -98,6 +99,7 @@ use App\Http\Controllers\PublicProfileController;
 use App\Http\Controllers\PublicQueueTicketController;
 use App\Http\Controllers\PublicRevenueReportController;
 use App\Http\Controllers\PublicRevenueSummaryController;
+use App\Http\Controllers\PublicSchedulePageController;
 use App\Http\Controllers\PublicServiceBoardController;
 use App\Http\Controllers\PublicServiceController;
 use App\Http\Controllers\PublicSiteController;
@@ -288,6 +290,15 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::put('/pengaturan/beranda', [HomepageController::class, 'update'])
         ->can('update', [Setting::class, $homepage])
         ->name('pengaturan.beranda.update');
+
+    // The Jadwal page's texts, part of Layanan Luar Kantor (SettingPolicy, D-080).
+    $schedulePage = "'".Setting::SCHEDULE_PAGE."'";
+    Route::get('/pengaturan/keliling', [SchedulePageController::class, 'show'])
+        ->can('view', [Setting::class, $schedulePage])
+        ->name('pengaturan.keliling.show');
+    Route::put('/pengaturan/keliling', [SchedulePageController::class, 'update'])
+        ->can('update', [Setting::class, $schedulePage])
+        ->name('pengaturan.keliling.update');
 
     // Pengaturan Situs: every employee reads it, only administrators save it (SettingPolicy, D-026).
     $site = "'".Setting::SITE."'";
@@ -629,6 +640,7 @@ Route::prefix('public')
             ->where('slug', Article::SLUG_PATTERN)
             ->name('berita.show');
         Route::get('/beranda', PublicHomepageController::class)->name('beranda.show');
+        Route::get('/jadwal', PublicSchedulePageController::class)->name('jadwal.show');
         Route::get('/situs', PublicSiteController::class)->name('situs.show');
         Route::get('/halaman/{slug}', PublicStaticPageController::class)
             ->whereIn('slug', array_keys(StaticPage::PAGES))

@@ -212,10 +212,11 @@
     <ol class="crumbs" role="list"><li><a href="index.html">Beranda</a></li><li aria-current="page">Jadwal Pelayanan</li></ol>
     <div class="page-hero--split">
       <div>
-        <p class="eyebrow">Jadwal pelayanan</p>
-        <h1 class="h-display" data-reveal>Buka setiap hari kerja. <span class="tone">Cek dulu sebelum berangkat.</span></h1>
+        <!-- Teks pembuka ini dikelola di dashboard (Layanan Luar Kantor › Teks halaman), dimuat main.js lewat GET /api/public/jadwal -->
+        <p class="eyebrow" data-jadwal-teks="pembuka.eyebrow">Jadwal pelayanan</p>
+        <h1 class="h-display" data-jadwal-judul="pembuka" data-reveal>Buka setiap hari kerja. <span class="tone">Cek dulu sebelum berangkat.</span></h1>
       </div>
-      <p class="lead" data-reveal>Status loket di bawah mengikuti waktu Kupang (WITA) dan berubah otomatis. Hari libur nasional mengikuti ketetapan pemerintah.</p>
+      <p class="lead" data-jadwal-teks="pembuka.deskripsi" data-reveal>Status loket di bawah mengikuti waktu Kupang (WITA) dan berubah otomatis. Hari libur nasional mengikuti ketetapan pemerintah.</p>
     </div>
   </section>
 
@@ -233,8 +234,8 @@
   <section class="section">
     <div class="container split">
       <div class="split__sticky" data-reveal>
-        <p class="eyebrow">Jam loket kantor</p>
-        <h2 class="h2" style="margin-top:20px">Datang pagi. <span class="tone">Antre lebih pendek.</span></h2>
+        <p class="eyebrow" data-jadwal-teks="jam.eyebrow">Jam loket kantor</p>
+        <h2 class="h2" style="margin-top:20px" data-jadwal-judul="jam">Datang pagi. <span class="tone">Antre lebih pendek.</span></h2>
         <!-- Jam loket dari dashboard, dimuat main.js lewat GET /api/public/jam -->
         <p class="body" style="margin-top:20px" data-jam-catatan hidden></p>
       </div>
@@ -261,12 +262,12 @@
     <div class="container">
       <div class="split split--middle" style="margin-bottom: 40px">
         <div data-reveal>
-          <p class="eyebrow">Layanan di luar kantor</p>
-          <h2 class="h2" style="margin-top:20px">Kami yang datang. <span class="tone">Ke kelurahan Anda.</span></h2>
+          <p class="eyebrow" data-jadwal-teks="luarKantor.eyebrow">Layanan di luar kantor</p>
+          <h2 class="h2" style="margin-top:20px" data-jadwal-judul="luarKantor">Kami yang datang. <span class="tone">Ke kelurahan Anda.</span></h2>
         </div>
         <div data-reveal>
-          <p class="body">Samsat Keliling 01, 02, dan 03 bergiliran mendatangi kelurahan dan keramaian warga. Ada juga gerai tetap dan loket sementara di dekat Anda. Bawa STNK, notis, dan KTP asli. Jadwal minggu depan terbit setiap Jumat.</p>
-          <p class="trust" style="margin-top:14px"><svg class="i" aria-hidden="true"><use href="#i-info"/></svg>Samsat Keliling hanya melayani pajak tahunan.</p>
+          <p class="body" data-jadwal-teks="luarKantor.deskripsi">Samsat Keliling 01, 02, dan 03 bergiliran mendatangi kelurahan dan keramaian warga. Ada juga gerai tetap dan loket sementara di dekat Anda. Bawa STNK, notis, dan KTP asli. Jadwal minggu depan terbit setiap Jumat.</p>
+          <p class="trust" style="margin-top:14px" data-jadwal-catatan><svg class="i" aria-hidden="true"><use href="#i-info"/></svg>Samsat Keliling hanya melayani pajak tahunan.</p>
         </div>
       </div>
       <!-- Jadwal dari dashboard (Layanan Luar Kantor), dimuat main.js lewat GET /api/public/keliling -->

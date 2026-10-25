@@ -22,6 +22,7 @@ import { DataTable, pembantuKolom } from "@/components/data/data-table"
 import { Baris, Halaman, PengantarHalaman } from "@/components/data/page"
 import { MenuBaris, TombolHapusMassal, useHapus } from "@/components/data/row-actions"
 import { EntriSheet, useEditorEntri } from "@/components/form/entri-sheet"
+import { TeksHalamanJadwal } from "@/components/jadwal/teks-halaman-jadwal"
 import { FieldArea, FieldPilih, FieldSakelar, FieldTanggal, FieldTeks } from "@/components/form/fields"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -718,6 +719,8 @@ export default function HalamanLayananLuarKantor() {
   const [params, setParams] = useSearchParams()
   const jenisParam = params.get("jenis")
   const tabLokasi = jenisParam === "lokasi"
+  // Teks pembuka halaman Jadwal portal (D-080)
+  const tabTeks = jenisParam === "teks"
   const jenis: JenisLayananLuar = isJenis(jenisParam) ? jenisParam : "keliling"
   const { data, isLoading, error, refetch, isRefetching } = useKoleksi("keliling")
   const { data: lokasi, isLoading: memuatLokasi } = useKoleksi("lokasi")
@@ -1000,10 +1003,12 @@ export default function HalamanLayananLuarKantor() {
   return (
     <Halaman>
       <PengantarHalaman deskripsi="Pelayanan pajak di luar kantor: Samsat Keliling 01–03 berpindah lokasi per tanggal, gerai tetap seperti Samsat Corner dan Mall Pelayanan Publik, serta loket sementara untuk musim atau acara tertentu. Jadwal Samsat Keliling minggu berikutnya diperbarui setiap Jumat.">
-        <Button onClick={tabLokasi ? edLokasi.bukaBaru : ed.bukaBaru}>
-          <IconPlus />
-          {tabLokasi ? "Tambah lokasi" : TOMBOL_TAMBAH[jenis]}
-        </Button>
+        {!tabTeks && (
+          <Button onClick={tabLokasi ? edLokasi.bukaBaru : ed.bukaBaru}>
+            <IconPlus />
+            {tabLokasi ? "Tambah lokasi" : TOMBOL_TAMBAH[jenis]}
+          </Button>
+        )}
       </PengantarHalaman>
       <Alert>
         <IconServer />
@@ -1025,7 +1030,7 @@ export default function HalamanLayananLuarKantor() {
           </AlertDescription>
         </Alert>
       ) : (
-        <Tabs value={tabLokasi ? "lokasi" : jenis} onValueChange={pilihTab} className="gap-4">
+        <Tabs value={tabTeks ? "teks" : tabLokasi ? "lokasi" : jenis} onValueChange={pilihTab} className="gap-4">
           <TabsList className="flex-wrap group-data-[orientation=horizontal]/tabs:h-auto *:data-[slot=tabs-trigger]:h-auto">
             {JENIS.map((j) => (
               <TabsTrigger key={j} value={j}>
@@ -1037,6 +1042,7 @@ export default function HalamanLayananLuarKantor() {
               Lokasi
               {lokasi && <span className="text-muted-foreground tabular-nums">{lokasi.length}</span>}
             </TabsTrigger>
+            <TabsTrigger value="teks">Teks halaman</TabsTrigger>
           </TabsList>
           <TabsContent value="keliling" className="grid grid-cols-[minmax(0,1fr)] gap-4">
             {data && <PratinjauMinggu data={perJenis.keliling} semua={data} />}
@@ -1127,6 +1133,9 @@ export default function HalamanLayananLuarKantor() {
                 deskripsi: "Tambahkan lokasi yang sering dipakai, atau ketik lokasi baru saat mengisi jadwal.",
               }}
             />
+          </TabsContent>
+          <TabsContent value="teks" className="grid grid-cols-[minmax(0,1fr)] gap-4">
+            <TeksHalamanJadwal />
           </TabsContent>
         </Tabs>
       )}

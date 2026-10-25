@@ -1076,3 +1076,14 @@ Pemilik ingin halaman Laporan Penerimaan di dashboard punya tabel **Rincian pene
 | Nama | **Tabel baru "Rincian penerimaan"** (pemilik); kartu rekap per jenis daftar, kecamatan, tanggal, dll. yang sebelumnya bernama sama menjadi **Rekap penerimaan**. |
 | Kolom | Urutan dan kelompok berkas STS (Jatuh tempo, Realisasi penerimaan, Alamat), lalu Loket. "Jenis kendaraan" yang tampil sejak awal adalah kolom JENIS KENDARAAN (mis. SEPEDA MOTOR PRIBADI); JNS_KEND tersedia tersembunyi. NOPOL selalu tampil. Pilihan kolom berlaku selama halaman terbuka, seperti Riwayat impor. |
 | Di luar cakupan | Ekspor CSV rincian (data pribadi; tetap keputusan tertunda), pilihan kolom yang diingat, dan rincian lebih dari 7 hari. |
+
+## D-080 · 2026-10-25 · Teks pembuka halaman Jadwal diatur dari Layanan Luar Kantor
+
+Pemilik ingin mengubah teks bagian "Layanan di luar kantor" di halaman Jadwal portal, tetapi teks itu masih tertulis di HTML dan tidak ada menunya di dashboard.
+
+| Hal | Keputusan |
+|---|---|
+| Cakupan | **Semua teks pembuka halaman Jadwal** (pemilik): judul dan paragraf pembuka halaman, judul bagian Jam loket kantor, dan pengantar Layanan di luar kantor (teks kecil, judul dua nada, paragraf, catatan berikon). Jadwal, jam loket, status loket, dan catatan Jam Pelayanan tetap dari datanya masing-masing. |
+| Menu | **Tab "Teks halaman" di Layanan Luar Kantor** (pemilik), jadi pegawai yang mengelola jadwal luar kantor juga mengelola teks halaman itu. Disimpan sebagai pengaturan `keliling` (nama modulnya), sehingga hak akses dan log aktivitas mengikuti modul Layanan Luar Kantor. |
+| Isi awal | Seperti Beranda ([D-023](#d-023--2026-10-14--teks-beranda-tersimpan-di-server-teks-html-tetap-sebagai-isi-awal)): teks di HTML menjadi isi awal dan tetap tampil sampai dokumen pertama kali disimpan, juga bila API gagal. |
+| Isian | Judul wajib di setiap bagian; teks kecil, lanjutan judul, paragraf, dan catatan boleh dikosongkan dan tidak tampil. Batas sama dengan Beranda (120/80/80/300 karakter, catatan 160), teks polos tanpa karakter kontrol. Ada tombol **Kembalikan teks bawaan**. |

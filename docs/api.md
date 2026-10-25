@@ -23,6 +23,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET` | `/api/public/struktur` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/aplikasi` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/beranda` | anonim, hanya baca | tersedia |
+| `GET` | `/api/public/jadwal` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/halaman/{slug}` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/situs` | anonim, hanya baca | tersedia |
 | `POST` | `/api/public/pesan` | anonim, formulir Kontak | tersedia |
@@ -82,6 +83,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET`, `PUT` | `/api/pengaturan/visiMisi` | Administrator, pengelola Visi & Misi | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/profil` | Administrator, pengelola Tentang UPTD | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/beranda` | Administrator, pengelola Beranda | tersedia |
+| `GET`, `PUT` | `/api/pengaturan/keliling` | Administrator, pengelola Layanan Luar Kantor | tersedia |
 | `GET` | `/api/pengaturan/situs` | pegawai login | tersedia |
 | `PUT` | `/api/pengaturan/situs` | Administrator | tersedia |
 | `GET` | `/api/pengaturan/tema` | pegawai login | tersedia |
@@ -856,6 +858,27 @@ Penyimpanan tercatat di log aktivitas sebagai "memperbarui Beranda".
 
 Kode: `app/Http/Controllers/Dashboard/HomepageController.php`, `app/Http/Requests/Dashboard/UpdateHomepageRequest.php`, `app/Actions/SaveSetting.php`, `app/Models/Setting.php`. Tes: `tests/Feature/HomepageControllerTest.php`.
 
+## Teks halaman Jadwal di dashboard
+
+Dipakai tab *Teks halaman* di halaman *Layanan Luar Kantor* dashboard ([D-080](decisions.md#d-080--2026-10-25--teks-pembuka-halaman-jadwal-diatur-dari-layanan-luar-kantor)): teks pembuka halaman Jadwal portal, sebagai pengaturan `keliling` milik modul Layanan Luar Kantor. Tamu mendapat `401`; pegawai yang tidak mengelola modul `keliling` mendapat `403` `{"message": "Modul Layanan Luar Kantor belum ditugaskan kepada Anda."}`.
+
+```json
+{
+  "pembuka": { "eyebrow": "Jadwal pelayanan", "judul": "Buka setiap hari kerja.", "lanjutan": "Cek dulu sebelum berangkat.", "deskripsi": "…" },
+  "jam": { "eyebrow": "Jam loket kantor", "judul": "Datang pagi.", "lanjutan": "Antre lebih pendek." },
+  "luarKantor": { "eyebrow": "Layanan di luar kantor", "judul": "Kami yang datang.", "lanjutan": "Ke kelurahan Anda.", "deskripsi": "…", "catatan": "Samsat Keliling hanya melayani pajak tahunan." }
+}
+```
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `GET /api/pengaturan/keliling` | — | `200` dokumen di atas. Sebelum pertama kali disimpan: teks yang tertulis di HTML halaman Jadwal. |
+| `PUT /api/pengaturan/keliling` | dokumen lengkap | `200` dokumen tersimpan; isian opsional yang kosong disimpan sebagai `""`, kunci lain dibuang. `judul` wajib di setiap bagian; `eyebrow` maks. 120, `judul` dan `lanjutan` maks. 80, `deskripsi` maks. 300, `catatan` maks. 160 karakter, semuanya teks polos tanpa karakter kontrol (`PlainText`). `422` mis. `luarKantor.judul` "Judul layanan di luar kantor wajib diisi.", `pembuka.deskripsi` "Paragraf pembuka maksimal 300 karakter.", `jam.eyebrow` "Teks kecil jam loket maksimal 120 karakter.", `luarKantor.catatan` "Catatan layanan di luar kantor tidak boleh hanya berisi spasi atau karakter tak terlihat.", atau `jam` "Bagian jam loket wajib diisi.". |
+
+Penyimpanan tercatat di log aktivitas sebagai "memperbarui Layanan Luar Kantor"; dokumen yang sama tidak mencatat apa pun.
+
+Kode: `app/Http/Controllers/Dashboard/SchedulePageController.php`, `app/Http/Requests/Dashboard/UpdateSchedulePageRequest.php`, `app/Models/Setting.php` (`SCHEDULE_PAGE`, `INITIAL_SCHEDULE_PAGE`). Tes: `tests/Feature/SchedulePageControllerTest.php`.
+
 ## Halaman Statis di dashboard
 
 Dipakai halaman *Halaman Statis* di dashboard ([D-024](decisions.md#d-024--2026-10-14--halaman-statis-tersimpan-di-server-teks-html-tetap-sebagai-isi-awal)). Tamu mendapat `401`; pegawai yang tidak mengelola modul `halaman` mendapat `403` `{"message": "Modul Halaman Statis belum ditugaskan kepada Anda."}`.
@@ -1490,6 +1513,18 @@ Teks beranda portal ([D-023](decisions.md#d-023--2026-10-14--teks-beranda-tersim
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 
 Kode: `app/Http/Controllers/PublicHomepageController.php`, `app/Actions/ShowPublicHomepage.php`. Tes: `tests/Feature/PublicHomepageControllerTest.php`.
+
+## `GET /api/public/jadwal`
+
+Teks pembuka halaman Jadwal portal ([D-080](decisions.md#d-080--2026-10-25--teks-pembuka-halaman-jadwal-diatur-dari-layanan-luar-kantor), `initTeksJadwal()` di `public/assets/js/main.js`): dokumen `keliling` seperti di dashboard, ditambah `diperbarui`.
+
+| Hal | Perilaku |
+|---|---|
+| Berhasil | `200` `{ "pembuka", "jam", "luarKantor", "diperbarui" }`. Bila `diperbarui` `null` (belum pernah disimpan), halaman membiarkan teks HTML; bila tidak, elemen bertanda `data-jadwal-teks`, `data-jadwal-judul`, dan `data-jadwal-catatan` diganti isi ini sebagai teks polos, dan isian kosong disembunyikan. |
+| Galat | `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah batas laju yang sama dengan `GET /api/public/faq`; `503` bila data tidak bisa dibaca. Halaman tetap menampilkan teks HTML-nya. |
+| Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
+
+Kode: `app/Http/Controllers/PublicSchedulePageController.php`, `app/Actions/ShowPublicSchedulePage.php`. Tes: `tests/Feature/PublicSchedulePageControllerTest.php`, `tests/Feature/PortalPagesTest.php` (teks HTML sama dengan isi awal).
 
 ## `GET /api/public/halaman/{slug}`
 

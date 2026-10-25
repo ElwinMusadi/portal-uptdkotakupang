@@ -42,6 +42,7 @@ export const PENGATURAN_SERVER: readonly NamaPengaturan[] = [
   "visiMisi",
   "profil",
   "beranda",
+  "keliling",
   "situs",
   "tema",
   "akun",

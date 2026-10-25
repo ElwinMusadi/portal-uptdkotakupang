@@ -537,6 +537,23 @@ export interface Akun {
   email: string
 }
 
+/** Judul dua nada halaman portal: judul, lanjutan abu-abu (boleh kosong), dan teks kecil di atasnya */
+export interface JudulBagianJadwal {
+  eyebrow: string
+  judul: string
+  lanjutan: string
+}
+
+/**
+ * Teks pembuka halaman Jadwal portal (D-080), bagian modul Layanan Luar Kantor
+ * (pengaturan `keliling`). Isian kosong disembunyikan di portal.
+ */
+export interface TeksJadwal {
+  pembuka: JudulBagianJadwal & { deskripsi: string }
+  jam: JudulBagianJadwal
+  luarKantor: JudulBagianJadwal & { deskripsi: string; catatan: string }
+}
+
 export interface Pengaturan {
   situs: Situs
   tema: Tema
@@ -547,6 +564,7 @@ export interface Pengaturan {
   profil: Profil
   visiMisi: VisiMisi
   kontak: Kontak
+  keliling: TeksJadwal
   akun: Akun
 }
 

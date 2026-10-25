@@ -260,6 +260,7 @@ Halaman *Layanan Luar Kantor* (`#/jadwal/keliling`, `pages/jadwal/keliling.tsx`)
 - **Gerai Tetap**: gerai rutin seperti Samsat Corner dan Mall Pelayanan Publik, dengan hari dan jam buka. Jam yang berbeda per hari dicatat sebagai baris tersendiri.
 - **Loket Sementara**: loket musiman atau acara, mis. di kantor lurah, pasar, atau pameran, dengan tanggal mulai dan selesai.
 - Jadwal yang aktif langsung tampil di beranda ("Di luar kantor hari ini") dan halaman Jadwal portal (`GET /api/public/keliling`).
+- **Teks halaman** (`?jenis=teks`, `components/jadwal/teks-halaman-jadwal.tsx`, [D-080](decisions.md#d-080--2026-10-25--teks-pembuka-halaman-jadwal-diatur-dari-layanan-luar-kantor)): teks pembuka halaman Jadwal portal, yaitu judul dan paragraf halaman, judul bagian Jam loket kantor, serta pengantar Layanan di luar kantor (teks kecil, judul dua nada, paragraf, dan catatan berikon). Disimpan sebagai pengaturan `keliling`; sebelum disimpan pertama kali isinya sama dengan teks HTML halaman, dan sesudahnya portal memakai isi dari server (`GET /api/public/jadwal`). Isian kosong tidak tampil di portal; **Kembalikan teks bawaan** mengisi ulang formulir dengan teks awal (perlu disimpan), dan **Lihat di portal** membuka halaman Jadwal. Catatan di bawah judul Jam loket tetap diatur di Jam Pelayanan.
 
 ## Jam Pelayanan
 

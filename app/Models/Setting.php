@@ -299,6 +299,41 @@ class Setting extends Model
     ];
 
     /**
+     * The texts of the portal's Jadwal page (D-080): its opening, the heading
+     * of the office's opening hours and the introduction to the services
+     * outside the office. It belongs to Layanan Luar Kantor, which manages
+     * the page's schedules.
+     */
+    public const string SCHEDULE_PAGE = 'keliling';
+
+    /**
+     * The Jadwal page document until it is first saved: the text written in
+     * the page's markup.
+     *
+     * @var array{pembuka: array{eyebrow: string, judul: string, lanjutan: string, deskripsi: string}, jam: array{eyebrow: string, judul: string, lanjutan: string}, luarKantor: array{eyebrow: string, judul: string, lanjutan: string, deskripsi: string, catatan: string}}
+     */
+    public const array INITIAL_SCHEDULE_PAGE = [
+        'pembuka' => [
+            'eyebrow' => 'Jadwal pelayanan',
+            'judul' => 'Buka setiap hari kerja.',
+            'lanjutan' => 'Cek dulu sebelum berangkat.',
+            'deskripsi' => 'Status loket di bawah mengikuti waktu Kupang (WITA) dan berubah otomatis. Hari libur nasional mengikuti ketetapan pemerintah.',
+        ],
+        'jam' => [
+            'eyebrow' => 'Jam loket kantor',
+            'judul' => 'Datang pagi.',
+            'lanjutan' => 'Antre lebih pendek.',
+        ],
+        'luarKantor' => [
+            'eyebrow' => 'Layanan di luar kantor',
+            'judul' => 'Kami yang datang.',
+            'lanjutan' => 'Ke kelurahan Anda.',
+            'deskripsi' => 'Samsat Keliling 01, 02, dan 03 bergiliran mendatangi kelurahan dan keramaian warga. Ada juga gerai tetap dan loket sementara di dekat Anda. Bawa STNK, notis, dan KTP asli. Jadwal minggu depan terbit setiap Jumat.',
+            'catatan' => 'Samsat Keliling hanya melayani pajak tahunan.',
+        ],
+    ];
+
+    /**
      * The columns of the Pemetaan PKB tables (D-052), chosen by an
      * Administrator: "wilayah" for the kecamatan and kelurahan tables in the
      * dashboard and on the portal, "sasaran" for the dashboard's collection
@@ -525,6 +560,17 @@ class Setting extends Model
     public static function homepage(): array
     {
         return self::upgradeHomepage(self::query()->find(self::HOMEPAGE)?->value ?? self::INITIAL_HOMEPAGE);
+    }
+
+    /**
+     * The Jadwal page document as the dashboard edits it (D-080); the text
+     * in the page's markup until it is first saved.
+     *
+     * @return array{pembuka: array{eyebrow: string, judul: string, lanjutan: string, deskripsi: string}, jam: array{eyebrow: string, judul: string, lanjutan: string}, luarKantor: array{eyebrow: string, judul: string, lanjutan: string, deskripsi: string, catatan: string}}
+     */
+    public static function schedulePage(): array
+    {
+        return self::query()->find(self::SCHEDULE_PAGE)?->value ?? self::INITIAL_SCHEDULE_PAGE;
     }
 
     /**

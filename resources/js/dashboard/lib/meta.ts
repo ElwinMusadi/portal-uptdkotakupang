@@ -48,6 +48,7 @@ export const PENGATURAN_LABEL: Record<NamaPengaturan, string> = {
   profil: "Tentang UPTD",
   visiMisi: "Visi & Misi",
   kontak: "Kontak & Kanal Pengaduan",
+  keliling: "Teks halaman Jadwal",
   akun: "Akun",
 }
 
@@ -55,7 +56,8 @@ export const PENGATURAN_LABEL: Record<NamaPengaturan, string> = {
 export const LABEL_MODUL_SERVER = daftarKata([
   // Penyesuaian jadwal bagian dari modul Jam Pelayanan, lokasi bagian dari Layanan Luar Kantor
   ...KOLEKSI_SERVER.filter((k) => k !== "penyesuaian" && k !== "lokasi").map((k) => KOLEKSI_LABEL[k]),
-  ...PENGATURAN_SERVER.map((n) => PENGATURAN_LABEL[n]),
+  // Teks halaman Jadwal bagian dari Layanan Luar Kantor, yang sudah tercantum lewat koleksinya
+  ...PENGATURAN_SERVER.filter((n) => n !== "keliling").map((n) => PENGATURAN_LABEL[n]),
 ])
 
 function daftarKata(kata: string[]): string {
