@@ -26,6 +26,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET` | `/api/public/jadwal` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/halaman/{slug}` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/situs` | anonim, hanya baca | tersedia |
+| `GET` | `/api/public/pengumuman` | anonim, hanya baca | tersedia |
 | `POST` | `/api/public/pesan` | anonim, formulir Kontak | tersedia |
 | `GET` | `/api/public/pesan/{kode}` | anonim, halaman lacak pesan | tersedia |
 | `POST` | `/api/public/pesan/lacak` | anonim, lacak pesan di halaman Kontak | tersedia |
@@ -86,6 +87,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET`, `PUT` | `/api/pengaturan/keliling` | Administrator, pengelola Layanan Luar Kantor | tersedia |
 | `GET` | `/api/pengaturan/situs` | pegawai login | tersedia |
 | `PUT` | `/api/pengaturan/situs` | Administrator | tersedia |
+| `GET`, `PUT` | `/api/pengaturan/berita` | Administrator, pengelola Berita & Pengumuman | tersedia |
 | `GET` | `/api/pengaturan/tema` | pegawai login | tersedia |
 | `PUT`, `POST` | `/api/pengaturan/tema`, `/api/pengaturan/tema/pratinjau` | Administrator | tersedia |
 | `GET`, `POST` | `/api/pengaturan/tema/riwayat`, `/api/pengaturan/tema/tautan-pratinjau` | Administrator | tersedia |
@@ -233,7 +235,7 @@ Kunci modul untuk `modul` ([D-010](decisions.md#d-010--2026-10-13--penugasan-mod
 | | | `pemutakhiran` | Jadwal Pemutakhiran |
 | | | `aplikasi` | Aplikasi & Situs ([D-054](decisions.md#d-054--2026-10-17--halaman-aplikasi--situs)) |
 
-Endpoint konten dashboard (`/api/koleksi/…`, `/api/pengaturan/…`) wajib menolak pegawai yang tidak mengelola modul koleksi atau pengaturan itu. `/api/koleksi/faq`, `/api/koleksi/keliling`, `/api/koleksi/penyesuaian`, `/api/koleksi/pesan`, `/api/koleksi/layanan`, `/api/koleksi/halaman`, `/api/koleksi/pemutakhiran`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/statistik`, `/api/pengaturan/kontak`, `/api/pengaturan/visiMisi`, `/api/pengaturan/profil`, dan `/api/pengaturan/beranda` sudah melakukannya; daftar Jadwal Pemutakhiran boleh dibaca semua pegawai, sebatas standar modul mereka, dan Pengaturan Situs, yang bukan milik modul mana pun, boleh dibaca semua pegawai tetapi hanya disimpan Administrator (`/api/pengaturan/situs`).
+Endpoint konten dashboard (`/api/koleksi/…`, `/api/pengaturan/…`) wajib menolak pegawai yang tidak mengelola modul koleksi atau pengaturan itu. `/api/koleksi/faq`, `/api/koleksi/keliling`, `/api/koleksi/penyesuaian`, `/api/koleksi/pesan`, `/api/koleksi/layanan`, `/api/koleksi/halaman`, `/api/koleksi/pemutakhiran`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/statistik`, `/api/pengaturan/kontak`, `/api/pengaturan/visiMisi`, `/api/pengaturan/profil`, `/api/pengaturan/beranda`, `/api/pengaturan/keliling`, dan `/api/pengaturan/berita` sudah melakukannya; daftar Jadwal Pemutakhiran boleh dibaca semua pegawai, sebatas standar modul mereka, dan Pengaturan Situs, yang bukan milik modul mana pun, boleh dibaca semua pegawai tetapi hanya disimpan Administrator (`/api/pengaturan/situs`).
 
 ## Tanya Jawab di dashboard
 
@@ -941,19 +943,35 @@ Dipakai tab *Situs* di halaman Pengaturan, sidebar, dan tautan ke portal di dash
   "namaPortal": "PINTU", "kepanjangan": "Portal Informasi dan Pelayanan",
   "namaInstansi": "UPTD Pendapatan Daerah Wilayah Kota Kupang", "namaSingkat": "Samsat Kota Kupang",
   "induk": "Badan Pendapatan dan Aset Daerah Provinsi Nusa Tenggara Timur", "deskripsi": "…",
-  "urlPortal": "../", "hakCipta": "© 2026 UPTD Pendapatan Daerah Wilayah Kota Kupang · BPAD Provinsi NTT",
-  "bilahPengumuman": { "aktif": true, "teks": "…", "tautanLabel": "Baca", "tautanUrl": "berita-detail.html" }
+  "urlPortal": "../", "hakCipta": "© 2026 UPTD Pendapatan Daerah Wilayah Kota Kupang · BPAD Provinsi NTT"
 }
 ```
 
 | Alamat | Permintaan | Respons |
 |---|---|---|
-| `GET /api/pengaturan/situs` | — | `200` dokumen di atas. Sebelum pertama kali disimpan: identitas dan pengumuman yang tertulis di HTML portal. |
-| `PUT /api/pengaturan/situs` | dokumen lengkap | `200` dokumen tersimpan; isian opsional yang kosong disimpan sebagai `""`, `aktif` sebagai boolean, dan kunci lain dibuang. Isi yang sama dengan yang tersimpan tidak disimpan ulang. `422` bila nama portal, nama instansi, atau alamat portal kosong; teks pengumuman kosong selama bilah ditampilkan; batas panjang terlampaui; alamat portal atau tujuan tautan bukan tautan portal yang sah; atau teks berisi karakter kontrol. |
+| `GET /api/pengaturan/situs` | — | `200` dokumen di atas. Sebelum pertama kali disimpan: identitas yang tertulis di HTML portal. Bilah pengumuman bukan lagi bagian dokumen ini sejak [D-082](decisions.md#d-082--2026-10-25--bilah-pengumuman-pindah-ke-berita--pengumuman). |
+| `PUT /api/pengaturan/situs` | dokumen lengkap | `200` dokumen tersimpan; isian opsional yang kosong disimpan sebagai `""`, dan kunci lain dibuang, termasuk `bilahPengumuman` yang masih dikirim dashboard lama (D-082). Isi yang sama dengan yang tersimpan tidak disimpan ulang. `422` bila nama portal, nama instansi, atau alamat portal kosong; batas panjang terlampaui; alamat portal bukan tautan portal yang sah; atau teks berisi karakter kontrol. |
 
 Penyimpanan tidak tercatat di log aktivitas, karena log aktivitas disusun per modul.
 
 Kode: `app/Http/Controllers/Dashboard/SiteController.php`, `app/Http/Requests/Dashboard/UpdateSiteRequest.php`, `app/Policies/SettingPolicy.php`, `app/Actions/SaveSetting.php`, `app/Models/Setting.php`. Tes: `tests/Feature/SiteControllerTest.php`.
+
+## Bilah pengumuman di dashboard
+
+Dipakai tab *Bilah pengumuman* di halaman Berita & Pengumuman ([D-082](decisions.md#d-082--2026-10-25--bilah-pengumuman-pindah-ke-berita--pengumuman)): bilah di atas daftar berita halaman Informasi, sebagai pengaturan `berita` milik modul Berita & Pengumuman. Sebelumnya bagian Pengaturan Situs (D-026). Tamu mendapat `401`; pegawai yang tidak mengelola modul `berita` mendapat `403` `{"message": "Modul Berita & Pengumuman belum ditugaskan kepada Anda."}`.
+
+```json
+{ "aktif": true, "teks": "Program pemutihan denda PKB diperpanjang hingga 31 Desember 2026.", "tautanLabel": "Baca", "tautanUrl": "berita-detail.html" }
+```
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `GET /api/pengaturan/berita` | — | `200` bilah di atas. Sebelum pertama kali disimpan: bilah yang tertulis di HTML halaman Informasi. |
+| `PUT /api/pengaturan/berita` | bilah lengkap | `200` bilah tersimpan; `aktif` sebagai boolean, isian opsional yang kosong sebagai `""`, kunci lain dibuang. `422`: `aktif` "Pilihan tampilkan bilah pengumuman wajib diisi." atau "… tidak valid."; `teks` "Teks pengumuman wajib diisi selama bilah pengumuman ditampilkan.", "Teks pengumuman maksimal 200 karakter."; `tautanLabel` maks. 30; `tautanUrl` maks. 300 dan harus tautan portal yang sah (`PortalLink`); teks tanpa karakter kontrol. |
+
+Penyimpanan tercatat di log aktivitas sebagai "memperbarui Berita & Pengumuman"; bilah yang sama tidak mencatat apa pun. Migrasi `move_announcement_bar_to_its_own_setting` memindahkan bilah yang sudah tersimpan di dokumen `situs` ke dokumen `berita` beserta waktu simpannya, tanpa mengubah waktu dokumen `situs`.
+
+Kode: `app/Http/Controllers/Dashboard/AnnouncementBarController.php`, `app/Http/Requests/Dashboard/UpdateAnnouncementBarRequest.php`, `app/Models/Setting.php` (`ANNOUNCEMENT_BAR`, `INITIAL_ANNOUNCEMENT_BAR`). Tes: `tests/Feature/AnnouncementBarControllerTest.php`, `tests/Feature/MoveAnnouncementBarMigrationTest.php`.
 
 ## Tampilan di dashboard
 
@@ -1544,10 +1562,10 @@ Kode: `app/Http/Controllers/PublicStaticPageController.php`, `app/Actions/ShowPu
 
 ## `GET /api/public/situs`
 
-Deskripsi dan hak cipta di kaki halaman portal serta bilah pengumuman di halaman Informasi ([D-026](decisions.md#d-026--2026-10-14--pengaturan-situs-tersimpan-di-server-hanya-administrator-yang-menyimpan), `initSitus()` di `public/assets/js/main.js`).
+Deskripsi dan hak cipta di kaki halaman portal ([D-026](decisions.md#d-026--2026-10-14--pengaturan-situs-tersimpan-di-server-hanya-administrator-yang-menyimpan), `initSitus()` di `public/assets/js/main.js`).
 
 ```json
-{ "deskripsi": "…", "hakCipta": "…", "bilahPengumuman": { "aktif": true, "teks": "…", "tautanLabel": "Baca", "tautanUrl": "berita-detail.html" }, "diperbarui": null }
+{ "deskripsi": "…", "hakCipta": "…", "diperbarui": null }
 ```
 
 | Hal | Perilaku |
@@ -1556,7 +1574,25 @@ Deskripsi dan hak cipta di kaki halaman portal serta bilah pengumuman di halaman
 | Galat | `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah batas laju yang sama dengan `GET /api/public/faq`; `503` bila data tidak bisa dibaca. Portal tetap menampilkan teks HTML-nya. |
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 
+Bilah pengumuman tidak lagi termuat di sini sejak D-082; lihat `GET /api/public/pengumuman`.
+
 Kode: `app/Http/Controllers/PublicSiteController.php`, `app/Actions/ShowPublicSite.php`. Tes: `tests/Feature/PublicSiteControllerTest.php`.
+
+## `GET /api/public/pengumuman`
+
+Bilah pengumuman di atas daftar berita halaman Informasi ([D-082](decisions.md#d-082--2026-10-25--bilah-pengumuman-pindah-ke-berita--pengumuman), `initPengumuman()` di `public/assets/js/main.js`, penanda `data-pengumuman`, `data-pengumuman-teks`, `data-pengumuman-label`).
+
+```json
+{ "aktif": true, "teks": "…", "tautanLabel": "Baca", "tautanUrl": "berita-detail.html", "diperbarui": null }
+```
+
+| Hal | Perilaku |
+|---|---|
+| Berhasil | `200`. Bila `diperbarui` `null`, halaman membiarkan bilah di HTML; bila tidak, bilah disembunyikan saat dimatikan atau teksnya kosong, teks dipasang sebagai teks polos, dan tujuan tautan dipasang hanya bila skemanya diizinkan (tanpa tujuan yang sah, bilah tampil sebagai teks tanpa label). |
+| Galat | `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah batas laju yang sama dengan `GET /api/public/faq`; `503` bila data tidak bisa dibaca. Halaman tetap menampilkan bilah di HTML. |
+| Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
+
+Kode: `app/Http/Controllers/PublicAnnouncementBarController.php`, `app/Actions/ShowPublicAnnouncementBar.php`. Tes: `tests/Feature/PublicAnnouncementBarControllerTest.php`, `tests/Feature/PortalPagesTest.php` (bilah di HTML sama dengan isi awal).
 
 ## `POST /api/public/pesan`
 

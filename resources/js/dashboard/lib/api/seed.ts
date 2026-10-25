@@ -7,6 +7,7 @@
  * dashboard dibuka agar grafik dan status pemutakhiran tetap bermakna.
  */
 import { newId } from "@/lib/id"
+import { BILAH_PENGUMUMAN_BAWAAN } from "@/lib/bilah-pengumuman"
 import { TEKS_JADWAL_BAWAAN } from "@/lib/teks-jadwal"
 import { TEMA_BAWAAN, TEMA_BAWAAN_PORTAL } from "@/lib/tema"
 import type {
@@ -1056,13 +1057,8 @@ function pengaturan(sekarang: Date): Pengaturan {
         "Unit Pelaksana Teknis Daerah pada Badan Pendapatan dan Aset Daerah Provinsi Nusa Tenggara Timur. Kantor bersama Samsat Kota Kupang.",
       urlPortal: "../",
       hakCipta: "© 2026 UPTD Pendapatan Daerah Wilayah Kota Kupang · BPAD Provinsi NTT",
-      bilahPengumuman: {
-        aktif: true,
-        teks: "Program pemutihan denda PKB diperpanjang hingga 31 Desember 2026.",
-        tautanLabel: "Baca",
-        tautanUrl: "berita-detail.html",
-      },
     },
+    berita: structuredClone(BILAH_PENGUMUMAN_BAWAAN),
     beranda: {
       hero: {
         eyebrow: "UPTD Pendapatan Daerah Wilayah Kota Kupang · Samsat Kota Kupang",
@@ -1359,6 +1355,7 @@ export function seedWaktuPengaturan(sekarang = new Date()): Record<keyof Pengatu
     visiMisi: waktu(sekarang, 40),
     kontak: waktu(sekarang, 40),
     keliling: waktu(sekarang, 40),
+    berita: waktu(sekarang, 40),
     akun: waktu(sekarang, 40),
   }
 }

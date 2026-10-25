@@ -9,6 +9,7 @@ use App\Http\Controllers\Dashboard\ActivityController;
 use App\Http\Controllers\Dashboard\AgencyAppController;
 use App\Http\Controllers\Dashboard\AgencyAppDeletionController;
 use App\Http\Controllers\Dashboard\AgencyAppOrderController;
+use App\Http\Controllers\Dashboard\AnnouncementBarController;
 use App\Http\Controllers\Dashboard\ArticleController;
 use App\Http\Controllers\Dashboard\ArticleDeletionController;
 use App\Http\Controllers\Dashboard\ClockInController;
@@ -82,6 +83,7 @@ use App\Http\Controllers\Dashboard\UploadController;
 use App\Http\Controllers\Dashboard\VehicleController;
 use App\Http\Controllers\Dashboard\VisionMissionController;
 use App\Http\Controllers\PublicAgencyAppController;
+use App\Http\Controllers\PublicAnnouncementBarController;
 use App\Http\Controllers\PublicArticleController;
 use App\Http\Controllers\PublicContactController;
 use App\Http\Controllers\PublicDocumentationController;
@@ -290,6 +292,15 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::put('/pengaturan/beranda', [HomepageController::class, 'update'])
         ->can('update', [Setting::class, $homepage])
         ->name('pengaturan.beranda.update');
+
+    // The announcement bar on Informasi, part of Berita & Pengumuman (SettingPolicy, D-082).
+    $announcementBar = "'".Setting::ANNOUNCEMENT_BAR."'";
+    Route::get('/pengaturan/berita', [AnnouncementBarController::class, 'show'])
+        ->can('view', [Setting::class, $announcementBar])
+        ->name('pengaturan.berita.show');
+    Route::put('/pengaturan/berita', [AnnouncementBarController::class, 'update'])
+        ->can('update', [Setting::class, $announcementBar])
+        ->name('pengaturan.berita.update');
 
     // The Jadwal page's texts, part of Layanan Luar Kantor (SettingPolicy, D-080).
     $schedulePage = "'".Setting::SCHEDULE_PAGE."'";
@@ -641,6 +652,7 @@ Route::prefix('public')
             ->name('berita.show');
         Route::get('/beranda', PublicHomepageController::class)->name('beranda.show');
         Route::get('/jadwal', PublicSchedulePageController::class)->name('jadwal.show');
+        Route::get('/pengumuman', PublicAnnouncementBarController::class)->name('pengumuman.show');
         Route::get('/situs', PublicSiteController::class)->name('situs.show');
         Route::get('/halaman/{slug}', PublicStaticPageController::class)
             ->whereIn('slug', array_keys(StaticPage::PAGES))

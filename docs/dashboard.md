@@ -386,6 +386,7 @@ Halaman *Berita & Pengumuman* (`#/berita`, `pages/berita/`) tersimpan di server 
 - Foto sampul diunggah ke server (tujuan `berita`). Menandai *Jadikan tulisan utama* melepas tanda itu dari tulisan lain di server.
 - Tulisan terbit tampil di halaman Informasi, di `/berita/{slug}`, dan, bila ditandai *Tampilkan di beranda*, di ubin Pengumuman papan layanan beranda (`GET /api/public/berita`).
 - Hanya artikel peluncuran PINTU yang menjadi data awal, sebagai draf. Tulisan contoh dari penyimpanan peramban tidak dipindahkan.
+- Tab **Bilah pengumuman** (`?tab=bilah`, `components/berita/bilah-pengumuman.tsx`, [D-082](decisions.md#d-082--2026-10-25--bilah-pengumuman-pindah-ke-berita--pengumuman)): pita pengumuman di atas daftar berita halaman Informasi (sakelar tampil, teks maks. 200 karakter, label tautan, tujuan tautan) dengan contoh tampilannya. Disimpan sebagai pengaturan `berita` dan langsung tampil di portal tanpa alur publikasi (`GET /api/public/pengumuman`); pengelola modul dan Administrator yang mengubahnya. Sebelum D-082 bilah ini ada di Pengaturan › Situs dan hanya Administrator yang menyimpannya.
 
 ## Dokumentasi Kegiatan
 
@@ -450,7 +451,7 @@ Halaman *Jadwal Pemutakhiran* (`#/pemutakhiran`, `pages/pemutakhiran.tsx`) tersi
 Tab *Situs* di halaman *Pengaturan* (`#/pengaturan?tab=situs`, `pages/pengaturan.tsx`) tersimpan di server sejak [D-026](decisions.md#d-026--2026-10-14--pengaturan-situs-tersimpan-di-server-hanya-administrator-yang-menyimpan) sebagai pengaturan `situs`.
 
 - Hanya Administrator yang menyimpan; pegawai lain melihat formulirnya dalam keadaan hanya-baca. Nama portal dan nama yang dikenal tetap dipakai sidebar, dan alamat portal dipakai tautan *Lihat di portal*.
-- Deskripsi dan hak cipta tampil di kaki halaman portal, dan bilah pengumuman di halaman Informasi (`GET /api/public/situs`). Teks di HTML portal tetap tampil sampai pengaturan pertama kali disimpan. Nama di kepala halaman dan judul tab tetap mengikuti HTML.
+- Deskripsi dan hak cipta tampil di kaki halaman portal (`GET /api/public/situs`). Bilah pengumuman halaman Informasi pindah ke Berita & Pengumuman ([D-082](decisions.md#d-082--2026-10-25--bilah-pengumuman-pindah-ke-berita--pengumuman)). Teks di HTML portal tetap tampil sampai pengaturan pertama kali disimpan. Nama di kepala halaman dan judul tab tetap mengikuti HTML.
 
 ## Profil akun
 

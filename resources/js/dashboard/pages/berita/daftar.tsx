@@ -1,7 +1,8 @@
 import { IconPlus, IconSpeakerphone, IconStarFilled } from "@tabler/icons-react"
-import { Link, useNavigate } from "react-router"
+import { Link, useNavigate, useSearchParams } from "react-router"
 
 import { MenuAksiAlur, useAksiAlur } from "@/components/alur/alur"
+import { FormBilahPengumuman } from "@/components/berita/bilah-pengumuman"
 import { DataTable, HeaderUrut, pembantuKolom } from "@/components/data/data-table"
 import { Halaman, PengantarHalaman } from "@/components/data/page"
 import { MenuBaris, TombolHapusMassal, useHapus } from "@/components/data/row-actions"
@@ -9,6 +10,7 @@ import { StatusAlurBadge } from "@/components/data/status-badge"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Berita } from "@/lib/api"
 import { khususAdministrator } from "@/lib/alur"
 import { tanggal, waktuRelatif } from "@/lib/format"
@@ -19,6 +21,9 @@ const k = pembantuKolom<Berita>()
 
 export default function DaftarBerita() {
   const navigate = useNavigate()
+  // Tab Bilah pengumuman (D-082) tersimpan di alamat: #/berita?tab=bilah
+  const [params, setParams] = useSearchParams()
+  const tab = params.get("tab") === "bilah" ? "bilah" : "tulisan"
   const { data, isLoading } = useKoleksi("berita")
   const hapus = useHapus("berita", "tulisan")
   const { jalankan, dialog } = useAksiAlur("berita")
@@ -94,7 +99,7 @@ export default function DaftarBerita() {
 
   return (
     <Halaman>
-      <PengantarHalaman deskripsi="Tulisan tampil di halaman Informasi dan beranda portal setelah melewati alur publikasi. Tandai satu tulisan sebagai sorotan untuk dijadikan tulisan utama.">
+      <PengantarHalaman deskripsi="Tulisan tampil di halaman Informasi dan beranda portal setelah melewati alur publikasi. Tandai satu tulisan sebagai sorotan untuk dijadikan tulisan utama. Bilah pengumuman di atas daftar berita diatur di tab Bilah pengumuman.">
         <Button asChild>
           <Link to="/berita/baru">
             <IconPlus />
@@ -102,52 +107,63 @@ export default function DaftarBerita() {
           </Link>
         </Button>
       </PengantarHalaman>
-      <DataTable
-        data={data}
-        memuat={isLoading}
-        columns={kolom}
-        label="Daftar berita dan pengumuman"
-        sortingAwal={[{ id: "tanggal", desc: true }]}
-        cari={{ placeholder: "Cari judul atau ringkasan…", teks: (b) => `${b.judul} ${b.ringkasan}` }}
-        filter={[
-          {
-            id: "kategori",
-            label: "Kategori",
-            opsi: Object.entries(KATEGORI_BERITA).map(([nilai, label]) => ({ nilai, label })),
-            nilai: (b) => b.kategori,
-          },
-          {
-            id: "status",
-            label: "Status",
-            opsi: Object.entries(STATUS_ALUR).map(([nilai, s]) => ({ nilai, label: s.label })),
-            nilai: (b) => b.status,
-          },
-        ]}
-        pilih={!khususAdmin}
-        tindakanMassal={
-          khususAdmin
-            ? undefined
-            : (baris, bersihkan) => (
-                <TombolHapusMassal
-                  onClick={async () => {
-                    if (await hapus(baris.map((b) => b.id))) bersihkan()
-                  }}
-                />
-              )
-        }
-        kosong={{
-          judul: "Belum ada tulisan",
-          deskripsi: "Tulis berita atau pengumuman pertama untuk portal.",
-          tindakan: (
-            <Button asChild size="sm">
-              <Link to="/berita/baru">
-                <IconPlus />
-                Tulis berita
-              </Link>
-            </Button>
-          ),
-        }}
-      />
+      <Tabs value={tab} onValueChange={(t) => setParams(t === "bilah" ? { tab: "bilah" } : {}, { replace: true })} className="gap-4">
+        <TabsList>
+          <TabsTrigger value="tulisan">Tulisan</TabsTrigger>
+          <TabsTrigger value="bilah">Bilah pengumuman</TabsTrigger>
+        </TabsList>
+        <TabsContent value="tulisan" className="grid grid-cols-[minmax(0,1fr)]">
+          <DataTable
+            data={data}
+            memuat={isLoading}
+            columns={kolom}
+            label="Daftar berita dan pengumuman"
+            sortingAwal={[{ id: "tanggal", desc: true }]}
+            cari={{ placeholder: "Cari judul atau ringkasan…", teks: (b) => `${b.judul} ${b.ringkasan}` }}
+            filter={[
+              {
+                id: "kategori",
+                label: "Kategori",
+                opsi: Object.entries(KATEGORI_BERITA).map(([nilai, label]) => ({ nilai, label })),
+                nilai: (b) => b.kategori,
+              },
+              {
+                id: "status",
+                label: "Status",
+                opsi: Object.entries(STATUS_ALUR).map(([nilai, s]) => ({ nilai, label: s.label })),
+                nilai: (b) => b.status,
+              },
+            ]}
+            pilih={!khususAdmin}
+            tindakanMassal={
+              khususAdmin
+                ? undefined
+                : (baris, bersihkan) => (
+                    <TombolHapusMassal
+                      onClick={async () => {
+                        if (await hapus(baris.map((b) => b.id))) bersihkan()
+                      }}
+                    />
+                  )
+            }
+            kosong={{
+              judul: "Belum ada tulisan",
+              deskripsi: "Tulis berita atau pengumuman pertama untuk portal.",
+              tindakan: (
+                <Button asChild size="sm">
+                  <Link to="/berita/baru">
+                    <IconPlus />
+                    Tulis berita
+                  </Link>
+                </Button>
+              ),
+            }}
+          />
+        </TabsContent>
+        <TabsContent value="bilah" className="grid grid-cols-[minmax(0,1fr)] gap-4">
+          <FormBilahPengumuman />
+        </TabsContent>
+      </Tabs>
       {dialog}
     </Halaman>
   )

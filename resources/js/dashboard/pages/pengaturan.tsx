@@ -15,7 +15,7 @@ import { z } from "zod"
 
 import { useKonfirmasi } from "@/components/data/confirm"
 import { Bagian, Baris, Halaman, PengantarHalaman } from "@/components/data/page"
-import { FieldArea, FieldPilih, FieldSakelar, FieldTeks } from "@/components/form/fields"
+import { FieldArea, FieldPilih, FieldTeks } from "@/components/form/fields"
 import { FormPengaturan } from "@/components/form/settings-form"
 import { TabTampilan } from "@/components/tema/tab-tampilan"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -41,17 +41,6 @@ const skemaSitus = z.object({
   deskripsi: v.teks.max(300, maks(300)),
   urlPortal: v.wajib("Alamat portal").max(300, maks(300)).pipe(v.tautan),
   hakCipta: v.teks.max(160, maks(160)),
-  bilahPengumuman: z
-    .object({
-      aktif: z.boolean(),
-      teks: v.teks.max(200, maks(200)),
-      tautanLabel: v.teks.max(30, maks(30)),
-      tautanUrl: v.tautan.pipe(z.string().max(300, maks(300))),
-    })
-    .refine((b) => !b.aktif || b.teks.trim() !== "", {
-      path: ["teks"],
-      message: "Teks pengumuman wajib diisi selama bilah pengumuman ditampilkan.",
-    }),
 })
 
 // Nama dan surel mengikuti akun server; jabatan, unit, dan peran disimpan per akun (D-027)
@@ -99,14 +88,6 @@ function TabSitus() {
                 deskripsi="Relatif terhadap folder dashboard (../) atau alamat lengkap."
               />
               <FieldTeks control={form.control} name="hakCipta" label="Teks hak cipta" />
-            </Baris>
-          </Bagian>
-          <Bagian judul="Bilah pengumuman" deskripsi="Pita pengumuman singkat di atas daftar berita.">
-            <FieldSakelar control={form.control} name="bilahPengumuman.aktif" label="Tampilkan bilah pengumuman" />
-            <FieldTeks control={form.control} name="bilahPengumuman.teks" label="Teks pengumuman" />
-            <Baris>
-              <FieldTeks control={form.control} name="bilahPengumuman.tautanLabel" label="Label tautan" />
-              <FieldTeks control={form.control} name="bilahPengumuman.tautanUrl" label="Tujuan tautan" placeholder="./berita/judul-tulisan" />
             </Baris>
           </Bagian>
         </fieldset>

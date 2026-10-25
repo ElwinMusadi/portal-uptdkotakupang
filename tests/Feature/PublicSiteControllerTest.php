@@ -15,33 +15,31 @@ class PublicSiteControllerTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
-    public function test_shows_the_footer_and_announcement_in_the_markup_without_a_time_until_first_saved(): void
+    public function test_shows_the_footer_in_the_markup_without_a_time_until_first_saved(): void
     {
         $this->getJson('/api/public/situs')
             ->assertOk()
             ->assertExactJson([
                 'deskripsi' => Setting::INITIAL_SITE['deskripsi'],
                 'hakCipta' => Setting::INITIAL_SITE['hakCipta'],
-                'bilahPengumuman' => Setting::INITIAL_SITE['bilahPengumuman'],
                 'diperbarui' => null,
             ]);
     }
 
-    public function test_publishes_only_the_footer_and_announcement_of_the_saved_document(): void
+    public function test_publishes_only_the_footer_of_the_saved_document(): void
     {
         $site = Setting::INITIAL_SITE;
         $site['deskripsi'] = 'Deskripsi baru.';
         $site['urlPortal'] = 'https://intra.example.go.id/';
-        $site['bilahPengumuman']['aktif'] = false;
         $setting = Setting::query()->forceCreate(['name' => Setting::SITE, 'value' => $site]);
 
         $response = $this->getJson('/api/public/situs');
 
         $response->assertOk()
             ->assertJsonPath('deskripsi', 'Deskripsi baru.')
-            ->assertJsonPath('bilahPengumuman.aktif', false)
             ->assertJsonPath('diperbarui', $setting->updated_at->toIso8601String());
-        $this->assertSame(['deskripsi', 'hakCipta', 'bilahPengumuman', 'diperbarui'], array_keys($response->json()));
+        // The announcement bar has its own endpoint since D-082 (GET /api/public/pengumuman)
+        $this->assertSame(['deskripsi', 'hakCipta', 'diperbarui'], array_keys($response->json()));
     }
 
     public function test_starts_no_session_forbids_caching_and_rejects_query_parameters(): void

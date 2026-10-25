@@ -48,7 +48,8 @@ class SiteControllerTest extends TestCase
         $site['namaPortal'] = 'PINTU Kupang';
         $site['kepanjangan'] = null;
         $site['hakCipta'] = null;
-        $site['bilahPengumuman'] = ['aktif' => false, 'teks' => null, 'tautanLabel' => null, 'tautanUrl' => null, 'warna' => 'merah'];
+        // A dashboard opened before D-082 still sends the announcement bar; it belongs to Berita & Pengumuman now
+        $site['bilahPengumuman'] = ['aktif' => false, 'teks' => 'Bilah lama', 'tautanLabel' => null, 'tautanUrl' => null];
         $site['logo'] = 'x.png';
 
         $response = $this->actingAs($administrator)->putJson('/api/pengaturan/situs', $site);
@@ -56,23 +57,13 @@ class SiteControllerTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('namaPortal', 'PINTU Kupang')
             ->assertJsonPath('kepanjangan', '')
-            ->assertJsonPath('hakCipta', '')
-            ->assertJsonPath('bilahPengumuman', ['aktif' => false, 'teks' => '', 'tautanLabel' => '', 'tautanUrl' => '']);
+            ->assertJsonPath('hakCipta', '');
         $this->assertArrayNotHasKey('logo', $response->json());
+        $this->assertArrayNotHasKey('bilahPengumuman', $response->json());
+        $this->assertSame(Setting::INITIAL_ANNOUNCEMENT_BAR, Setting::announcementBar());
         $this->assertSame($response->json(), Setting::site());
         $this->assertDatabaseCount('activities', 0);
         $this->actingAs(User::factory()->create())->getJson('/api/pengaturan')->assertOk()->assertJsonStructure(['situs']);
-    }
-
-    public function test_stores_the_announcement_switch_as_a_boolean(): void
-    {
-        $site = Setting::INITIAL_SITE;
-        $site['bilahPengumuman']['aktif'] = 0;
-
-        $this->actingAs(User::factory()->administrator()->create())->putJson('/api/pengaturan/situs', $site)
-            ->assertOk()
-            ->assertJsonPath('bilahPengumuman.aktif', false);
-        $this->assertFalse(Setting::site()['bilahPengumuman']['aktif']);
     }
 
     public function test_validates_the_document(): void
@@ -83,7 +74,6 @@ class SiteControllerTest extends TestCase
         $site['namaInstansi'] = str_repeat('a', 121);
         $site['urlPortal'] = 'javascript:alert(1)';
         $site['deskripsi'] = "Deskripsi\u{0007}";
-        $site['bilahPengumuman'] = ['aktif' => true, 'teks' => '', 'tautanLabel' => str_repeat('a', 31), 'tautanUrl' => 'data:text/html,x'];
 
         $this->actingAs($administrator)->putJson('/api/pengaturan/situs', $site)
             ->assertUnprocessable()
@@ -92,13 +82,7 @@ class SiteControllerTest extends TestCase
                 'namaInstansi' => 'Nama instansi maksimal 120 karakter.',
                 'urlPortal' => 'Alamat portal publik: gunakan alamat lengkap (https://…) atau nama halaman portal (mis. jadwal.html).',
                 'deskripsi' => 'Deskripsi singkat berisi karakter kontrol yang tidak diizinkan.',
-                'bilahPengumuman.teks' => 'Teks pengumuman wajib diisi selama bilah pengumuman ditampilkan.',
-                'bilahPengumuman.tautanLabel' => 'Label tautan maksimal 30 karakter.',
-                'bilahPengumuman.tautanUrl' => 'Tujuan tautan: gunakan alamat lengkap (https://…) atau nama halaman portal (mis. jadwal.html).',
             ]);
-        $this->actingAs($administrator)->putJson('/api/pengaturan/situs', ['bilahPengumuman' => ['aktif' => 'ya']] + Setting::INITIAL_SITE)
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors(['bilahPengumuman.aktif' => 'Pilihan tampilkan bilah pengumuman tidak valid.']);
         $this->assertDatabaseCount('settings', 0);
     }
 }

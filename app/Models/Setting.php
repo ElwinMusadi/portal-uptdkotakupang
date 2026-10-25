@@ -176,18 +176,18 @@ class Setting extends Model
     ];
 
     /**
-     * The portal's identity and announcement bar (Pengaturan Situs). It
-     * belongs to no dashboard module: every employee reads it, only
-     * administrators save it (D-026).
+     * The portal's identity (Pengaturan Situs). It belongs to no dashboard
+     * module: every employee reads it, only administrators save it (D-026).
+     * The announcement bar it held moved to Berita & Pengumuman (D-082).
      */
     public const string SITE = 'situs';
 
     /**
      * The Pengaturan Situs document until it is first saved: the identity
-     * and announcement written in the portal's markup, which stay there and
-     * are replaced only by a saved document (D-026).
+     * written in the portal's markup, which stays there and is replaced only
+     * by a saved document (D-026).
      *
-     * @var array{namaPortal: string, kepanjangan: string, namaInstansi: string, namaSingkat: string, induk: string, deskripsi: string, urlPortal: string, hakCipta: string, bilahPengumuman: array{aktif: bool, teks: string, tautanLabel: string, tautanUrl: string}}
+     * @var array{namaPortal: string, kepanjangan: string, namaInstansi: string, namaSingkat: string, induk: string, deskripsi: string, urlPortal: string, hakCipta: string}
      */
     public const array INITIAL_SITE = [
         'namaPortal' => 'PINTU',
@@ -198,12 +198,27 @@ class Setting extends Model
         'deskripsi' => 'Unit Pelaksana Teknis Daerah pada Badan Pendapatan dan Aset Daerah Provinsi Nusa Tenggara Timur. Kantor bersama Samsat Kota Kupang.',
         'urlPortal' => '../',
         'hakCipta' => '© 2026 UPTD Pendapatan Daerah Wilayah Kota Kupang · BPAD Provinsi NTT',
-        'bilahPengumuman' => [
-            'aktif' => true,
-            'teks' => 'Program pemutihan denda PKB diperpanjang hingga 31 Desember 2026.',
-            'tautanLabel' => 'Baca',
-            'tautanUrl' => 'berita-detail.html',
-        ],
+    ];
+
+    /**
+     * The announcement bar above the news on the portal's Informasi page
+     * (D-082): part of Berita & Pengumuman, whose managers publish urgent
+     * announcements themselves (D-031). It was part of Pengaturan Situs until
+     * D-082.
+     */
+    public const string ANNOUNCEMENT_BAR = 'berita';
+
+    /**
+     * The announcement bar until it is first saved: the one written in the
+     * Informasi page's markup.
+     *
+     * @var array{aktif: bool, teks: string, tautanLabel: string, tautanUrl: string}
+     */
+    public const array INITIAL_ANNOUNCEMENT_BAR = [
+        'aktif' => true,
+        'teks' => 'Program pemutihan denda PKB diperpanjang hingga 31 Desember 2026.',
+        'tautanLabel' => 'Baca',
+        'tautanUrl' => 'berita-detail.html',
     ];
 
     /**
@@ -528,11 +543,22 @@ class Setting extends Model
     /**
      * The Pengaturan Situs document as the dashboard edits it.
      *
-     * @return array{namaPortal: string, kepanjangan: string, namaInstansi: string, namaSingkat: string, induk: string, deskripsi: string, urlPortal: string, hakCipta: string, bilahPengumuman: array{aktif: bool, teks: string, tautanLabel: string, tautanUrl: string}}
+     * @return array{namaPortal: string, kepanjangan: string, namaInstansi: string, namaSingkat: string, induk: string, deskripsi: string, urlPortal: string, hakCipta: string}
      */
     public static function site(): array
     {
         return self::query()->find(self::SITE)?->value ?? self::INITIAL_SITE;
+    }
+
+    /**
+     * The announcement bar as Berita & Pengumuman edits it (D-082); the one in
+     * the Informasi page's markup until it is first saved.
+     *
+     * @return array{aktif: bool, teks: string, tautanLabel: string, tautanUrl: string}
+     */
+    public static function announcementBar(): array
+    {
+        return self::query()->find(self::ANNOUNCEMENT_BAR)?->value ?? self::INITIAL_ANNOUNCEMENT_BAR;
     }
 
     /**

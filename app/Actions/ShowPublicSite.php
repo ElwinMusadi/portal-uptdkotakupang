@@ -10,12 +10,13 @@ class ShowPublicSite
 {
     /**
      * The parts of Pengaturan Situs the portal shows: the footer's
-     * description and copyright, and the announcement bar. Until the
-     * document is first saved they are the text in the portal's markup and
-     * "diperbarui" is null, so the portal keeps the markup as it is. A source
-     * that cannot be read fails the request.
+     * description and copyright. The announcement bar has its own document
+     * since D-082 (ShowPublicAnnouncementBar). Until the document is first
+     * saved they are the text in the portal's markup and "diperbarui" is
+     * null, so the portal keeps the markup as it is. A source that cannot be
+     * read fails the request.
      *
-     * @return array{deskripsi: string, hakCipta: string, bilahPengumuman: array{aktif: bool, teks: string, tautanLabel: string, tautanUrl: string}, diperbarui: ?string}
+     * @return array{deskripsi: string, hakCipta: string, diperbarui: ?string}
      *
      * @throws PublicContentUnavailableException
      */
@@ -32,7 +33,6 @@ class ShowPublicSite
         return [
             'deskripsi' => $site['deskripsi'],
             'hakCipta' => $site['hakCipta'],
-            'bilahPengumuman' => $site['bilahPengumuman'],
             'diperbarui' => $setting?->updated_at?->toIso8601String(),
         ];
     }

@@ -2107,19 +2107,15 @@
   }
 
   /* ---------- Pengaturan Situs ----------
-     Deskripsi dan hak cipta di kaki halaman serta bilah pengumuman di
-     Informasi dikelola di dashboard (Pengaturan Situs) dan dibaca dari
-     GET /api/public/situs (D-026). Teks di HTML sama dengan isi awal di
-     server dan tetap tampil; skrip menggantinya hanya bila pengaturan sudah
-     pernah disimpan. Teks dipasang sebagai teks polos dan tautan hanya
-     dengan skema yang diizinkan. Bila API gagal, teks HTML tetap tampil. */
+     Deskripsi dan hak cipta di kaki halaman dikelola di dashboard
+     (Pengaturan Situs) dan dibaca dari GET /api/public/situs (D-026). Teks di
+     HTML sama dengan isi awal di server dan tetap tampil; skrip menggantinya
+     hanya bila pengaturan sudah pernah disimpan. Teks dipasang sebagai teks
+     polos. Bila API gagal, teks HTML tetap tampil. */
   async function muatSitus() {
     const s = await ambilJson("/api/public/situs");
     const teks = (x) => typeof x === "string";
-    const b = s?.bilahPengumuman;
-    const valid = teks(s?.deskripsi) && teks(s.hakCipta)
-      && typeof b?.aktif === "boolean" && teks(b.teks) && teks(b.tautanLabel) && teks(b.tautanUrl)
-      && (s.diperbarui === null || teks(s.diperbarui));
+    const valid = teks(s?.deskripsi) && teks(s.hakCipta) && (s.diperbarui === null || teks(s.diperbarui));
     if (!valid) throw new Error("Respons tidak dikenal");
     return s;
   }
@@ -2127,27 +2123,53 @@
   function initSitus() {
     const deskripsi = $$("[data-situs-deskripsi]");
     const hakCipta = $$("[data-situs-hak-cipta]");
-    const pengumuman = $("[data-situs-pengumuman]");
-    if (!deskripsi.length && !hakCipta.length && !pengumuman) return;
+    if (!deskripsi.length && !hakCipta.length) return;
 
     const tampilkan = (s) => {
       deskripsi.forEach((el) => { el.textContent = s.deskripsi; el.hidden = !s.deskripsi; });
       hakCipta.forEach((el) => { el.textContent = s.hakCipta; el.hidden = !s.hakCipta; });
-      if (!pengumuman) return;
-      const b = s.bilahPengumuman;
+    };
+
+    muatSitus()
+      .then((s) => { if (typeof s.diperbarui === "string") tampilkan(s); })
+      .catch(() => {});
+  }
+
+  /* ---------- Bilah pengumuman ----------
+     Bilah di atas daftar berita halaman Informasi dikelola di dashboard
+     (Berita & Pengumuman › Bilah pengumuman) dan dibaca dari
+     GET /api/public/pengumuman (D-082; sebelumnya bagian Pengaturan Situs).
+     Teks di HTML sama dengan isi awal di server dan tetap tampil; skrip
+     menggantinya hanya bila bilah sudah pernah disimpan. Teks dipasang
+     sebagai teks polos dan tautan hanya dengan skema yang diizinkan. Bila
+     API gagal, teks HTML tetap tampil. */
+  async function muatPengumuman() {
+    const b = await ambilJson("/api/public/pengumuman");
+    const teks = (x) => typeof x === "string";
+    const valid = typeof b?.aktif === "boolean" && teks(b.teks) && teks(b.tautanLabel) && teks(b.tautanUrl)
+      && (b.diperbarui === null || teks(b.diperbarui));
+    if (!valid) throw new Error("Respons tidak dikenal");
+    return b;
+  }
+
+  function initPengumuman() {
+    const pengumuman = $("[data-pengumuman]");
+    if (!pengumuman) return;
+
+    const tampilkan = (b) => {
       pengumuman.closest("section").hidden = !b.aktif || !b.teks;
-      $("[data-situs-pengumuman-teks]", pengumuman).textContent = b.teks;
+      $("[data-pengumuman-teks]", pengumuman).textContent = b.teks;
       // Tanpa tujuan yang sah, bilah tetap tampil sebagai teks, bukan tautan
       const url = tautanAman(b.tautanUrl);
-      const label = $("[data-situs-pengumuman-label]", pengumuman);
+      const label = $("[data-pengumuman-label]", pengumuman);
       if (url) pengumuman.setAttribute("href", url);
       else pengumuman.removeAttribute("href");
       label.replaceChildren(b.tautanLabel || "Baca", $("svg", label));
       label.hidden = !url;
     };
 
-    muatSitus()
-      .then((s) => { if (typeof s.diperbarui === "string") tampilkan(s); })
+    muatPengumuman()
+      .then((b) => { if (typeof b.diperbarui === "string") tampilkan(b); })
       .catch(() => {});
   }
 
@@ -3070,7 +3092,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    initNav(); initCari(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil(); initLayanan(); initDokumen(); initInformasi(); initBerita(); initPengumumanBeranda(); initDokumentasi(); initStruktur(); initAplikasi(); initBeranda(); initTeksJadwal(); initHalaman(); initSitus();
+    initNav(); initCari(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil(); initLayanan(); initDokumen(); initInformasi(); initBerita(); initPengumumanBeranda(); initDokumentasi(); initStruktur(); initAplikasi(); initBeranda(); initTeksJadwal(); initHalaman(); initSitus(); initPengumuman();
     initDash(); initDialogs(); initGag(); initFilters(); initGallery(); initFaq(); initForms(); initPesanForm(); initLacakPesanForm(); initAuthFit(); initUtilities(); initWarnaBilah();
   });
 })();

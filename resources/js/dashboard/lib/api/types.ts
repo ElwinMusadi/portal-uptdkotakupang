@@ -406,12 +406,18 @@ export interface Situs {
   deskripsi: string
   urlPortal: string
   hakCipta: string
-  bilahPengumuman: {
-    aktif: boolean
-    teks: string
-    tautanLabel: string
-    tautanUrl: string
-  }
+}
+
+/**
+ * Bilah pengumuman di atas daftar berita halaman Informasi (D-082), bagian
+ * modul Berita & Pengumuman (pengaturan `berita`); dulu bagian Pengaturan Situs.
+ */
+export interface BilahPengumuman {
+  aktif: boolean
+  teks: string
+  tautanLabel: string
+  /** Kosong = bilah tampil sebagai teks tanpa tautan */
+  tautanUrl: string
 }
 
 export interface Judul2Nada {
@@ -565,6 +571,7 @@ export interface Pengaturan {
   visiMisi: VisiMisi
   kontak: Kontak
   keliling: TeksJadwal
+  berita: BilahPengumuman
   akun: Akun
 }
 

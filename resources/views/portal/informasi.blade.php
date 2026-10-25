@@ -220,10 +220,11 @@
   </section>
 
   <section class="container">
-    <a class="card card--link" href="berita-detail.html" style="padding:16px 20px;display:flex;gap:14px;align-items:center;flex-wrap:wrap" data-reveal data-situs-pengumuman>
+    <!-- Bilah pengumuman dikelola di dashboard (Berita & Pengumuman › Bilah pengumuman), dimuat main.js lewat GET /api/public/pengumuman -->
+    <a class="card card--link" href="berita-detail.html" style="padding:16px 20px;display:flex;gap:14px;align-items:center;flex-wrap:wrap" data-reveal data-pengumuman>
       <span class="tag tag--accent"><svg class="i" aria-hidden="true"><use href="#i-megaphone"/></svg>Pengumuman</span>
-      <span class="title-sm" style="flex:1;min-width:220px" data-situs-pengumuman-teks>Program pemutihan denda PKB diperpanjang hingga 31 Desember 2026.</span>
-      <span class="link-arrow small" data-situs-pengumuman-label>Baca<svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
+      <span class="title-sm" style="flex:1;min-width:220px" data-pengumuman-teks>Program pemutihan denda PKB diperpanjang hingga 31 Desember 2026.</span>
+      <span class="link-arrow small" data-pengumuman-label>Baca<svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
     </a>
   </section>
 

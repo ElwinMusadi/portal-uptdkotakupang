@@ -214,12 +214,13 @@ class PortalPagesTest extends TestCase
     public function test_keeps_the_initial_announcement_in_the_markup_for_the_public_api_to_replace(): void
     {
         $html = $this->get('/informasi')->assertOk()->getContent();
-        $announcement = Setting::INITIAL_SITE['bilahPengumuman'];
+        $announcement = Setting::INITIAL_ANNOUNCEMENT_BAR;
 
-        $this->assertSame(1, preg_match('/<a class="card card--link" href="([^"]*)"[^>]*data-situs-pengumuman>(.*?)<\/a>/s', $html, $bar));
+        $this->assertSame(1, preg_match('/<a class="card card--link" href="([^"]*)"[^>]*data-pengumuman>(.*?)<\/a>/s', $html, $bar));
         $this->assertSame($announcement['tautanUrl'], $bar[1]);
-        $this->assertStringContainsString("data-situs-pengumuman-teks>{$announcement['teks']}</span>", $bar[2]);
-        $this->assertStringContainsString("data-situs-pengumuman-label>{$announcement['tautanLabel']}<svg", $bar[2]);
+        $this->assertStringContainsString("data-pengumuman-teks>{$announcement['teks']}</span>", $bar[2]);
+        $this->assertStringContainsString("data-pengumuman-label>{$announcement['tautanLabel']}<svg", $bar[2]);
+        $this->assertStringNotContainsString('data-situs-pengumuman', $html);
     }
 
     public function test_leaves_the_contact_page_details_and_complaint_channels_to_the_public_api(): void

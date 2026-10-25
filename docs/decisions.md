@@ -355,6 +355,7 @@ Pengaturan Situs kini tersimpan di server. Kaki halaman portal dan bilah pengumu
 | Akses | **Hanya Administrator yang menyimpan** (keputusan pemilik): pengaturan ini berlaku untuk seluruh portal dan bukan milik modul mana pun. Semua pegawai boleh membacanya untuk sidebar dan tautan ke portal; di dashboard, formulirnya hanya-baca bagi pegawai lain. Karena log aktivitas disusun per modul, penyimpanan ini tidak dicatat di sana, sama seperti pengelolaan akun. Waktu simpannya tetap tercatat (`GET /api/pengaturan`). |
 | Portal | **Portal membaca bilah pengumuman serta deskripsi dan hak cipta di kaki halaman** (keputusan pemilik), lewat `GET /api/public/situs`, yang hanya memuat bagian itu. Nama dan logo di kepala halaman, merek di kaki halaman, judul tab, dan baris hak cipta ringkas di halaman Login tetap mengikuti HTML, supaya tidak berganti setelah halaman dimuat dan tetap terbaca mesin pencari. |
 | Isi awal | Teks yang tertulis di HTML portal menjadi isi awal dan tetap tampil sampai pengaturan pertama kali disimpan, seperti Beranda (D-023). Bila API gagal, teks HTML yang tampil. Tes portal memastikan teks isi awal masih sama dengan teks di HTML. |
+| Diubah | [D-082](#d-082--2026-10-25--bilah-pengumuman-pindah-ke-berita--pengumuman): bilah pengumuman pindah ke Berita & Pengumuman (pengaturan `berita`, `GET /api/public/pengumuman`); Pengaturan Situs kini hanya identitas portal. |
 | Tampilan | Teks dipasang sebagai teks polos. Deskripsi atau hak cipta yang dikosongkan disembunyikan. Bilah pengumuman disembunyikan bila dimatikan atau teksnya kosong. Tanpa tujuan tautan yang sah, bilah tampil sebagai teks tanpa tautan dan tanpa label. |
 
 Setiap halaman portal yang memiliki kaki halaman kini memakai satu permintaan tambahan dari batas laju API publik (D-013).
@@ -441,7 +442,7 @@ Berita & Pengumuman kini tersimpan di server dengan alur publikasi. Halaman Info
 | Tampilan portal | Halaman Informasi menampilkan tulisan utama, daftar tulisan lain dengan saringan kategori dan pencarian, serta arsip enam pengumuman terbaru. Navigasi halaman (1, 2, 3) yang hanya contoh dihapus, sehingga semua tulisan terbit tampil. Tulisan tanpa foto memakai ilustrasi kategori. Papan layanan beranda menampilkan pengumuman terbaru yang ditandai tampil di beranda, dengan tanda "Baru" selama tujuh hari setelah terbit. Bila belum ada tulisan terbit, setiap bagian menyatakannya. Bila API gagal, tampil keterangan dan tombol coba lagi. Tanggal tayang hanya ditampilkan, bukan jadwal terbit. |
 | Dashboard | Unggahan `berita` dikirim ke server. Penghapusan hanya ditawarkan kepada Administrator. Penyunting tidak terkunci bagi pengelola Berita. Ringkasan, antrean kerja, menu perintah, Jadwal Pemutakhiran, dan *Pengaturan › Data* hanya membaca berita bila pengguna boleh membacanya. |
 
-Bilah pengumuman di halaman Informasi tetap diatur di Pengaturan Situs (D-026). Untuk menautkannya ke sebuah tulisan, isi tujuan tautan dengan `./berita/{slug}`.
+Bilah pengumuman di halaman Informasi semula diatur di Pengaturan Situs (D-026); sejak [D-082](#d-082--2026-10-25--bilah-pengumuman-pindah-ke-berita--pengumuman) di Berita & Pengumuman › Bilah pengumuman. Untuk menautkannya ke sebuah tulisan, isi tujuan tautan dengan `./berita/{slug}`.
 
 ## D-032 · 2026-10-14 · Dokumentasi Kegiatan tersimpan di server; galeri disusun per bulan
 
@@ -1096,3 +1097,15 @@ Di desktop, pemilik menilai judul (kiri) dan paragraf (kanan) bagian *Layanan di
 |---|---|
 | Perataan | **Titik tengah paragraf = titik tengah judul** (pemilik); teks kecil tetap di atas judul. Kolom kanan diberi ruang atas setinggi baris teks kecil (`.eyebrow` berupa inline-flex, jadi setinggi satu baris teks badan: `--fs-body` × `--lh-body`) ditambah jarak judul 20 px; bila teks kecil disembunyikan (D-080), 20 px saja. Hanya di desktop (≥ 961 px); di layar sempit susunannya satu kolom. |
 | Cakupan | **Semua bagian serupa** (pemilik): kolom kiri berteks kecil + `.h2`, kolom kanan berupa paragraf `.body` atau diawali paragraf. Kini: Jadwal › Layanan di luar kantor, Layanan › Panduan dan Alur non-tunai, Profil › Tugas & fungsi, Visi & Misi › Misi. Bagian Cek biaya pajak (kolom kanan kalkulator) dan Maklumat pelayanan tidak berubah. |
+
+## D-082 · 2026-10-25 · Bilah pengumuman pindah ke Berita & Pengumuman
+
+Pemilik tidak menemukan cara mengubah bilah pengumuman halaman Informasi di Berita & Pengumuman, karena bilah itu bagian Pengaturan Situs (D-026). Pemilik meminta bilah dipindah ke Berita & Pengumuman, sebab isinya pengumuman, bukan pengaturan situs.
+
+| Hal | Keputusan |
+|---|---|
+| Letak | **Tab "Bilah pengumuman" di halaman Berita & Pengumuman** (`#/berita?tab=bilah`), di samping tab Tulisan, dengan contoh tampilannya. Bagian Bilah pengumuman dihapus dari Pengaturan › Situs. |
+| Penyimpanan | Dokumen pengaturan tersendiri bernama modulnya, `berita`, sehingga hak akses (`SettingPolicy`) dan log aktivitas ("memperbarui Berita & Pengumuman") mengikuti modul itu. Isian dan batasnya tetap seperti di D-026 (teks maks. 200 dan wajib selama tampil, label 30, tujuan tautan portal yang sah). |
+| Yang mengubah | Administrator dan **pegawai bermodul Berita & Pengumuman**, langsung tayang saat disimpan, sejalan dengan [D-031](#d-031--2026-10-14--berita--pengumuman-tersimpan-di-server-pengelola-berita-menerbitkan-sendiri) (pengelola berita menerbitkan pengumuman sendiri karena sering mendesak). Sebelumnya hanya Administrator, karena Pengaturan Situs bukan milik modul mana pun. |
+| Data lama | Migrasi memindahkan bilah yang sudah tersimpan di dokumen `situs` ke dokumen `berita` beserta waktu simpannya, sehingga portal tetap menampilkan isi yang sama; waktu dokumen `situs` tidak berubah. |
+| Portal | Bilah dibaca dari `GET /api/public/pengumuman` (`initPengumuman()`), dan `GET /api/public/situs` kini hanya deskripsi dan hak cipta kaki halaman. Teks bilah di HTML tetap isi awal, seperti sebelumnya. Isi produksi saat dipindah sama dengan teks HTML, jadi `main.js` lama yang masih tersimpan di cache (Cloudflare, maks. 4 jam) tidak menampilkan perbedaan. |
