@@ -202,20 +202,29 @@ class Setting extends Model
 
     /**
      * The announcement bar above the news on the portal's Informasi page
-     * (D-082): part of Berita & Pengumuman, whose managers publish urgent
-     * announcements themselves (D-031). It was part of Pengaturan Situs until
-     * D-082.
+     * (D-082), and below Beranda's opening when chosen (D-083): part of
+     * Berita & Pengumuman, whose managers publish urgent announcements
+     * themselves (D-031). It was part of Pengaturan Situs until D-082.
      */
     public const string ANNOUNCEMENT_BAR = 'berita';
 
     /**
+     * Where the announcement bar's text comes from (D-083): the text written
+     * in it, or one published Tulisan of Berita & Pengumuman, of any category.
+     */
+    public const array ANNOUNCEMENT_BAR_SOURCES = ['teks', 'tulisan'];
+
+    /**
      * The announcement bar until it is first saved: the one written in the
-     * Informasi page's markup.
+     * Informasi page's markup, not shown on Beranda (D-083).
      *
-     * @var array{aktif: bool, teks: string, tautanLabel: string, tautanUrl: string}
+     * @var array{aktif: bool, beranda: bool, sumber: string, tulisan: ?string, teks: string, tautanLabel: string, tautanUrl: string}
      */
     public const array INITIAL_ANNOUNCEMENT_BAR = [
         'aktif' => true,
+        'beranda' => false,
+        'sumber' => 'teks',
+        'tulisan' => null,
         'teks' => 'Program pemutihan denda PKB diperpanjang hingga 31 Desember 2026.',
         'tautanLabel' => 'Baca',
         'tautanUrl' => 'berita-detail.html',
@@ -552,13 +561,25 @@ class Setting extends Model
 
     /**
      * The announcement bar as Berita & Pengumuman edits it (D-082); the one in
-     * the Informasi page's markup until it is first saved.
+     * the Informasi page's markup until it is first saved. A bar saved before
+     * D-083 has its own text and is not shown on Beranda.
      *
-     * @return array{aktif: bool, teks: string, tautanLabel: string, tautanUrl: string}
+     * @return array{aktif: bool, beranda: bool, sumber: string, tulisan: ?string, teks: string, tautanLabel: string, tautanUrl: string}
      */
     public static function announcementBar(): array
     {
-        return self::query()->find(self::ANNOUNCEMENT_BAR)?->value ?? self::INITIAL_ANNOUNCEMENT_BAR;
+        return self::withAnnouncementBarDefaults(self::query()->find(self::ANNOUNCEMENT_BAR)?->value);
+    }
+
+    /**
+     * A stored announcement bar with the fields added after it was saved.
+     *
+     * @param  ?array<string, mixed>  $bar
+     * @return array{aktif: bool, beranda: bool, sumber: string, tulisan: ?string, teks: string, tautanLabel: string, tautanUrl: string}
+     */
+    public static function withAnnouncementBarDefaults(?array $bar): array
+    {
+        return array_replace(self::INITIAL_ANNOUNCEMENT_BAR, $bar ?? []);
     }
 
     /**

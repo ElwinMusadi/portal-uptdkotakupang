@@ -278,6 +278,19 @@
             <svg class="i" aria-hidden="true"><use href="#i-lock" /></svg>Gratis
             dan tanpa perantara. Setiap informasi diverifikasi petugas UPTD.
           </p>
+          <!-- Bilah pengumuman (D-083): tampil bila dipilih untuk Beranda di dashboard (Berita & Pengumuman › Bilah pengumuman), dimuat main.js lewat GET /api/public/pengumuman -->
+          <div class="hero__pengumuman" data-pengumuman-beranda hidden>
+            <a class="card card--link" data-pengumuman-bilah>
+              <span class="tag tag--accent" data-pengumuman-tag
+                ><svg class="i" aria-hidden="true"><use href="#i-megaphone" /></svg
+                >Pengumuman</span
+              >
+              <span class="title-sm" data-pengumuman-teks></span>
+              <span class="link-arrow small" data-pengumuman-label
+                >Baca<svg class="i" aria-hidden="true"><use href="#i-arrow-right" /></svg
+              ></span>
+            </a>
+          </div>
         </div>
       </section>
 

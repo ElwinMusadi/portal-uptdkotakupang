@@ -32,7 +32,7 @@ class MoveAnnouncementBarMigrationTest extends TestCase
         $this->assertSame(self::SAVED_SITE['bilahPengumuman'], json_decode($bar->value, true));
         $this->assertSame('2026-10-13 23:13:33', (string) $bar->created_at);
         $this->assertSame('2026-10-13 23:13:33', (string) $bar->updated_at);
-        $this->assertSame(self::SAVED_SITE['bilahPengumuman'], Setting::announcementBar());
+        $this->assertSame(self::SAVED_SITE['bilahPengumuman'], Setting::query()->find(Setting::ANNOUNCEMENT_BAR)?->value);
         $this->assertSame(Setting::INITIAL_SITE, Setting::site());
         $this->assertSame('2026-10-13 23:13:33', (string) DB::table('settings')->where('name', 'situs')->value('updated_at'));
         $this->getJson('/api/public/pengumuman')->assertOk()->assertJsonPath('teks', 'Loket tutup Senin.')->assertJsonPath('diperbarui', '2026-10-13T23:13:33+00:00');
@@ -46,7 +46,7 @@ class MoveAnnouncementBarMigrationTest extends TestCase
 
         $this->migration()->up();
 
-        $this->assertSame($kept, Setting::announcementBar());
+        $this->assertSame($kept, Setting::query()->find(Setting::ANNOUNCEMENT_BAR)?->value);
         $this->assertArrayNotHasKey('bilahPengumuman', Setting::site());
     }
 

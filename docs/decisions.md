@@ -442,7 +442,7 @@ Berita & Pengumuman kini tersimpan di server dengan alur publikasi. Halaman Info
 | Tampilan portal | Halaman Informasi menampilkan tulisan utama, daftar tulisan lain dengan saringan kategori dan pencarian, serta arsip enam pengumuman terbaru. Navigasi halaman (1, 2, 3) yang hanya contoh dihapus, sehingga semua tulisan terbit tampil. Tulisan tanpa foto memakai ilustrasi kategori. Papan layanan beranda menampilkan pengumuman terbaru yang ditandai tampil di beranda, dengan tanda "Baru" selama tujuh hari setelah terbit. Bila belum ada tulisan terbit, setiap bagian menyatakannya. Bila API gagal, tampil keterangan dan tombol coba lagi. Tanggal tayang hanya ditampilkan, bukan jadwal terbit. |
 | Dashboard | Unggahan `berita` dikirim ke server. Penghapusan hanya ditawarkan kepada Administrator. Penyunting tidak terkunci bagi pengelola Berita. Ringkasan, antrean kerja, menu perintah, Jadwal Pemutakhiran, dan *Pengaturan › Data* hanya membaca berita bila pengguna boleh membacanya. |
 
-Bilah pengumuman di halaman Informasi semula diatur di Pengaturan Situs (D-026); sejak [D-082](#d-082--2026-10-25--bilah-pengumuman-pindah-ke-berita--pengumuman) di Berita & Pengumuman › Bilah pengumuman. Untuk menautkannya ke sebuah tulisan, isi tujuan tautan dengan `./berita/{slug}`.
+Bilah pengumuman di halaman Informasi semula diatur di Pengaturan Situs (D-026); sejak [D-082](#d-082--2026-10-25--bilah-pengumuman-pindah-ke-berita--pengumuman) di Berita & Pengumuman › Bilah pengumuman. Untuk menautkannya ke sebuah tulisan, pilih *Ambil dari tulisan* di tab itu ([D-083](#d-083--2026-10-25--bilah-pengumuman-dari-tulisan-dan-di-beranda)); bilah lalu memakai judul dan kategori tulisan dan menaut ke halamannya.
 
 ## D-032 · 2026-10-14 · Dokumentasi Kegiatan tersimpan di server; galeri disusun per bulan
 
@@ -1108,4 +1108,20 @@ Pemilik tidak menemukan cara mengubah bilah pengumuman halaman Informasi di Beri
 | Penyimpanan | Dokumen pengaturan tersendiri bernama modulnya, `berita`, sehingga hak akses (`SettingPolicy`) dan log aktivitas ("memperbarui Berita & Pengumuman") mengikuti modul itu. Isian dan batasnya tetap seperti di D-026 (teks maks. 200 dan wajib selama tampil, label 30, tujuan tautan portal yang sah). |
 | Yang mengubah | Administrator dan **pegawai bermodul Berita & Pengumuman**, langsung tayang saat disimpan, sejalan dengan [D-031](#d-031--2026-10-14--berita--pengumuman-tersimpan-di-server-pengelola-berita-menerbitkan-sendiri) (pengelola berita menerbitkan pengumuman sendiri karena sering mendesak). Sebelumnya hanya Administrator, karena Pengaturan Situs bukan milik modul mana pun. |
 | Data lama | Migrasi memindahkan bilah yang sudah tersimpan di dokumen `situs` ke dokumen `berita` beserta waktu simpannya, sehingga portal tetap menampilkan isi yang sama; waktu dokumen `situs` tidak berubah. |
+| Diubah | [D-083](#d-083--2026-10-25--bilah-pengumuman-dari-tulisan-dan-di-beranda): bilah bisa diambil dari satu tulisan terbit dan bisa tampil juga di Beranda. |
 | Portal | Bilah dibaca dari `GET /api/public/pengumuman` (`initPengumuman()`), dan `GET /api/public/situs` kini hanya deskripsi dan hak cipta kaki halaman. Teks bilah di HTML tetap isi awal, seperti sebelumnya. Isi produksi saat dipindah sama dengan teks HTML, jadi `main.js` lama yang masih tersimpan di cache (Cloudflare, maks. 4 jam) tidak menampilkan perbedaan. |
+
+## D-083 · 2026-10-25 · Bilah pengumuman dari tulisan dan di Beranda
+
+Pemilik meminta bilah pengumuman bisa diambil dari tulisan Berita & Pengumuman dengan semua kategorinya, dan punya pilihan untuk tampil di halaman Beranda.
+
+| Hal | Keputusan |
+|---|---|
+| Sumber | Pilihan **Isi bilah**: *Tulis sendiri* (seperti D-082) atau *Ambil dari tulisan*. Bila dari tulisan, pengelola **memilih satu tulisan terbit** dari semua kategori (Berita, Pengumuman, Samsat Keliling, Edukasi) (pemilik). Bilah memakai judul tulisan dan menaut ke `/berita/{slug}`; label tautan tetap bisa diubah. Teks yang ditulis sendiri tetap tersimpan, jadi bisa dipakai lagi. |
+| Label | **Kategori tulisan** (pemilik): bilah dari tulisan berlabel Berita, Pengumuman, Samsat Keliling, atau Edukasi; bilah teks sendiri tetap berlabel Pengumuman. |
+| Tulisan ditarik atau dihapus | **Bilah disembunyikan** (pemilik) di Informasi dan Beranda sampai tulisan lain dipilih, dan tab Bilah pengumuman memberi peringatan. Server menolak menyimpan bilah yang tampil dengan tulisan yang tidak terbit ("Tulisan yang dipilih belum terbit atau sudah dihapus."), tetapi bilah yang dimatikan boleh tetap menyimpan pilihannya. |
+| Beranda | Sakelar **Tampilkan juga di Beranda** (bawaan mati), berlaku selama bilah ditampilkan; halaman Informasi selalu menampilkannya. Letaknya **di bawah pembuka Beranda**, sesudah tombol dan catatan pembuka, sebelum papan layanan hari ini (pemilik), dengan gaya kartu yang sama seperti di Informasi. Di HTML Beranda bilah tersembunyi dan baru ditampilkan skrip bila API menyatakannya tampil. |
+| Data lama | Dokumen `berita` yang disimpan sebelum D-083 dibaca sebagai teks sendiri yang tidak tampil di Beranda (`Setting::withAnnouncementBarDefaults()`), tanpa migrasi. |
+| Portal | `GET /api/public/pengumuman` kini juga memberi `beranda` dan `kategori`. Untuk bilah dari tulisan, server sudah mengisi `teks` dan `tautanUrl` dari tulisan itu dan tidak mengirim id tulisan. Penanda di Beranda (`data-pengumuman-beranda`) sengaja berbeda dari `data-pengumuman`: `main.js` lama yang masih di cache Cloudflare (maks. 4 jam) mengisi `[data-pengumuman]` di halaman mana pun, jadi akan menampilkan bilah di Beranda. Selama cache itu, bilah dari tulisan tampil tanpa tautan, karena `main.js` lama belum mengenal alamat `/berita/…`. |
+
+Ubin Pengumuman di papan layanan Beranda tetap berasal dari tulisan bertanda *Tampilkan di beranda* (D-031); bilah pengumuman terpisah dari ubin itu.

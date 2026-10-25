@@ -220,9 +220,9 @@
   </section>
 
   <section class="container">
-    <!-- Bilah pengumuman dikelola di dashboard (Berita & Pengumuman › Bilah pengumuman), dimuat main.js lewat GET /api/public/pengumuman -->
+    <!-- Bilah pengumuman dikelola di dashboard (Berita & Pengumuman › Bilah pengumuman), dimuat main.js lewat GET /api/public/pengumuman; teksnya bisa diambil dari tulisan (D-083) -->
     <a class="card card--link" href="berita-detail.html" style="padding:16px 20px;display:flex;gap:14px;align-items:center;flex-wrap:wrap" data-reveal data-pengumuman>
-      <span class="tag tag--accent"><svg class="i" aria-hidden="true"><use href="#i-megaphone"/></svg>Pengumuman</span>
+      <span class="tag tag--accent" data-pengumuman-tag><svg class="i" aria-hidden="true"><use href="#i-megaphone"/></svg>Pengumuman</span>
       <span class="title-sm" style="flex:1;min-width:220px" data-pengumuman-teks>Program pemutihan denda PKB diperpanjang hingga 31 Desember 2026.</span>
       <span class="link-arrow small" data-pengumuman-label>Baca<svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
     </a>

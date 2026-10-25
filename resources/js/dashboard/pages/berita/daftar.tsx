@@ -99,7 +99,7 @@ export default function DaftarBerita() {
 
   return (
     <Halaman>
-      <PengantarHalaman deskripsi="Tulisan tampil di halaman Informasi dan beranda portal setelah melewati alur publikasi. Tandai satu tulisan sebagai sorotan untuk dijadikan tulisan utama. Bilah pengumuman di atas daftar berita diatur di tab Bilah pengumuman.">
+      <PengantarHalaman deskripsi="Tulisan tampil di halaman Informasi dan beranda portal setelah melewati alur publikasi. Tandai satu tulisan sebagai sorotan untuk dijadikan tulisan utama. Bilah pengumuman di halaman Informasi (dan bila dipilih di Beranda) diatur di tab Bilah pengumuman, dengan teks sendiri atau dari satu tulisan.">
         <Button asChild>
           <Link to="/berita/baru">
             <IconPlus />

@@ -2140,36 +2140,50 @@
      (Berita & Pengumuman › Bilah pengumuman) dan dibaca dari
      GET /api/public/pengumuman (D-082; sebelumnya bagian Pengaturan Situs).
      Teks di HTML sama dengan isi awal di server dan tetap tampil; skrip
-     menggantinya hanya bila bilah sudah pernah disimpan. Teks dipasang
+     menggantinya hanya bila bilah sudah pernah disimpan. Bilah yang sama
+     tampil di bawah pembuka Beranda bila dipilih (D-083); di sana ia
+     tersembunyi sampai API menyatakannya tampil. Bilah dari tulisan memakai
+     judul, kategori, dan alamat tulisan itu (/berita/…). Teks dipasang
      sebagai teks polos dan tautan hanya dengan skema yang diizinkan. Bila
      API gagal, teks HTML tetap tampil. */
   async function muatPengumuman() {
     const b = await ambilJson("/api/public/pengumuman");
     const teks = (x) => typeof x === "string";
-    const valid = typeof b?.aktif === "boolean" && teks(b.teks) && teks(b.tautanLabel) && teks(b.tautanUrl)
+    const valid = typeof b?.aktif === "boolean" && typeof b.beranda === "boolean"
+      && ["kategori", "teks", "tautanLabel", "tautanUrl"].every((f) => teks(b[f]))
       && (b.diperbarui === null || teks(b.diperbarui));
     if (!valid) throw new Error("Respons tidak dikenal");
     return b;
   }
 
-  function initPengumuman() {
-    const pengumuman = $("[data-pengumuman]");
-    if (!pengumuman) return;
+  // Tujuan yang diizinkan tautanAman, atau alamat tulisan portal
+  const tautanPengumuman = (url) => tautanAman(url) || (/^\/berita\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(url) ? url : "");
 
-    const tampilkan = (b) => {
-      pengumuman.closest("section").hidden = !b.aktif || !b.teks;
-      $("[data-pengumuman-teks]", pengumuman).textContent = b.teks;
+  function initPengumuman() {
+    const informasi = $("[data-pengumuman]");
+    const beranda = $("[data-pengumuman-beranda]");
+    if (!informasi && !beranda) return;
+
+    const tampilkan = (bilah, wadah, b, tampil) => {
+      wadah.hidden = !tampil || !b.teks;
+      const tag = $("[data-pengumuman-tag]", bilah);
+      tag.replaceChildren($("svg", tag), (KATEGORI_BERITA[b.kategori] || KATEGORI_BERITA.pengumuman)[0]);
+      $("[data-pengumuman-teks]", bilah).textContent = b.teks;
       // Tanpa tujuan yang sah, bilah tetap tampil sebagai teks, bukan tautan
-      const url = tautanAman(b.tautanUrl);
-      const label = $("[data-pengumuman-label]", pengumuman);
-      if (url) pengumuman.setAttribute("href", url);
-      else pengumuman.removeAttribute("href");
+      const url = tautanPengumuman(b.tautanUrl);
+      const label = $("[data-pengumuman-label]", bilah);
+      if (url) bilah.setAttribute("href", url);
+      else bilah.removeAttribute("href");
       label.replaceChildren(b.tautanLabel || "Baca", $("svg", label));
       label.hidden = !url;
     };
 
     muatPengumuman()
-      .then((b) => { if (typeof b.diperbarui === "string") tampilkan(b); })
+      .then((b) => {
+        if (typeof b.diperbarui !== "string") return;
+        if (informasi) tampilkan(informasi, informasi.closest("section"), b, b.aktif);
+        if (beranda) tampilkan($("[data-pengumuman-bilah]", beranda), beranda, b, b.aktif && b.beranda);
+      })
       .catch(() => {});
   }
 

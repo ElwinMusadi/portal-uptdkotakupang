@@ -28,7 +28,7 @@ Semuanya satu aplikasi Laravel di root repository, satu origin (D-002):
 
 | Perintah | Kegunaan |
 |---|---|
-| `composer test` | Semua tes PHPUnit di SQLite memori (±70 detik, 1798 tes) |
+| `composer test` | Semua tes PHPUnit di SQLite memori (±70 detik, 1810 tes) |
 | `php artisan test --compact <berkas> --filter=<tes>` | Tes tertentu |
 | `composer test:mysql` | **Mereset database `pintu`** (berisi data pemilik); hanya dengan izin pemilik dan cadangan |
 | `npm run typecheck` / `npm run lint` / `npm run build` | `tsc -b` / `oxlint resources/js` / `tsc -b && vite build` |
@@ -108,7 +108,7 @@ Build di Laravel Cloud: `composer install --no-dev && npm ci && npm run build &&
 - **React SPA + JSON API dalam satu aplikasi Laravel (D-001, D-002):** tanpa CORS, sesi cookie Sanctum, dan satu deploy.
 - **Portal berupa HTML lengkap dari server yang diisi API publik (D-023):** teks HTML menjadi isi awal yang terbaca mesin pencari dan tetap tampil bila API gagal.
 - **React di portal dipasang bertahap di atas Blade (D-045):** tanpa SPA atau SSR.
-- **Teks portal yang bisa diubah dari dashboard (D-023, D-080):** disimpan sebagai pengaturan bernama modulnya (mis. `beranda`, `keliling` = teks pembuka halaman Jadwal, `berita` = bilah pengumuman Informasi sejak D-082; Pengaturan Situs `situs` hanya identitas portal), jadi hak akses (`SettingPolicy`) dan log aktivitas (`SaveSetting`) mengikuti modul itu. Teks di HTML sama dengan isi awal di server; `main.js` menggantinya hanya bila `diperbarui` tidak `null`, dan HTML tetap tampil bila API gagal. Pengaturan baru juga didaftarkan di dashboard (`types.ts`, `hybrid.ts`, `meta.ts`, `seed.ts`).
+- **Teks portal yang bisa diubah dari dashboard (D-023, D-080):** disimpan sebagai pengaturan bernama modulnya (mis. `beranda`, `keliling` = teks pembuka halaman Jadwal, `berita` = bilah pengumuman Informasi sejak D-082, juga Beranda dan dari satu tulisan sejak D-083; Pengaturan Situs `situs` hanya identitas portal), jadi hak akses (`SettingPolicy`) dan log aktivitas (`SaveSetting`) mengikuti modul itu. Teks di HTML sama dengan isi awal di server; `main.js` menggantinya hanya bila `diperbarui` tidak `null`, dan HTML tetap tampil bila API gagal. Pengaturan baru juga didaftarkan di dashboard (`types.ts`, `hybrid.ts`, `meta.ts`, `seed.ts`).
 - **Impor STS (D-047, D-079):** laporan dihitung tanpa identitas wajib pajak; transaksi dikenali lewat sidik HMAC (nopol, tanggal, jenis daftar, jumlah) dengan `APP_KEY`, jadi impor ulang tidak menggandakan penerimaan. Karena itu `APP_KEY` produksi sama dengan lokal (D-065).
   - NOPOL, nama, RT/RW, dan kolom STS lain hanya disimpan di `revenue_transactions.rincian` (JSON terenkripsi) untuk transaksi 7 hari terakhir (WITA), untuk tabel *Rincian penerimaan* di dashboard; setiap impor mengosongkan yang lebih lama, dan impor ulang melengkapi yang kosong;
   - `insert()` melewati cast, jadi rincian dienkripsi lewat `RevenueTransaction::encryptDetails()`; portal dan API publik tidak pernah menerimanya.

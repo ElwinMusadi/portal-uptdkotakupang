@@ -958,20 +958,20 @@ Kode: `app/Http/Controllers/Dashboard/SiteController.php`, `app/Http/Requests/Da
 
 ## Bilah pengumuman di dashboard
 
-Dipakai tab *Bilah pengumuman* di halaman Berita & Pengumuman ([D-082](decisions.md#d-082--2026-10-25--bilah-pengumuman-pindah-ke-berita--pengumuman)): bilah di atas daftar berita halaman Informasi, sebagai pengaturan `berita` milik modul Berita & Pengumuman. Sebelumnya bagian Pengaturan Situs (D-026). Tamu mendapat `401`; pegawai yang tidak mengelola modul `berita` mendapat `403` `{"message": "Modul Berita & Pengumuman belum ditugaskan kepada Anda."}`.
+Dipakai tab *Bilah pengumuman* di halaman Berita & Pengumuman ([D-082](decisions.md#d-082--2026-10-25--bilah-pengumuman-pindah-ke-berita--pengumuman)): bilah di atas daftar berita halaman Informasi, dan bila `beranda` di bawah pembuka Beranda, sebagai pengaturan `berita` milik modul Berita & Pengumuman. Teksnya ditulis sendiri (`sumber` `teks`) atau diambil dari satu tulisan terbit (`sumber` `tulisan`, `tulisan` = id tulisan) ([D-083](decisions.md#d-083--2026-10-25--bilah-pengumuman-dari-tulisan-dan-di-beranda)). Sebelumnya bagian Pengaturan Situs (D-026). Tamu mendapat `401`; pegawai yang tidak mengelola modul `berita` mendapat `403` `{"message": "Modul Berita & Pengumuman belum ditugaskan kepada Anda."}`.
 
 ```json
-{ "aktif": true, "teks": "Program pemutihan denda PKB diperpanjang hingga 31 Desember 2026.", "tautanLabel": "Baca", "tautanUrl": "berita-detail.html" }
+{ "aktif": true, "beranda": false, "sumber": "teks", "tulisan": null, "teks": "Program pemutihan denda PKB diperpanjang hingga 31 Desember 2026.", "tautanLabel": "Baca", "tautanUrl": "berita-detail.html" }
 ```
 
 | Alamat | Permintaan | Respons |
 |---|---|---|
-| `GET /api/pengaturan/berita` | — | `200` bilah di atas. Sebelum pertama kali disimpan: bilah yang tertulis di HTML halaman Informasi. |
-| `PUT /api/pengaturan/berita` | bilah lengkap | `200` bilah tersimpan; `aktif` sebagai boolean, isian opsional yang kosong sebagai `""`, kunci lain dibuang. `422`: `aktif` "Pilihan tampilkan bilah pengumuman wajib diisi." atau "… tidak valid."; `teks` "Teks pengumuman wajib diisi selama bilah pengumuman ditampilkan.", "Teks pengumuman maksimal 200 karakter."; `tautanLabel` maks. 30; `tautanUrl` maks. 300 dan harus tautan portal yang sah (`PortalLink`); teks tanpa karakter kontrol. |
+| `GET /api/pengaturan/berita` | — | `200` bilah di atas. Sebelum pertama kali disimpan: bilah yang tertulis di HTML halaman Informasi. Bilah yang disimpan sebelum D-083 dilengkapi `beranda: false`, `sumber: "teks"`, `tulisan: null`. |
+| `PUT /api/pengaturan/berita` | bilah lengkap | `200` bilah tersimpan; `aktif` dan `beranda` sebagai boolean, isian opsional yang kosong sebagai `""`, `tulisan` `null` bila `sumber` `teks`, kunci lain dibuang. `422`: `aktif` "Pilihan tampilkan bilah pengumuman wajib diisi." atau "… tidak valid."; `beranda` "Pilihan tampilkan di Beranda …"; `sumber` wajib, `teks` atau `tulisan`; selama tampil dengan `sumber` `tulisan`: `tulisan` "Pilih tulisan untuk bilah pengumuman." atau "Tulisan yang dipilih belum terbit atau sudah dihapus." (bilah yang dimatikan boleh menyimpan tulisan yang tidak terbit); selama tampil dengan `sumber` `teks`: `teks` "Teks pengumuman wajib diisi selama bilah pengumuman ditampilkan.", "Teks pengumuman maksimal 200 karakter."; `tautanLabel` maks. 30; `tautanUrl` maks. 300 dan harus tautan portal yang sah (`PortalLink`); teks tanpa karakter kontrol. |
 
 Penyimpanan tercatat di log aktivitas sebagai "memperbarui Berita & Pengumuman"; bilah yang sama tidak mencatat apa pun. Migrasi `move_announcement_bar_to_its_own_setting` memindahkan bilah yang sudah tersimpan di dokumen `situs` ke dokumen `berita` beserta waktu simpannya, tanpa mengubah waktu dokumen `situs`.
 
-Kode: `app/Http/Controllers/Dashboard/AnnouncementBarController.php`, `app/Http/Requests/Dashboard/UpdateAnnouncementBarRequest.php`, `app/Models/Setting.php` (`ANNOUNCEMENT_BAR`, `INITIAL_ANNOUNCEMENT_BAR`). Tes: `tests/Feature/AnnouncementBarControllerTest.php`, `tests/Feature/MoveAnnouncementBarMigrationTest.php`.
+Kode: `app/Http/Controllers/Dashboard/AnnouncementBarController.php`, `app/Http/Requests/Dashboard/UpdateAnnouncementBarRequest.php`, `app/Models/Setting.php` (`ANNOUNCEMENT_BAR`, `ANNOUNCEMENT_BAR_SOURCES`, `INITIAL_ANNOUNCEMENT_BAR`, `withAnnouncementBarDefaults()`). Tes: `tests/Feature/AnnouncementBarControllerTest.php`, `tests/Feature/MoveAnnouncementBarMigrationTest.php`.
 
 ## Tampilan di dashboard
 
@@ -1580,19 +1580,20 @@ Kode: `app/Http/Controllers/PublicSiteController.php`, `app/Actions/ShowPublicSi
 
 ## `GET /api/public/pengumuman`
 
-Bilah pengumuman di atas daftar berita halaman Informasi ([D-082](decisions.md#d-082--2026-10-25--bilah-pengumuman-pindah-ke-berita--pengumuman), `initPengumuman()` di `public/assets/js/main.js`, penanda `data-pengumuman`, `data-pengumuman-teks`, `data-pengumuman-label`).
+Bilah pengumuman di atas daftar berita halaman Informasi ([D-082](decisions.md#d-082--2026-10-25--bilah-pengumuman-pindah-ke-berita--pengumuman)) dan, bila dipilih, di bawah pembuka Beranda ([D-083](decisions.md#d-083--2026-10-25--bilah-pengumuman-dari-tulisan-dan-di-beranda)); `initPengumuman()` di `public/assets/js/main.js`, penanda `data-pengumuman`, `data-pengumuman-tag`, `data-pengumuman-teks`, `data-pengumuman-label`, dan di Beranda `data-pengumuman-beranda` dengan `data-pengumuman-bilah`.
 
 ```json
-{ "aktif": true, "teks": "…", "tautanLabel": "Baca", "tautanUrl": "berita-detail.html", "diperbarui": null }
+{ "aktif": true, "beranda": false, "kategori": "pengumuman", "teks": "…", "tautanLabel": "Baca", "tautanUrl": "berita-detail.html", "diperbarui": null }
 ```
 
 | Hal | Perilaku |
 |---|---|
-| Berhasil | `200`. Bila `diperbarui` `null`, halaman membiarkan bilah di HTML; bila tidak, bilah disembunyikan saat dimatikan atau teksnya kosong, teks dipasang sebagai teks polos, dan tujuan tautan dipasang hanya bila skemanya diizinkan (tanpa tujuan yang sah, bilah tampil sebagai teks tanpa label). |
+| Isi | Bilah teks sendiri: `kategori` `pengumuman`. Bilah dari tulisan: `teks` = judul, `kategori` = kategori tulisan, `tautanUrl` = `/berita/{slug}`; selama tulisan itu tidak terbit atau sudah dihapus, `aktif` `false` dan `teks` serta `tautanUrl` kosong. Id tulisan dan sumbernya tidak dikirim. |
+| Berhasil | `200`. Label bilah mengikuti `kategori`. Beranda menampilkan bilah hanya bila `aktif` dan `beranda`, dan tetap menyembunyikannya bila `diperbarui` `null`. Bila `diperbarui` `null`, halaman Informasi membiarkan bilah di HTML; bila tidak, bilah disembunyikan saat dimatikan atau teksnya kosong, teks dipasang sebagai teks polos, dan tujuan tautan dipasang hanya bila skemanya diizinkan (tanpa tujuan yang sah, bilah tampil sebagai teks tanpa label). |
 | Galat | `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah batas laju yang sama dengan `GET /api/public/faq`; `503` bila data tidak bisa dibaca. Halaman tetap menampilkan bilah di HTML. |
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 
-Kode: `app/Http/Controllers/PublicAnnouncementBarController.php`, `app/Actions/ShowPublicAnnouncementBar.php`. Tes: `tests/Feature/PublicAnnouncementBarControllerTest.php`, `tests/Feature/PortalPagesTest.php` (bilah di HTML sama dengan isi awal).
+Kode: `app/Http/Controllers/PublicAnnouncementBarController.php`, `app/Actions/ShowPublicAnnouncementBar.php`. Tes: `tests/Feature/PublicAnnouncementBarControllerTest.php`, `tests/Feature/PortalPagesTest.php` (bilah di HTML Informasi sama dengan isi awal; bilah Beranda tersembunyi di bawah pembuka).
 
 ## `POST /api/public/pesan`
 

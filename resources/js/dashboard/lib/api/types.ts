@@ -91,7 +91,7 @@ export interface Berita extends Entri, Beralur {
   tanggal: IsoDate
   /** Tampil sebagai tulisan utama di halaman Informasi */
   sorotan: boolean
-  /** Tampil di bilah pengumuman & papan layanan beranda */
+  /** Tampil sebagai pengumuman di papan layanan Beranda (bukan bilah pengumuman) */
   pengumumanBeranda: boolean
 }
 
@@ -408,15 +408,26 @@ export interface Situs {
   hakCipta: string
 }
 
+/** Asal teks bilah pengumuman (D-083): ditulis sendiri, atau satu tulisan terbit */
+export type SumberBilahPengumuman = "teks" | "tulisan"
+
 /**
  * Bilah pengumuman di atas daftar berita halaman Informasi (D-082), bagian
  * modul Berita & Pengumuman (pengaturan `berita`); dulu bagian Pengaturan Situs.
+ * Bisa juga tampil di bawah pembuka Beranda, dan teksnya bisa diambil dari
+ * tulisan (D-083).
  */
 export interface BilahPengumuman {
   aktif: boolean
+  /** Tampil juga di Beranda, selama `aktif` */
+  beranda: boolean
+  sumber: SumberBilahPengumuman
+  /** Id tulisan bila `sumber` = "tulisan": judul, kategori, dan alamatnya dipakai bilah */
+  tulisan: Id | null
+  /** Teks yang ditulis sendiri; disimpan juga selama sumbernya tulisan */
   teks: string
   tautanLabel: string
-  /** Kosong = bilah tampil sebagai teks tanpa tautan */
+  /** Kosong = bilah tampil sebagai teks tanpa tautan; tidak dipakai bila sumbernya tulisan */
   tautanUrl: string
 }
 

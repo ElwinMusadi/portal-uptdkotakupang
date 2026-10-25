@@ -220,7 +220,21 @@ class PortalPagesTest extends TestCase
         $this->assertSame($announcement['tautanUrl'], $bar[1]);
         $this->assertStringContainsString("data-pengumuman-teks>{$announcement['teks']}</span>", $bar[2]);
         $this->assertStringContainsString("data-pengumuman-label>{$announcement['tautanLabel']}<svg", $bar[2]);
+        $this->assertStringContainsString('<span class="tag tag--accent" data-pengumuman-tag><svg', $bar[2]);
         $this->assertStringNotContainsString('data-situs-pengumuman', $html);
+    }
+
+    public function test_keeps_the_beranda_announcement_hidden_below_the_opening_for_the_public_api_to_show(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+
+        $this->assertSame(1, preg_match('/<section class="hero">(.*?)<\/section>/s', $html, $hero));
+        $this->assertSame(1, preg_match('/data-beranda-catatan.*<div class="hero__pengumuman" data-pengumuman-beranda hidden>(.*?)<\/div>/s', $hero[1], $bar));
+        foreach (['<a class="card card--link" data-pengumuman-bilah>', 'data-pengumuman-tag', '<span class="title-sm" data-pengumuman-teks></span>', 'data-pengumuman-label'] as $hook) {
+            $this->assertStringContainsString($hook, $bar[1]);
+        }
+        // main.js before D-083 fills [data-pengumuman] on any page; Beranda must not have it
+        $this->assertDoesNotMatchRegularExpression('/data-pengumuman[\s>]/', $html);
     }
 
     public function test_leaves_the_contact_page_details_and_complaint_channels_to_the_public_api(): void
