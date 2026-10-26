@@ -613,8 +613,8 @@
         </div>
       </section>
 
-      <!-- 7 · Peta kanal layanan -->
-      <section class="section kanal" id="kanal">
+      <!-- 7 · Peta kanal layanan (tanpa ruang atas: ruang bawah Transparansi sudah memisahkannya) -->
+      <section class="section section--flush-top kanal" id="kanal">
         <div class="container center">
           <div data-reveal>
             <p class="eyebrow">Kanal layanan</p>
