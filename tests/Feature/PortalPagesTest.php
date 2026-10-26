@@ -442,8 +442,25 @@ class PortalPagesTest extends TestCase
         $this->assertMatchesRegularExpression('#<a class="dash__more" href="penerimaan\.html" data-dash-tautan hidden\s*><span data-dash-tautan-teks>Lihat laporan penerimaan</span#', $section[0]);
         $this->assertStringNotContainsString('class="link-arrow" href="penerimaan.html"', $section[0]);
         $this->assertStringNotContainsString('href="pemetaan.html"', $section[0]);
-        // Kanal layanan follows without its own top padding, so the two sections are not twice as far apart
-        $this->assertMatchesRegularExpression('#<section class="section transparansi" id="transparansi">.*?</section>\s*<!--[^>]*-->\s*<section class="section section--flush-top kanal" id="kanal">#s', $html);
+    }
+
+    public function test_never_doubles_the_padding_between_two_beranda_sections(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+        preg_match_all('/<section class="([^"]*)"/', $html, $sections);
+        $isSection = fn (string $classes): bool => in_array('section', explode(' ', $classes), true);
+
+        // A section right after another one has no top padding of its own: the bottom padding before it is the gap
+        $doubled = [];
+        foreach (array_slice($sections[1], 1, null, true) as $i => $classes) {
+            if ($isSection($classes) && $isSection($sections[1][$i - 1]) && ! str_contains($classes, 'section--flush-top')) {
+                $doubled[] = $classes;
+            }
+        }
+
+        $this->assertSame([], $doubled);
+        $this->assertContains('section section--flush-top kanal', $sections[1]);
+        $this->assertContains('section section--flush-top statement', $sections[1]);
     }
 
     public function test_leaves_the_tax_potential_map_to_its_component_and_the_public_api(): void

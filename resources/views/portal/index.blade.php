@@ -931,8 +931,8 @@
         </div>
       </section>
 
-      <!-- 9 · Pernyataan integritas (jeda napas) -->
-      <section class="section statement">
+      <!-- 9 · Pernyataan integritas (tanpa ruang atas: ruang bawah Cek biaya pajak sudah memisahkannya) -->
+      <section class="section section--flush-top statement">
         <div class="container container--narrow center" data-reveal>
           <svg class="i statement__icon" aria-hidden="true">
             <use href="#i-lock" />
