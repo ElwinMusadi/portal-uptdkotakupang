@@ -63,4 +63,17 @@ return [
         'timeout' => (int) env('SIKAP_API_TIMEOUT_SECONDS', 8),
     ],
 
+    /*
+    | The OpenAI-compatible AI API that writes article drafts (D-085), first
+    | Sumopod. These are the fallback until an administrator saves the base
+    | URL, model and key in Pengaturan > Integrasi AI; the key never reaches
+    | the browser. The timeout keeps a draft within Cloudflare's 100 seconds.
+    */
+    'ai' => [
+        'base_url' => env('SUMOPOD_BASE_URL', 'https://ai.sumopod.com/v1'),
+        'api_key' => env('SUMOPOD_API_KEY'),
+        'model' => env('SUMOPOD_AI_MODEL'),
+        'timeout' => (int) env('AI_TIMEOUT_SECONDS', 75),
+    ],
+
 ];

@@ -371,6 +371,13 @@ class Setting extends Model
     public const string THEME = 'tema';
 
     /**
+     * The AI API that writes article drafts (Pengaturan › Integrasi AI,
+     * D-085): base URL, model and the key, encrypted with APP_KEY. It belongs
+     * to no module, and only administrators read or save it.
+     */
+    public const string AI_INTEGRATION = 'ai';
+
+    /**
      * One part of the theme as the built-in PINTU look: blue accent, warm
      * background, system fonts, medium corners, 100% scale, semibold
      * headings, near-black buttons and navigation.

@@ -32,6 +32,13 @@ class Article extends Model
     public const array CATEGORIES = ['berita', 'pengumuman', 'keliling', 'edukasi'];
 
     /**
+     * The categories' names, as the dashboard and the portal write them.
+     *
+     * @var array<string, string>
+     */
+    public const array CATEGORY_LABELS = ['berita' => 'Berita', 'pengumuman' => 'Pengumuman', 'keliling' => 'Samsat Keliling', 'edukasi' => 'Edukasi'];
+
+    /**
      * A slug: lowercase letters and digits joined by single hyphens.
      */
     public const string SLUG_PATTERN = '[a-z0-9]+(?:-[a-z0-9]+)*';

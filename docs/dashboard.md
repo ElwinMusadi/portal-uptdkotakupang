@@ -387,6 +387,7 @@ Halaman *Berita & Pengumuman* (`#/berita`, `pages/berita/`) tersimpan di server 
 - Tulisan terbit tampil di halaman Informasi, di `/berita/{slug}`, dan, bila ditandai *Tampilkan di beranda*, di ubin Pengumuman papan layanan beranda (`GET /api/public/berita`).
 - Hanya artikel peluncuran PINTU yang menjadi data awal, sebagai draf. Tulisan contoh dari penyimpanan peramban tidak dipindahkan.
 - Tab **Bilah pengumuman** (`?tab=bilah`, `components/berita/bilah-pengumuman.tsx`, [D-082](decisions.md#d-082--2026-10-25--bilah-pengumuman-pindah-ke-berita--pengumuman)): pita pengumuman di atas daftar berita halaman Informasi (sakelar tampil, sakelar *Tampilkan juga di Beranda*, isi bilah *Tulis sendiri* dengan teks maks. 200 karakter dan tujuan tautan, atau *Ambil dari tulisan* dengan pemilih satu tulisan terbit dari semua kategori, label tautan) dengan contoh tampilannya. Bilah dari tulisan memakai judul dan kategori tulisan dan menaut ke halamannya; bila tulisan itu ditarik atau dihapus, bilah tidak tampil dan tab memberi peringatan ([D-083](decisions.md#d-083--2026-10-25--bilah-pengumuman-dari-tulisan-dan-di-beranda)). Disimpan sebagai pengaturan `berita` dan langsung tampil di portal tanpa alur publikasi (`GET /api/public/pengumuman`); pengelola modul dan Administrator yang mengubahnya. Sebelum D-082 bilah ini ada di Pengaturan › Situs dan hanya Administrator yang menyimpannya.
+- *Tulis berita* (`#/berita/baru`) dimulai dengan **Cara menulis**: *Tulis sendiri* atau *Buat dengan AI* (`components/berita/draf-ai.tsx`, `lib/ai.ts`, [D-085](decisions.md#d-085--2026-10-26--draf-berita-dengan-ai-dan-pengaturan-integrasi-ai)). *Buat dengan AI* menerima tautan dan/atau sampai 5 dokumen (PDF, Word `.docx`, JPEG, PNG; 10 MB seluruhnya), kategori atau *Pilih otomatis*, dan petunjuk tambahan, lalu `POST /api/koleksi/berita/draf-ai` mengisi judul, ringkasan, isi, dan kategori formulir (slug ikut judul). Belum ada yang tersimpan sampai *Simpan sebagai draf*; formulir yang sudah berisi minta konfirmasi sebelum diganti, dan pemberitahuan meminta fakta, tanggal, nama, dan dasar hukum diperiksa. Dokumen tidak disimpan PINTU. Draf biasanya selesai dalam 10–60 detik.
 
 ## Dokumentasi Kegiatan
 
@@ -452,6 +453,14 @@ Tab *Situs* di halaman *Pengaturan* (`#/pengaturan?tab=situs`, `pages/pengaturan
 
 - Hanya Administrator yang menyimpan; pegawai lain melihat formulirnya dalam keadaan hanya-baca. Nama portal dan nama yang dikenal tetap dipakai sidebar, dan alamat portal dipakai tautan *Lihat di portal*.
 - Deskripsi dan hak cipta tampil di kaki halaman portal (`GET /api/public/situs`). Bilah pengumuman halaman Informasi pindah ke Berita & Pengumuman ([D-082](decisions.md#d-082--2026-10-25--bilah-pengumuman-pindah-ke-berita--pengumuman)). Teks di HTML portal tetap tampil sampai pengaturan pertama kali disimpan. Nama di kepala halaman dan judul tab tetap mengikuti HTML.
+
+## Integrasi AI
+
+Tab *Integrasi AI* di halaman *Pengaturan* (`#/pengaturan?tab=ai`, `components/pengaturan/tab-integrasi-ai.tsx`, [D-085](decisions.md#d-085--2026-10-26--draf-berita-dengan-ai-dan-pengaturan-integrasi-ai)) hanya tampil bagi Administrator; alamat `?tab=ai` membuka tab *Situs* bagi pegawai lain.
+
+- Base URL dan model API kompatibel OpenAI yang menulis draf berita, serta kunci API. Selama belum disimpan, isinya dari `.env` server dan tab menyebutnya.
+- Kunci hanya bisa ditulis: setelah disimpan yang tampil hanya 4 karakter terakhir dan asalnya (Pengaturan atau .env). Kosongkan untuk mempertahankannya; *Hapus kunci yang disimpan di Pengaturan* kembali ke `.env`. Mengganti host Base URL mewajibkan kunci baru.
+- *Uji koneksi* mengirim satu permintaan singkat dengan isian formulir, sudah disimpan atau belum, dan menampilkan *Terhubung* atau alasannya beserta pesan penyedia.
 
 ## Profil akun
 

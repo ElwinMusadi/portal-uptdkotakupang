@@ -123,6 +123,29 @@ class AppServiceProvider extends ServiceProvider
                 ], 429, $headers));
         });
 
+        // AI drafts of Berita & Pengumuman (D-085), slow and paid for: 5 a minute and 40 an
+        // hour for each employee.
+        RateLimiter::for('ai-drafts', function (Request $request): array {
+            $tooMany = fn (Request $request, array $headers): JsonResponse => response()->json([
+                'message' => 'Terlalu banyak permintaan draf AI. Coba lagi sebentar lagi.',
+            ], 429, $headers);
+            $user = $request->user()?->getAuthIdentifier() ?? $request->ip();
+
+            return [
+                Limit::perMinute(5)->by('menit:'.$user)->response($tooMany),
+                Limit::perHour(40)->by('jam:'.$user)->response($tooMany),
+            ];
+        });
+
+        // Connection tests of Pengaturan › Integrasi AI (D-085): 5 a minute for each administrator.
+        RateLimiter::for('ai-tests', function (Request $request): Limit {
+            return Limit::perMinute(5)
+                ->by($request->user()?->getAuthIdentifier() ?? $request->ip())
+                ->response(fn (Request $request, array $headers): JsonResponse => response()->json([
+                    'message' => 'Terlalu banyak uji koneksi. Coba lagi sebentar lagi.',
+                ], 429, $headers));
+        });
+
         // Dashboard uploads (D-028): at most 30 files per minute for each employee.
         RateLimiter::for('uploads', function (Request $request): Limit {
             return Limit::perMinute(30)

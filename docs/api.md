@@ -746,6 +746,16 @@ Isi divalidasi seperti formulir dashboard: judul (maks. 160 karakter), slug unik
 
 Kode: `app/Http/Controllers/Dashboard/Article*`, `app/Http/Requests/Dashboard/*Article*`, `app/Models/Article.php`, `app/Policies/ArticlePolicy.php`, `database/migrations/*_insert_initial_articles.php`. Tes: `tests/Feature/ArticleControllerTest.php`, `ArticleWorkflowTest.php`.
 
+### Draf tulisan dengan AI
+
+Dipakai *Tulis berita › Buat dengan AI* ([D-085](decisions.md#d-085--2026-10-26--draf-berita-dengan-ai-dan-pengaturan-integrasi-ai)). Hak aksesnya sama dengan menulis tulisan baru (`ArticlePolicy::create`); tidak ada yang disimpan, dan dokumen sumber dibuang setelah dibaca.
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `POST /api/koleksi/berita/draf-ai` | `multipart/form-data`: `tautan` (http/https, maks. 2000) dan/atau `berkas[]` (maks. 5; PDF, Word `.docx`, JPEG, PNG menurut isinya; masing-masing dan seluruhnya maks. 10 MB), `kategori` (opsional, salah satu kategori), `petunjuk` (opsional, maks. 500) | `200` `{"judul", "ringkasan", "isi", "kategori", "model"}`: isi berupa HTML editor, judul dan ringkasan dalam batas formulir. `422` untuk sumber yang kosong atau tidak valid, untuk dokumen yang ditolak batas unggah PHP ("Dokumen gagal diunggah, mungkin melebihi batas unggah server. …"), dan untuk tautan atau dokumen yang tidak terbaca (pesan di `tautan` atau `berkas`, mis. "Tautan menunjuk ke alamat jaringan internal dan tidak dapat dibuka."); `503` bila Integrasi AI belum diatur; `502` bila penyedia menolak atau jawabannya tidak lengkap; `504` bila penyedia tidak menjawab dalam 75 detik; `429` setelah 5 draf per menit atau 40 per jam. |
+
+Kode: `app/Http/Controllers/Dashboard/ArticleDraftController.php`, `app/Http/Requests/Dashboard/GenerateArticleDraftRequest.php`, `app/Actions/GenerateArticleDraft.php`, `app/Support/AiClient.php`, `PublicPageFetcher.php`, `DocxText.php`, `RichTextCleaner.php`. Tes: `tests/Feature/ArticleDraftTest.php`, `RichTextCleanerTest.php`.
+
 ## Dokumentasi Kegiatan di dashboard
 
 Dipakai halaman *Dokumentasi Kegiatan* di dashboard ([D-032](decisions.md#d-032--2026-10-14--dokumentasi-kegiatan-tersimpan-di-server-galeri-disusun-per-bulan)). Tamu mendapat `401`; pegawai yang tidak mengelola modul `dokumentasi` mendapat `403` `{"message": "Modul Dokumentasi Kegiatan belum ditugaskan kepada Anda."}`. Pengelola Jadwal Pemutakhiran boleh memakai `GET /api/koleksi/dokumentasi` saja.
@@ -972,6 +982,24 @@ Dipakai tab *Bilah pengumuman* di halaman Berita & Pengumuman ([D-082](decisions
 Penyimpanan tercatat di log aktivitas sebagai "memperbarui Berita & Pengumuman"; bilah yang sama tidak mencatat apa pun. Migrasi `move_announcement_bar_to_its_own_setting` memindahkan bilah yang sudah tersimpan di dokumen `situs` ke dokumen `berita` beserta waktu simpannya, tanpa mengubah waktu dokumen `situs`.
 
 Kode: `app/Http/Controllers/Dashboard/AnnouncementBarController.php`, `app/Http/Requests/Dashboard/UpdateAnnouncementBarRequest.php`, `app/Models/Setting.php` (`ANNOUNCEMENT_BAR`, `ANNOUNCEMENT_BAR_SOURCES`, `INITIAL_ANNOUNCEMENT_BAR`, `withAnnouncementBarDefaults()`). Tes: `tests/Feature/AnnouncementBarControllerTest.php`, `tests/Feature/MoveAnnouncementBarMigrationTest.php`.
+
+## Integrasi AI di dashboard
+
+Dipakai tab *Integrasi AI* di halaman Pengaturan ([D-085](decisions.md#d-085--2026-10-26--draf-berita-dengan-ai-dan-pengaturan-integrasi-ai)): API kompatibel OpenAI yang menulis draf berita. Hanya Administrator yang membaca, menyimpan, dan mengujinya; tamu mendapat `401`, pegawai lain `403` `{"message": "Hanya Administrator yang dapat mengatur Integrasi AI."}`. Kunci API tidak pernah dikirim balik.
+
+```json
+{ "baseUrl": "https://ai.sumopod.com/v1", "model": "gemini/gemini-4-argon", "tersimpan": false, "kunci": { "ada": true, "akhir": "AB12", "sumber": "env" } }
+```
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `GET /api/pengaturan/ai` | — | `200` pengaturan di atas. Sebelum disimpan, Base URL, model, dan kunci dari `.env` (`SUMOPOD_*`, `tersimpan: false`); `kunci.sumber` `pengaturan`, `env`, atau `null` bila tidak ada kunci sama sekali. |
+| `PUT /api/pengaturan/ai` | `{"baseUrl", "model", "kunci", "hapusKunci"}` | `200` seperti `GET`. `kunci` kosong mempertahankan kunci tersimpan; `hapusKunci: true` menghapusnya (kembali ke `.env`). `422`: `baseUrl` "Base URL harus alamat lengkap yang diawali https://." (maks. 200); `model` wajib, maks. 120, hanya huruf, angka, dan `. _ - / : @ +`; `kunci` maks. 300, tanpa spasi; bila host Base URL berubah tanpa kunci baru: "Isi kunci API untuk alamat baru. Kunci yang tersimpan tidak dikirim ke alamat lain." |
+| `POST /api/pengaturan/ai/uji` | `{"baseUrl", "model", "kunci"}` (kunci kosong = kunci yang dipakai) | `200` `{"terhubung", "pesan", "penyedia", "model", "detik"}`: satu permintaan singkat ke model; `penyedia` berisi pesan galat penyedia dengan kunci disamarkan. Validasi sama dengan `PUT`; `429` setelah 5 uji per menit. |
+
+Kunci disimpan di dokumen `ai` sebagai `kunci` terenkripsi `APP_KEY`; kunci yang tidak bisa dibuka diabaikan dan `.env` dipakai. Penyimpanan tidak masuk log aktivitas (dokumen tanpa modul, seperti Pengaturan Situs); log aplikasi mencatat siapa yang menyimpan dan apakah kuncinya berubah.
+
+Kode: `app/Http/Controllers/Dashboard/AiIntegrationController.php`, `app/Http/Requests/Dashboard/AiIntegrationRules.php`, `UpdateAiIntegrationRequest.php`, `TestAiIntegrationRequest.php`, `app/Actions/TestAiConnection.php`, `app/Support/AiSettings.php`, `AiConnection.php`, `AiClient.php`, `app/Policies/SettingPolicy.php`. Tes: `tests/Feature/AiIntegrationControllerTest.php`.
 
 ## Tampilan di dashboard
 

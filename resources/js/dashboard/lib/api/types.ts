@@ -408,6 +408,38 @@ export interface Situs {
   hakCipta: string
 }
 
+/**
+ * Pengaturan › Integrasi AI (D-085), khusus Administrator: API kompatibel
+ * OpenAI untuk draf berita. Kunci tidak pernah dikirim balik, hanya ada
+ * tidaknya, 4 karakter terakhir, dan asalnya (Pengaturan atau .env server).
+ */
+export interface IntegrasiAi {
+  baseUrl: string
+  model: string
+  /** Sudah pernah disimpan di Pengaturan; bila belum, nilai di atas dari .env server */
+  tersimpan: boolean
+  kunci: { ada: boolean; akhir: string | null; sumber: "pengaturan" | "env" | null }
+}
+
+/** Hasil Uji koneksi Integrasi AI */
+export interface HasilUjiAi {
+  terhubung: boolean
+  pesan: string
+  /** Pesan galat dari penyedia AI sendiri, bila ada */
+  penyedia: string | null
+  model: string | null
+  detik: number
+}
+
+/** Draf tulisan dari AI untuk formulir Tulis berita (D-085); belum tersimpan */
+export interface DrafAi {
+  judul: string
+  ringkasan: string
+  isi: string
+  kategori: KategoriBerita
+  model: string
+}
+
 /** Asal teks bilah pengumuman (D-083): ditulis sendiri, atau satu tulisan terbit */
 export type SumberBilahPengumuman = "teks" | "tulisan"
 

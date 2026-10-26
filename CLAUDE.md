@@ -28,7 +28,7 @@ Semuanya satu aplikasi Laravel di root repository, satu origin (D-002):
 
 | Perintah | Kegunaan |
 |---|---|
-| `composer test` | Semua tes PHPUnit di SQLite memori (±70 detik, 1810 tes) |
+| `composer test` | Semua tes PHPUnit di SQLite memori (±70 detik, 1862 tes) |
 | `php artisan test --compact <berkas> --filter=<tes>` | Tes tertentu |
 | `composer test:mysql` | **Mereset database `pintu`** (berisi data pemilik); hanya dengan izin pemilik dan cadangan |
 | `npm run typecheck` / `npm run lint` / `npm run build` | `tsc -b` / `oxlint resources/js` / `tsc -b && vite build` |
@@ -117,6 +117,7 @@ Build di Laravel Cloud: `composer install --no-dev && npm ci && npm run build &&
   - angka 1–2 kendaraan di Pemetaan PKB, termasuk angka yang bisa dipakai menghitungnya balik (D-052).
 
   Identitas wajib pajak hanya ada di dashboard, untuk sasaran penagihan.
+- **Draf berita dengan AI (D-085):** *Tulis berita › Buat dengan AI* membaca tautan dan/atau sampai 5 dokumen (PDF, Word, JPEG, PNG) lewat API kompatibel OpenAI (`AiClient`, Sumopod `gemini/gemini-4-argon` lebih dulu), lalu mengisi formulir untuk ditinjau; dokumen tidak disimpan. Pengaturan › Integrasi AI hanya untuk Administrator; kunci terenkripsi `APP_KEY`, tidak pernah dikirim balik dan tidak dikirim ke host lain, dengan `.env` (`SUMOPOD_*`) sebagai cadangan. Tautan dibaca `PublicPageFetcher` dengan pengaman SSRF (alamat publik saja, alamat dikunci, maks. 3 pengalihan), dan HTML jawaban AI dibersihkan `RichTextCleaner` ke HTML editor. Permintaan AI dibatasi 75 detik karena Cloudflare memutus di 100 detik.
 - **Produksi tetap MySQL, bukan Cloudflare D1 (D-065):** D1 dari luar Workers hanya lewat REST berbatas, tanpa transaksi interaktif, dan tanpa driver Laravel.
 - **Pegawai dari SIKAP (D-075):** kunci API SIKAP hanya ada di server (proxy `/api/akun/pegawai-sikap`, khusus Administrator). Akun hanya mengambil NIP + Nama, dan saat disimpan server membaca ulang nama per NIP, karena nama dari browser tidak dipercaya. Input manual tetap ada untuk petugas di luar UPTD. Email dan no HP SIKAP tidak dipakai di v1 (pemilik): dibuang di server, tidak disimpan.
 - **Data kendaraan dengan kunci API Data Potensi (D-076, D-077, D-078):** `api.uptdpenda-kupang.web.id` kini Worker `api-potensi-ntt`, tanpa Cloudflare Access sejak 2026-10-24. PINTU hanya mengirim `NJKB_API_KEY` sebagai `Authorization: Bearer`; tanpa kunci, pencarian "belum dikonfigurasi". Header dan env Access (`NJKB_ACCESS_*`) sudah dibuang (D-078). Kunci "PINTU" mencakup **semua UPT**, karena kalkulator di dashboard dan portal harus bisa menghitung semua nomor polisi NTT. `403 region_not_allowed` berarti wilayah kunci salah diatur: dicatat di log (tanpa nomor polisi), dashboard memberi pesan wilayah, portal memberi pesan gagal biasa tanpa menyebut wilayah.
@@ -185,7 +186,8 @@ Daftar lengkapnya di `KONTEKS-PROYEK.md` §15 dan §18.
   - API SIKAP (D-075): pemilih pegawai di Tambah akun sudah dibuat; menunggu kunci "PINTU (produksi)" sebagai env `SIKAP_API_*` di Laravel Cloud dan uji ujung-ke-ujung; data pejabat menyusul (endpoint `pejabat` SIKAP);
   - kunci API Data Potensi (D-076): pemilik membuat kunci "PINTU" (semua UPT, D-077) di https://potensi.uptdpenda-kupang.web.id/#kunci dan memasang `NJKB_API_KEY` di Laravel Cloud (tercatat dipakai 2026-10-23); sisa: pemilik menghapus env `NJKB_ACCESS_*` di Laravel Cloud dan `.env` lokal, mengisi `NJKB_API_KEY` di `.env` lokal bila ingin menguji lokal, dan menghapus service token PINTU di Zero Trust (D-078);
   - uji cek kendaraan NJKB dengan kendaraan sungguhan;
-  - jam mulai layanan BPAD (`NJKB_SERVICE_OPENS_AT`).
+  - jam mulai layanan BPAD (`NJKB_SERVICE_OPENS_AT`);
+  - Integrasi AI (D-085): pemilik mengisi kunci Sumopod di Pengaturan › Integrasi AI produksi (atau env `SUMOPOD_*` di Laravel Cloud), lalu Uji koneksi.
 - **Konten draf:** regulasi, dokumentasi, artikel peluncuran, statistik berstatus Ilustrasi, foto dan nama pejabat.
 - **Fitur belum dibuat:** ganti atau lupa sandi sendiri, MFA, notifikasi pesan, masa simpan pesan dan swafoto, statistik per rentang, ekspor CSV sasaran penagihan (perlu keputusan karena berisi data pribadi).
 - **Utang kecil:**

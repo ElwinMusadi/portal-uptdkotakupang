@@ -103,14 +103,17 @@ export function ukuranBerkas(byte: number): string {
 }
 
 export function slugify(teks: string): string {
-  return teks
+  const slug = teks
     .normalize("NFKD")
     .replace(/[̀-ͯ]/g, "")
     .toLowerCase()
     .replace(/&/g, " dan ")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
-    .slice(0, 80)
+  if (slug.length <= 80) return slug
+  // Dipotong di batas kata agar tidak berakhir dengan potongan kata, mis. "-31-o" (judul panjang dari AI, D-085)
+  const batas = slug.slice(0, 81).lastIndexOf("-")
+  return batas > 40 ? slug.slice(0, batas) : slug.slice(0, 80).replace(/-+$/, "")
 }
 
 /** "08:00" → "08.00" (gaya penulisan jam di portal) */

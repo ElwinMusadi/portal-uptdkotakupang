@@ -1,12 +1,14 @@
 import * as React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { IconArrowLeft, IconTrash, IconWand } from "@tabler/icons-react"
+import { IconArrowLeft, IconSparkles, IconTrash, IconWand } from "@tabler/icons-react"
 import { useForm, type Resolver } from "react-hook-form"
 import { Link, useNavigate, useParams } from "react-router"
 import { toast } from "sonner"
 import { z } from "zod"
 
 import { PanelAlur, RiwayatAlur, useAksiAlur } from "@/components/alur/alur"
+import { PanelDrafAi } from "@/components/berita/draf-ai"
+import { useKonfirmasi } from "@/components/data/confirm"
 import { EntriTidakDitemukan } from "@/components/data/not-found"
 import { Bagian, Baris, Halaman } from "@/components/data/page"
 import { useHapus } from "@/components/data/row-actions"
@@ -15,6 +17,7 @@ import { FieldGambar } from "@/components/form/media-fields"
 import { FieldKaya } from "@/components/form/rich-text-field"
 import { BilahSimpan, KerangkaMemuat } from "@/components/form/settings-form"
 import { JagaPerubahan } from "@/components/form/unsaved"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -26,7 +29,9 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { diServer, type Berita } from "@/lib/api"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { diServer, type Berita, type DrafAi } from "@/lib/api"
 import { alurBaru, khususAdministrator } from "@/lib/alur"
 import { sesi } from "@/lib/auth"
 import { hariIniIso, menitBaca, slugify } from "@/lib/format"
@@ -52,6 +57,11 @@ const schema = z.object({
 })
 
 type FormBerita = z.infer<typeof schema>
+
+const CARA_MENULIS = [
+  { nilai: "tulis", label: "Tulis sendiri", keterangan: "Ketik judul, ringkasan, dan isi tulisan." },
+  { nilai: "ai", label: "Buat dengan AI", keterangan: "AI menulis draf dari tautan atau dokumen (PDF, Word, gambar)." },
+] as const
 
 function kosong(): FormBerita {
   return {
@@ -134,6 +144,33 @@ function IsiEditor({ entri, semua }: { entri: Berita | null; semua: Berita[] }) 
     if (!slugManual) form.setValue("slug", slugify(judul), { shouldDirty: true })
   }, [judul, slugManual, form])
 
+  // Tulisan baru bisa ditulis sendiri atau dibuatkan drafnya oleh AI (D-085)
+  const konfirmasi = useKonfirmasi()
+  const [cara, setCara] = React.useState<"tulis" | "ai">("tulis")
+  const [modelAi, setModelAi] = React.useState<string | null>(null)
+  const isiDrafAi = async (draf: DrafAi): Promise<boolean> => {
+    const sekarang = form.getValues()
+    if (
+      (sekarang.judul.trim() || sekarang.ringkasan.trim() || sekarang.isi) &&
+      !(await konfirmasi({
+        judul: "Ganti isi formulir dengan draf AI?",
+        deskripsi: "Judul, ringkasan, isi, dan kategori yang sudah ada akan diganti.",
+        label: "Ganti",
+      }))
+    ) {
+      return false
+    }
+    const opsi = { shouldDirty: true, shouldValidate: true }
+    form.setValue("judul", draf.judul, opsi)
+    form.setValue("ringkasan", draf.ringkasan, opsi)
+    form.setValue("isi", draf.isi, opsi)
+    form.setValue("kategori", draf.kategori, opsi)
+    setSlugManual(false)
+    setModelAi(draf.model)
+    toast.success("Draf AI terisi. Periksa dan sunting sebelum menyimpan.")
+    return true
+  }
+
   const simpan = async (): Promise<boolean> => {
     if (!(await validasiFormulir(form))) {
       toast.error("Periksa kembali isian yang ditandai merah.")
@@ -209,6 +246,40 @@ function IsiEditor({ entri, semua }: { entri: Berita | null; semua: Berita[] }) 
         >
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_21.25rem] lg:items-start">
             <div className="grid min-w-0 gap-4">
+              {!entri && (
+                <Bagian judul="Cara menulis">
+                  <RadioGroup
+                    value={cara}
+                    onValueChange={(c) => setCara(c as "tulis" | "ai")}
+                    className="grid gap-2 sm:grid-cols-2"
+                    aria-label="Cara menulis"
+                  >
+                    {CARA_MENULIS.map((c) => (
+                      <Label
+                        key={c.nilai}
+                        htmlFor={`cara-${c.nilai}`}
+                        className="items-start gap-3 rounded-lg border p-3 font-normal has-[[data-state=checked]]:border-ring has-[[data-state=checked]]:bg-muted/50"
+                      >
+                        <RadioGroupItem value={c.nilai} id={`cara-${c.nilai}`} className="mt-0.5" />
+                        <span className="grid gap-0.5">
+                          <span className="font-medium">{c.label}</span>
+                          <span className="text-xs text-muted-foreground">{c.keterangan}</span>
+                        </span>
+                      </Label>
+                    ))}
+                  </RadioGroup>
+                </Bagian>
+              )}
+              {!entri && cara === "ai" && <PanelDrafAi onDraf={isiDrafAi} />}
+              {modelAi && (
+                <Alert role="status">
+                  <IconSparkles />
+                  <AlertTitle>Draf dibuat dengan AI ({modelAi})</AlertTitle>
+                  <AlertDescription>
+                    Periksa kembali fakta, tanggal, jam, nama, dan dasar hukumnya dengan sumber sebelum menyimpan dan mengajukan tulisan.
+                  </AlertDescription>
+                </Alert>
+              )}
               <Bagian
                 judul="Isi tulisan"
                 deskripsi={isi ? `Sekitar ${menitBaca(isi)} menit baca.` : "Kalimat pendek dan jelas lebih mudah dibaca warga."}

@@ -17,6 +17,7 @@ import { useKonfirmasi } from "@/components/data/confirm"
 import { Bagian, Baris, Halaman, PengantarHalaman } from "@/components/data/page"
 import { FieldArea, FieldPilih, FieldTeks } from "@/components/form/fields"
 import { FormPengaturan } from "@/components/form/settings-form"
+import { TabIntegrasiAi } from "@/components/pengaturan/tab-integrasi-ai"
 import { TabTampilan } from "@/components/tema/tab-tampilan"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -403,10 +404,13 @@ function TabData() {
 
 export default function HalamanPengaturan() {
   const [params, setParams] = useSearchParams()
-  const tab = params.get("tab") ?? "situs"
+  // Integrasi AI hanya dibaca dan diubah Administrator (D-085)
+  const admin = sesi().peran === "administrator"
+  const diminta = params.get("tab") ?? "situs"
+  const tab = diminta === "ai" && !admin ? "situs" : diminta
   return (
     <Halaman>
-      <PengantarHalaman deskripsi="Identitas portal, tampilan portal dan dashboard, profil pengelola, serta cadangan dan pemulihan data dashboard." />
+      <PengantarHalaman deskripsi="Identitas portal, tampilan portal dan dashboard, profil pengelola, cadangan dan pemulihan data dashboard, serta integrasi AI untuk draf berita." />
       <Tabs
         value={tab}
         onValueChange={(t) => setParams({ tab: t }, { replace: true })}
@@ -417,6 +421,7 @@ export default function HalamanPengaturan() {
           <TabsTrigger value="tampilan">Tampilan</TabsTrigger>
           <TabsTrigger value="akun">Akun</TabsTrigger>
           <TabsTrigger value="data">Data</TabsTrigger>
+          {admin && <TabsTrigger value="ai">Integrasi AI</TabsTrigger>}
         </TabsList>
         <TabsContent value="situs">
           <TabSitus />
@@ -430,6 +435,11 @@ export default function HalamanPengaturan() {
         <TabsContent value="data">
           <TabData />
         </TabsContent>
+        {admin && (
+          <TabsContent value="ai">
+            <TabIntegrasiAi />
+          </TabsContent>
+        )}
       </Tabs>
     </Halaman>
   )

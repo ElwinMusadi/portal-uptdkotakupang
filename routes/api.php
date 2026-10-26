@@ -9,9 +9,11 @@ use App\Http\Controllers\Dashboard\ActivityController;
 use App\Http\Controllers\Dashboard\AgencyAppController;
 use App\Http\Controllers\Dashboard\AgencyAppDeletionController;
 use App\Http\Controllers\Dashboard\AgencyAppOrderController;
+use App\Http\Controllers\Dashboard\AiIntegrationController;
 use App\Http\Controllers\Dashboard\AnnouncementBarController;
 use App\Http\Controllers\Dashboard\ArticleController;
 use App\Http\Controllers\Dashboard\ArticleDeletionController;
+use App\Http\Controllers\Dashboard\ArticleDraftController;
 use App\Http\Controllers\Dashboard\ClockInController;
 use App\Http\Controllers\Dashboard\ContactController;
 use App\Http\Controllers\Dashboard\DocumentationController;
@@ -338,6 +340,19 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->can('update', [Setting::class, $theme])
         ->name('pengaturan.tema.riwayat');
 
+    // Integrasi AI, the AI API for article drafts: only administrators read, save and test it (SettingPolicy, D-085).
+    $aiIntegration = "'".Setting::AI_INTEGRATION."'";
+    Route::get('/pengaturan/ai', [AiIntegrationController::class, 'show'])
+        ->can('view', [Setting::class, $aiIntegration])
+        ->name('pengaturan.ai.show');
+    Route::put('/pengaturan/ai', [AiIntegrationController::class, 'update'])
+        ->can('update', [Setting::class, $aiIntegration])
+        ->name('pengaturan.ai.update');
+    Route::post('/pengaturan/ai/uji', [AiIntegrationController::class, 'test'])
+        ->can('update', [Setting::class, $aiIntegration])
+        ->middleware('throttle:ai-tests')
+        ->name('pengaturan.ai.uji');
+
     // The signed-in employee's own profile, the dashboard's "akun" settings (D-027).
     Route::get('/pengaturan/akun', [OwnAccountController::class, 'show'])->name('pengaturan.akun.show');
     Route::put('/pengaturan/akun', [OwnAccountController::class, 'update'])->name('pengaturan.akun.update');
@@ -386,6 +401,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/', [ArticleController::class, 'index'])->can('viewAny', Article::class)->name('index');
         Route::post('/', [ArticleController::class, 'store'])->can('create', Article::class)->name('store');
         Route::post('/hapus', [ArticleDeletionController::class, 'store'])->can('deleteAny', Article::class)->name('hapus');
+        // A draft written by AI from a link or documents, for the editor's form only (D-085)
+        Route::post('/draf-ai', ArticleDraftController::class)->can('create', Article::class)->middleware('throttle:ai-drafts')->name('draf-ai');
         Route::get('/{article}', [ArticleController::class, 'show'])->can('view', 'article')->name('show');
         Route::patch('/{article}', [ArticleController::class, 'update'])->can('update', 'article')->name('update');
     });
