@@ -28,7 +28,7 @@ Semuanya satu aplikasi Laravel di root repository, satu origin (D-002):
 
 | Perintah | Kegunaan |
 |---|---|
-| `composer test` | Semua tes PHPUnit di SQLite memori (±70 detik, 1862 tes) |
+| `composer test` | Semua tes PHPUnit di SQLite memori (±70 detik, 1868 tes) |
 | `php artisan test --compact <berkas> --filter=<tes>` | Tes tertentu |
 | `composer test:mysql` | **Mereset database `pintu`** (berisi data pemilik); hanya dengan izin pemilik dan cadangan |
 | `npm run typecheck` / `npm run lint` / `npm run build` | `tsc -b` / `oxlint resources/js` / `tsc -b && vite build` |
@@ -118,6 +118,7 @@ Build di Laravel Cloud: `composer install --no-dev && npm ci && npm run build &&
 
   Identitas wajib pajak hanya ada di dashboard, untuk sasaran penagihan.
 - **Draf berita dengan AI (D-085):** *Tulis berita › Buat dengan AI* membaca tautan dan/atau sampai 5 dokumen (PDF, Word, JPEG, PNG) lewat API kompatibel OpenAI (`AiClient`, Sumopod `gemini/gemini-4-argon` lebih dulu), lalu mengisi formulir untuk ditinjau; dokumen tidak disimpan. Pengaturan › Integrasi AI hanya untuk Administrator; kunci terenkripsi `APP_KEY`, tidak pernah dikirim balik dan tidak dikirim ke host lain, dengan `.env` (`SUMOPOD_*`) sebagai cadangan. Tautan dibaca `PublicPageFetcher` dengan pengaman SSRF (alamat publik saja, alamat dikunci, maks. 3 pengalihan), dan HTML jawaban AI dibersihkan `RichTextCleaner` ke HTML editor. Permintaan AI dibatasi 75 detik karena Cloudflare memutus di 100 detik.
+- **Pratinjau tulisan dan sampul (D-086):** tombol *Pratinjau* menyimpan dulu, lalu membuka `/berita/pratinjau/{id}`: tautan bertanda tangan `APP_KEY` atas alamat relatif, 24 jam, bisa dibagikan tanpa login; server menyisipkan pita dan data tulisan (JSON ter-escape) ke halaman `berita-detail` yang sama, dengan `noindex` dan `no-referrer`. Sampul tidak pernah dipotong: rasio asli di editor dan halaman tulisan, utuh berlatar buram (`.ph--utuh`) di kartu.
 - **Produksi tetap MySQL, bukan Cloudflare D1 (D-065):** D1 dari luar Workers hanya lewat REST berbatas, tanpa transaksi interaktif, dan tanpa driver Laravel.
 - **Pegawai dari SIKAP (D-075):** kunci API SIKAP hanya ada di server (proxy `/api/akun/pegawai-sikap`, khusus Administrator). Akun hanya mengambil NIP + Nama, dan saat disimpan server membaca ulang nama per NIP, karena nama dari browser tidak dipercaya. Input manual tetap ada untuk petugas di luar UPTD. Email dan no HP SIKAP tidak dipakai di v1 (pemilik): dibuang di server, tidak disimpan.
 - **Data kendaraan dengan kunci API Data Potensi (D-076, D-077, D-078):** `api.uptdpenda-kupang.web.id` kini Worker `api-potensi-ntt`, tanpa Cloudflare Access sejak 2026-10-24. PINTU hanya mengirim `NJKB_API_KEY` sebagai `Authorization: Bearer`; tanpa kunci, pencarian "belum dikonfigurasi". Header dan env Access (`NJKB_ACCESS_*`) sudah dibuang (D-078). Kunci "PINTU" mencakup **semua UPT**, karena kalkulator di dashboard dan portal harus bisa menghitung semua nomor polisi NTT. `403 region_not_allowed` berarti wilayah kunci salah diatur: dicatat di log (tanpa nomor polisi), dashboard memberi pesan wilayah, portal memberi pesan gagal biasa tanpa menyebut wilayah.

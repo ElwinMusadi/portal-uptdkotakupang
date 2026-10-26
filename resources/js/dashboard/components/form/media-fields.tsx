@@ -151,6 +151,7 @@ export function FieldGambar<T extends FieldValues>({
   logo = false,
   tujuan,
 }: PropsDasar<T> & {
+  /** Kelas rasio bingkai, atau "asli" agar foto tampil utuh dengan rasio aslinya (sampul berita, D-086) */
   rasio?: string
   /** Tampilkan utuh di atas latar putih, tidak dipotong (logo) */
   logo?: boolean
@@ -182,14 +183,16 @@ export function FieldGambar<T extends FieldValues>({
           <FormItem className={className}>
             <FormLabel>{label}</FormLabel>
             <div
-              className={cn("relative overflow-hidden rounded-lg border bg-muted/40", rasio)}
+              className={cn("relative overflow-hidden rounded-lg border bg-muted/40", rasio === "asli" ? (src ? "" : "aspect-[16/9]") : rasio)}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
                 e.preventDefault()
                 void pilih(e.dataTransfer.files[0])
               }}
             >
-              {src ? (
+              {src && rasio === "asli" ? (
+                <img src={src} alt="" className="mx-auto block h-auto max-h-[28rem] w-auto max-w-full" />
+              ) : src ? (
                 <img src={src} alt="" className={cn("size-full", logo ? "bg-white object-contain p-4" : "object-cover")} />
               ) : (
                 <PlaceholderFoto

@@ -1,6 +1,6 @@
 import * as React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { IconArrowLeft, IconSparkles, IconTrash, IconWand } from "@tabler/icons-react"
+import { IconArrowLeft, IconExternalLink, IconEye, IconSparkles, IconTrash, IconWand } from "@tabler/icons-react"
 import { useForm, type Resolver } from "react-hook-form"
 import { Link, useNavigate, useParams } from "react-router"
 import { toast } from "sonner"
@@ -31,10 +31,12 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Spinner } from "@/components/ui/spinner"
 import { diServer, type Berita, type DrafAi } from "@/lib/api"
 import { alurBaru, khususAdministrator } from "@/lib/alur"
 import { sesi } from "@/lib/auth"
-import { hariIniIso, menitBaca, slugify } from "@/lib/format"
+import { useTautanPratinjau } from "@/lib/berita"
+import { hariIniIso, menitBaca, slugify, tanggalJam } from "@/lib/format"
 import { validasiFormulir } from "@/lib/formulir"
 import { KATEGORI_BERITA, PEMERIKSA, UNIT_PENYEDIA } from "@/lib/meta"
 import { useKoleksi, useTambahEntri, useUbahEntri } from "@/lib/queries"
@@ -171,16 +173,16 @@ function IsiEditor({ entri, semua }: { entri: Berita | null; semua: Berita[] }) 
     return true
   }
 
-  const simpan = async (): Promise<boolean> => {
+  const simpan = async (): Promise<Berita | null> => {
     if (!(await validasiFormulir(form))) {
       toast.error("Periksa kembali isian yang ditandai merah.")
-      return false
+      return null
     }
     const nilai = form.getValues()
     if (semua.some((b) => b.slug === nilai.slug && b.id !== entri?.id)) {
       form.setError("slug", { message: "Slug sudah dipakai tulisan lain." })
       form.setFocus("slug")
-      return false
+      return null
     }
     try {
       let tersimpan: Berita
@@ -202,9 +204,41 @@ function IsiEditor({ entri, semua }: { entri: Berita | null; semua: Berita[] }) 
       toast.success(entri ? "Perubahan disimpan" : "Draf tulisan dibuat")
       // tunggu render ulang agar penjaga perubahan tahu formulir sudah bersih
       if (!entri) setTimeout(() => navigate(`/berita/${tersimpan.id}`, { replace: true }), 0)
-      return true
+      return tersimpan
     } catch {
-      return false
+      return null
+    }
+  }
+
+  // Pratinjau di portal untuk tulisan yang belum terbit (D-086): perubahan disimpan dulu, lalu tautan 24 jam dibuka
+  const pratinjau = useTautanPratinjau()
+  const bukaPratinjau = async () => {
+    // Tab dibuka selagi masih dalam klik, agar tidak dicegah pemblokir pop-up
+    const tab = window.open("", "_blank")
+    if (tab) tab.opener = null
+    const tersimpan = berubah || !entri ? await simpan() : entri
+    if (!tersimpan) {
+      tab?.close()
+      return
+    }
+    try {
+      const { tautan, berlaku } = await pratinjau.mutateAsync(tersimpan.id)
+      if (tab) tab.location.href = tautan
+      else window.open(tautan, "_blank", "noopener")
+      toast.success("Pratinjau dibuka di tab baru", {
+        description: `Tautan berlaku sampai ${tanggalJam(berlaku)} dan bisa dibuka siapa pun yang menerimanya.`,
+        action: {
+          label: "Salin tautan",
+          onClick: () =>
+            void navigator.clipboard.writeText(tautan).then(
+              () => toast.success("Tautan pratinjau disalin"),
+              () => toast.error("Tautan gagal disalin")
+            ),
+        },
+      })
+    } catch (e) {
+      tab?.close()
+      toast.error((e as Error).message)
     }
   }
 
@@ -217,22 +251,44 @@ function IsiEditor({ entri, semua }: { entri: Berita | null; semua: Berita[] }) 
             Semua tulisan
           </Link>
         </Button>
-        {entri && !khususAdministrator("berita") && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="ml-auto text-destructive hover:text-destructive"
-            onClick={async () => {
-              if (await hapus([entri.id], entri.judul)) {
-                form.reset(form.getValues())
-                setTimeout(() => navigate("/berita", { replace: true }), 0)
-              }
-            }}
-          >
-            <IconTrash />
-            Hapus tulisan
-          </Button>
-        )}
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          {diServer("berita") &&
+            (entri?.status === "terbit" ? (
+              <Button variant="outline" size="sm" asChild>
+                <a href={`/berita/${entri.slug}`} target="_blank" rel="noopener">
+                  <IconExternalLink />
+                  Lihat di portal
+                </a>
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => void bukaPratinjau()}
+                disabled={menyimpan || pratinjau.isPending}
+              >
+                {pratinjau.isPending ? <Spinner /> : <IconEye />}
+                Pratinjau
+              </Button>
+            ))}
+          {entri && !khususAdministrator("berita") && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-destructive hover:text-destructive"
+              onClick={async () => {
+                if (await hapus([entri.id], entri.judul)) {
+                  form.reset(form.getValues())
+                  setTimeout(() => navigate("/berita", { replace: true }), 0)
+                }
+              }}
+            >
+              <IconTrash />
+              Hapus tulisan
+            </Button>
+          )}
+        </div>
       </div>
 
       <Form {...form}>
@@ -319,7 +375,7 @@ function IsiEditor({ entri, semua }: { entri: Berita | null; semua: Berita[] }) 
                 entriBaru={!entri}
                 jalankan={jalankan}
                 memproses={memproses || menyimpan}
-                sebelumAksi={async () => (berubah ? simpan() : true)}
+                sebelumAksi={async () => (berubah ? (await simpan()) !== null : true)}
               />
               <Bagian judul="Atribut">
                 <Baris className="sm:grid-cols-1">
@@ -396,7 +452,14 @@ function IsiEditor({ entri, semua }: { entri: Berita | null; semua: Berita[] }) 
                 />
               </Bagian>
               <Bagian judul="Foto sampul">
-                <FieldGambar control={form.control} name="sampul" label="Foto" tujuan="berita" />
+                <FieldGambar
+                  control={form.control}
+                  name="sampul"
+                  label="Foto"
+                  tujuan="berita"
+                  rasio="asli"
+                  deskripsi="JPG, PNG, atau WebP dengan rasio apa pun; foto tidak dipotong dan diperkecil otomatis menjadi maks. 1600 px."
+                />
                 <FieldTeks control={form.control} name="keteranganSampul" label="Keterangan foto" />
                 <FieldTeks control={form.control} name="kreditFoto" label="Kredit foto" placeholder="Mis. Subbagian Tata Usaha" />
               </Bagian>

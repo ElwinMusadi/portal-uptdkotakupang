@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ArticlePageController;
+use App\Http\Controllers\ArticlePreviewPageController;
 use App\Http\Controllers\Auth\AccountActivationController;
 use App\Http\Controllers\MessageTrackingPageController;
 use App\Http\Controllers\QueueTrackingPageController;
@@ -65,6 +66,8 @@ Route::withoutMiddleware([
 
     // One article per address, filled from the public API (D-031). The former example page leads to the news list.
     Route::get('/berita/{slug}', ArticlePageController::class)->where('slug', Article::SLUG_PATTERN)->name('portal.berita');
+    // A signed preview link of an article not published yet, for anyone who has it for 24 hours (D-086)
+    Route::get('/berita/pratinjau/{article}', ArticlePreviewPageController::class)->whereUlid('article')->name('portal.berita.pratinjau');
     Route::permanentRedirect('/berita-detail', '/informasi');
     Route::permanentRedirect('/berita-detail.html', '/informasi');
 

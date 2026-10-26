@@ -1374,11 +1374,12 @@
     return data;
   }
 
+  const beritaValid = (b) => ringkasanBeritaValid(b) && ["isi", "kreditFoto", "pemeriksa"].every((f) => teksBerita(b[f]))
+    && (b.diperbarui === null || teksBerita(b.diperbarui));
+
   async function muatBerita(slug) {
     const b = await ambilJson(`/api/public/berita/${encodeURIComponent(slug)}`);
-    const valid = ringkasanBeritaValid(b) && ["isi", "kreditFoto", "pemeriksa"].every((f) => teksBerita(b[f]))
-      && (b.diperbarui === null || teksBerita(b.diperbarui));
-    if (!valid) throw new Error("Respons tidak dikenal");
+    if (!beritaValid(b)) throw new Error("Respons tidak dikenal");
     return b;
   }
 
@@ -1406,12 +1407,13 @@
     return `${w.d} ${BULAN[w.mo - 1]} ${w.y}, ${pad(w.h)}.${pad(w.m)} WITA`;
   }
 
-  // Bingkai foto: sampul bila ada, selain itu ilustrasi kategori
+  // Bingkai foto: sampul bila ada, selain itu ilustrasi kategori. Sampul berasio bebas tampil utuh;
+  // sisi bingkai yang kosong diisi foto yang sama, diburamkan (D-086)
   function mediaBerita(b, kelas) {
     const [, warna, ilustrasi] = kategoriBerita(b.kategori);
     const foto = gambarAman(b.sampul);
-    return `<div class="ph ph--${warna} ${kelas}">${foto
-      ? `<img src="${esc(foto)}" alt="" loading="lazy" decoding="async">`
+    return `<div class="ph ph--${warna} ${kelas}${foto ? " ph--utuh" : ""}">${foto
+      ? `<img class="ph__latar" src="${esc(foto)}" alt="" aria-hidden="true" loading="lazy" decoding="async"><img src="${esc(foto)}" alt="" loading="lazy" decoding="async">`
       : `<svg aria-hidden="true"><use href="#ill-${ilustrasi}"/></svg>`}</div>`;
   }
 
@@ -1522,9 +1524,15 @@
         img.src = foto;
         img.alt = b.keteranganSampul;
         img.decoding = "async";
+        // Sampul utuh dengan rasio aslinya; poster tegak dibatasi tinggi layar dengan latar foto yang sama, buram (D-086)
+        const latar = document.createElement("img");
+        latar.className = "ph__latar";
+        latar.src = foto;
+        latar.alt = "";
+        latar.setAttribute("aria-hidden", "true");
         const media = $("[data-berita-media]");
-        media.className = `ph ph--${warna} article-media`;
-        media.replaceChildren(img);
+        media.className = `ph ph--${warna} article-media ph--utuh`;
+        media.replaceChildren(latar, img);
         $("[data-berita-keterangan]").textContent = b.keteranganSampul;
         $("[data-berita-kredit]").textContent = b.kreditFoto ? `Foto: ${b.kreditFoto}` : "";
       }
@@ -1568,11 +1576,26 @@
       }
     };
 
+    // Tautan pratinjau (D-086): server menulis tulisan yang belum terbit, atau alasan tautan tidak berlaku, ke halaman
+    const pratinjau = $("[data-berita-pratinjau]");
+
     const muat = async (fokus) => {
       judul.textContent = "Memuat tulisan…";
       ringkasan.setAttribute("role", "status");
       ringkasan.textContent = "";
       try {
+        if (pratinjau) {
+          const b = JSON.parse(pratinjau.textContent);
+          if (typeof b?.galat === "string") {
+            pesan("Tautan pratinjau tidak berlaku.", b.galat, "");
+            return;
+          }
+          if (!beritaValid(b)) throw new Error("Respons tidak dikenal");
+          tampilkan(b);
+          // Tulisan belum punya alamat publik untuk dibagikan
+          $("[data-berita-bagikan]").hidden = true;
+          return;
+        }
         if (!slug) throw new Error("Status 404");
         tampilkan(await muatBerita(slug));
       } catch (e) {

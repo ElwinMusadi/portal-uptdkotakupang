@@ -232,7 +232,7 @@
             <div><dt>Diterbitkan</dt><dd data-berita-terbit></dd></div>
             <div><dt>Diperbarui</dt><dd data-berita-diperbarui></dd></div>
             <div data-berita-pemeriksa-baris><dt>Diverifikasi oleh</dt><dd data-berita-pemeriksa></dd></div>
-            <div><dt>Bagikan</dt><dd class="share" style="margin-top:8px">
+            <div data-berita-bagikan><dt>Bagikan</dt><dd class="share" style="margin-top:8px">
               <button type="button" data-copy-link aria-label="Salin tautan"><svg class="i" aria-hidden="true"><use href="#i-link"/></svg></button>
               <a href="https://wa.me/?text=PINTU%20Samsat%20Kota%20Kupang" target="_blank" rel="noopener" aria-label="Bagikan ke WhatsApp" data-berita-wa><svg class="i" aria-hidden="true"><use href="#i-message"/></svg></a>
               <a href="https://www.facebook.com/sharer/sharer.php" target="_blank" rel="noopener" aria-label="Bagikan ke Facebook" data-berita-fb><svg class="i" aria-hidden="true"><use href="#i-facebook"/></svg></a>

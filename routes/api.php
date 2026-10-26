@@ -14,6 +14,7 @@ use App\Http\Controllers\Dashboard\AnnouncementBarController;
 use App\Http\Controllers\Dashboard\ArticleController;
 use App\Http\Controllers\Dashboard\ArticleDeletionController;
 use App\Http\Controllers\Dashboard\ArticleDraftController;
+use App\Http\Controllers\Dashboard\ArticlePreviewLinkController;
 use App\Http\Controllers\Dashboard\ClockInController;
 use App\Http\Controllers\Dashboard\ContactController;
 use App\Http\Controllers\Dashboard\DocumentationController;
@@ -404,6 +405,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
         // A draft written by AI from a link or documents, for the editor's form only (D-085)
         Route::post('/draf-ai', ArticleDraftController::class)->can('create', Article::class)->middleware('throttle:ai-drafts')->name('draf-ai');
         Route::get('/{article}', [ArticleController::class, 'show'])->can('view', 'article')->name('show');
+        // A 24-hour preview link of the article on the portal, to share before it is published (D-086)
+        Route::post('/{article}/pratinjau', [ArticlePreviewLinkController::class, 'store'])->can('view', 'article')->name('pratinjau');
         Route::patch('/{article}', [ArticleController::class, 'update'])->can('update', 'article')->name('update');
     });
 

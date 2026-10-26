@@ -28,6 +28,17 @@ class ShowPublicArticle
             throw new PublicContentUnavailableException('The article could not be read.', previous: $exception);
         }
 
+        return self::present($article);
+    }
+
+    /**
+     * An article as the portal's article page shows it, published or, for a
+     * preview link (D-086), not yet.
+     *
+     * @return array{judul: string, slug: string, kategori: string, ringkasan: string, isi: string, sampul: ?string, keteranganSampul: string, kreditFoto: string, tanggal: string, pemeriksa: string, menitBaca: int, terbitPada: ?string, diperbarui: ?string}
+     */
+    public static function present(Article $article): array
+    {
         return [
             'judul' => $article->judul,
             'slug' => $article->slug,

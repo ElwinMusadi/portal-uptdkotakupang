@@ -484,6 +484,9 @@
 @media (max-width: 600px) { .posts { grid-template-columns: 1fr; } .notice-list a { grid-template-columns: 1fr; gap: 4px; } .search { min-width: 0; width: 100%; } }
 
 /* ---------- Artikel ---------- */
+/* Pita tautan pratinjau tulisan yang belum terbit (D-086) */
+.pratinjau-pita { padding-top: 20px; }
+.pratinjau-pita p { max-width: calc(200px + 56px + 680px); margin-inline: auto; padding: 10px 16px; border-radius: var(--r-md); background: var(--accent); color: #fff; font-size: 14px; font-weight: 500; text-wrap: balance; }
 /* Kepala, sampul, dan isi artikel selebar kolom info + teks (200 + 56 + 680), jadi tepi kirinya sejajar */
 .article-head { max-width: calc(200px + 56px + 680px); margin-inline: auto; }
 .article-head .h-display { max-width: 18ch; font-size: clamp(34px, 4.6vw, 58px); }
@@ -491,6 +494,8 @@
 .article-figure { max-width: calc(200px + 56px + 680px); margin-inline: auto; }
 .article-media { border-radius: var(--r-xl); }
 .article-media > img { position: relative; height: auto; }
+/* Sampul tegak tidak lebih tinggi dari layar: utuh di tengah, sisi kosong diisi foto yang sama yang diburamkan (D-086) */
+.article-media.ph--utuh > img:not(.ph__latar) { width: auto; max-width: 100%; max-height: min(80vh, 56rem); margin-inline: auto; }
 /* Tanpa sampul, jarak ke isi cukup ruang bawah kepala artikel, bukan ditambah ruang atas bagian isi */
 .container:has(> .article-figure[hidden]) + .section--tight { padding-top: 0; }
 .article-body { display: grid; grid-template-columns: 200px minmax(0, 680px); gap: 56px; justify-content: center; }

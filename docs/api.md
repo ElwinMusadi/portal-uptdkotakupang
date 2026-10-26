@@ -746,6 +746,17 @@ Isi divalidasi seperti formulir dashboard: judul (maks. 160 karakter), slug unik
 
 Kode: `app/Http/Controllers/Dashboard/Article*`, `app/Http/Requests/Dashboard/*Article*`, `app/Models/Article.php`, `app/Policies/ArticlePolicy.php`, `database/migrations/*_insert_initial_articles.php`. Tes: `tests/Feature/ArticleControllerTest.php`, `ArticleWorkflowTest.php`.
 
+### Pratinjau tulisan
+
+Dipakai tombol *Pratinjau* di editor ([D-086](decisions.md#d-086--2026-10-26--pratinjau-tulisan-yang-belum-terbit-dan-sampul-berasio-bebas)).
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `POST /api/koleksi/berita/{id}/pratinjau` | — | `201` `{"tautan": "https://…/berita/pratinjau/{id}?expires=…&signature=…", "berlaku": "…"}`: tautan halaman portal bertanda tangan `APP_KEY` atas alamat relatif, berlaku 24 jam bagi siapa pun yang memilikinya. Hak akses sama dengan membaca tulisan; tulisan yang tidak ada `404`. |
+| `GET /berita/pratinjau/{id}?expires&signature` | — | `200` halaman `berita-detail` dengan pita pratinjau dan data tulisan sebagaimana tersimpan (`<script type="application/json" data-berita-pratinjau>`, bentuknya sama dengan `GET /api/public/berita/{slug}`); `noindex, nofollow`, `no-store, private`, `Referrer-Policy: no-referrer`, tanpa sesi. Tanda tangan salah, diubah, atau kedaluwarsa: `403` dengan `{"galat": "…"}`. Tulisan terbit: `302` ke `/berita/{slug}`. Tulisan tidak ada: `404`. |
+
+Kode: `app/Http/Controllers/Dashboard/ArticlePreviewLinkController.php`, `app/Http/Controllers/ArticlePreviewPageController.php`, `app/Support/ArticlePreview.php`, `app/Actions/ShowPublicArticle.php` (`present()`). Tes: `tests/Feature/ArticlePreviewTest.php`.
+
 ### Draf tulisan dengan AI
 
 Dipakai *Tulis berita › Buat dengan AI* ([D-085](decisions.md#d-085--2026-10-26--draf-berita-dengan-ai-dan-pengaturan-integrasi-ai)). Hak aksesnya sama dengan menulis tulisan baru (`ArticlePolicy::create`); tidak ada yang disimpan, dan dokumen sumber dibuang setelah dibaca.
