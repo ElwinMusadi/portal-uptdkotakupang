@@ -444,6 +444,18 @@ class PortalPagesTest extends TestCase
         $this->assertStringNotContainsString('href="pemetaan.html"', $section[0]);
     }
 
+    public function test_keeps_the_newest_articles_hidden_before_layanan_utama_for_the_public_api_to_fill(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+
+        // Hidden until the Beranda document allows it and an article is published (D-087)
+        $this->assertSame(1, preg_match('#<section class="section section--flush-top berita-terbaru" id="berita-terbaru" data-beranda-berita hidden>(.*?)</section>\s*<!--[^>]*-->\s*<section class="section section--flush-top views" id="layanan-utama">#s', $html, $section));
+        $this->assertStringContainsString('<h2 class="h2" style="margin-top: 20px" data-beranda-judul="beritaTerbaru">', $section[1]);
+        $this->assertStringContainsString('data-beranda-teks="beritaTerbaru.deskripsi"', $section[1]);
+        $this->assertMatchesRegularExpression('#<a class="link-arrow" href="informasi\.html" data-reveal\s*>Semua berita<svg#', $section[1]);
+        $this->assertStringContainsString('<div class="posts berita-terbaru__daftar" data-beranda-berita-daftar></div>', $section[1]);
+    }
+
     public function test_never_doubles_the_padding_between_two_beranda_sections(): void
     {
         $html = $this->get('/')->assertOk()->getContent();
@@ -656,8 +668,8 @@ class PortalPagesTest extends TestCase
         foreach (['data-beranda-tombol', 'data-beranda-catatan ', 'data-beranda-nilai', 'data-beranda-mitra', 'data-beranda-kanal', 'data-beranda-catatan-notis', 'data-beranda-wajib', 'data-beranda-jaminan'] as $hook) {
             $this->assertStringContainsString($hook, $html);
         }
-        $this->assertSame(4, substr_count($html, 'data-beranda-judul="'));
-        $this->assertSame(6, substr_count($html, 'data-beranda-teks="'));
+        $this->assertSame(5, substr_count($html, 'data-beranda-judul="'));
+        $this->assertSame(7, substr_count($html, 'data-beranda-teks="'));
         // The video button stays hidden until the public API gives a video (D-040)
         $this->assertMatchesRegularExpression('/<button\s+class="play-pill"[^>]*\sdata-beranda-video\s+hidden\s*>/', $html);
         foreach (['data-beranda-video-label', 'data-beranda-video-durasi', 'data-beranda-video-pemutar', 'data-beranda-video-judul'] as $hook) {

@@ -449,6 +449,30 @@
         </div>
       </section>
 
+      <!-- 3a · Berita terbaru: tulisan terbit terbaru semua kategori, dimuat main.js lewat GET /api/public/berita; tampil, jumlah (3–6), dan judulnya diatur di dashboard Beranda (D-087) -->
+      <section class="section section--flush-top berita-terbaru" id="berita-terbaru" data-beranda-berita hidden>
+        <div class="container">
+          <div class="berita-terbaru__kepala">
+            <div data-reveal>
+              <p class="eyebrow">Berita terbaru</p>
+              <h2 class="h2" style="margin-top: 20px" data-beranda-judul="beritaTerbaru">
+                Kabar terbaru.
+                <span class="tone">Langsung dari loket.</span>
+              </h2>
+              <p class="body" style="margin-top: 20px" data-beranda-teks="beritaTerbaru.deskripsi">
+                Pengumuman, jadwal Samsat Keliling, dan informasi pajak kendaraan
+                terbaru dari UPTD.
+              </p>
+            </div>
+            <a class="link-arrow" href="informasi.html" data-reveal
+              >Semua berita<svg class="i" aria-hidden="true">
+                <use href="#i-arrow-right" /></svg
+            ></a>
+          </div>
+          <div class="posts berita-terbaru__daftar" data-beranda-berita-daftar></div>
+        </div>
+      </section>
+
       <!-- 4 · Layanan utama: judul dan tab bernomor di kiri, persyaratan layanan terpilih di kanan (seperti Transparansi) -->
       <section class="section section--flush-top views" id="layanan-utama">
         <div class="container split">

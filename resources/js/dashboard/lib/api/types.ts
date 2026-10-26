@@ -483,6 +483,8 @@ export interface Beranda {
   /** Video YouTube di balik tombol "Tonton alur pelayanan"; tautan kosong = tombol tidak tampil (D-040) */
   video: { url: string; label: string; durasi: string; judul: string }
   nilai: { id: Id; judul: string; deskripsi: string }[]
+  /** Kartu tulisan terbit terbaru sebelum Layanan utama, 3–6 tulisan (D-087) */
+  beritaTerbaru: Judul2Nada & { deskripsi: string; tampil: boolean; jumlah: number }
   layananUtama: Judul2Nada & { deskripsi: string }
   /** Logo mitra di bucket publik; inisial dipakai bila belum ada logo (D-037) */
   mitra: { id: Id; singkatan: string; nama: string; logo: string | null }[]

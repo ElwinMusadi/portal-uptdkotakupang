@@ -12,8 +12,9 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
 /**
- * The complete Beranda document: the homepage's opening, values, services
- * heading, partners, channel map, integrity statement, fees and closing.
+ * The complete Beranda document: the homepage's opening, values, newest
+ * articles (D-087), services heading, partners, channel map, integrity
+ * statement, fees and closing.
  */
 class UpdateHomepageRequest extends FormRequest
 {
@@ -84,6 +85,13 @@ class UpdateHomepageRequest extends FormRequest
             'nilai.*.id' => ['required', 'string', 'max:40', 'distinct'],
             'nilai.*.judul' => ['required', 'string', 'max:60', new PlainText('Judul nilai')],
             'nilai.*.deskripsi' => ['nullable', 'string', 'max:200', new PlainText('Deskripsi nilai')],
+            // A dashboard opened before Berita terbaru (D-087) sends none
+            'beritaTerbaru' => ['sometimes', 'array'],
+            'beritaTerbaru.tampil' => ['required_with:beritaTerbaru', 'boolean'],
+            'beritaTerbaru.jumlah' => ['required_with:beritaTerbaru', 'integer', 'between:3,6'],
+            'beritaTerbaru.judul' => ['required_with:beritaTerbaru', 'string', 'max:80', new PlainText('Judul berita terbaru')],
+            'beritaTerbaru.lanjutan' => ['nullable', 'string', 'max:80', new PlainText('Lanjutan judul berita terbaru')],
+            'beritaTerbaru.deskripsi' => ['nullable', 'string', 'max:300', new PlainText('Deskripsi berita terbaru')],
             'mitra' => ['present', 'list', 'max:12'],
             'mitra.*' => ['required', 'array'],
             'mitra.*.id' => ['required', 'string', 'max:40', 'distinct'],
@@ -154,6 +162,12 @@ class UpdateHomepageRequest extends FormRequest
             'max' => ':Attribute maksimal :max karakter.',
             'distinct' => ':Attribute tercantum dua kali.',
             'required_with' => ':Attribute wajib diisi bila tautannya diisi.',
+            'boolean' => ':Attribute tidak valid.',
+            'integer' => ':Attribute tidak valid.',
+            'beritaTerbaru.tampil.required_with' => 'Pilihan tampilkan berita terbaru wajib diisi.',
+            'beritaTerbaru.jumlah.required_with' => 'Jumlah berita terbaru wajib diisi.',
+            'beritaTerbaru.jumlah.between' => 'Jumlah berita terbaru 3 sampai 6 tulisan.',
+            'beritaTerbaru.judul.required_with' => 'Judul berita terbaru wajib diisi.',
             'hero.kataBergilir.max' => 'Maksimal :max kata bergilir.',
             'video.durasi.regex' => 'Tulis durasi video seperti 2:14 atau 1:02:30.',
             'nilai.max' => 'Maksimal :max nilai utama.',
@@ -190,6 +204,12 @@ class UpdateHomepageRequest extends FormRequest
             'nilai.*.id' => 'nilai utama',
             'nilai.*.judul' => 'judul nilai',
             'nilai.*.deskripsi' => 'deskripsi nilai',
+            'beritaTerbaru' => 'bagian berita terbaru',
+            'beritaTerbaru.tampil' => 'pilihan tampilkan berita terbaru',
+            'beritaTerbaru.jumlah' => 'jumlah berita terbaru',
+            'beritaTerbaru.judul' => 'judul berita terbaru',
+            'beritaTerbaru.lanjutan' => 'lanjutan judul berita terbaru',
+            'beritaTerbaru.deskripsi' => 'deskripsi berita terbaru',
             'mitra' => 'daftar mitra',
             'mitra.*' => 'mitra',
             'mitra.*.id' => 'mitra',
@@ -260,6 +280,12 @@ class UpdateHomepageRequest extends FormRequest
                 'judul' => $value['judul'],
                 'deskripsi' => $value['deskripsi'] ?? '',
             ], $this->validated('nilai')),
+            // A dashboard opened before Berita terbaru (D-087) sends none; the saved one stays
+            'beritaTerbaru' => $this->has('beritaTerbaru') ? [
+                'tampil' => $this->boolean('beritaTerbaru.tampil'),
+                'jumlah' => (int) $this->validated('beritaTerbaru.jumlah'),
+                ...$titled('beritaTerbaru'),
+            ] : Setting::homepage()['beritaTerbaru'],
             'layananUtama' => $titled('layananUtama'),
             'mitra' => array_map(fn (array $partner): array => [
                 'id' => $partner['id'],

@@ -244,9 +244,11 @@ class HomepageControllerTest extends TestCase
         $homepage = Setting::INITIAL_HOMEPAGE;
         $homepage['mitra'] = [['id' => 'mitra-1', 'singkatan' => 'BP', 'nama' => 'BPAD Provinsi NTT']];
         $homepage['kanal'] = [['id' => 'kanal-1', 'kelompok' => 'Pengaduan', 'item' => ['SP4N-LAPOR!', 'Kotak saran']]];
-        unset($homepage['video']);
+        unset($homepage['video'], $homepage['beritaTerbaru']);
         (new Setting)->forceFill(['name' => Setting::HOMEPAGE, 'value' => $homepage])->save();
         $this->assertSame(['url' => '', 'label' => 'Tonton alur pelayanan', 'durasi' => '', 'judul' => ''], Setting::homepage()['video']);
+        // Berita terbaru (D-087) shows as it starts in a document saved before it
+        $this->assertSame(Setting::INITIAL_HOMEPAGE['beritaTerbaru'], Setting::homepage()['beritaTerbaru']);
         $employee = $this->berandaEmployee();
 
         $shown = $this->actingAs($employee)->getJson('/api/pengaturan/beranda')
@@ -349,16 +351,58 @@ class HomepageControllerTest extends TestCase
         $homepage = Setting::INITIAL_HOMEPAGE;
         $homepage['hero']['kataBergilir'] = ['STNK', 'Samsat'];
         $homepage['video'] = ['url' => 'https://youtu.be/25sRCp-IFxI', 'label' => 'Tonton alur pelayanan', 'durasi' => '2:14', 'judul' => 'Alur pelayanan PINTU'];
+        $homepage['beritaTerbaru'] = [...$homepage['beritaTerbaru'], 'tampil' => false, 'jumlah' => 6];
         $this->actingAs($employee)->putJson('/api/pengaturan/beranda', $homepage)->assertOk();
 
-        unset($homepage['video'], $homepage['hero']['kataBergilir']);
+        unset($homepage['video'], $homepage['hero']['kataBergilir'], $homepage['beritaTerbaru']);
         $homepage['hero']['judul'] = 'Judul baru.';
         $this->actingAs($employee)->putJson('/api/pengaturan/beranda', $homepage)
             ->assertOk()
             ->assertJsonPath('hero.judul', 'Judul baru.')
             ->assertJsonPath('hero.kataBergilir', ['STNK', 'Samsat'])
             ->assertJsonPath('video.url', 'https://www.youtube.com/watch?v=25sRCp-IFxI')
-            ->assertJsonPath('video.judul', 'Alur pelayanan PINTU');
+            ->assertJsonPath('video.judul', 'Alur pelayanan PINTU')
+            ->assertJsonPath('beritaTerbaru.tampil', false)
+            ->assertJsonPath('beritaTerbaru.jumlah', 6);
+    }
+
+    public function test_saves_the_newest_articles_section(): void
+    {
+        $homepage = Setting::INITIAL_HOMEPAGE;
+        $homepage['beritaTerbaru'] = ['tampil' => '0', 'jumlah' => '5', 'judul' => 'Berita terkini.', 'lanjutan' => null, 'deskripsi' => null];
+
+        $this->actingAs($this->berandaEmployee())->putJson('/api/pengaturan/beranda', $homepage)
+            ->assertOk()
+            ->assertJsonPath('beritaTerbaru', ['tampil' => false, 'jumlah' => 5, 'judul' => 'Berita terkini.', 'lanjutan' => '', 'deskripsi' => '']);
+        $this->assertSame(['tampil' => false, 'jumlah' => 5, 'judul' => 'Berita terkini.', 'lanjutan' => '', 'deskripsi' => ''], Setting::homepage()['beritaTerbaru']);
+    }
+
+    /**
+     * @param  array<string, mixed>  $section
+     * @param  array<string, string>  $errors
+     */
+    #[TestWith([['tampil' => 'ya', 'jumlah' => 2, 'judul' => ''], [
+        'beritaTerbaru.tampil' => 'Pilihan tampilkan berita terbaru tidak valid.',
+        'beritaTerbaru.jumlah' => 'Jumlah berita terbaru 3 sampai 6 tulisan.',
+        'beritaTerbaru.judul' => 'Judul berita terbaru wajib diisi.',
+    ]])]
+    #[TestWith([['tampil' => true, 'jumlah' => 7, 'judul' => 'Judul.', 'lanjutan' => 'Lanjutan yang terlalu panjang untuk judul dua nada di beranda, lebih dari delapan puluh', 'deskripsi' => 'Deskripsi.'], [
+        'beritaTerbaru.jumlah' => 'Jumlah berita terbaru 3 sampai 6 tulisan.',
+        'beritaTerbaru.lanjutan' => 'Lanjutan judul berita terbaru maksimal 80 karakter.',
+    ]])]
+    #[TestWith([['jumlah' => 3.5, 'judul' => 'Judul.'], [
+        'beritaTerbaru.tampil' => 'Pilihan tampilkan berita terbaru wajib diisi.',
+        'beritaTerbaru.jumlah' => 'Jumlah berita terbaru tidak valid.',
+    ]])]
+    public function test_validates_the_newest_articles_section(array $section, array $errors): void
+    {
+        $homepage = Setting::INITIAL_HOMEPAGE;
+        $homepage['beritaTerbaru'] = $section;
+
+        $this->actingAs($this->berandaEmployee())->putJson('/api/pengaturan/beranda', $homepage)
+            ->assertUnprocessable()
+            ->assertOnlyJsonValidationErrors($errors);
+        $this->assertDatabaseCount('settings', 0);
     }
 
     private function logo(): Upload

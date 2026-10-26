@@ -2,7 +2,7 @@ import { IconExternalLink, IconServer } from "@tabler/icons-react"
 import { z } from "zod"
 
 import { Bagian, Baris, Halaman, PengantarHalaman } from "@/components/data/page"
-import { FieldArea, FieldTeks } from "@/components/form/fields"
+import { FieldArea, FieldPilih, FieldSakelar, FieldTeks } from "@/components/form/fields"
 import { FieldJudul2Nada, IsianItem } from "@/components/form/item-fields"
 import { DaftarObjek, FieldDaftarTeks } from "@/components/form/list-fields"
 import { IsianLogo } from "@/components/form/media-fields"
@@ -86,6 +86,10 @@ const schema = z.object({
   nilai: z
     .array(z.object({ id: z.string(), judul: v.wajib("Judul").max(60, maks(60)), deskripsi: v.teks.max(200, maks(200)) }))
     .max(6, "Maksimal 6 nilai utama."),
+  beritaTerbaru: judul2.extend({
+    tampil: z.boolean(),
+    jumlah: z.number().int().min(3, "Jumlah berita terbaru 3 sampai 6 tulisan.").max(6, "Jumlah berita terbaru 3 sampai 6 tulisan."),
+  }),
   layananUtama: judul2,
   mitra: z
     .array(
@@ -125,6 +129,7 @@ const BAGIAN = [
   ["hero", "Pembuka"],
   ["video", "Video"],
   ["nilai", "Nilai utama"],
+  ["berita-terbaru", "Berita terbaru"],
   ["layanan-utama", "Layanan utama"],
   ["mitra", "Mitra"],
   ["kanal", "Kanal layanan"],
@@ -237,6 +242,25 @@ export default function HalamanBeranda() {
                     </div>
                   )}
                 />
+              </Bagian>
+
+              <Bagian
+                id="bagian-berita-terbaru"
+                judul="Berita terbaru"
+                deskripsi="Kartu tulisan terbit terbaru dari Berita & Pengumuman (semua kategori) sebelum Layanan utama, dengan judul, foto sampul, dan ringkasan dua baris. Bagian ini tidak tampil selama belum ada tulisan terbit."
+              >
+                <FieldSakelar control={form.control} name="beritaTerbaru.tampil" label="Tampilkan Berita terbaru di beranda" />
+                <FieldPilih
+                  control={form.control}
+                  name="beritaTerbaru.jumlah"
+                  label="Jumlah tulisan"
+                  angka
+                  opsi={[3, 4, 5, 6].map((j) => ({ nilai: String(j), label: `${j} tulisan` }))}
+                  deskripsi="Bawaan 3. Empat tulisan tampil sebaris di layar lebar; 5 dan 6 dalam dua baris."
+                  className="sm:max-w-1/2"
+                />
+                <FieldJudul2Nada control={form.control} judul="beritaTerbaru.judul" lanjutan="beritaTerbaru.lanjutan" nilaiJudul={n.beritaTerbaru?.judul} nilaiLanjutan={n.beritaTerbaru?.lanjutan} />
+                <FieldTeks control={form.control} name="beritaTerbaru.deskripsi" label="Deskripsi" />
               </Bagian>
 
               <Bagian id="bagian-layanan-utama" judul="Layanan utama" deskripsi="Judul blok tab layanan. Isi tab diambil dari layanan bertanda “Tampil di beranda”.">

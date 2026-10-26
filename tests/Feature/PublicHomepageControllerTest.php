@@ -59,6 +59,24 @@ class PublicHomepageControllerTest extends TestCase
         }
     }
 
+    public function test_gives_the_newest_articles_section_also_for_a_document_saved_before_it(): void
+    {
+        $homepage = Setting::INITIAL_HOMEPAGE;
+        unset($homepage['beritaTerbaru']);
+        (new Setting)->forceFill(['name' => Setting::HOMEPAGE, 'value' => $homepage])->save();
+
+        // Shown with three articles until the owner changes it (D-087)
+        $this->getJson('/api/public/beranda')->assertOk()
+            ->assertJsonPath('beritaTerbaru', Setting::INITIAL_HOMEPAGE['beritaTerbaru'])
+            ->assertJsonPath('beritaTerbaru.tampil', true)
+            ->assertJsonPath('beritaTerbaru.jumlah', 3);
+
+        $homepage['beritaTerbaru'] = ['tampil' => false, 'jumlah' => 4, 'judul' => 'Berita terkini.', 'lanjutan' => '', 'deskripsi' => ''];
+        Setting::query()->find(Setting::HOMEPAGE)->forceFill(['value' => $homepage])->save();
+
+        $this->getJson('/api/public/beranda')->assertOk()->assertJsonPath('beritaTerbaru', $homepage['beritaTerbaru']);
+    }
+
     public function test_returns_partner_logos_and_channel_links_in_the_current_shape(): void
     {
         $homepage = Setting::INITIAL_HOMEPAGE;

@@ -1625,7 +1625,7 @@
     const baru = $("[data-papan-pengumuman-baru]");
     const tautan = $("[data-papan-pengumuman-tautan]");
 
-    muatDaftarBerita().then((data) => {
+    daftarBeritaSekali().then((data) => {
       const p = data.find((b) => b.pengumumanBeranda);
       judul.textContent = p ? p.judul : "Belum ada pengumuman.";
       teks.textContent = p ? p.ringkasan : "Pengumuman resmi UPTD akan tampil di sini.";
@@ -1915,7 +1915,8 @@
     const teks = (x) => typeof x === "string";
     const judulDua = (x) => teks(x?.judul) && teks(x.lanjutan) && teks(x.deskripsi);
     const valid = ["eyebrow", "judul", "lanjutan", "deskripsi", "tombolLabel", "tombolUrl", "catatan"].every((f) => teks(b?.hero?.[f]))
-      && ["layananUtama", "integritas", "biaya", "penutup"].every((k) => judulDua(b[k]))
+      && ["beritaTerbaru", "layananUtama", "integritas", "biaya", "penutup"].every((k) => judulDua(b[k]))
+      && typeof b.beritaTerbaru.tampil === "boolean" && Number.isInteger(b.beritaTerbaru.jumlah)
       && Array.isArray(b.nilai) && b.nilai.every((n) => teks(n?.judul) && teks(n.deskripsi))
       && Array.isArray(b.mitra) && b.mitra.every((m) => teks(m?.singkatan) && teks(m.nama) && (m.logo === null || teks(m.logo)))
       && Array.isArray(b.kanal) && b.kanal.every((k) => teks(k?.kelompok) && Array.isArray(k.item) && k.item.every((t) => teks(t?.teks) && teks(t.tautan)))
@@ -1924,6 +1925,36 @@
       && (b.diperbarui === null || teks(b.diperbarui));
     if (!valid) throw new Error("Respons tidak dikenal");
     return b;
+  }
+
+  // Beranda memuat dokumen Beranda dan daftar berita sekali saja untuk beberapa bagian; yang gagal boleh dimuat ulang
+  const sekali = (muat) => {
+    let janji = null;
+    return () => (janji ??= muat().catch((e) => { janji = null; throw e; }));
+  };
+  const berandaSekali = sekali(muatBeranda);
+  const daftarBeritaSekali = sekali(muatDaftarBerita);
+
+  /* Berita terbaru (D-087): tulisan terbit terbaru semua kategori sebelum
+     Layanan utama, sebanyak yang diatur di dashboard Beranda (3–6, bawaan
+     3). Bagian ini tersembunyi di HTML dan baru tampil bila Beranda
+     mengizinkannya dan ada tulisan terbit; bila dokumen Beranda gagal
+     dimuat, pengaturan bawaan yang dipakai. */
+  function initBeritaTerbaru() {
+    const bagian = $("[data-beranda-berita]");
+    if (!bagian) return;
+    const daftar = $("[data-beranda-berita-daftar]", bagian);
+
+    Promise.all([berandaSekali().catch(() => null), daftarBeritaSekali()])
+      .then(([beranda, berita]) => {
+        const atur = beranda?.beritaTerbaru ?? { tampil: true, jumlah: 3 };
+        const jumlah = Math.min(6, Math.max(3, atur.jumlah));
+        bagian.hidden = !atur.tampil || !berita.length;
+        if (bagian.hidden) return;
+        daftar.classList.toggle("berita-terbaru__daftar--4", jumlah === 4);
+        daftar.innerHTML = berita.slice(0, jumlah).map((b) => kartuBerita(b, true)).join("");
+      })
+      .catch(() => { bagian.hidden = true; });
   }
 
   function initBeranda() {
@@ -2021,7 +2052,7 @@
         `<li><svg class="i i--sm" aria-hidden="true"><use href="#i-check"/></svg>${esc(t)}</li>`).join("");
     };
 
-    muatBeranda()
+    berandaSekali()
       .then((b) => { if (typeof b.diperbarui === "string") tampilkan(b); })
       .catch(() => {});
   }
@@ -3129,7 +3160,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    initNav(); initCari(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil(); initLayanan(); initDokumen(); initInformasi(); initBerita(); initPengumumanBeranda(); initDokumentasi(); initStruktur(); initAplikasi(); initBeranda(); initTeksJadwal(); initHalaman(); initSitus(); initPengumuman();
+    initNav(); initCari(); initReveal(); initTabs(); initChecklists(); initStatus(); initPapan(); initKeliling(); initKontak(); initVisiMisi(); initProfil(); initLayanan(); initDokumen(); initInformasi(); initBerita(); initPengumumanBeranda(); initDokumentasi(); initStruktur(); initAplikasi(); initBeranda(); initBeritaTerbaru(); initTeksJadwal(); initHalaman(); initSitus(); initPengumuman();
     initDash(); initDialogs(); initGag(); initFilters(); initGallery(); initFaq(); initForms(); initPesanForm(); initLacakPesanForm(); initAuthFit(); initUtilities(); initWarnaBilah();
   });
 })();

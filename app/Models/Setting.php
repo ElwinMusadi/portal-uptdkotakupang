@@ -262,6 +262,14 @@ class Setting extends Model
             ['id' => 'nilai-2', 'judul' => 'Jadwal terbaru.', 'deskripsi' => 'Jam loket dan lokasi Samsat Keliling diperbarui petugas setiap hari kerja.'],
             ['id' => 'nilai-3', 'judul' => 'Tanpa perantara.', 'deskripsi' => 'Semua biaya mengikuti notis pajak resmi. Urus sendiri dengan mudah, tanpa calo.'],
         ],
+        // The newest published articles of every category before Layanan utama, three to six of them (D-087)
+        'beritaTerbaru' => [
+            'tampil' => true,
+            'jumlah' => 3,
+            'judul' => 'Kabar terbaru.',
+            'lanjutan' => 'Langsung dari loket.',
+            'deskripsi' => 'Pengumuman, jadwal Samsat Keliling, dan informasi pajak kendaraan terbaru dari UPTD.',
+        ],
         'layananUtama' => [
             'judul' => 'Dibuat untuk wajib pajak.',
             'lanjutan' => 'Dirancang agar cukup sekali datang.',
@@ -633,7 +641,8 @@ class Setting extends Model
      * with a link, empty when it has none (D-038), and there is a video, with
      * no link until one is saved (D-040). Channels saved as plain text get no
      * link. An opening saved before its rotating words (D-045) gets the
-     * initial ones when its title holds one of them, and none otherwise.
+     * initial ones when its title holds one of them, and none otherwise. A
+     * document saved before Berita terbaru (D-087) shows it as it starts.
      *
      * @param  array<string, mixed>  $homepage
      * @return array<string, mixed>
@@ -648,6 +657,7 @@ class Setting extends Model
             'item' => array_map(fn (string|array $channel): array => is_string($channel) ? ['teks' => $channel, 'tautan' => ''] : $channel, $group['item']),
         ], $homepage['kanal']);
         $homepage['video'] = [...self::INITIAL_HOMEPAGE['video'], ...($homepage['video'] ?? [])];
+        $homepage['beritaTerbaru'] ??= self::INITIAL_HOMEPAGE['beritaTerbaru'];
 
         return $homepage;
     }

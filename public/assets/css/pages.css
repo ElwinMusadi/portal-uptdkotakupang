@@ -483,6 +483,15 @@
 @media (max-width: 900px) { .feature-post { grid-template-columns: 1fr; } .posts { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 600px) { .posts { grid-template-columns: 1fr; } .notice-list a { grid-template-columns: 1fr; gap: 4px; } .search { min-width: 0; width: 100%; } }
 
+/* ---------- Berita terbaru di Beranda (D-087) ---------- */
+.berita-terbaru__kepala { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px 40px; margin-bottom: var(--inner-y); }
+.berita-terbaru__kepala > div { max-width: 46rem; }
+/* Empat tulisan sebaris di layar lebar; tiga, lima, dan enam memakai tiga kolom .posts */
+@media (min-width: 1101px) { .berita-terbaru__daftar--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 901px) and (max-width: 1100px) { .berita-terbaru__daftar--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* Ringkasan paling banyak dua baris, sisanya diganti elipsis (…) */
+.berita-terbaru .post h3 + p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+
 /* ---------- Artikel ---------- */
 /* Pita tautan pratinjau tulisan yang belum terbit (D-086) */
 .pratinjau-pita { padding-top: 20px; }

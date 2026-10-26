@@ -1077,6 +1077,13 @@ function pengaturan(sekarang: Date): Pengaturan {
         { id: id(), judul: "Jadwal terbaru.", deskripsi: "Jam loket dan lokasi Samsat Keliling diperbarui petugas setiap hari kerja." },
         { id: id(), judul: "Tanpa perantara.", deskripsi: "Semua biaya mengikuti notis pajak resmi. Urus sendiri dengan mudah, tanpa calo." },
       ],
+      beritaTerbaru: {
+        tampil: true,
+        jumlah: 3,
+        judul: "Kabar terbaru.",
+        lanjutan: "Langsung dari loket.",
+        deskripsi: "Pengumuman, jadwal Samsat Keliling, dan informasi pajak kendaraan terbaru dari UPTD.",
+      },
       layananUtama: {
         judul: "Dibuat untuk wajib pajak.",
         lanjutan: "Dirancang agar cukup sekali datang.",
