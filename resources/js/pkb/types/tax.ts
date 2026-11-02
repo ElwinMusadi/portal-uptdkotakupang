@@ -1,6 +1,10 @@
 // ============================================================
-// Tipe data untuk Kalkulator Pajak Kendaraan (Pergub NTT 54/2026)
+// Tipe data untuk Kalkulator Pajak Kendaraan
+// (Pergub NTT 54/2026 dan 64/2026)
 // ============================================================
+
+/** Identitas Pergub keringanan PKB; aturannya ada di src/lib/pergub.ts. */
+export type PergubId = "54-2026" | "64-2026"
 
 /** Jenis kendaraan yang didukung oleh kalkulator */
 export type JenisKendaraan =
@@ -42,7 +46,7 @@ export const WARNA_PLAT_LABEL: Record<WarnaPlat, string> = {
   merah: "Merah",
 }
 
-/** Default bila sumber data tidak menyediakan warna plat (mis. data D1). */
+/** Default bila sumber data tidak menyediakan warna plat; petugas dapat mengoreksi. */
 export const DEFAULT_WARNA_PLAT: WarnaPlat = "putih"
 
 /** Tarif PKB plat merah (kendaraan dinas), berlaku untuk seluruh periode. */
@@ -105,19 +109,22 @@ export interface VehicleData {
    * frontend memakai DEFAULT_WARNA_PLAT dan user dapat mengubah manual.
    */
   warnaPlat?: WarnaPlat | null
+  /** Label UPT asal dari Data Potensi, bukan alamat lengkap pemilik. */
+  originUpt?: string | null
+  /** Waktu sinkronisasi dataset pusat (ISO), null bila tidak tersedia. */
+  syncedAt?: string | null
   source?: "d1" | "api"
   njkbStatus?: "matched" | "not_found" | "reference_unavailable" | "conflict" | "ambiguous"
 }
 
 /**
- * Mode sumber data kendaraan.
- * - api_then_d1 (default): NJKB API dahulu, fallback D1 bila tidak ditemukan/error.
- * - d1_then_api: D1 dahulu, fallback NJKB API.
+ * Mode kompatibilitas sumber data. Lookup produksi selalu memakai API Data
+ * Kendaraan; nilai lama dipertahankan untuk adapter/test historis dan klien lama.
  */
 export type VehicleDataSourceMode = "d1" | "api" | "d1_then_api" | "api_then_d1"
 
-/** Mode default untuk frontend dan endpoint bila `source` tidak dikirim. */
-export const DEFAULT_VEHICLE_DATA_SOURCE_MODE: VehicleDataSourceMode = "api_then_d1"
+/** Sumber aktif tunggal. Mode lama dipertahankan sebagai tipe kompatibilitas. */
+export const DEFAULT_VEHICLE_DATA_SOURCE_MODE: VehicleDataSourceMode = "api"
 
 export const VEHICLE_DATA_SOURCE_MODES: readonly VehicleDataSourceMode[] = [
   "d1",
@@ -134,6 +141,8 @@ export type VehicleLookupErrorCode =
   | "NJKB_UPSTREAM_HTTP_ERROR"
   | "NJKB_NETWORK_ERROR"
   | "NJKB_INVALID_PAYLOAD"
+  /** Upstream 403 `region_not_allowed`: nopol di luar wilayah UPT kunci API. */
+  | "NJKB_REGION_NOT_ALLOWED"
 
 /** Hasil pencarian data kendaraan dari sumber data */
 export type VehicleLookupResult =
@@ -151,9 +160,37 @@ export type VehicleLookupResult =
       error: Error | string
       message?: string
       code?: VehicleLookupErrorCode
-      httpStatus?: 500 | 502 | 503 | 504
+      httpStatus?: 403 | 500 | 502 | 503 | 504
       upstreamStatus?: number
     }
+
+/**
+ * Biaya layanan BBN & Mutasi (bagian 5). Nominal diisi manual oleh petugas
+ * karena bersifat dinamis; kosong/0 berarti tidak dikenakan.
+ */
+export const BIAYA_LAYANAN_KEYS = [
+  "pendaftaranBbn",
+  "bpkb",
+  "cekFisik",
+  "mutasiMasuk",
+  "mutasiKeluar",
+  "arsipFiskal",
+] as const
+export type BiayaLayananKey = (typeof BIAYA_LAYANAN_KEYS)[number]
+
+export const BIAYA_LAYANAN_LABEL: Record<BiayaLayananKey, string> = {
+  pendaftaranBbn: "Biaya Pendaftaran BBN",
+  bpkb: "Biaya BPKB",
+  cekFisik: "Biaya Cek Fisik / Cek Fisik Bantuan",
+  mutasiMasuk: "Biaya Mutasi Masuk",
+  mutasiKeluar: "Biaya Mutasi Keluar",
+  arsipFiskal: "Biaya Arsip STNK & BPKB (Fiskal)",
+}
+
+/** Batas atas per biaya (pengaman salah ketik), dalam Rupiah. */
+export const BIAYA_LAYANAN_MAX = 100_000_000
+
+export type BiayaLayanan = Partial<Record<BiayaLayananKey, number>>
 
 /** Input untuk fungsi calculateTax */
 export interface TaxCalculatorInput {
@@ -166,21 +203,50 @@ export interface TaxCalculatorInput {
   tanggalBayar: Date
   isDomisiliGempa: boolean
   isMutasiMasuk?: boolean // Pengurangan PKB berjalan 50% untuk Mutasi Masuk Luar Daerah
+  /**
+   * Bayar via payment online (Bank NTT, PRO NTT, SIGNAL). Hanya berlaku pada
+   * Pergub yang memberi diskon online; diabaikan untuk Mutasi Masuk.
+   */
+  isBayarOnline?: boolean
   isTembakRu: boolean
+  /**
+   * Paksa aturan Pergub tertentu (simulasi/test). Default: ditentukan dari
+   * tanggalBayar; di luar masa berlaku calculateTax melempar RangeError.
+   */
+  pergub?: PergubId
   /** Warna plat (TNKB); default "putih". Plat merah → tarif PKB 0,5% semua periode. */
   warnaPlat?: WarnaPlat
+  /** Biaya BBN & Mutasi (bagian 5); nilai kosong/≤0/tidak valid diabaikan. */
+  biayaLayanan?: BiayaLayanan
 }
 
 /** Rincian komponen pajak hasil kalkulasi */
 export interface TaxCalculationResult {
+  /** Pergub yang dipakai untuk perhitungan ini. */
+  pergub: PergubId
+
   // PKB
   pkbBerjalan: number
-  pkbDiscount: number              // Persentase diskon PKB berjalan (0–0.5)
+  pkbDiscount: number              // Total diskon PKB berjalan (0–0.5), termasuk diskon online
+  /** Porsi diskon payment online di dalam pkbDiscount (0, 0.02, 0.05). */
+  diskonPaymentOnline: number
+  /** Pembayaran online yang benar-benar dipakai (false bila Mutasi Masuk / tidak berlaku). */
+  isBayarOnline: boolean
   isMutasiMasuk: boolean
+  /** Pilihan wilayah gempa yang benar-benar digunakan pada hasil perhitungan. */
+  isDomisiliGempa: boolean
+  /** Pengurangan pokok PKB tunggakan (0.5 / 0.75 / 1 = dihapus). */
+  diskonTunggakan: number
   pkbTunggakanPra2025: number      // PKB tunggakan periode sebelum 5 Jan 2025 (tanpa Opsen)
   pkbTunggakanPost2025: number     // PKB tunggakan periode mulai 5 Jan 2025 (kena Opsen)
   warnaPlat: WarnaPlat             // Warna plat yang dipakai dalam perhitungan
   tarifPkbBerjalan: number         // Tarif PKB periode berjalan (0.012 / 0.015 / 0.005)
+  /**
+   * Selisih hari dari tanggal bayar ke tanggal Jatuh Tempo Pajak yang diisi.
+   * Positif = sebelum jatuh tempo; negatif = sudah lewat. Informasi tampilan
+   * saja (status "Pajak Aktif" bila > 90 hari) — tidak memengaruhi nominal.
+   */
+  hariMenujuJatuhTempo: number
   tahunTunggakanPra: number        // Jumlah tahun tunggakan pra-cutoff
   tahunTunggakanPost: number       // Jumlah tahun tunggakan post-cutoff
   tahunTunggakan: number           // Total tahun tunggakan (max 4)
@@ -199,7 +265,9 @@ export interface TaxCalculationResult {
   // SWDKLLJ
   swdklljBerjalan: number
   swdklljTunggakan: number
-  dendaSwdkllj: number
+  dendaSwdkllj: number             // Denda masa berjalan saja
+  /** Ada tunggakan dan denda SWDKLLJ masa tunggakan dihapus (Pergub 64). */
+  dendaSwdklljTunggakanDihapus: boolean
 
   // PNBP (hanya jika STNK jatuh tempo ≤ 90 hari)
   biayaStnk: number
@@ -207,6 +275,10 @@ export interface TaxCalculationResult {
 
   // Biaya tambahan
   biayaTembakRu: number
+
+  // Biaya BBN & Mutasi (bagian 5) — setiap key selalu ada; 0 = tidak dikenakan
+  biayaLayanan: Record<BiayaLayananKey, number>
+  totalBiayaLayanan: number
 
   // Grand total
   total: number

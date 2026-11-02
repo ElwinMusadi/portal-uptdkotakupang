@@ -153,6 +153,23 @@ class PortalPagesTest extends TestCase
         $this->assertStringNotContainsString('data-tarif', $html);
     }
 
+    #[TestWith(['/'])]
+    #[TestWith(['/layanan'])]
+    public function test_offers_the_pergub_64_tax_check_with_online_payment_instead_of_the_earthquake_region(string $uri): void
+    {
+        $html = $this->get($uri)->assertOk()->getContent();
+
+        $this->assertSame(1, preg_match('/<section[^>]*\bid="simulasi"[^>]*>.*?<\/section>/s', $html, $check));
+        $this->assertStringContainsString('Cek biaya pajak · Pergub NTT 64/2026', $check[0]);
+        $this->assertMatchesRegularExpression('/<input type="checkbox" data-cek-mutasi\s*\/?>/', $check[0]);
+        $this->assertMatchesRegularExpression('/<input type="checkbox" data-cek-online\s*\/?>/', $check[0]);
+        $this->assertStringContainsString('data-cek-online-ket', $check[0]);
+        $this->assertStringContainsString('data-cek="pembebasan"', $check[0]);
+        $this->assertStringNotContainsString('data-cek-gempa', $check[0]);
+        $this->assertStringNotContainsString('54/2026', $check[0]);
+        $this->assertStringNotContainsString('Nomor 54 Tahun 2026', $check[0]);
+    }
+
     #[TestWith(['/skrip/cek-pajak', 'resources/js/portal/cek-pajak.ts', 'http://localhost/build/assets/cek-pajak-a1b2c3.js'])]
     #[TestWith(['/skrip/portal', 'resources/js/portal/main.tsx', 'http://localhost/build/assets/main-d4e5f6.js'])]
     public function test_sends_the_portal_to_its_built_scripts_without_letting_the_address_be_cached(string $uri, string $entry, string $built): void

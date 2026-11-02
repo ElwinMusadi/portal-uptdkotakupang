@@ -5,19 +5,28 @@
  * rinciannya di peramban. Tanggal bayar dan fasilitas dihitung ulang tanpa
  * permintaan baru. Nomor rangka tidak disimpan di mana pun.
  *
+ * Aturan mengikuti Pergub yang berlaku pada tanggal bayar (D-088). Tanggal bayar
+ * paling awal hari ini, jadi portal memakai Pergub 64/2026: tanpa pilihan
+ * wilayah gempa, dengan pilihan payment online. Di luar masa berlaku Pergub,
+ * rincian tidak dihitung.
+ *
  * Halaman portal memuat berkas ini lewat /skrip/cek-pajak, yang diteruskan
  * ke hasil build Vite (routes/web.php). Setiap kanvas [data-cek-pajak]
  * berdiri sendiri.
  */
 import {
   calculateTax,
+  daftarMasaBerlaku,
   hariIni,
   isWarnaPlat,
-  jatuhTempoSesudahTahunBayar,
   jenisDariData,
   keTanggal,
   keteranganMasa,
+  keteranganPembebasan,
   keteranganTarif,
+  PERGUB_TERBARU,
+  pkbTahunBayarSudahLunas,
+  resolvePergub,
   rincianPembayaran,
   rupiah,
   tanggalPanjang,
@@ -73,12 +82,14 @@ function cekPajak(root: HTMLElement) {
   const kirim = root.querySelector<HTMLButtonElement>("[data-cek-kirim]")
   const pesan = root.querySelector<HTMLElement>("[data-cek-pesan]")
   const inBayar = root.querySelector<HTMLInputElement>("[data-cek-bayar]")
-  const gempa = root.querySelector<HTMLInputElement>("[data-cek-gempa]")
   const mutasi = root.querySelector<HTMLInputElement>("[data-cek-mutasi]")
+  const online = root.querySelector<HTMLInputElement>("[data-cek-online]")
+  const opsiOnline = online?.closest("label")
+  const ketOnline = root.querySelector<HTMLElement>("[data-cek-online-ket]")
   const rincian = root.querySelector<HTMLElement>("[data-cek-rincian]")
   if (
-    !form || !hasil || !kirim || !pesan || !inBayar || !gempa || !mutasi || !rincian ||
-    !(inNopol instanceof HTMLInputElement) || !(inRangka instanceof HTMLInputElement)
+    !form || !hasil || !kirim || !pesan || !inBayar || !mutasi || !online || !opsiOnline || !ketOnline ||
+    !rincian || !(inNopol instanceof HTMLInputElement) || !(inRangka instanceof HTMLInputElement)
   ) {
     return
   }
@@ -115,6 +126,15 @@ function cekPajak(root: HTMLElement) {
     isi("total", "—")
     isi("catatan", isWarnaPlat(k.warnaPlat) ? "" : "Warna plat tidak tercatat, dihitung sebagai plat putih. Plat kuning (angkutan umum) dihitung di loket.")
 
+    // Payment online hanya tampil bila Pergub pada tanggal bayar memberi
+    // diskonnya; mutasi masuk tidak dapat dibayar online.
+    const pergub = tglBayar ? resolvePergub(tglBayar) : null
+    const adaOnline = Boolean(pergub?.diskonOnlinePersen)
+    opsiOnline.hidden = !adaOnline
+    ketOnline.hidden = !adaOnline
+    online.disabled = mutasi.checked
+    if (!adaOnline || mutasi.checked) online.checked = false
+
     const kurang = [
       k.njkb > 0 ? null : "nilai jual kendaraan",
       jenis ? null : "jenis kendaraan",
@@ -125,10 +145,18 @@ function cekPajak(root: HTMLElement) {
       isi("masa", `Data ${daftarKata(kurang)} belum tersedia, jadi biayanya belum bisa dihitung di sini. Silakan cek di loket Samsat.`)
       return
     }
-    if (jatuhTempoSesudahTahunBayar(tglPajak, tglBayar)) {
+    if (!pergub) {
+      const masa = daftarMasaBerlaku().map((m) => `${m.pergub}: ${m.masa}`).join("; ")
       isi(
         "masa",
-        `PKB tahun ${tglBayar.getFullYear()} sudah dibayar; pajak berikutnya jatuh tempo ${tanggalPanjang(k.jatuhTempoPajak ?? "")}. Pilih tanggal bayar di tahun ${tglPajak.getFullYear()} untuk memperkirakan tagihannya.`
+        `Tanggal bayar ${tanggalPanjang(inBayar.value || hariIni())} di luar masa berlaku keringanan pajak (${masa}), jadi biayanya belum bisa dihitung di sini. Silakan cek di loket Samsat.`
+      )
+      return
+    }
+    if (pkbTahunBayarSudahLunas(tglPajak, tglBayar)) {
+      isi(
+        "masa",
+        `PKB tahun ${tglBayar.getFullYear()} sudah dibayar; pajak berikutnya jatuh tempo ${tanggalPanjang(k.jatuhTempoPajak ?? "")}. Diskon pembayaran awal berlaku mulai 90 hari sebelum jatuh tempo.`
       )
       return
     }
@@ -141,13 +169,15 @@ function cekPajak(root: HTMLElement) {
       jatuhTempoPajak: tglPajak,
       jatuhTempoStnk: tglStnk,
       tanggalBayar: tglBayar,
-      isDomisiliGempa: gempa.checked,
+      isDomisiliGempa: false,
       isMutasiMasuk: mutasi.checked,
+      isBayarOnline: online.checked,
       isTembakRu: false,
       warnaPlat: warnaPlatDariData(k.warnaPlat),
     })
     isi("total", rupiah(h.total))
     isi("masa", [keteranganMasa(h), keteranganTarif(h)].filter(Boolean).join(" · "))
+    isi("pembebasan", keteranganPembebasan(h))
     for (const kelompok of rincianPembayaran(h)) {
       const judul = el("p", "cek__kelompok")
       judul.append(el("span", "", kelompok.judul), el("span", "", rupiah(kelompok.jumlah)))
@@ -172,8 +202,11 @@ function cekPajak(root: HTMLElement) {
     isi("jt-pajak", k.jatuhTempoPajak ? tanggalPanjang(k.jatuhTempoPajak) : "—")
     isi("jt-stnk", k.jatuhTempoStnk ? tanggalPanjang(k.jatuhTempoStnk) : "—")
     inBayar.value = inBayar.min = hariIni()
-    gempa.checked = false
+    // Batas atas pilihan tanggal: akhir Pergub terbaru, selama belum lewat.
+    if (inBayar.min <= PERGUB_TERBARU.sampai) inBayar.max = PERGUB_TERBARU.sampai
+    else inBayar.removeAttribute("max")
     mutasi.checked = false
+    online.checked = false
     hasil.hidden = false
     hitung()
   }
@@ -194,8 +227,8 @@ function cekPajak(root: HTMLElement) {
     })
   )
   inBayar.addEventListener("change", hitung)
-  gempa.addEventListener("change", hitung)
   mutasi.addEventListener("change", hitung)
+  online.addEventListener("change", hitung)
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault()

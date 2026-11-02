@@ -5,6 +5,8 @@
  * kalkulator-pajak (src/components/result-breakdown.tsx, result-summary.tsx
  * dan tax-calculator-form.tsx). Berkas ini milik PINTU, bukan salinan.
  */
+import { differenceInCalendarDays } from "date-fns"
+import { formatMasaBerlaku, getPergub, PERGUB_RULES } from "./lib/pergub"
 import {
   BOBOT_MAP,
   DEFAULT_WARNA_PLAT,
@@ -77,13 +79,25 @@ export function tanggalPanjang(iso: string): string {
 }
 
 /**
- * Mesin pajak menghitung masa berjalan pada tahun pembayaran. Bila jatuh tempo
- * pajak berada di tahun sesudahnya, PKB tahun pembayaran sudah lunas dan
- * rinciannya belum bisa dihitung.
+ * Jatuh tempo pajak di tahun sesudah tanggal bayar dan masih lebih dari 90
+ * hari lagi: PKB tahun pembayaran sudah lunas dan belum ada diskon bayar awal,
+ * jadi rinciannya tidak ditampilkan (D-088). Dalam 90 hari, mesin menghitung
+ * pembayaran lebih awal beserta diskonnya.
  */
-export function jatuhTempoSesudahTahunBayar(jatuhTempoPajak: Date, tanggalBayar: Date): boolean {
-  return jatuhTempoPajak.getFullYear() > tanggalBayar.getFullYear()
+export function pkbTahunBayarSudahLunas(jatuhTempoPajak: Date, tanggalBayar: Date): boolean {
+  return (
+    jatuhTempoPajak.getFullYear() > tanggalBayar.getFullYear() &&
+    differenceInCalendarDays(jatuhTempoPajak, tanggalBayar) > 90
+  )
 }
+
+/** Daftar masa berlaku Pergub, untuk pesan tanggal bayar di luar masa berlaku */
+export function daftarMasaBerlaku(): { pergub: string; masa: string }[] {
+  return PERGUB_RULES.map((p) => ({ pergub: p.shortLabel, masa: formatMasaBerlaku(p) }))
+}
+
+/** Persen bulat dari rasio diskon: 0,15 → 15 (tanpa galat float) */
+const persenBulat = (rasio: number) => Math.round(rasio * 100)
 
 export interface BarisRincian {
   label: string
@@ -98,17 +112,31 @@ export interface KelompokRincian {
   baris: BarisRincian[]
 }
 
+/** "PKB berjalan · diskon 20% + online 5%", seperti kalkulator-pajak */
+function labelPkbBerjalan(h: TaxCalculationResult): string {
+  const total = persenBulat(h.pkbDiscount)
+  const online = persenBulat(h.diskonPaymentOnline)
+  if (total === 0) return "PKB berjalan"
+  if (online === 0) return `PKB berjalan · diskon ${total}%`
+  const bayarAwal = total - online
+  return bayarAwal > 0
+    ? `PKB berjalan · diskon ${bayarAwal}% + online ${online}%`
+    : `PKB berjalan · diskon online ${online}%`
+}
+
 /** Rincian pembayaran per komponen, dengan label yang sama di dashboard dan portal */
 export function rincianPembayaran(h: TaxCalculationResult): KelompokRincian[] {
+  // Pergub 64: pokok PKB dan Opsen tunggakan dihapus 100%, tampil sebagai Rp0.
+  const tunggakanDihapus = h.diskonTunggakan >= 1
   const kelompok: KelompokRincian[] = [
     {
       judul: "PKB",
       jumlah: h.pkbBerjalan + h.pkbTunggakanPra2025 + h.pkbTunggakanPost2025,
       baris: [
-        {
-          label: h.pkbDiscount > 0 ? `PKB berjalan · diskon ${persen(h.pkbDiscount)}` : "PKB berjalan",
-          nilai: h.pkbBerjalan,
-        },
+        { label: labelPkbBerjalan(h), nilai: h.pkbBerjalan },
+        ...(tunggakanDihapus && h.tahunTunggakan > 0
+          ? [{ label: `Tunggakan PKB · ${h.tahunTunggakan} tahun · dihapus 100%`, nilai: 0, dibebaskan: true }]
+          : []),
         ...(h.pkbTunggakanPost2025 > 0
           ? [{ label: `Tunggakan ≥ 5 Jan 2025 · ${h.tahunTunggakanPost} tahun`, nilai: h.pkbTunggakanPost2025 }]
           : []),
@@ -126,6 +154,9 @@ export function rincianPembayaran(h: TaxCalculationResult): KelompokRincian[] {
         ...(h.opsenTunggakan > 0
           ? [{ label: `Opsen tunggakan · ${h.tahunTunggakanPost} tahun`, nilai: h.opsenTunggakan }]
           : []),
+        ...(tunggakanDihapus && h.tahunTunggakanPost > 0
+          ? [{ label: `Opsen tunggakan · ${h.tahunTunggakanPost} tahun · dihapus 100%`, nilai: 0, dibebaskan: true }]
+          : []),
         { label: "Denda Opsen · dibebaskan 100%", nilai: h.dendaOpsen, dibebaskan: true },
       ],
     },
@@ -138,7 +169,17 @@ export function rincianPembayaran(h: TaxCalculationResult): KelompokRincian[] {
           ? [{ label: `SWDKLLJ tunggakan · ${h.tahunTunggakan} tahun`, nilai: h.swdklljTunggakan }]
           : []),
         ...(h.dendaSwdkllj > 0
-          ? [{ label: `Denda SWDKLLJ · ${h.bulanTerlambat} bulan`, nilai: h.dendaSwdkllj }]
+          ? [
+              {
+                label: h.dendaSwdklljTunggakanDihapus
+                  ? `Denda SWDKLLJ berjalan · ${h.bulanTerlambat} bulan`
+                  : `Denda SWDKLLJ · ${h.bulanTerlambat} bulan`,
+                nilai: h.dendaSwdkllj,
+              },
+            ]
+          : []),
+        ...(h.dendaSwdklljTunggakanDihapus
+          ? [{ label: "Denda SWDKLLJ tunggakan · dihapus", nilai: 0, dibebaskan: true }]
           : []),
       ],
     },
@@ -170,11 +211,24 @@ export function keteranganTarif(h: TaxCalculationResult): string | null {
     : null
 }
 
+/** Catatan pembebasan di bawah rincian, sesuai Pergub yang dipakai */
+export function keteranganPembebasan(h: TaxCalculationResult): string {
+  return h.diskonTunggakan >= 1
+    ? "Denda keterlambatan PKB dan opsen dibebaskan 100%, dan pokok PKB tunggakan dihapus 100%. SWDKLLJ tahun berjalan dan pokok SWDKLLJ tunggakan tetap dihitung."
+    : "Denda keterlambatan PKB dan opsen dibebaskan 100%. Pokok pajak dan SWDKLLJ tetap dihitung."
+}
+
+/** "Bayar via payment online: diskon PKB berjalan 2%"; null bila tidak dipakai */
+export function keteranganOnline(h: TaxCalculationResult): string | null {
+  return h.isBayarOnline ? `Bayar via payment online: diskon PKB berjalan ${persenBulat(h.diskonPaymentOnline)}%` : null
+}
+
 /** Teks ringkasan untuk disalin, seperti tombol salin di kalkulator-pajak */
 export function ringkasanPenetapan(h: TaxCalculationResult, nopol?: string): string {
   const [pkb, opsen, swdkllj] = rincianPembayaran(h)
   return [
     "RINGKASAN PENETAPAN PAJAK KENDARAAN",
+    `Dasar: ${getPergub(h.pergub).label}`,
     nopol ? `Nomor polisi: ${nopol}` : null,
     h.warnaPlat === "merah" ? `Plat ${WARNA_PLAT_LABEL[h.warnaPlat]} · Tarif PKB ${persen(h.tarifPkbBerjalan)}` : null,
     `PKB: ${rupiah(pkb.jumlah)}`,
@@ -183,6 +237,9 @@ export function ringkasanPenetapan(h: TaxCalculationResult, nopol?: string): str
     `PNBP: ${rupiah(h.biayaStnk + h.biayaTnkb)}`,
     `Total bayar: ${rupiah(h.total)}`,
     "Denda PKB dan Opsen: dibebaskan 100%",
+    h.diskonTunggakan >= 1 && h.tahunTunggakan > 0 ? `PKB tunggakan ${h.tahunTunggakan} tahun: dihapus 100%` : null,
+    h.dendaSwdklljTunggakanDihapus ? "Denda SWDKLLJ tunggakan: dihapus" : null,
+    keteranganOnline(h),
   ]
     .filter(Boolean)
     .join("\n")

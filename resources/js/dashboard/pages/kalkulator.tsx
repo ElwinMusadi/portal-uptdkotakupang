@@ -3,8 +3,10 @@ import {
   IconAlertCircle,
   IconArrowsExchange,
   IconCalendar,
+  IconCalendarOff,
   IconCircleCheck,
   IconCopy,
+  IconDeviceMobile,
   IconInfoCircle,
   IconRestore,
   IconRosetteDiscountCheck,
@@ -51,16 +53,24 @@ import {
   BOBOT_MAP,
   calculateTax,
   dariTanggal,
+  daftarMasaBerlaku,
   DEFAULT_WARNA_PLAT,
+  formatMasaBerlaku,
+  getPergub,
   hariIni,
+  hasWilayahGempa,
   isWarnaPlat,
   JENIS_KENDARAAN,
-  jatuhTempoSesudahTahunBayar,
   jenisDariData,
   keTanggal,
   keteranganMasa,
+  keteranganOnline,
+  keteranganPembebasan,
   keteranganTarif,
   persen,
+  PERGUB_TERBARU,
+  pkbTahunBayarSudahLunas,
+  resolvePergub,
   rincianPembayaran,
   ringkasanPenetapan,
   rupiah,
@@ -244,6 +254,7 @@ function Fasilitas({
   ikon,
   aktif,
   ubah,
+  nonaktif = false,
 }: {
   id: string
   judul: string
@@ -251,21 +262,31 @@ function Fasilitas({
   ikon: React.ReactNode
   aktif: boolean
   ubah: (aktif: boolean) => void
+  /** Tidak bisa dipilih pada kondisi ini; alasannya ditulis di keterangan */
+  nonaktif?: boolean
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 rounded-lg border p-4">
+    <div className={cn("flex items-start justify-between gap-4 rounded-lg border p-4", nonaktif && "bg-muted/40")}>
       <div className="flex gap-3">
         <span className="mt-0.5 text-muted-foreground [&_svg]:size-4" aria-hidden="true">
           {ikon}
         </span>
         <div className="grid gap-1">
-          <Label htmlFor={id}>{judul}</Label>
+          <Label htmlFor={id} className={cn(nonaktif && "text-muted-foreground")}>
+            {judul}
+          </Label>
           <p id={`${id}-ket`} className="text-sm text-muted-foreground">
             {keterangan}
           </p>
         </div>
       </div>
-      <Switch id={id} checked={aktif} onCheckedChange={ubah} aria-describedby={`${id}-ket`} />
+      <Switch
+        id={id}
+        checked={aktif}
+        onCheckedChange={ubah}
+        disabled={nonaktif}
+        aria-describedby={`${id}-ket`}
+      />
     </div>
   )
 }
@@ -310,6 +331,7 @@ function Kalkulator() {
   const [warnaPlat, setWarnaPlat] = React.useState<WarnaPlat>(DEFAULT_WARNA_PLAT)
   const [gempa, setGempa] = React.useState(false)
   const [mutasi, setMutasi] = React.useState(false)
+  const [online, setOnline] = React.useState(false)
 
   const isiDariData = React.useCallback((d: DataKendaraan) => {
     setNjkb(d.njkb > 0 ? d.njkb : 0)
@@ -334,6 +356,7 @@ function Kalkulator() {
     setWarnaPlat(DEFAULT_WARNA_PLAT)
     setGempa(false)
     setMutasi(false)
+    setOnline(false)
   }
 
   const bobot = bobotData ?? (jenis ? BOBOT_MAP[jenis] : undefined)
@@ -349,12 +372,20 @@ function Kalkulator() {
     tglBayar ? null : "tanggal pembayaran",
   ].filter((k): k is string => k !== null)
   const lunas =
-    tglPajak && tglBayar && jatuhTempoSesudahTahunBayar(tglPajak, tglBayar)
-      ? { tahunBayar: tglBayar.getFullYear(), tahunPajak: tglPajak.getFullYear() }
+    tglPajak && tglBayar && pkbTahunBayarSudahLunas(tglPajak, tglBayar)
+      ? { tahunBayar: tglBayar.getFullYear() }
       : null
 
+  // Aturan mengikuti tanggal bayar (D-088): gempa hanya pada Pergub yang
+  // membedakannya (54), payment online hanya bila Pergub memberi diskonnya (64).
+  // Di luar masa berlaku semua Pergub, rincian tidak dihitung.
+  const pergub = tglBayar ? resolvePergub(tglBayar) : null
+  const diLuarMasa = Boolean(tglBayar) && !pergub
+  const gempaBerlaku = hasWilayahGempa(pergub)
+  const tarifOnline = pergub?.diskonOnlinePersen ?? null
+
   const hasil =
-    !lunas && jenis && bobot && njkb > 0 && tglPajak && tglStnk && tglBayar
+    pergub && !lunas && jenis && bobot && njkb > 0 && tglPajak && tglStnk && tglBayar
       ? calculateTax({
           njkb,
           njub,
@@ -365,6 +396,7 @@ function Kalkulator() {
           tanggalBayar: tglBayar,
           isDomisiliGempa: gempa,
           isMutasiMasuk: mutasi,
+          isBayarOnline: online,
           isTembakRu: false,
           warnaPlat,
         })
@@ -541,31 +573,65 @@ function Kalkulator() {
               </div>
               <div className="grid content-start gap-2">
                 <Label htmlFor={`${id}-bayar`}>Tanggal pembayaran</Label>
-                <PilihTanggal id={`${id}-bayar`} nilai={tanggalBayar} ubah={setTanggalBayar} />
+                <PilihTanggal
+                  id={`${id}-bayar`}
+                  nilai={tanggalBayar}
+                  ubah={setTanggalBayar}
+                  describedBy={pergub ? `${id}-pergub` : undefined}
+                />
               </div>
             </div>
+            {pergub && (
+              <p id={`${id}-pergub`} className="text-sm text-muted-foreground">
+                Dihitung dengan {pergub.label}, berlaku {formatMasaBerlaku(pergub)}.
+              </p>
+            )}
           </fieldset>
 
           <Separator />
 
           <fieldset className="grid min-w-0 gap-3">
             <legend className="mb-1 font-medium">Fasilitas</legend>
-            <Fasilitas
-              id={`${id}-gempa`}
-              judul="Wilayah terdampak gempa (diskon tunggakan 75%)"
-              keterangan="Sikka, Ende, Nagekeo, Ngada, Manggarai, Manggarai Timur, Manggarai Barat."
-              ikon={<IconShieldCheck />}
-              aktif={gempa}
-              ubah={setGempa}
-            />
+            {gempaBerlaku && (
+              <Fasilitas
+                id={`${id}-gempa`}
+                judul={`Wilayah terdampak gempa (diskon tunggakan ${pergub?.diskonTunggakanPersen.gempa}%)`}
+                keterangan="Sikka, Ende, Nagekeo, Ngada, Manggarai, Manggarai Timur, Manggarai Barat."
+                ikon={<IconShieldCheck />}
+                aktif={gempa}
+                ubah={setGempa}
+              />
+            )}
             <Fasilitas
               id={`${id}-mutasi`}
               judul="Mutasi masuk luar daerah (diskon PKB berjalan 50%)"
-              keterangan="Menggantikan diskon pembayaran awal pada PKB berjalan."
+              keterangan={
+                tarifOnline
+                  ? "Menggantikan diskon pembayaran awal; tidak dapat dibayar via payment online."
+                  : "Menggantikan diskon pembayaran awal pada PKB berjalan."
+              }
               ikon={<IconArrowsExchange />}
               aktif={mutasi}
-              ubah={setMutasi}
+              ubah={(aktif) => {
+                setMutasi(aktif)
+                if (aktif) setOnline(false)
+              }}
             />
+            {tarifOnline && (
+              <Fasilitas
+                id={`${id}-online`}
+                judul={`Bayar via payment online (diskon PKB berjalan ${tarifOnline.motor}% motor, ${tarifOnline.mobil}% roda 4+)`}
+                keterangan={
+                  mutasi
+                    ? "Mutasi masuk tidak dapat dibayar via payment online."
+                    : "Payment online Bank NTT, aplikasi PRO NTT, atau SIGNAL. Ditambahkan ke diskon pembayaran awal."
+                }
+                ikon={<IconDeviceMobile />}
+                aktif={online && !mutasi}
+                ubah={setOnline}
+                nonaktif={mutasi}
+              />
+            )}
           </fieldset>
         </CardContent>
       </Card>
@@ -588,19 +654,40 @@ function Kalkulator() {
         <CardContent className="grid gap-4">
           {hasil ? (
             <>
-              <p className="flex gap-2 rounded-lg bg-success-soft p-3 text-sm">
+              <div className="flex gap-2 rounded-lg bg-success-soft p-3 text-sm">
                 <IconRosetteDiscountCheck className="mt-0.5 size-4 shrink-0 text-success" aria-hidden="true" />
-                Denda keterlambatan PKB dan opsen dibebaskan 100%. Pokok pajak dan SWDKLLJ tetap dihitung.
-              </p>
+                <div className="grid gap-1">
+                  <p>{keteranganPembebasan(hasil)}</p>
+                  {keteranganOnline(hasil) && <p className="font-medium">{keteranganOnline(hasil)}.</p>}
+                </div>
+              </div>
               <Rincian hasil={hasil} />
             </>
+          ) : diLuarMasa ? (
+            <Alert variant="destructive">
+              <IconCalendarOff />
+              <AlertTitle>Di luar masa berlaku</AlertTitle>
+              <AlertDescription>
+                <p>
+                  Tanggal pembayaran {tanggalPanjang(tanggalBayar)} tidak termasuk masa berlaku Pergub keringanan
+                  PKB, sehingga rincian tidak dihitung.
+                </p>
+                <ul className="list-disc pl-4">
+                  {daftarMasaBerlaku().map((m) => (
+                    <li key={m.pergub}>
+                      {m.pergub}: {m.masa}
+                    </li>
+                  ))}
+                </ul>
+              </AlertDescription>
+            </Alert>
           ) : lunas ? (
             <Alert>
               <IconInfoCircle />
               <AlertTitle>PKB tahun {lunas.tahunBayar} sudah dibayar</AlertTitle>
               <AlertDescription>
-                Jatuh tempo pajak {tanggalPanjang(jatuhTempoPajak)} berada di tahun sesudah tanggal pembayaran. Untuk
-                menghitung tagihan berikutnya, pilih tanggal pembayaran di tahun {lunas.tahunPajak}.
+                Jatuh tempo pajak {tanggalPanjang(jatuhTempoPajak)} masih lebih dari 90 hari lagi. Diskon
+                pembayaran awal berlaku mulai 90 hari sebelum jatuh tempo.
               </AlertDescription>
             </Alert>
           ) : (
@@ -609,7 +696,8 @@ function Kalkulator() {
             </p>
           )}
           <p className="text-xs text-muted-foreground">
-            Dihitung menurut Pergub NTT Nomor 54 Tahun 2026. Tagihan resmi mengikuti notis pajak di loket.
+            Dihitung menurut {(hasil ? getPergub(hasil.pergub) : (pergub ?? PERGUB_TERBARU)).label}. Tagihan resmi
+            mengikuti notis pajak di loket.
           </p>
         </CardContent>
         <CardFooter className="flex-wrap gap-2 border-t">
@@ -630,7 +718,9 @@ function Kalkulator() {
 export default function HalamanKalkulator() {
   return (
     <Halaman>
-      <PengantarHalaman deskripsi="Hitung PKB, opsen, SWDKLLJ, dan PNBP untuk wajib pajak di loket menurut Pergub NTT Nomor 54 Tahun 2026. Nomor polisi mengisi data kendaraan dari Samsat; denda PKB dan opsen dibebaskan." />
+      <PengantarHalaman
+        deskripsi={`Hitung PKB, opsen, SWDKLLJ, dan PNBP untuk wajib pajak di loket menurut ${PERGUB_TERBARU.label}. Nomor polisi mengisi data kendaraan dari Samsat; denda PKB dan opsen dibebaskan, pokok PKB tunggakan dihapus.`}
+      />
       <Kalkulator />
     </Halaman>
   )

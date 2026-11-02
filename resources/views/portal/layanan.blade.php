@@ -292,17 +292,18 @@
           <tbody>
             <tr><td>Tarif PKB</td><td class="num">1,2% · plat merah 0,5%</td></tr>
             <tr><td>Opsen PKB</td><td class="num">66% dari PKB</td></tr>
-            <tr><td>Tunggakan PKB</td><td class="num">maks. 4 tahun, diskon 50%</td></tr>
+            <tr><td>Tunggakan PKB</td><td class="num">dihapus 100%</td></tr>
             <tr><td>Denda PKB dan opsen</td><td class="num">dibebaskan 100%</td></tr>
+            <tr><td>Bayar via payment online</td><td class="num">diskon 5% motor · 2% roda 4+</td></tr>
             <tr><td>PNBP STNK dan TNKB</td><td class="num">bila STNK tersisa ≤ 90 hari</td></tr>
           </tbody>
         </table>
-        <p class="micro muted" style="margin-top:14px">Menurut Pergub NTT Nomor 54 Tahun 2026. Masa pajak sebelum 5 Januari 2025 bertarif 1,5% tanpa opsen; tunggakan di wilayah terdampak gempa didiskon 75%.</p>
+        <p class="micro muted" style="margin-top:14px">Menurut Pergub NTT Nomor 64 Tahun 2026, berlaku 1 November–31 Desember 2026. Tanpa tunggakan, membayar paling lama 90 hari sebelum jatuh tempo mendapat diskon PKB 10–20%, ditambah diskon payment online.</p>
       </div>
       <div data-reveal>
         <div class="canvas" data-cek-pajak>
           <div class="canvas__bar">
-            <p class="smallcaps">Cek biaya pajak · Pergub NTT 54/2026</p>
+            <p class="smallcaps">Cek biaya pajak · Pergub NTT 64/2026</p>
           </div>
           <form class="bento cek__form" data-cek-form novalidate>
             <div class="tile cek__isian"><label class="tile__label" for="cek-nopol">Nomor polisi</label><input class="bento__input" id="cek-nopol" name="nopol" type="text" placeholder="DH 1234 AB" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" required aria-describedby="cek-pesan"></div>
@@ -311,8 +312,8 @@
           </form>
           <div class="bento cek__hasil" data-cek-hasil hidden>
             <div class="tile cek__kendaraan"><p class="tile__label">Pemilik</p><p class="cek__nama" data-cek="nama">—</p><dl class="cek__data"><div><dt>Nomor polisi</dt><dd data-cek="nopol">—</dd></div><div><dt>Jenis</dt><dd data-cek="jenis">—</dd></div><div><dt>Jatuh tempo pajak</dt><dd data-cek="jt-pajak">—</dd></div><div><dt>Jatuh tempo STNK</dt><dd data-cek="jt-stnk">—</dd></div></dl></div>
-            <div class="tile cek__opsi"><label class="tile__label" for="cek-bayar">Tanggal bayar</label><input class="cek__tanggal" id="cek-bayar" type="date" data-cek-bayar><label class="switch on-night"><input type="checkbox" data-cek-gempa><span class="switch__track" aria-hidden="true"></span>Wilayah terdampak gempa</label><label class="switch on-night"><input type="checkbox" data-cek-mutasi><span class="switch__track" aria-hidden="true"></span>Mutasi masuk luar daerah</label><p class="tile__meta">Wilayah gempa: Sikka, Ende, Nagekeo, Ngada, Manggarai, Manggarai Timur, dan Manggarai Barat.</p></div>
-            <div class="tile cek__total"><p class="tile__label">Estimasi total bayar</p><p class="bento__total-val" data-cek="total" aria-live="polite">—</p><p class="cek__masa" data-cek="masa">—</p><div class="cek__rincian" data-cek-rincian></div><p class="cek__catatan" data-cek="catatan"></p><p class="cek__catatan">Denda keterlambatan PKB dan opsen dibebaskan 100%. Pokok pajak dan SWDKLLJ tetap dihitung.</p></div>
+            <div class="tile cek__opsi"><label class="tile__label" for="cek-bayar">Tanggal bayar</label><input class="cek__tanggal" id="cek-bayar" type="date" data-cek-bayar><label class="switch on-night"><input type="checkbox" data-cek-mutasi><span class="switch__track" aria-hidden="true"></span>Mutasi masuk luar daerah</label><label class="switch on-night"><input type="checkbox" data-cek-online><span class="switch__track" aria-hidden="true"></span>Bayar via payment online</label><p class="tile__meta" data-cek-online-ket>Payment online: Bank NTT, PRO NTT, atau SIGNAL. Mutasi masuk tidak dapat dibayar online.</p></div>
+            <div class="tile cek__total"><p class="tile__label">Estimasi total bayar</p><p class="bento__total-val" data-cek="total" aria-live="polite">—</p><p class="cek__masa" data-cek="masa">—</p><div class="cek__rincian" data-cek-rincian></div><p class="cek__catatan" data-cek="catatan"></p><p class="cek__catatan" data-cek="pembebasan">Denda keterlambatan PKB dan opsen dibebaskan 100%, dan pokok PKB tunggakan dihapus 100%. SWDKLLJ tahun berjalan dan pokok SWDKLLJ tunggakan tetap dihitung.</p></div>
           </div>
         </div>
         <p class="micro muted canvas__note">Data kendaraan dari BPAD tersedia sampai pukul 21.00 WITA. Nomor rangka hanya dipakai untuk mencocokkan data kendaraan dan tidak disimpan. Tagihan resmi mengikuti notis pajak di loket.</p>

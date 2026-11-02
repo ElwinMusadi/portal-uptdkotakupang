@@ -118,7 +118,7 @@ export const NAV_GRUP: GrupNav[] = [
     label: "Alat Bantu",
     item: [
       { judul: "Absensi Lapangan", url: "/absensi", ikon: IconCamera, keterangan: "Clock-in kegiatan lapangan dengan swafoto dan lokasi" },
-      { judul: "Kalkulator PKB", url: "/kalkulator", ikon: IconCalculator, keterangan: "Rincian PKB dari nomor polisi, menurut Pergub NTT 54/2026" },
+      { judul: "Kalkulator PKB", url: "/kalkulator", ikon: IconCalculator, keterangan: "Rincian PKB dari nomor polisi, menurut Pergub NTT 64/2026" },
       {
         judul: "Aplikasi & Situs",
         url: "/aplikasi",

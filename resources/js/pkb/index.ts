@@ -1,17 +1,29 @@
 /*
  * Mesin perhitungan PKB, Opsen PKB, SWDKLLJ, dan PNBP menurut Pergub NTT
- * Nomor 54 Tahun 2026 (D-041), dipakai Kalkulator PKB di dashboard dan cek
+ * keringanan PKB yang berlaku pada tanggal bayar (D-041, D-088): Nomor 64
+ * Tahun 2026 untuk 1 November–31 Desember 2026, Nomor 54 Tahun 2026 untuk
+ * 1 September–31 Oktober 2026. Dipakai Kalkulator PKB di dashboard dan cek
  * biaya pajak di portal.
  *
- * lib/tax-calculator.ts dan types/tax.ts adalah salinan persis dari
- * repository kalkulator-pajak (https://github.com/ElwinMusadi/kalkulator-pajak),
- * commit 7e90d89, berkas src/lib/tax-calculator.ts dan src/types/tax.ts.
- * Jangan menyunting kedua berkas itu di sini: rumusnya mengikuti Pergub dan
- * diuji oleh tests/tax-calculator.regression.ts di repository sumber. Bila
- * rumus berubah, salin ulang kedua berkas dari repository sumber dan catat
- * commit-nya di sini. penetapan.ts milik PINTU: label dan ringkasan hasil.
+ * lib/tax-calculator.ts, lib/pergub.ts, dan types/tax.ts adalah salinan persis
+ * dari repository kalkulator-pajak (https://github.com/ElwinMusadi/kalkulator-pajak),
+ * commit a5d291e, berkas src/lib/tax-calculator.ts, src/lib/pergub.ts, dan
+ * src/types/tax.ts. Jangan menyunting ketiga berkas itu di sini: rumusnya
+ * mengikuti Pergub dan diuji oleh tests/tax-calculator.regression.ts di
+ * repository sumber. Bila rumus berubah, salin ulang ketiga berkas dari
+ * repository sumber dan catat commit-nya di sini. penetapan.ts milik PINTU:
+ * label dan ringkasan hasil.
  */
 export { calculateTax } from "./lib/tax-calculator"
+export {
+  formatMasaBerlaku,
+  getPergub,
+  hasWilayahGempa,
+  PERGUB_RULES,
+  PERGUB_TERBARU,
+  resolvePergub,
+  type PergubRule,
+} from "./lib/pergub"
 export * from "./penetapan"
 export {
   BOBOT_MAP,
@@ -21,6 +33,7 @@ export {
   WARNA_PLAT_LABEL,
   WARNA_PLAT_OPTIONS,
   type JenisKendaraan,
+  type PergubId,
   type TaxCalculationResult,
   type TaxCalculatorInput,
   type WarnaPlat,

@@ -109,7 +109,8 @@ export default function HalamanPanduan() {
         </p>
         <p>
           <Link to="/kalkulator" className="underline underline-offset-4">Kalkulator PKB</Link> menghitung
-          PKB, opsen, SWDKLLJ, dan PNBP menurut Pergub NTT Nomor 54 Tahun 2026. Cukup masukkan nomor polisi:
+          PKB, opsen, SWDKLLJ, dan PNBP menurut Pergub NTT Nomor 64 Tahun 2026 (tanggal bayar 1 September–31
+          Oktober 2026 masih memakai Pergub Nomor 54 Tahun 2026). Cukup masukkan nomor polisi:
           data kendaraan diambil dari Samsat. Bila kendaraan tidak ditemukan, isi NJKB, jenis, dan tanggal jatuh
           tempo sendiri. Cek biaya pajak di portal memakai rumus yang sama, dengan nomor polisi dan 5 digit
           terakhir nomor rangka.

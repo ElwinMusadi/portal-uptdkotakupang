@@ -837,7 +837,7 @@
           <div data-reveal>
             <div class="canvas" data-cek-pajak>
               <div class="canvas__bar">
-                <p class="smallcaps">Cek biaya pajak · Pergub NTT 54/2026</p>
+                <p class="smallcaps">Cek biaya pajak · Pergub NTT 64/2026</p>
               </div>
               <form class="bento cek__form" data-cek-form novalidate>
                 <div class="tile cek__isian">
@@ -915,22 +915,22 @@
                     data-cek-bayar
                   />
                   <label class="switch on-night"
-                    ><input type="checkbox" data-cek-gempa /><span
-                      class="switch__track"
-                      aria-hidden="true"
-                    ></span
-                    >Wilayah terdampak gempa</label
-                  >
-                  <label class="switch on-night"
                     ><input type="checkbox" data-cek-mutasi /><span
                       class="switch__track"
                       aria-hidden="true"
                     ></span
                     >Mutasi masuk luar daerah</label
                   >
-                  <p class="tile__meta">
-                    Wilayah gempa: Sikka, Ende, Nagekeo, Ngada, Manggarai,
-                    Manggarai Timur, dan Manggarai Barat.
+                  <label class="switch on-night"
+                    ><input type="checkbox" data-cek-online /><span
+                      class="switch__track"
+                      aria-hidden="true"
+                    ></span
+                    >Bayar via payment online</label
+                  >
+                  <p class="tile__meta" data-cek-online-ket>
+                    Payment online: Bank NTT, PRO NTT, atau SIGNAL. Mutasi
+                    masuk tidak dapat dibayar online.
                   </p>
                 </div>
                 <div class="tile cek__total">
@@ -939,9 +939,10 @@
                   <p class="cek__masa" data-cek="masa">—</p>
                   <div class="cek__rincian" data-cek-rincian></div>
                   <p class="cek__catatan" data-cek="catatan"></p>
-                  <p class="cek__catatan">
-                    Denda keterlambatan PKB dan opsen dibebaskan 100%. Pokok
-                    pajak dan SWDKLLJ tetap dihitung.
+                  <p class="cek__catatan" data-cek="pembebasan">
+                    Denda keterlambatan PKB dan opsen dibebaskan 100%, dan
+                    pokok PKB tunggakan dihapus 100%. SWDKLLJ tahun berjalan
+                    dan pokok SWDKLLJ tunggakan tetap dihitung.
                   </p>
                 </div>
               </div>
