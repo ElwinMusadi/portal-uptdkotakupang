@@ -201,6 +201,53 @@ class VehicleLookupTest extends TestCase
             ->assertExactJson(['message' => 'Data kendaraan sedang tidak dapat diambil. Coba lagi beberapa saat lagi.']);
     }
 
+    #[TestWith([['potensi' => ['njub' => '35000000.00', 'synced_at' => '2026-10-17T03:15:00Z']], 35000000])]
+    #[TestWith([['potensi' => ['njub' => ' 12500000 ']], 12500000])]
+    #[TestWith([['potensi' => ['njub' => '0.00']], 0])]
+    #[TestWith([['potensi' => ['njub' => null]], 0])]
+    #[TestWith([['potensi' => ['synced_at' => '2026-10-17T03:15:00Z']], 0])]
+    #[TestWith([['potensi' => null], 0])]
+    #[TestWith([[], 0])]
+    public function test_adds_the_njub_the_api_gives_to_the_vehicle(array $changes, int $njub): void
+    {
+        Http::fake([self::UPSTREAM => Http::response($this->vehicle($changes), 200, ['Content-Type' => 'application/json'])]);
+
+        $this->actingAs(User::factory()->create())->getJson('/api/kendaraan/DH1234AB')
+            ->assertOk()
+            ->assertJsonPath('njub', $njub)
+            ->assertJsonPath('njkb', 150000000);
+    }
+
+    public function test_keeps_the_njub_when_the_njkb_reference_is_missing(): void
+    {
+        Http::fake([self::UPSTREAM => Http::response($this->vehicle([
+            'njkb_status' => 'not_found',
+            'njkb' => null,
+            'potensi' => ['njub' => '35000000.00'],
+        ]), 200, ['Content-Type' => 'application/json'])]);
+
+        $this->actingAs(User::factory()->create())->getJson('/api/kendaraan/DH1234AB')
+            ->assertOk()
+            ->assertJsonPath('njkb', 0)
+            ->assertJsonPath('njub', 35000000);
+    }
+
+    #[TestWith([['potensi' => ['njub' => '35000000.50']]])]
+    #[TestWith([['potensi' => ['njub' => '-1.00']]])]
+    #[TestWith([['potensi' => ['njub' => 'tiga puluh juta']]])]
+    #[TestWith([['potensi' => ['njub' => '']]])]
+    #[TestWith([['potensi' => ['njub' => 35000000]]])]
+    #[TestWith([['potensi' => ['njub' => '99999999999999999999.00']]])]
+    #[TestWith([['potensi' => 'rusak']])]
+    public function test_refuses_a_broken_njub_instead_of_counting_it_as_zero(array $changes): void
+    {
+        Http::fake([self::UPSTREAM => Http::response($this->vehicle($changes), 200, ['Content-Type' => 'application/json'])]);
+
+        $this->actingAs(User::factory()->create())->getJson('/api/kendaraan/DH1234AB')
+            ->assertServiceUnavailable()
+            ->assertExactJson(['message' => 'Data kendaraan sedang tidak dapat diambil. Coba lagi beberapa saat lagi.']);
+    }
+
     public function test_treats_an_answer_that_is_not_json_as_unavailable(): void
     {
         Http::fakeSequence(self::UPSTREAM)
@@ -468,6 +515,7 @@ class VehicleLookupTest extends TestCase
             ->assertJsonPath('nopol', 'DH1234AB')
             ->assertJsonPath('nama', 'PEMILIK CONTOH')
             ->assertJsonPath('njkb', 150000000)
+            ->assertJsonPath('njub', 0)
             ->assertJsonPath('isiSilinder', 1497)
             ->assertHeader('Cache-Control', 'no-store, private')
             ->assertCookieMissing(config('session.cookie'));

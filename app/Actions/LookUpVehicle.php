@@ -232,6 +232,16 @@ class LookUpVehicle
             return $this->failed($response, 'invalid_payload');
         }
 
+        // NJUB (potensi.njub) is part of the tax base, as parseOptionalNjub in
+        // kalkulator-pajak: absent means 0, but one that is there and broken
+        // must not quietly become 0 and lower the tax (D-090)
+        $potensi = $body['potensi'] ?? null;
+        $njubRaw = is_array($potensi) ? ($potensi['njub'] ?? null) : null;
+        $njub = $njubRaw === null ? 0 : $this->wholeRupiah($njubRaw);
+        if (($potensi !== null && ! is_array($potensi)) || $njub === null) {
+            return $this->failed($response, 'invalid_payload');
+        }
+
         return [
             'status' => 'found',
             'vehicle' => [
@@ -241,7 +251,7 @@ class LookUpVehicle
                 'jatuhTempoStnk' => $this->date(data_get($body, 'registration.stnk_valid_until')),
                 'jatuhTempoPajak' => $this->date(data_get($body, 'tax.notice_valid_until')),
                 'njkb' => $njkb,
-                'njub' => 0,
+                'njub' => $njub,
                 'bobot' => $weight,
                 'isiSilinder' => self::engineSize(data_get($body, 'vehicle.engine_capacity_cc')),
                 'warnaPlat' => self::plateColour(data_get($body, 'registration.plate_color')),
@@ -297,10 +307,22 @@ class LookUpVehicle
     }
 
     /**
-     * A whole Rupiah amount from a decimal string such as "150000000.00";
-     * null for anything else, including amounts with non-zero sen.
+     * A positive whole Rupiah amount from a decimal string such as
+     * "150000000.00"; null for anything else, including zero.
      */
     private function rupiah(mixed $raw): ?int
+    {
+        $amount = $this->wholeRupiah($raw);
+
+        return $amount !== null && $amount > 0 ? $amount : null;
+    }
+
+    /**
+     * A whole Rupiah amount of zero or more from a decimal string such as
+     * "35000000.00" or "0.00"; null for anything else, including amounts
+     * with non-zero sen.
+     */
+    private function wholeRupiah(mixed $raw): ?int
     {
         if (! is_string($raw) || preg_match('/^(\d+)(?:\.(\d+))?$/', trim($raw), $match) !== 1 || preg_match('/[1-9]/', $match[2] ?? '') === 1) {
             return null;
@@ -308,7 +330,7 @@ class LookUpVehicle
 
         $amount = filter_var(ltrim($match[1], '0') ?: '0', FILTER_VALIDATE_INT);
 
-        return is_int($amount) && $amount > 0 ? $amount : null;
+        return is_int($amount) ? $amount : null;
     }
 
     /**

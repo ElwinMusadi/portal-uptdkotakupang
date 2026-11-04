@@ -1201,3 +1201,14 @@ SWDKLLJ di Kalkulator PKB dan cek biaya pajak sebelumnya Rp35.000 untuk semua se
 | Golongan | **A** sepeda motor ≤ 50 cc Rp3.000 tanpa denda; **C1** sepeda motor 51–250 cc Rp35.000 (8/16/24/32 ribu); **C2** sepeda motor > 250 cc Rp83.000 (20/40/60/80 ribu); **DP** minibus, sedan, jeep, serta pick up, light truck, dan truck ≤ 2.400 cc Rp143.000 (35/70/100/100 ribu); **EP** microbus Rp153.000 (37,5/75/100/100 ribu); **F** pick up, light truck, dan truck > 2.400 cc Rp163.000 (40/80/100/100 ribu). Angkutan umum (DU, EU) dan alat berat (B) tetap dihitung di loket. |
 | Isi silinder | **Dari API, wajib bila kosong** (pemilik, di kalkulator-pajak): `LookUpVehicle` meneruskan `vehicle.engine_capacity_cc` sebagai `isiSilinder` (bilangan bulat 1–50.000, number atau teks angka; selain itu `null` tanpa menggagalkan pencarian) ke `GET /api/kendaraan/{nopol}` dan `POST /api/public/kendaraan`. Kalkulator PKB dashboard punya isian *Isi silinder (CC)* yang terisi dari data dan wajib untuk sepeda motor, pick up, light truck, dan truck; tanpa itu rincian tidak dihitung dan CC masuk daftar yang perlu dilengkapi. Pengunjung portal tidak bisa mengisi data kendaraan, jadi bila CC jenis itu tidak tercatat, cek biaya menyatakan datanya belum tersedia dan meminta cek di loket. |
 | Tampilan | Rincian SWDKLLJ "SWDKLLJ berjalan · Gol. F", ringkasan salin "SWDKLLJ (Gol. F)", keterangan golongan dan tarif di bawah isian CC, serta baris *SWDKLLJ Jasa Raharja · menurut golongan dan CC* di tabel dasar perhitungan halaman Layanan. |
+
+## D-090 · 2026-11-04 · NJUB dari Data Potensi
+
+PINTU selalu mengirim NJUB `0` ke Kalkulator PKB dan cek biaya pajak, padahal API data kendaraan memberikan nilai jual ubah bentuk di `potensi.njub` dan aplikasi kalkulator-pajak sudah memakainya. Akibatnya PKB kendaraan ubah bentuk di PINTU lebih rendah daripada di kalkulator-pajak dan di loket. Pemilik meminta NJUB disamakan.
+
+| Hal | Keputusan |
+|---|---|
+| Sumber | `potensi.njub` dari API (tersedia untuk kunci "PINTU" karena izin Pajak), string desimal Rupiah seperti `"35000000.00"` atau `"0.00"`, sama dengan `parseOptionalNjub` di kalkulator-pajak. Dipakai juga bila referensi NJKB tidak ditemukan (NJKB `0`, diisi manual). |
+| Tidak ada | `potensi` atau `potensi.njub` tidak ada atau `null`: NJUB `0`, seperti sebelumnya. |
+| Rusak | **Pencarian ditolak, bukan dihitung `0`**: NJUB yang ada tetapi bersen bukan nol, negatif, bukan teks angka (termasuk number), terlalu besar, atau `potensi` yang bukan objek menjadikan jawaban seperti jawaban API tak dikenal (`503` "Data kendaraan sedang tidak dapat diambil…", dicatat `invalid_payload` tanpa nomor polisi), karena NJUB 0 diam-diam menurunkan pajak. Pegawai tetap bisa mengisi data secara manual. |
+| Tampilan | Tidak berubah: Kalkulator PKB sudah mengisi isian NJUB dari data kendaraan, dan cek biaya portal sudah memakai `njub` dari jawaban. |
