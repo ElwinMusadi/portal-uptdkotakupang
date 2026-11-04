@@ -5,14 +5,18 @@
  * 1 September–31 Oktober 2026. Dipakai Kalkulator PKB di dashboard dan cek
  * biaya pajak di portal.
  *
- * lib/tax-calculator.ts, lib/pergub.ts, dan types/tax.ts adalah salinan persis
- * dari repository kalkulator-pajak (https://github.com/ElwinMusadi/kalkulator-pajak),
- * commit a5d291e, berkas src/lib/tax-calculator.ts, src/lib/pergub.ts, dan
- * src/types/tax.ts. Jangan menyunting ketiga berkas itu di sini: rumusnya
- * mengikuti Pergub dan diuji oleh tests/tax-calculator.regression.ts di
- * repository sumber. Bila rumus berubah, salin ulang ketiga berkas dari
- * repository sumber dan catat commit-nya di sini. penetapan.ts milik PINTU:
- * label dan ringkasan hasil.
+ * lib/tax-calculator.ts, lib/pergub.ts, lib/swdkllj.ts, dan types/tax.ts adalah
+ * salinan persis dari repository kalkulator-pajak
+ * (https://github.com/ElwinMusadi/kalkulator-pajak), commit 405e0ee, berkas
+ * src/lib/tax-calculator.ts, src/lib/pergub.ts, src/lib/swdkllj.ts, dan
+ * src/types/tax.ts. Jangan menyunting keempat berkas itu di sini: rumusnya
+ * mengikuti Pergub dan tarif Jasa Raharja, dan diuji oleh
+ * tests/tax-calculator.regression.ts di repository sumber. Bila rumus berubah,
+ * salin ulang keempat berkas dari repository sumber dan catat commit-nya di
+ * sini. penetapan.ts milik PINTU: label dan ringkasan hasil.
+ *
+ * SWDKLLJ dihitung per golongan Jasa Raharja (D-089); golongan sepeda motor
+ * dan mobil barang bergantung isi silinder (CC).
  */
 export { calculateTax } from "./lib/tax-calculator"
 export {
@@ -24,6 +28,7 @@ export {
   resolvePergub,
   type PergubRule,
 } from "./lib/pergub"
+export { bergantungCc, golonganSwdkllj, TARIF_SWDKLLJ, type TarifSwdkllj } from "./lib/swdkllj"
 export * from "./penetapan"
 export {
   BOBOT_MAP,
@@ -32,6 +37,7 @@ export {
   TARIF_PKB_PLAT_MERAH,
   WARNA_PLAT_LABEL,
   WARNA_PLAT_OPTIONS,
+  type GolonganSwdkllj,
   type JenisKendaraan,
   type PergubId,
   type TaxCalculationResult,
@@ -50,6 +56,8 @@ export interface DataKendaraan {
   njkb: number
   njub: number
   bobot: number
+  /** Isi silinder (cc) dari vehicle.engine_capacity_cc; null bila tidak tersedia (D-089) */
+  isiSilinder: number | null
   warnaPlat: "putih" | "hitam" | "merah" | null
   /** "not_found": kendaraan ada, tetapi referensi NJKB-nya tidak (NJKB 0, isi manual) */
   njkbStatus: "matched" | "not_found"

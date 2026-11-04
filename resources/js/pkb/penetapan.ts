@@ -50,6 +50,12 @@ export function warnaPlatDariData(raw: unknown): WarnaPlat {
   return isWarnaPlat(raw) ? raw : DEFAULT_WARNA_PLAT
 }
 
+/** Isi silinder (cc) bilangan bulat 1–50.000 dari isian atau data kendaraan; selain itu null */
+export function isiSilinderDari(raw: unknown): number | null {
+  const n = typeof raw === "string" ? (/^\s*\d+\s*$/.test(raw) ? Number(raw) : NaN) : raw
+  return typeof n === "number" && Number.isSafeInteger(n) && n >= 1 && n <= 50_000 ? n : null
+}
+
 /** "2026-03-01" sebagai tengah malam waktu setempat, cara mesin pajak membaca tanggal */
 export function keTanggal(iso: string | null | undefined): Date | undefined {
   const m = iso ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso) : null
@@ -164,7 +170,7 @@ export function rincianPembayaran(h: TaxCalculationResult): KelompokRincian[] {
       judul: "SWDKLLJ",
       jumlah: h.swdklljBerjalan + h.swdklljTunggakan + h.dendaSwdkllj,
       baris: [
-        { label: "SWDKLLJ berjalan", nilai: h.swdklljBerjalan },
+        { label: `SWDKLLJ berjalan · Gol. ${h.golonganSwdkllj}`, nilai: h.swdklljBerjalan },
         ...(h.swdklljTunggakan > 0
           ? [{ label: `SWDKLLJ tunggakan · ${h.tahunTunggakan} tahun`, nilai: h.swdklljTunggakan }]
           : []),
@@ -233,7 +239,7 @@ export function ringkasanPenetapan(h: TaxCalculationResult, nopol?: string): str
     h.warnaPlat === "merah" ? `Plat ${WARNA_PLAT_LABEL[h.warnaPlat]} · Tarif PKB ${persen(h.tarifPkbBerjalan)}` : null,
     `PKB: ${rupiah(pkb.jumlah)}`,
     `Opsen PKB: ${rupiah(opsen.jumlah)}`,
-    `SWDKLLJ: ${rupiah(swdkllj.jumlah)}`,
+    `SWDKLLJ (Gol. ${h.golonganSwdkllj}): ${rupiah(swdkllj.jumlah)}`,
     `PNBP: ${rupiah(h.biayaStnk + h.biayaTnkb)}`,
     `Total bayar: ${rupiah(h.total)}`,
     "Denda PKB dan Opsen: dibebaskan 100%",

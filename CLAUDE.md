@@ -17,7 +17,7 @@ Semuanya satu aplikasi Laravel di root repository, satu origin (D-002):
 
 - Produksi: https://uptdpenda-kupang.web.id di Laravel Cloud, region Singapura, MySQL 8.4, bucket privat dan publik. Push ke `main` langsung di-deploy (Push to deploy, deploy menjalankan `php artisan migrate --force`). Cloudflare hanya untuk DNS dan pengalihan `pintu.` → domain utama.
 - Database produksi terpisah dari lokal: data yang diisi di lokal tidak sampai ke produksi.
-- Modul utama: konten portal (Beranda, Layanan, Berita, Regulasi, dll.), Layanan Luar Kantor, Antrean Online (D-051), Pemetaan PKB (D-052, D-064), Laporan Penerimaan dari berkas STS (D-047–D-049), Realisasi Target Form I (D-068, D-070), Nomoratur SKPD (D-071), tema (D-057), Kalkulator PKB + API data kendaraan (D-041, Pergub 64/2026 D-088, kunci API Data Potensi D-076, D-077), dan pemilih pegawai SIKAP di Tambah akun (D-075).
+- Modul utama: konten portal (Beranda, Layanan, Berita, Regulasi, dll.), Layanan Luar Kantor, Antrean Online (D-051), Pemetaan PKB (D-052, D-064), Laporan Penerimaan dari berkas STS (D-047–D-049), Realisasi Target Form I (D-068, D-070), Nomoratur SKPD (D-071), tema (D-057), Kalkulator PKB + API data kendaraan (D-041, Pergub 64/2026 D-088, SWDKLLJ per golongan D-089, kunci API Data Potensi D-076, D-077), dan pemilih pegawai SIKAP di Tambah akun (D-075).
 
 ## Stack, versi, dan perintah
 

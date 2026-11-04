@@ -295,6 +295,7 @@
             <tr><td>Tunggakan PKB</td><td class="num">dihapus 100%</td></tr>
             <tr><td>Denda PKB dan opsen</td><td class="num">dibebaskan 100%</td></tr>
             <tr><td>Bayar via payment online</td><td class="num">diskon 5% motor · 2% roda 4+</td></tr>
+            <tr><td>SWDKLLJ Jasa Raharja</td><td class="num">menurut golongan dan CC</td></tr>
             <tr><td>PNBP STNK dan TNKB</td><td class="num">bila STNK tersisa ≤ 90 hari</td></tr>
           </tbody>
         </table>

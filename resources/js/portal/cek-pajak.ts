@@ -15,9 +15,11 @@
  * berdiri sendiri.
  */
 import {
+  bergantungCc,
   calculateTax,
   daftarMasaBerlaku,
   hariIni,
+  isiSilinderDari,
   isWarnaPlat,
   jenisDariData,
   keTanggal,
@@ -59,6 +61,8 @@ function dataKendaraan(v: unknown): DataKendaraan | null {
     typeof d.njkb === "number" &&
     typeof d.njub === "number" &&
     typeof d.bobot === "number" &&
+    // Jawaban server sebelum D-089 tidak membawa isiSilinder: dibaca sebagai null
+    (d.isiSilinder === undefined || d.isiSilinder === null || typeof d.isiSilinder === "number") &&
     (d.warnaPlat === null || isWarnaPlat(d.warnaPlat))
     ? (d as DataKendaraan)
     : null
@@ -135,9 +139,12 @@ function cekPajak(root: HTMLElement) {
     online.disabled = mutasi.checked
     if (!adaOnline || mutasi.checked) online.checked = false
 
+    // Golongan SWDKLLJ sepeda motor dan mobil barang bergantung CC (D-089)
+    const cc = isiSilinderDari(k.isiSilinder)
     const kurang = [
       k.njkb > 0 ? null : "nilai jual kendaraan",
       jenis ? null : "jenis kendaraan",
+      jenis && bergantungCc(jenis) && cc === null ? "isi silinder (CC)" : null,
       tglPajak ? null : "jatuh tempo pajak",
       tglStnk ? null : "jatuh tempo STNK",
     ].filter((x): x is string => x !== null)
@@ -166,6 +173,7 @@ function cekPajak(root: HTMLElement) {
       njub: k.njub,
       bobot: k.bobot || BOBOT_MAP[jenis],
       jenisKendaraan: jenis,
+      isiSilinder: cc,
       jatuhTempoPajak: tglPajak,
       jatuhTempoStnk: tglStnk,
       tanggalBayar: tglBayar,

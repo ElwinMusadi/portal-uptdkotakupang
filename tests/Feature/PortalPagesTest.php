@@ -170,6 +170,14 @@ class PortalPagesTest extends TestCase
         $this->assertStringNotContainsString('Nomor 54 Tahun 2026', $check[0]);
     }
 
+    public function test_explains_that_swdkllj_follows_the_jasa_raharja_class(): void
+    {
+        $html = $this->get('/layanan')->assertOk()->getContent();
+
+        $this->assertSame(1, preg_match('/<table[^>]*>.*?Dasar perhitungan biaya pajak.*?<\/table>/s', $html, $table));
+        $this->assertStringContainsString('<tr><td>SWDKLLJ Jasa Raharja</td><td class="num">menurut golongan dan CC</td></tr>', $table[0]);
+    }
+
     #[TestWith(['/skrip/cek-pajak', 'resources/js/portal/cek-pajak.ts', 'http://localhost/build/assets/cek-pajak-a1b2c3.js'])]
     #[TestWith(['/skrip/portal', 'resources/js/portal/main.tsx', 'http://localhost/build/assets/main-d4e5f6.js'])]
     public function test_sends_the_portal_to_its_built_scripts_without_letting_the_address_be_cached(string $uri, string $entry, string $built): void

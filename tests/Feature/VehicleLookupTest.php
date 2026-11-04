@@ -63,6 +63,7 @@ class VehicleLookupTest extends TestCase
             'njkb' => 150000000,
             'njub' => 0,
             'bobot' => 1.05,
+            'isiSilinder' => 1497,
             'warnaPlat' => 'hitam',
             'njkbStatus' => 'matched',
         ]);
@@ -423,6 +424,38 @@ class VehicleLookupTest extends TestCase
         $this->assertSame($colour, LookUpVehicle::plateColour($raw));
     }
 
+    #[TestWith([110, 110])]
+    #[TestWith([2477, 2477])]
+    #[TestWith([1, 1])]
+    #[TestWith([50000, 50000])]
+    #[TestWith([' 2400 ', 2400])]
+    #[TestWith([2400.0, 2400])]
+    #[TestWith([0, null])]
+    #[TestWith([-110, null])]
+    #[TestWith([50001, null])]
+    #[TestWith([1497.5, null])]
+    #[TestWith(['2.400', null])]
+    #[TestWith(['1500cc', null])]
+    #[TestWith(['', null])]
+    #[TestWith([null, null])]
+    #[TestWith([true, null])]
+    public function test_reads_the_engine_size_the_swdkllj_class_needs(mixed $raw, ?int $cc): void
+    {
+        $this->assertSame($cc, LookUpVehicle::engineSize($raw));
+    }
+
+    public function test_leaves_the_engine_size_empty_when_the_api_has_a_broken_one(): void
+    {
+        $vehicle = $this->vehicle();
+        $vehicle['vehicle']['engine_capacity_cc'] = 'dua ribu';
+        Http::fake([self::UPSTREAM => Http::response($vehicle, 200, ['Content-Type' => 'application/json'])]);
+
+        $this->actingAs(User::factory()->create())->getJson('/api/kendaraan/DH1234AB')
+            ->assertOk()
+            ->assertJsonPath('isiSilinder', null)
+            ->assertJsonPath('njkb', 150000000);
+    }
+
     public function test_gives_a_visitor_the_vehicle_once_the_chassis_characters_match(): void
     {
         $vehicle = $this->vehicle();
@@ -435,6 +468,7 @@ class VehicleLookupTest extends TestCase
             ->assertJsonPath('nopol', 'DH1234AB')
             ->assertJsonPath('nama', 'PEMILIK CONTOH')
             ->assertJsonPath('njkb', 150000000)
+            ->assertJsonPath('isiSilinder', 1497)
             ->assertHeader('Cache-Control', 'no-store, private')
             ->assertCookieMissing(config('session.cookie'));
         $this->assertStringNotContainsStringIgnoringCase('synthetic', $response->getContent());
@@ -568,6 +602,7 @@ class VehicleLookupTest extends TestCase
                 'category_raw' => 'MINIBUS',
                 'type' => 'CONTOH MODEL 1.5 M/T',
                 'year' => 2024,
+                'engine_capacity_cc' => 1497,
                 'chassis_number' => 'SYNTHETIC-CHA5678',
                 'engine_number' => 'SYNTHETIC-ENGINE',
             ],

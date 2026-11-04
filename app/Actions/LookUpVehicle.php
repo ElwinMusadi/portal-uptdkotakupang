@@ -97,7 +97,7 @@ class LookUpVehicle
      * never sent to a browser. A vehicle in a region PINTU's key does not
      * cover comes back without any data at all.
      *
-     * @return array{status: 'found', vehicle: array{nopol: string, nama: ?string, jenis: ?string, jatuhTempoStnk: ?string, jatuhTempoPajak: ?string, njkb: int, njub: int, bobot: float, warnaPlat: ?string, njkbStatus: string}, chassis: ?string}|array{status: 'reference_problem', message: string, chassis: ?string}|array{status: 'outside_region', message: string}|array{status: 'not_found'}|array{status: 'unavailable', message: string}
+     * @return array{status: 'found', vehicle: array{nopol: string, nama: ?string, jenis: ?string, jatuhTempoStnk: ?string, jatuhTempoPajak: ?string, njkb: int, njub: int, bobot: float, isiSilinder: ?int, warnaPlat: ?string, njkbStatus: string}, chassis: ?string}|array{status: 'reference_problem', message: string, chassis: ?string}|array{status: 'outside_region', message: string}|array{status: 'not_found'}|array{status: 'unavailable', message: string}
      */
     public function handle(string $nopol): array
     {
@@ -243,6 +243,7 @@ class LookUpVehicle
                 'njkb' => $njkb,
                 'njub' => 0,
                 'bobot' => $weight,
+                'isiSilinder' => self::engineSize(data_get($body, 'vehicle.engine_capacity_cc')),
                 'warnaPlat' => self::plateColour(data_get($body, 'registration.plate_color')),
                 'njkbStatus' => $njkbStatus,
             ],
@@ -276,6 +277,23 @@ class LookUpVehicle
         $found = array_values(array_unique(array_filter(array_map(fn (string $token): ?string => $colours[$token] ?? null, $tokens))));
 
         return count($found) === 1 ? $found[0] : null;
+    }
+
+    /**
+     * The engine size in whole cc (1–50,000) from a number or a string of
+     * digits, as parseIsiSilinder in kalkulator-pajak. It decides the SWDKLLJ
+     * class of motorcycles and goods vehicles (D-089); anything else is null,
+     * so staff fill it in themselves.
+     */
+    public static function engineSize(mixed $raw): ?int
+    {
+        if (is_string($raw) && preg_match('/^\s*\d+\s*$/', $raw) === 1) {
+            $raw = (int) trim($raw);
+        } elseif (is_float($raw) && floor($raw) === $raw) {
+            $raw = (int) $raw;
+        }
+
+        return is_int($raw) && $raw >= 1 && $raw <= 50000 ? $raw : null;
     }
 
     /**

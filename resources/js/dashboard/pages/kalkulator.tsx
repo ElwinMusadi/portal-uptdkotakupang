@@ -50,6 +50,7 @@ import { tanggal } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
 import {
+  bergantungCc,
   BOBOT_MAP,
   calculateTax,
   dariTanggal,
@@ -57,8 +58,10 @@ import {
   DEFAULT_WARNA_PLAT,
   formatMasaBerlaku,
   getPergub,
+  golonganSwdkllj,
   hariIni,
   hasWilayahGempa,
+  isiSilinderDari,
   isWarnaPlat,
   JENIS_KENDARAAN,
   jenisDariData,
@@ -76,6 +79,7 @@ import {
   rupiah,
   tanggalPanjang,
   TARIF_PKB_PLAT_MERAH,
+  TARIF_SWDKLLJ,
   warnaPlatDariData,
   WARNA_PLAT_LABEL,
   WARNA_PLAT_OPTIONS,
@@ -322,6 +326,8 @@ function Kalkulator() {
   const [nopol, setNopol] = React.useState("")
   const [njkb, setNjkb] = React.useState(0)
   const [njub, setNjub] = React.useState(0)
+  /** Isi silinder (cc) sebagai teks isian; kosong bila data kendaraan tidak menyebutnya */
+  const [isiSilinder, setIsiSilinder] = React.useState("")
   /** Bobot dari data kendaraan; tanpa itu bobot mengikuti jenis kendaraan */
   const [bobotData, setBobotData] = React.useState<number>()
   const [jenis, setJenis] = React.useState<JenisKendaraan>()
@@ -336,6 +342,7 @@ function Kalkulator() {
   const isiDariData = React.useCallback((d: DataKendaraan) => {
     setNjkb(d.njkb > 0 ? d.njkb : 0)
     setNjub(d.njub || 0)
+    setIsiSilinder(String(isiSilinderDari(d.isiSilinder) ?? ""))
     setBobotData(d.bobot || undefined)
     setJenis(jenisDariData(d.jenis))
     setJatuhTempoPajak(keTanggal(d.jatuhTempoPajak) ? (d.jatuhTempoPajak ?? "") : "")
@@ -349,6 +356,7 @@ function Kalkulator() {
     lupakan()
     setNjkb(0)
     setNjub(0)
+    setIsiSilinder("")
     setBobotData(undefined)
     setJenis(undefined)
     setJatuhTempoPajak("")
@@ -364,9 +372,16 @@ function Kalkulator() {
   const tglStnk = keTanggal(jatuhTempoStnk)
   const tglBayar = keTanggal(tanggalBayar)
 
+  // Golongan SWDKLLJ sepeda motor dan mobil barang bergantung CC (D-089);
+  // tanpa CC rincian tidak dihitung, bukan ditebak.
+  const cc = isiSilinderDari(isiSilinder)
+  const ccWajib = Boolean(jenis && bergantungCc(jenis))
+  const tarifSwdkllj = jenis && (!ccWajib || cc !== null) ? TARIF_SWDKLLJ[golonganSwdkllj(jenis, cc)] : null
+
   const kurang = [
     njkb > 0 ? null : "NJKB",
     jenis ? null : "jenis kendaraan",
+    ccWajib && cc === null ? "isi silinder (CC)" : null,
     tglPajak ? null : "jatuh tempo pajak",
     tglStnk ? null : "jatuh tempo STNK",
     tglBayar ? null : "tanggal pembayaran",
@@ -385,12 +400,13 @@ function Kalkulator() {
   const tarifOnline = pergub?.diskonOnlinePersen ?? null
 
   const hasil =
-    pergub && !lunas && jenis && bobot && njkb > 0 && tglPajak && tglStnk && tglBayar
+    pergub && !lunas && jenis && bobot && njkb > 0 && !(ccWajib && cc === null) && tglPajak && tglStnk && tglBayar
       ? calculateTax({
           njkb,
           njub,
           bobot,
           jenisKendaraan: jenis,
+          isiSilinder: cc,
           jatuhTempoPajak: tglPajak,
           jatuhTempoStnk: tglStnk,
           tanggalBayar: tglBayar,
@@ -404,6 +420,7 @@ function Kalkulator() {
 
   const platData =
     pencarian.status === "ditemukan" && isWarnaPlat(pencarian.data.warnaPlat) ? pencarian.data.warnaPlat : null
+  const dataCc = pencarian.status === "ditemukan" ? isiSilinderDari(pencarian.data.isiSilinder) : null
   const keteranganPlat =
     pencarian.status === "ditemukan"
       ? platData
@@ -523,6 +540,30 @@ function Kalkulator() {
                 {bobotData !== undefined
                   ? `Bobot ${bobotData.toLocaleString("id-ID", { maximumFractionDigits: 3 })} dari data kendaraan.`
                   : "Bobot mengikuti jenis kendaraan."}
+              </p>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor={`${id}-cc`}>Isi silinder (CC){ccWajib ? "" : " · opsional"}</Label>
+              <Input
+                id={`${id}-cc`}
+                type="text"
+                inputMode="numeric"
+                value={isiSilinder}
+                onChange={(e) => setIsiSilinder(e.target.value.replace(/\D/g, "").slice(0, 5))}
+                placeholder={ccWajib ? "Wajib untuk jenis ini" : "Mis. 1500"}
+                autoComplete="off"
+                aria-invalid={ccWajib && isiSilinder !== "" && cc === null ? true : undefined}
+                aria-describedby={`${id}-cc-ket`}
+                className="sm:max-w-48"
+              />
+              <p id={`${id}-cc-ket`} className="text-sm text-muted-foreground">
+                {tarifSwdkllj
+                  ? `SWDKLLJ golongan ${tarifSwdkllj.golongan} · ${rupiah(tarifSwdkllj.pokok)}${
+                      dataCc !== null && dataCc === cc ? " · dari data kendaraan" : ""
+                    }.`
+                  : ccWajib
+                    ? "Sepeda motor dan mobil barang: golongan SWDKLLJ ditentukan CC. Lihat STNK."
+                    : "Menentukan golongan SWDKLLJ (Jasa Raharja)."}
               </p>
             </div>
             <div className="grid gap-2">
