@@ -413,8 +413,20 @@
 .step h3 { font-size: 15px; font-weight: 600; line-height: 1.35; }
 .step p { font-size: 13.5px; color: var(--text-2); }
 .steps--4 { grid-template-columns: repeat(4, 1fr); }
+.steps--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (max-width: 1000px) { .steps, .steps--4 { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 520px) { .steps, .steps--4 { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .steps, .steps--4, .steps--2 { grid-template-columns: 1fr; } }
+/* Alur non-tunai: bayar online lewat PRO NTT (D-092); langkah di kiri, video tutorial tegak dan poster di kanan */
+.bayar-online { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 300px); gap: 32px 48px; align-items: start; }
+.bayar-online__media { display: grid; gap: 14px; justify-items: center; text-align: center; }
+.bayar-online__video { margin: 0; width: 100%; max-width: 300px; }
+.bayar-online__video video { display: block; width: 100%; height: auto; aspect-ratio: 464 / 832; border-radius: var(--r-lg); background: var(--night, #0F1319); }
+.bayar-online__video figcaption { margin-top: 8px; font-size: 13px; color: var(--text-2); }
+.bayar-online__aksi { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+@media (max-width: 1000px) { .bayar-online { grid-template-columns: minmax(0, 1fr); } }
+.dialog--poster { width: min(560px, calc(100% - 32px)); }
+.dialog--poster .dialog__body { padding: 56px 20px 20px; display: grid; gap: 14px; justify-items: center; text-align: center; }
+.dialog--poster img { width: 100%; height: auto; max-height: calc(100vh - 230px); object-fit: contain; border-radius: var(--r-md); }
 
 /* ---------- Standar pelayanan ringkas ---------- */
 .std { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border-top: 1px solid var(--ink); }

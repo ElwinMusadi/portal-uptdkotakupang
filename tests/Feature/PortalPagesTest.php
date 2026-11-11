@@ -738,6 +738,34 @@ class PortalPagesTest extends TestCase
         $this->assertStringContainsString('data-unduh-persyaratan="${esc(l.slug)}"', (string) file_get_contents(public_path('assets/js/main.js')));
     }
 
+    public function test_walks_through_paying_online_with_pro_ntt_in_the_non_cash_section(): void
+    {
+        $html = $this->get('/layanan')->assertOk()->getContent();
+
+        // The eight steps of the PRO NTT poster replace the counter's five steps (D-092)
+        $this->assertSame(1, preg_match('#<section class="section section--flush-top" id="alur">(.*?)</section>#s', $html, $section));
+        $this->assertStringContainsString('<h2 class="h2" style="margin-top:20px">Bayar dari ponsel. <span class="tone">Lewat PRO NTT.</span></h2>', $section[1]);
+        $this->assertSame(1, preg_match('#<ol class="steps steps--2" role="list" data-reveal>(.*?)</ol>#s', $section[1], $steps));
+        preg_match_all('#<li class="step"><span class="step__n">(\d\d)</span>.*?<h3>([^<]+)</h3>#', $steps[1], $titles);
+        $this->assertSame(['01', '02', '03', '04', '05', '06', '07', '08'], $titles[1]);
+        $this->assertSame(['Buka PRO NTT.', 'Pilih menu SAMSAT.', 'Isi nomor polisi.', 'Tekan Cek Pajak.', 'Pilih Bayar Pajak.', 'Dapatkan kode bayar.', 'Bayar lewat Bank NTT.', 'Tukar bukti bayar.'], $titles[2]);
+        $this->assertStringNotContainsString('Pindai QRIS', $html);
+
+        // The tutorial video only loads when played; the poster opens in a dialog and can be downloaded
+        $this->assertMatchesRegularExpression('#<video controls preload="none" playsinline width="464" height="832" poster="assets/img/pro-ntt-tutorial-sampul\.webp"[^>]*>\s*<source src="assets/video/pro-ntt-tutorial\.mp4" type="video/mp4">\s*</video>#', $section[1]);
+        $this->assertStringContainsString('<a class="btn btn--dark btn--sm" href="https://play.google.com/store/apps/details?id=com.iwana.betantt" target="_blank" rel="noopener">', $section[1]);
+        $this->assertStringContainsString('data-open-dialog="dlg-poster-pro-ntt"', $section[1]);
+        $this->assertSame(1, preg_match('#<dialog class="dialog dialog--poster" id="dlg-poster-pro-ntt"[^>]*>(.*?)</dialog>#s', $html, $dialog));
+        $this->assertMatchesRegularExpression('#<img src="assets/img/pro-ntt-poster\.jpg" alt="Poster cara pembayaran[^"]+" width="1428" height="2000" loading="lazy">#', $dialog[1]);
+        $this->assertStringContainsString('href="assets/img/pro-ntt-poster.jpg" download="Poster cara bayar pajak lewat PRO NTT.jpg"', $dialog[1]);
+        foreach (['assets/video/pro-ntt-tutorial.mp4', 'assets/img/pro-ntt-tutorial-sampul.webp', 'assets/img/pro-ntt-poster.jpg'] as $file) {
+            $this->assertFileExists(public_path($file));
+        }
+
+        // Every page's menu describes it as the online way to pay
+        $this->assertStringContainsString('<strong>Alur Non-Tunai</strong><span>Bayar pajak online lewat aplikasi PRO NTT.</span>', $this->get('/')->getContent());
+    }
+
     public function test_shows_only_the_province_emblem_until_the_hero_component_brings_out_the_partner_logos(): void
     {
         $html = $this->get('/')->assertOk()->getContent();

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Layanan &amp; Persyaratan — PINTU UPTD Pendapatan Daerah Wilayah Kota Kupang</title>
-  <meta name="description" content="Persyaratan pajak tahunan, perpanjangan STNK 5 tahun, mutasi keluar, balik nama, dan duplikat STNK di Samsat Kota Kupang. Termasuk alur non-tunai dan simulasi PKB.">
+  <meta name="description" content="Persyaratan pajak tahunan, perpanjangan STNK 5 tahun, mutasi keluar, balik nama, dan duplikat STNK di Samsat Kota Kupang. Termasuk bayar online lewat PRO NTT dan cek biaya pajak.">
   <meta name="theme-color" content="#F7F6F2">
   <link rel="icon" href="assets/img/favicon-32.png" type="image/png" sizes="32x32">
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
@@ -129,7 +129,7 @@
         <button class="nav__link" type="button" aria-expanded="false" aria-controls="menu-layanan">Layanan<svg class="i" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
         <div class="nav__menu" id="menu-layanan">
           <a class="nav__menu-link" data-nav="layanan" aria-current="page" href="layanan.html"><span class="nav__menu-icon"><svg class="i i--sm" aria-hidden="true"><use href="#i-list-check"/></svg></span><strong>Persyaratan Layanan</strong><span>Berkas untuk setiap jenis layanan.</span></a>
-          <a class="nav__menu-link" href="layanan.html#alur"><span class="nav__menu-icon"><svg class="i i--sm" aria-hidden="true"><use href="#i-qr"/></svg></span><strong>Alur Non-Tunai</strong><span>Langkah bayar tanpa uang tunai.</span></a>
+          <a class="nav__menu-link" href="layanan.html#alur"><span class="nav__menu-icon"><svg class="i i--sm" aria-hidden="true"><use href="#i-qr"/></svg></span><strong>Alur Non-Tunai</strong><span>Bayar pajak online lewat aplikasi PRO NTT.</span></a>
           <a class="nav__menu-link" href="layanan.html#simulasi"><span class="nav__menu-icon"><svg class="i i--sm" aria-hidden="true"><use href="#i-calculator"/></svg></span><strong>Simulasi Pajak</strong><span>Perkiraan total sebelum datang.</span></a>
           <a class="nav__menu-link" data-nav="aplikasi" href="aplikasi.html"><span class="nav__menu-icon"><svg class="i i--sm" aria-hidden="true"><use href="#i-grid"/></svg></span><strong>Aplikasi &amp; Situs</strong><span>Aplikasi resmi BPAD dan UPTD.</span></a>
         </div>
@@ -265,24 +265,52 @@
     </div>
   </section>
 
+  <!-- Alur non-tunai (D-092): bayar pajak tahunan online lewat aplikasi PRO NTT, sesuai poster dan video tutorial BPAD Provinsi NTT -->
   <section class="section section--flush-top" id="alur">
     <div class="container">
       <div class="split split--middle" style="margin-bottom: var(--inner-y)">
         <div data-reveal>
           <p class="eyebrow">Alur non-tunai</p>
-          <h2 class="h2" style="margin-top:20px">Lima langkah. <span class="tone">Tanpa uang tunai.</span></h2>
+          <h2 class="h2" style="margin-top:20px">Bayar dari ponsel. <span class="tone">Lewat PRO NTT.</span></h2>
         </div>
-        <p class="body" data-reveal>Ringkasan alur pembayaran pajak tahunan dengan transaksi non-tunai, sesuai poster di ruang pelayanan.</p>
+        <p class="body" data-reveal>Pajak tahunan kendaraan bisa dibayar online lewat aplikasi PRO NTT (Pajak Retribusi Online NTT) dari BPAD Provinsi NTT. Ikuti delapan langkah ini, lalu tukarkan bukti bayarnya dengan notis pajak di SAMSAT.</p>
       </div>
-      <ol class="steps" role="list" data-reveal>
-        <li class="step"><span class="step__n">01</span><svg class="i" aria-hidden="true"><use href="#i-ticket"/></svg><h3>Ambil nomor antrean.</h3><p>Serahkan berkas lengkap di loket sesuai layanan.</p></li>
-        <li class="step"><span class="step__n">02</span><svg class="i" aria-hidden="true"><use href="#i-search"/></svg><h3>Verifikasi &amp; penetapan.</h3><p>Petugas memeriksa berkas dan sistem menghitung pajak.</p></li>
-        <li class="step"><span class="step__n">03</span><svg class="i" aria-hidden="true"><use href="#i-file"/></svg><h3>Terima tagihan.</h3><p>Anda menerima rincian tagihan beserta kode bayar.</p></li>
-        <li class="step"><span class="step__n">04</span><svg class="i" aria-hidden="true"><use href="#i-qr"/></svg><h3>Bayar non-tunai.</h3><p>Pindai QRIS atau gunakan kartu/transfer di kasir.</p></li>
-        <li class="step"><span class="step__n">05</span><svg class="i" aria-hidden="true"><use href="#i-check-circle"/></svg><h3>Ambil STNK.</h3><p>STNK disahkan dan dikembalikan bersama notis pajak.</p></li>
-      </ol>
+      <div class="bayar-online">
+        <ol class="steps steps--2" role="list" data-reveal>
+          <li class="step"><span class="step__n">01</span><svg class="i" aria-hidden="true"><use href="#i-phone"/></svg><h3>Buka PRO NTT.</h3><p>Daftar bila Anda pengguna baru, atau pilih Masuk bila sudah punya akun.</p></li>
+          <li class="step"><span class="step__n">02</span><svg class="i" aria-hidden="true"><use href="#i-grid"/></svg><h3>Pilih menu SAMSAT.</h3><p>Lalu pilih menu Cek dan Bayar Pajak.</p></li>
+          <li class="step"><span class="step__n">03</span><svg class="i" aria-hidden="true"><use href="#i-car"/></svg><h3>Isi nomor polisi.</h3><p>Masukkan NOPOL dan 5 digit terakhir nomor rangka.</p></li>
+          <li class="step"><span class="step__n">04</span><svg class="i" aria-hidden="true"><use href="#i-search"/></svg><h3>Tekan Cek Pajak.</h3><p>Rincian pajak kendaraan Anda ditampilkan.</p></li>
+          <li class="step"><span class="step__n">05</span><svg class="i" aria-hidden="true"><use href="#i-file"/></svg><h3>Pilih Bayar Pajak.</h3><p>Periksa rinciannya, lalu lanjutkan ke pembayaran.</p></li>
+          <li class="step"><span class="step__n">06</span><svg class="i" aria-hidden="true"><use href="#i-key"/></svg><h3>Dapatkan kode bayar.</h3><p>Simpan kode bayar yang muncul di aplikasi.</p></li>
+          <li class="step"><span class="step__n">07</span><svg class="i" aria-hidden="true"><use href="#i-card"/></svg><h3>Bayar lewat Bank NTT.</h3><p>Di kanal bayar Bank NTT, pilih menu SAMSAT › Samsat Daerah, lalu masukkan kode bayar.</p></li>
+          <li class="step"><span class="step__n">08</span><svg class="i" aria-hidden="true"><use href="#i-check-circle"/></svg><h3>Tukar bukti bayar.</h3><p>Tukarkan bukti bayar dengan notis pajak di SAMSAT atau Samsat Keliling terdekat.</p></li>
+        </ol>
+        <div class="bayar-online__media" data-reveal>
+          <figure class="bayar-online__video">
+            <video controls preload="none" playsinline width="464" height="832" poster="assets/img/pro-ntt-tutorial-sampul.webp" aria-label="Video tutorial pembayaran pajak kendaraan lewat aplikasi PRO NTT">
+              <source src="assets/video/pro-ntt-tutorial.mp4" type="video/mp4">
+            </video>
+            <figcaption>Video tutorial dari BPAD Provinsi NTT · 52 detik</figcaption>
+          </figure>
+          <div class="bayar-online__aksi">
+            <a class="btn btn--dark btn--sm" href="https://play.google.com/store/apps/details?id=com.iwana.betantt" target="_blank" rel="noopener"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Unduh PRO NTT di Google Play</a>
+            <button class="btn btn--ghost btn--sm" type="button" data-open-dialog="dlg-poster-pro-ntt"><svg class="i" aria-hidden="true"><use href="#i-image"/></svg>Lihat poster</button>
+          </div>
+          <p class="micro muted">PRO NTT tersedia untuk ponsel Android.</p>
+        </div>
+      </div>
     </div>
   </section>
+
+  <dialog class="dialog dialog--poster" id="dlg-poster-pro-ntt" aria-labelledby="dlg-poster-judul">
+    <div class="dialog__body">
+      <button class="dialog__close" type="button" data-close aria-label="Tutup"><svg class="i i--sm" aria-hidden="true"><use href="#i-x"/></svg></button>
+      <h2 class="title-sm" id="dlg-poster-judul">Cara pembayaran pajak kendaraan melalui aplikasi PRO NTT</h2>
+      <img src="assets/img/pro-ntt-poster.jpg" alt="Poster cara pembayaran pajak kendaraan melalui aplikasi PRO NTT: delapan langkah dari membuka aplikasi sampai menukar bukti bayar dengan notis pajak, beserta kode QR untuk mengunduh aplikasi di Play Store." width="1428" height="2000" loading="lazy">
+      <a class="btn btn--ghost btn--sm" href="assets/img/pro-ntt-poster.jpg" download="Poster cara bayar pajak lewat PRO NTT.jpg"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Unduh poster</a>
+    </div>
+  </dialog>
 
   <section class="section" id="simulasi">
     <div class="container split split--middle">
