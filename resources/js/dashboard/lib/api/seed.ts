@@ -1069,6 +1069,8 @@ function pengaturan(sekarang: Date): Pengaturan {
           "PINTU adalah portal resmi informasi dan pelayanan pajak kendaraan di Kota Kupang. Cek persyaratan, jadwal, dan lokasi layanan sebelum Anda berangkat.",
         tombolLabel: "Cek Persyaratan Layanan",
         tombolUrl: "layanan.html",
+        tombolKeduaLabel: "Cek Biaya Pajak",
+        tombolKeduaUrl: "layanan.html#simulasi",
         catatan: "Gratis dan tanpa perantara. Setiap informasi diverifikasi petugas UPTD.",
       },
       video: { url: "", label: "Tonton alur pelayanan", durasi: "", judul: "" },

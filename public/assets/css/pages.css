@@ -10,7 +10,7 @@
 .hero__lead { margin-top: 28px; max-width: 52ch; }
 .hero__actions { margin-top: 36px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
 /* Pembuka tanpa tombol atau catatan dari dashboard (initBeranda) */
-.hero__actions[hidden], .hero__trust[hidden] { display: none; }
+.hero__actions[hidden], .hero__trust[hidden], .hero__actions > .btn[hidden] { display: none; }
 /* Teks halaman Jadwal yang dikosongkan di dashboard (D-080); eyebrow dan catatan memakai inline-flex */
 [data-jadwal-teks][hidden], [data-jadwal-catatan][hidden] { display: none; }
 .hero__trust { margin-top: 18px; display: block; text-wrap: balance; }
@@ -397,6 +397,11 @@
 .svc__extra summary::-webkit-details-marker { display: none; }
 .svc__extra[open] summary .i { transform: rotate(180deg); }
 .svc__extra summary .i { transition: transform var(--dur-2) var(--ease); }
+/* Unduh gambar persyaratan (D-091); pesan galatnya hanya tampil bila ada isinya */
+.svc__unduh { margin-top: 22px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.unduh__status { margin: 0; font-size: 13px; color: var(--warn); }
+.unduh__status:empty { display: none; }
+.svc__unduh .btn[aria-busy="true"], .svc-nav__tools .btn[aria-busy="true"] { cursor: progress; opacity: .7; }
 @media (max-width: 960px) { .svc-layout { grid-template-columns: 1fr; } .svc-nav { position: static; } .svc-nav .catlist { grid-auto-flow: column; overflow-x: auto; gap: 18px; padding-bottom: 6px; } .svc-nav .catlist button, .svc-nav .catlist a { white-space: nowrap; } }
 @media (max-width: 560px) { .svc__head { flex-direction: column; } }
 

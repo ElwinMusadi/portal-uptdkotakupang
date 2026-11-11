@@ -683,7 +683,7 @@ class PortalPagesTest extends TestCase
         // The rotating words only appear while the title's word rolls through them (D-045)
         unset($initial['hero']['kataBergilir']);
         array_walk_recursive($initial, function (mixed $value, string|int $key) use ($text): void {
-            if (is_string($value) && $key !== 'id' && $key !== 'tombolUrl') {
+            if (is_string($value) && $key !== 'id' && $key !== 'tombolUrl' && $key !== 'tombolKeduaUrl') {
                 $this->assertStringContainsString($value, $text);
             }
         });
@@ -701,6 +701,41 @@ class PortalPagesTest extends TestCase
             $this->assertStringContainsString($hook, $html);
         }
         $this->assertStringNotContainsString('2:14', $html);
+    }
+
+    public function test_opens_with_both_buttons_pointing_where_the_initial_document_says(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+        $hero = Setting::INITIAL_HOMEPAGE['hero'];
+
+        // The second button leads to the tax check on the Layanan page (D-091); main.js hides each one whose link is emptied
+        $this->assertSame(1, preg_match('#<div class="hero__actions" data-reveal>(.*?)</div>#s', $html, $actions));
+        $this->assertMatchesRegularExpression('#^\s*<a class="btn btn--dark" href="'.preg_quote($hero['tombolUrl'], '#').'" data-beranda-tombol\s*>'.preg_quote($hero['tombolLabel'], '#').'<svg#', $actions[1]);
+        $this->assertMatchesRegularExpression('#<a class="btn btn--ghost" href="'.preg_quote($hero['tombolKeduaUrl'], '#').'" data-beranda-tombol-kedua\s*><svg class="i" aria-hidden="true"><use href="\#i-calculator" /></svg\s*>'.preg_quote($hero['tombolKeduaLabel'], '#').'</a\s*>\s*$#', $actions[1]);
+        $this->assertSame('layanan.html#simulasi', $hero['tombolKeduaUrl']);
+        $this->assertStringContainsString('<section class="section" id="simulasi">', $this->get('/layanan')->getContent());
+    }
+
+    public function test_never_lets_the_body_become_a_scroll_container_that_would_carry_the_sticky_header_away(): void
+    {
+        $css = (string) file_get_contents(public_path('assets/css/base.css'));
+
+        // While Lenis stops for the phone menu, html gets overflow: hidden; a body with overflow-x: hidden would then scroll
+        // itself and take the sticky header off screen. clip cuts the sideways overflow without that (D-091)
+        $this->assertSame(1, preg_match('/\nbody \{([^}]*)\}/', $css, $body));
+        $this->assertMatchesRegularExpression('/overflow-x: hidden;\s*overflow-x: clip;/', $body[1]);
+        $this->assertStringContainsString('html.lenis.lenis-stopped:not(.lenis-autoToggle) { overflow: hidden;', $css);
+    }
+
+    public function test_offers_the_service_requirements_as_images_to_download(): void
+    {
+        $html = $this->get('/layanan')->assertOk()->getContent();
+
+        // All of them from the side panel; each card gets its own button from main.js (D-091)
+        $this->assertSame(1, preg_match('#<aside class="svc-nav no-print"[^>]*>(.*?)</aside>#s', $html, $panel));
+        $this->assertMatchesRegularExpression('#<button class="btn btn--ghost btn--sm" type="button" data-unduh-persyaratan="semua"><svg class="i" aria-hidden="true"><use href="\#i-image"/></svg>Unduh semua persyaratan</button>\s*<p class="unduh__status" role="status" data-unduh-status></p>#', $panel[1]);
+        $this->assertStringContainsString('<script type="module" src="skrip/portal"></script>', $html);
+        $this->assertStringContainsString('data-unduh-persyaratan="${esc(l.slug)}"', (string) file_get_contents(public_path('assets/js/main.js')));
     }
 
     public function test_shows_only_the_province_emblem_until_the_hero_component_brings_out_the_partner_logos(): void

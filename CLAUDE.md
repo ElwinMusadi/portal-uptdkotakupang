@@ -28,7 +28,7 @@ Semuanya satu aplikasi Laravel di root repository, satu origin (D-002):
 
 | Perintah | Kegunaan |
 |---|---|
-| `composer test` | Semua tes PHPUnit di SQLite memori (±85 detik, 1875 tes) |
+| `composer test` | Semua tes PHPUnit di SQLite memori (±105 detik, 1920 tes) |
 | `php artisan test --compact <berkas> --filter=<tes>` | Tes tertentu |
 | `composer test:mysql` | **Mereset database `pintu`** (berisi data pemilik); hanya dengan izin pemilik dan cadangan |
 | `npm run typecheck` / `npm run lint` / `npm run build` | `tsc -b` / `oxlint resources/js` / `tsc -b && vite build` |
@@ -135,6 +135,7 @@ Build di Laravel Cloud: `composer install --no-dev && npm ci && npm run build &&
   - tidak berjalan saat gerak dikurangi, dan sentuhan tetap native;
   - gulir dari kode lewat `window.pintuScrollTo` (React: `gulirKe()` di `resources/js/portal/gulir.ts`);
   - posisi tujuan sudah memperhitungkan `scroll-padding-top`, jadi jangan menambah offset sendiri;
+  - selama Lenis berhenti (menu ponsel, dialog) `html` ber-`overflow: hidden`, jadi `body` memakai `overflow-x: clip`, bukan `hidden` saja (D-091);
   - versi baru berarti folder baru, karena aset portal tidak berversi.
 - **Motif latar portal (D-073):**
   - `portal.motif` (`polos` bawaan, `titik`) dipilih di Pengaturan › Tampilan, dengan `portal.kejelasanMotif` 10–100% (bawaan 40%; kepekatan titik 0,8 × persen, D-074);
@@ -162,6 +163,10 @@ Build di Laravel Cloud: `composer install --no-dev && npm ci && npm run build &&
 | Worktree dengan `vendor` berupa junction menguji kode checkout utama | Jalankan PHPUnit dengan `--bootstrap` sementara yang memuat autoloader worktree |
 | Menguji UI dashboard saat Herd mati, tanpa login dan tanpa menyentuh data pemilik | Harness di scratchpad: `php -S` dengan `-t public` dan router yang memberi HTML berisi aset build dashboard serta `window.fetch` tiruan untuk `/api/sesi` dan endpoint halaman itu |
 | Form I produksi berbeda dari contoh pemilik | Berkas Loket SAMSAT Oktober belum diimpor, dan contoh dibuat per 7 Oktober; diselesaikan dengan pilihan *Sampai tanggal* (D-070) |
+| Navbar dan menu ponsel hilang dan halaman terkunci bila menu dibuka setelah menggulir | `html` ber-`overflow: hidden` selama Lenis berhenti, sehingga `body { overflow-x: hidden }` menjadi wadah gulir yang membawa header lengket; `body` memakai `overflow-x: clip` (D-091) |
+| `#hash` meleset saat isi API dipasang di atas tujuan | Scroll anchoring sudah memindahkan halaman sebelum Lenis menerima gulirnya; `gulirKe()` menyamakan Lenis dengan `scrollY` dulu (D-091) |
+| Uji CDP di Git Bash: argumen `/jalur#hash` berubah menjadi path Windows | Jalankan dengan `MSYS2_ARG_CONV_EXCL="*"` |
+| Uji mutasi gagal menulis berkas (`OSError: Invalid argument`) di Windows | Berkas terkunci sesaat; coba ulang penulisan, lalu pastikan berkas sudah pulih sebelum melanjutkan |
 
 ## TODO / pekerjaan terbuka
 

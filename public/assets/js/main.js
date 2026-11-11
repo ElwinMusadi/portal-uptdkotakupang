@@ -77,6 +77,9 @@
       if (kotak.top >= atas && kotak.height <= bawah - atas) sasaran = window.scrollY + kotak.bottom - bawah;
     }
     lenis.dimensions.resize(); // isi dari API bisa baru dipasang; batas gulir Lenis baru diukur ulang 250 ms kemudian
+    // Scroll anchoring peramban bisa sudah memindahkan halaman sebelum Lenis menerima peristiwa gulirnya (mis. kartu
+    // layanan dipasang di atas #simulasi); posisi elemen dihitung Lenis dari posisinya sendiri, jadi samakan dulu.
+    if (Math.round(lenis.animatedScroll) !== Math.round(window.scrollY)) lenis.scrollTo(window.scrollY, { immediate: true });
     lenis.scrollTo(sasaran, { immediate });
   }
   /** Bagian dari #hash alamat yang baru tampil setelah isinya dimuat. Langsung, seperti peramban membuka alamat
@@ -1205,6 +1208,10 @@
           <p class="svc__desc">${esc(l.ringkasan)}</p>
           <div class="svc__meta">${tagLayanan(l, false)}</div>
           ${tabelPersyaratan(l.persyaratan)}${catatanLayanan(l.catatan)}${i === layanan.length - 1 ? lipatan : ""}
+          <div class="svc__unduh no-print">
+            <button class="btn btn--ghost btn--sm" type="button" data-unduh-persyaratan="${esc(l.slug)}" aria-label="Unduh persyaratan ${esc(l.nama)} sebagai gambar"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Unduh gambar</button>
+            <p class="unduh__status" role="status" data-unduh-status></p>
+          </div>
         </article>`).join("")
         : '<p class="muted" role="status">Persyaratan layanan belum tersedia. Tanyakan di meja informasi kantor.</p>';
       if (nav) {
@@ -1914,7 +1921,7 @@
     const b = await ambilJson("/api/public/beranda");
     const teks = (x) => typeof x === "string";
     const judulDua = (x) => teks(x?.judul) && teks(x.lanjutan) && teks(x.deskripsi);
-    const valid = ["eyebrow", "judul", "lanjutan", "deskripsi", "tombolLabel", "tombolUrl", "catatan"].every((f) => teks(b?.hero?.[f]))
+    const valid = ["eyebrow", "judul", "lanjutan", "deskripsi", "tombolLabel", "tombolUrl", "tombolKeduaLabel", "tombolKeduaUrl", "catatan"].every((f) => teks(b?.hero?.[f]))
       && ["beritaTerbaru", "layananUtama", "integritas", "biaya", "penutup"].every((k) => judulDua(b[k]))
       && typeof b.beritaTerbaru.tampil === "boolean" && Number.isInteger(b.beritaTerbaru.jumlah)
       && Array.isArray(b.nilai) && b.nilai.every((n) => teks(n?.judul) && teks(n.deskripsi))
@@ -2007,13 +2014,20 @@
       });
 
       // Judul pembuka diisi komponen React (resources/js/portal/beranda/judul-pembuka.tsx, D-045)
-      const tombol = $("[data-beranda-tombol]");
-      const url = tautanAman(b.hero.tombolUrl);
-      tombol.closest(".hero__actions").hidden = !url;
-      if (url) {
-        tombol.href = url;
-        tombol.replaceChildren(b.hero.tombolLabel, $("svg", tombol));
-      }
+      // Dua tombol pembuka (D-091): masing-masing tersembunyi bila tujuannya kosong, barisnya bila keduanya kosong
+      const pasangTombol = (tombol, label, tujuan, ikonDiDepan) => {
+        const url = tautanAman(tujuan);
+        tombol.hidden = !url;
+        if (url) {
+          tombol.href = url;
+          const ikon = $("svg", tombol);
+          tombol.replaceChildren(...(ikonDiDepan ? [ikon, label] : [label, ikon]));
+        }
+        return Boolean(url);
+      };
+      const adaPertama = pasangTombol($("[data-beranda-tombol]"), b.hero.tombolLabel, b.hero.tombolUrl, false);
+      const adaKedua = pasangTombol($("[data-beranda-tombol-kedua]"), b.hero.tombolKeduaLabel, b.hero.tombolKeduaUrl, true);
+      $(".hero__actions").hidden = !adaPertama && !adaKedua;
       const catatan = $("[data-beranda-catatan]");
       catatan.replaceChildren($("svg", catatan), b.hero.catatan);
       catatan.hidden = !b.hero.catatan;

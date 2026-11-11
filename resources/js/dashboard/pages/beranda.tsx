@@ -65,11 +65,16 @@ const schema = z.object({
       deskripsi: v.wajib("Deskripsi").max(300, maks(300)),
       tombolLabel: v.wajib("Label tombol").max(40, maks(40)),
       tombolUrl: v.tautan.max(300, maks(300)),
+      tombolKeduaLabel: v.teks.max(40, maks(40)),
+      tombolKeduaUrl: v.tautan.max(300, maks(300)),
       catatan: v.teks.max(160, maks(160)),
     })
     .superRefine((h, ctx) => {
       const masalah = masalahKataBergilir(h.judul, h.kataBergilir)
       if (masalah) ctx.addIssue({ code: "custom", path: ["kataBergilir"], message: masalah })
+      if (h.tombolKeduaUrl.trim() && !h.tombolKeduaLabel.trim()) {
+        ctx.addIssue({ code: "custom", path: ["tombolKeduaLabel"], message: "Label tombol kedua wajib diisi bila tujuannya diisi." })
+      }
     }),
   video: z
     .object({
@@ -186,6 +191,16 @@ export default function HalamanBeranda() {
                 <Baris>
                   <FieldTeks control={form.control} name="hero.tombolLabel" label="Label tombol" wajib />
                   <FieldTeks control={form.control} name="hero.tombolUrl" label="Tujuan tombol" placeholder="layanan.html" />
+                </Baris>
+                <Baris>
+                  <FieldTeks control={form.control} name="hero.tombolKeduaLabel" label="Label tombol kedua" placeholder="Cek Biaya Pajak" />
+                  <FieldTeks
+                    control={form.control}
+                    name="hero.tombolKeduaUrl"
+                    label="Tujuan tombol kedua"
+                    placeholder="layanan.html#simulasi"
+                    deskripsi="Kosongkan tujuan untuk menyembunyikan tombol kedua."
+                  />
                 </Baris>
                 <FieldTeks control={form.control} name="hero.catatan" label="Catatan kepercayaan" />
               </Bagian>

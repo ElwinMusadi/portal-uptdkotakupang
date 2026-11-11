@@ -77,6 +77,26 @@ class PublicHomepageControllerTest extends TestCase
         $this->getJson('/api/public/beranda')->assertOk()->assertJsonPath('beritaTerbaru', $homepage['beritaTerbaru']);
     }
 
+    public function test_gives_the_second_opening_button_also_for_a_document_saved_before_it(): void
+    {
+        $homepage = Setting::INITIAL_HOMEPAGE;
+        unset($homepage['hero']['tombolKeduaLabel'], $homepage['hero']['tombolKeduaUrl']);
+        (new Setting)->forceFill(['name' => Setting::HOMEPAGE, 'value' => $homepage])->save();
+
+        // Shown at once after the deploy, leading to the tax check on the Layanan page (D-091)
+        $this->getJson('/api/public/beranda')->assertOk()
+            ->assertJsonPath('hero.tombolKeduaLabel', 'Cek Biaya Pajak')
+            ->assertJsonPath('hero.tombolKeduaUrl', 'layanan.html#simulasi');
+
+        $homepage['hero']['tombolKeduaLabel'] = 'Hitung pajak';
+        $homepage['hero']['tombolKeduaUrl'] = '';
+        Setting::query()->find(Setting::HOMEPAGE)->forceFill(['value' => $homepage])->save();
+
+        $this->getJson('/api/public/beranda')->assertOk()
+            ->assertJsonPath('hero.tombolKeduaLabel', 'Hitung pajak')
+            ->assertJsonPath('hero.tombolKeduaUrl', '');
+    }
+
     public function test_returns_partner_logos_and_channel_links_in_the_current_shape(): void
     {
         $homepage = Setting::INITIAL_HOMEPAGE;

@@ -21,7 +21,12 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  /* clip, bukan hidden: selama html overflow: hidden (Lenis berhenti), overflow body tidak lagi diteruskan ke jendela,
+     dan hidden menjadikan body wadah gulir sendiri. Header lengket lalu menempel pada body dan hilang dari layar saat
+     menu ponsel dibuka di tengah halaman. clip tetap memotong luapan mendatar tanpa wadah gulir; peramban tanpa clip
+     (Safari < 16) memakai hidden. */
   overflow-x: hidden;
+  overflow-x: clip;
 }
 img, svg, video { display: block; max-width: 100%; }
 img { height: auto; }

@@ -247,6 +247,9 @@
         <p class="eyebrow" style="margin-bottom:12px">Pilih layanan</p>
         <nav class="catlist" data-spy data-layanan-nav></nav>
         <div class="svc-nav__tools">
+          <!-- Gambar PNG semua persyaratan (D-091), dibuat di peramban oleh resources/js/portal/layanan/gambar-persyaratan.ts -->
+          <button class="btn btn--ghost btn--sm" type="button" data-unduh-persyaratan="semua"><svg class="i" aria-hidden="true"><use href="#i-image"/></svg>Unduh semua persyaratan</button>
+          <p class="unduh__status" role="status" data-unduh-status></p>
           <button class="btn btn--ghost btn--sm" type="button" data-print><svg class="i" aria-hidden="true"><use href="#i-printer"/></svg>Cetak halaman</button>
           <a class="btn btn--ghost btn--sm" href="unduhan.html"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Unduh formulir</a>
         </div>

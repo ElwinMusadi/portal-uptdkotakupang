@@ -21,3 +21,15 @@ for (const el of document.querySelectorAll<HTMLElement>("[data-react]")) {
   const muat = KOMPONEN[el.dataset.react ?? ""]
   if (muat) void muat().then(({ pasang }) => pasang(el))
 }
+
+// Tombol unduh gambar persyaratan di halaman Layanan (D-091); pembuat gambarnya dimuat saat tombol pertama ditekan
+document.addEventListener("click", (e) => {
+  const tombol = (e.target as Element | null)?.closest<HTMLButtonElement>("button[data-unduh-persyaratan]")
+  if (!tombol) return
+  import("./layanan/gambar-persyaratan")
+    .then(({ unduhPersyaratan }) => unduhPersyaratan(tombol))
+    .catch(() => {
+      const status = tombol.parentElement?.querySelector("[data-unduh-status]")
+      if (status) status.textContent = "Gambar belum dapat dibuat. Coba lagi."
+    })
+})

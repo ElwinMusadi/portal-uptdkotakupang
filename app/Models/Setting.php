@@ -253,6 +253,9 @@ class Setting extends Model
             'deskripsi' => 'PINTU adalah portal resmi informasi dan pelayanan pajak kendaraan di Kota Kupang. Cek persyaratan, jadwal, dan lokasi layanan sebelum Anda berangkat.',
             'tombolLabel' => 'Cek Persyaratan Layanan',
             'tombolUrl' => 'layanan.html',
+            // The second button, hidden while its link is empty (D-091)
+            'tombolKeduaLabel' => 'Cek Biaya Pajak',
+            'tombolKeduaUrl' => 'layanan.html#simulasi',
             'catatan' => 'Gratis dan tanpa perantara. Setiap informasi diverifikasi petugas UPTD.',
         ],
         // The "Tonton alur pelayanan" button under the service board, hidden while its link is empty (D-040)
@@ -642,7 +645,8 @@ class Setting extends Model
      * no link until one is saved (D-040). Channels saved as plain text get no
      * link. An opening saved before its rotating words (D-045) gets the
      * initial ones when its title holds one of them, and none otherwise. A
-     * document saved before Berita terbaru (D-087) shows it as it starts.
+     * document saved before Berita terbaru (D-087) shows it as it starts, and
+     * one saved before the opening's second button (D-091) gets it.
      *
      * @param  array<string, mixed>  $homepage
      * @return array<string, mixed>
@@ -651,6 +655,8 @@ class Setting extends Model
     {
         $words = self::INITIAL_HOMEPAGE['hero']['kataBergilir'];
         $homepage['hero']['kataBergilir'] ??= self::rotatingWordIn($homepage['hero']['judul'], $words) === null ? [] : $words;
+        $homepage['hero']['tombolKeduaLabel'] ??= self::INITIAL_HOMEPAGE['hero']['tombolKeduaLabel'];
+        $homepage['hero']['tombolKeduaUrl'] ??= self::INITIAL_HOMEPAGE['hero']['tombolKeduaUrl'];
         $homepage['mitra'] = array_map(fn (array $partner): array => [...$partner, 'logo' => $partner['logo'] ?? null], $homepage['mitra']);
         $homepage['kanal'] = array_map(fn (array $group): array => [
             ...$group,

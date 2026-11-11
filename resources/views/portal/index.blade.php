@@ -273,6 +273,11 @@
               >Cek Persyaratan Layanan<svg class="i" aria-hidden="true">
                 <use href="#i-arrow-right" /></svg
             ></a>
+            <!-- Tombol kedua (D-091): label dan tujuannya diatur di dashboard Beranda, tersembunyi bila tujuannya kosong -->
+            <a class="btn btn--ghost" href="layanan.html#simulasi" data-beranda-tombol-kedua
+              ><svg class="i" aria-hidden="true"><use href="#i-calculator" /></svg
+              >Cek Biaya Pajak</a
+            >
           </div>
           <p class="trust hero__trust" data-beranda-catatan data-reveal>
             <svg class="i" aria-hidden="true"><use href="#i-lock" /></svg>Gratis

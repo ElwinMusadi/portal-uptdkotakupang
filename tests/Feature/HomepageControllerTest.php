@@ -405,6 +405,89 @@ class HomepageControllerTest extends TestCase
         $this->assertDatabaseCount('settings', 0);
     }
 
+    public function test_saves_the_second_opening_button_and_an_empty_one_that_hides_it(): void
+    {
+        $employee = $this->berandaEmployee();
+        $homepage = Setting::INITIAL_HOMEPAGE;
+        $homepage['hero']['tombolKeduaLabel'] = 'Hitung pajak';
+        $homepage['hero']['tombolKeduaUrl'] = 'index.html#simulasi';
+
+        $this->actingAs($employee)->putJson('/api/pengaturan/beranda', $homepage)
+            ->assertOk()
+            ->assertJsonPath('hero.tombolKeduaLabel', 'Hitung pajak')
+            ->assertJsonPath('hero.tombolKeduaUrl', 'index.html#simulasi');
+
+        // Both emptied: the portal hides the button (D-091)
+        $homepage['hero']['tombolKeduaLabel'] = null;
+        $homepage['hero']['tombolKeduaUrl'] = null;
+        $this->actingAs($employee)->putJson('/api/pengaturan/beranda', $homepage)->assertOk();
+        $this->assertSame(['', ''], [Setting::homepage()['hero']['tombolKeduaLabel'], Setting::homepage()['hero']['tombolKeduaUrl']]);
+    }
+
+    /**
+     * @param  array<string, string>  $errors
+     */
+    #[TestWith(['', 'layanan.html#simulasi', ['hero.tombolKeduaLabel' => 'Label tombol kedua wajib diisi bila tujuannya diisi.']])]
+    #[TestWith(['Label tombol kedua yang terlalu panjang sekali', 'javascript:alert(1)', [
+        'hero.tombolKeduaLabel' => 'Label tombol kedua maksimal 40 karakter.',
+        'hero.tombolKeduaUrl' => 'Tautan tombol kedua: gunakan alamat lengkap (https://…) atau nama halaman portal (mis. jadwal.html).',
+    ]])]
+    #[TestWith(["Cek\u{0007}", 'layanan.html#simulasi', ['hero.tombolKeduaLabel' => 'Label tombol kedua berisi karakter kontrol yang tidak diizinkan.']])]
+    public function test_validates_the_second_opening_button(string $label, string $url, array $errors): void
+    {
+        $homepage = Setting::INITIAL_HOMEPAGE;
+        $homepage['hero']['tombolKeduaLabel'] = $label;
+        $homepage['hero']['tombolKeduaUrl'] = $url;
+
+        $this->actingAs($this->berandaEmployee())->putJson('/api/pengaturan/beranda', $homepage)
+            ->assertUnprocessable()
+            ->assertOnlyJsonValidationErrors($errors);
+        $this->assertDatabaseCount('settings', 0);
+    }
+
+    public function test_limits_the_second_button_link_like_the_first(): void
+    {
+        $homepage = Setting::INITIAL_HOMEPAGE;
+        $homepage['hero']['tombolKeduaUrl'] = 'layanan.html#'.str_repeat('a', 287);
+        $this->assertSame(300, strlen($homepage['hero']['tombolKeduaUrl']));
+
+        $this->actingAs($this->berandaEmployee())->putJson('/api/pengaturan/beranda', $homepage)->assertOk();
+
+        $homepage['hero']['tombolKeduaUrl'] .= 'a';
+        $this->actingAs($this->berandaEmployee())->putJson('/api/pengaturan/beranda', $homepage)
+            ->assertUnprocessable()
+            ->assertOnlyJsonValidationErrors(['hero.tombolKeduaUrl' => 'Tautan tombol kedua maksimal 300 karakter.']);
+    }
+
+    public function test_keeps_the_saved_second_button_when_an_older_dashboard_sends_none(): void
+    {
+        $employee = $this->berandaEmployee();
+        $homepage = Setting::INITIAL_HOMEPAGE;
+        $homepage['hero']['tombolKeduaLabel'] = 'Hitung pajak';
+        $homepage['hero']['tombolKeduaUrl'] = '';
+        $this->actingAs($employee)->putJson('/api/pengaturan/beranda', $homepage)->assertOk();
+
+        unset($homepage['hero']['tombolKeduaLabel'], $homepage['hero']['tombolKeduaUrl']);
+        $homepage['hero']['judul'] = 'Semua urusan SAMSAT.';
+        $this->actingAs($employee)->putJson('/api/pengaturan/beranda', $homepage)
+            ->assertOk()
+            ->assertJsonPath('hero.judul', 'Semua urusan SAMSAT.')
+            ->assertJsonPath('hero.tombolKeduaLabel', 'Hitung pajak')
+            ->assertJsonPath('hero.tombolKeduaUrl', '');
+    }
+
+    public function test_gives_documents_saved_before_the_second_button_the_initial_one(): void
+    {
+        $homepage = Setting::INITIAL_HOMEPAGE;
+        unset($homepage['hero']['tombolKeduaLabel'], $homepage['hero']['tombolKeduaUrl']);
+        (new Setting)->forceFill(['name' => Setting::HOMEPAGE, 'value' => $homepage])->save();
+
+        $this->actingAs($this->berandaEmployee())->getJson('/api/pengaturan/beranda')
+            ->assertOk()
+            ->assertJsonPath('hero.tombolKeduaLabel', 'Cek Biaya Pajak')
+            ->assertJsonPath('hero.tombolKeduaUrl', 'layanan.html#simulasi');
+    }
+
     private function logo(): Upload
     {
         $upload = Upload::factory()

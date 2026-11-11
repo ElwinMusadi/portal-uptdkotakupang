@@ -478,6 +478,8 @@ export interface Beranda {
     deskripsi: string
     tombolLabel: string
     tombolUrl: string
+    tombolKeduaLabel: string
+    tombolKeduaUrl: string
     catatan: string
   }
   /** Video YouTube di balik tombol "Tonton alur pelayanan"; tautan kosong = tombol tidak tampil (D-040) */

@@ -10,43 +10,13 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { createRoot } from "react-dom/client"
 
 import { gulirKe } from "../gulir"
+import { bertitik, type Layanan, muatLayanan, pisahKeterangan } from "./data"
 import "./panduan-layanan.css"
-
-interface Layanan {
-  nama: string
-  slug: string
-  ringkasan: string
-  loket: string
-  jenis: "layanan" | "tambahan"
-  cekFisik: boolean
-  nonTunai: boolean
-  diwakilkan: boolean
-  label: string[]
-  persyaratan: { dokumen: string; jumlah: string }[]
-  situasi: string[]
-  catatan: string
-}
 
 interface Pilihan {
   kunci: string
   teks: string
   layanan: Layanan
-}
-
-/** Keterangan dalam kurung di akhir nama berkas, mis. "Fotokopi KTP pemilik (sesuai alamat di STNK)" */
-function pisahKeterangan(dokumen: string): [string, string] {
-  const m = dokumen.match(/^(.*\S)\s*\(([^()]+)\)$/)
-  return m ? [m[1], m[2]] : [dokumen, ""]
-}
-
-const bertitik = (t: string) => (/[.!?]$/.test(t) ? t : `${t}.`)
-
-async function muatLayanan(sinyal: AbortSignal): Promise<Layanan[]> {
-  const res = await fetch("/api/public/layanan", { headers: { Accept: "application/json" }, credentials: "omit", signal: sinyal })
-  if (!res.ok) throw new Error("Panduan belum dapat dimuat. Pilih layanan dari daftar di bawah, atau coba lagi.")
-  const data: unknown = await res.json()
-  if (!Array.isArray(data)) throw new Error("Panduan belum dapat dimuat. Pilih layanan dari daftar di bawah, atau coba lagi.")
-  return (data as Layanan[]).map((l) => ({ ...l, situasi: Array.isArray(l.situasi) ? l.situasi : [] }))
 }
 
 function Ikon({ nama, className = "i" }: { nama: string; className?: string }) {
@@ -84,7 +54,7 @@ function PanduanLayanan() {
 
   useEffect(() => {
     const kendali = new AbortController()
-    muatLayanan(kendali.signal)
+    muatLayanan("Panduan belum dapat dimuat. Pilih layanan dari daftar di bawah, atau coba lagi.", kendali.signal)
       .then((d) => {
         setData(d)
         setGalat(null)

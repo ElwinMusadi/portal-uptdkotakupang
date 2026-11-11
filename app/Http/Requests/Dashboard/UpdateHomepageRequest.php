@@ -9,12 +9,13 @@ use App\Rules\PortalLink;
 use App\Rules\UploadUrl;
 use App\Rules\YoutubeUrl;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\Validator;
 
 /**
- * The complete Beranda document: the homepage's opening, values, newest
- * articles (D-087), services heading, partners, channel map, integrity
- * statement, fees and closing.
+ * The complete Beranda document: the homepage's opening with its two
+ * buttons (D-091), values, newest articles (D-087), services heading,
+ * partners, channel map, integrity statement, fees and closing.
  */
 class UpdateHomepageRequest extends FormRequest
 {
@@ -74,6 +75,9 @@ class UpdateHomepageRequest extends FormRequest
             'hero.deskripsi' => ['required', 'string', 'max:300', new PlainText('Deskripsi pembuka')],
             'hero.tombolLabel' => ['required', 'string', 'max:40', new PlainText('Label tombol')],
             'hero.tombolUrl' => ['nullable', 'string', 'max:300', new PortalLink('Tautan tombol')],
+            // The second button (D-091); a dashboard opened before it sends neither
+            'hero.tombolKeduaLabel' => ['nullable', 'required_with:hero.tombolKeduaUrl', 'string', 'max:40', new PlainText('Label tombol kedua')],
+            'hero.tombolKeduaUrl' => ['nullable', 'string', 'max:300', new PortalLink('Tautan tombol kedua')],
             'hero.catatan' => ['nullable', 'string', 'max:160', new PlainText('Catatan pembuka')],
             'video' => ['sometimes', 'array'],
             'video.url' => ['nullable', 'string', 'max:300', new YoutubeUrl('Tautan video')],
@@ -164,6 +168,7 @@ class UpdateHomepageRequest extends FormRequest
             'required_with' => ':Attribute wajib diisi bila tautannya diisi.',
             'boolean' => ':Attribute tidak valid.',
             'integer' => ':Attribute tidak valid.',
+            'hero.tombolKeduaLabel.required_with' => 'Label tombol kedua wajib diisi bila tujuannya diisi.',
             'beritaTerbaru.tampil.required_with' => 'Pilihan tampilkan berita terbaru wajib diisi.',
             'beritaTerbaru.jumlah.required_with' => 'Jumlah berita terbaru wajib diisi.',
             'beritaTerbaru.jumlah.between' => 'Jumlah berita terbaru 3 sampai 6 tulisan.',
@@ -193,6 +198,8 @@ class UpdateHomepageRequest extends FormRequest
             'hero.deskripsi' => 'deskripsi pembuka',
             'hero.tombolLabel' => 'label tombol',
             'hero.tombolUrl' => 'tautan tombol',
+            'hero.tombolKeduaLabel' => 'label tombol kedua',
+            'hero.tombolKeduaUrl' => 'tautan tombol kedua',
             'hero.catatan' => 'catatan pembuka',
             'video' => 'video',
             'video.url' => 'tautan video',
@@ -255,6 +262,10 @@ class UpdateHomepageRequest extends FormRequest
             'lanjutan' => $text("{$section}.lanjutan"),
             'deskripsi' => $text("{$section}.deskripsi"),
         ];
+        // A dashboard opened before the second button (D-091) sends none; the saved one stays
+        $secondButton = $this->has('hero.tombolKeduaUrl')
+            ? ['tombolKeduaLabel' => $text('hero.tombolKeduaLabel'), 'tombolKeduaUrl' => $text('hero.tombolKeduaUrl')]
+            : Arr::only(Setting::homepage()['hero'], ['tombolKeduaLabel', 'tombolKeduaUrl']);
 
         return [
             'hero' => [
@@ -266,6 +277,7 @@ class UpdateHomepageRequest extends FormRequest
                 'deskripsi' => $this->validated('hero.deskripsi'),
                 'tombolLabel' => $this->validated('hero.tombolLabel'),
                 'tombolUrl' => $text('hero.tombolUrl'),
+                ...$secondButton,
                 'catatan' => $text('hero.catatan'),
             ],
             // A dashboard opened before the video existed sends none; the saved one stays
