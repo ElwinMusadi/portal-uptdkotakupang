@@ -24,6 +24,8 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
  * former static-site addresses (/profil.html, ...) redirect permanently and
  * keep their query string, which the login page reads (?lanjut=, ?sesi=).
  * They need no session: anonymous visitors get no cookie and no session row.
+ * Their stylesheets and scripts get a content version from the global
+ * AddPortalAssetVersions middleware (D-093).
  */
 $portalPages = [
     'profil',

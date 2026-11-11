@@ -1,6 +1,7 @@
 <?php
 
 use App\Exceptions\PublicContentUnavailableException;
+use App\Http\Middleware\AddPortalAssetVersions;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\PreventResponseCaching;
 use App\Http\PortalPage;
@@ -25,6 +26,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // Cookie sessions for API calls from the portal and dashboard (Sanctum SPA)
         $middleware->statefulApi();
         $middleware->api(prepend: [PreventResponseCaching::class]);
+
+        // Portal stylesheets and scripts carry a content version on every HTML page, the 404 page included (D-093)
+        $middleware->append(AddPortalAssetVersions::class);
 
         // Suspending or deactivating an account ends its session on the next request
         $middleware->web(append: [EnsureAccountIsActive::class]);

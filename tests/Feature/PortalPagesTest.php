@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Middleware\AddPortalAssetVersions;
 use App\Http\PortalPage;
 use App\Models\Message;
 use App\Models\Setting;
@@ -12,6 +13,17 @@ use Tests\TestCase;
 
 class PortalPagesTest extends TestCase
 {
+    /**
+     * The pages as their files are written; PortalAssetVersionTest covers the
+     * content versions the server adds to their stylesheets and scripts (D-093).
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->withoutMiddleware(AddPortalAssetVersions::class);
+    }
+
     /**
      * @return array<string, array{string, string}>
      */

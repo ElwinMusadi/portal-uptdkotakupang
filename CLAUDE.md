@@ -28,7 +28,7 @@ Semuanya satu aplikasi Laravel di root repository, satu origin (D-002):
 
 | Perintah | Kegunaan |
 |---|---|
-| `composer test` | Semua tes PHPUnit di SQLite memori (±75–105 detik, 1921 tes) |
+| `composer test` | Semua tes PHPUnit di SQLite memori (±55–105 detik, 1942 tes) |
 | `php artisan test --compact <berkas> --filter=<tes>` | Tes tertentu |
 | `composer test:mysql` | **Mereset database `pintu`** (berisi data pemilik); hanya dengan izin pemilik dan cadangan |
 | `npm run typecheck` / `npm run lint` / `npm run build` | `tsc -b` / `oxlint resources/js` / `tsc -b && vite build` |
@@ -97,7 +97,7 @@ Build di Laravel Cloud: `composer install --no-dev && npm ci && npm run build &&
 - **Portal:**
   - pertahankan markup dan copy halaman;
   - header dan footer disalin dengan `scripts/sync-partials.mjs`;
-  - CSS dan JS di `public/assets` tidak berversi.
+  - CSS dan JS di `public/assets` ditulis tanpa versi; middleware global `AddPortalAssetVersions` menambahkan `?v=` isi berkas saat disajikan (D-093), karena domain utama menyimpannya setahun `immutable`. Gambar dan video tidak diberi versi: berkas pengganti perlu nama baru.
 - **Tes:**
   - setiap perilaku baru dites beserta mode gagalnya;
   - logika baru diuji mutasi: ubah satu syarat, pastikan tes gagal, lalu pulihkan;
@@ -167,6 +167,7 @@ Build di Laravel Cloud: `composer install --no-dev && npm ci && npm run build &&
 | `#hash` meleset saat isi API dipasang di atas tujuan | Scroll anchoring sudah memindahkan halaman sebelum Lenis menerima gulirnya; `gulirKe()` menyamakan Lenis dengan `scrollY` dulu (D-091) |
 | Uji CDP di Git Bash: argumen `/jalur#hash` berubah menjadi path Windows | Jalankan dengan `MSYS2_ARG_CONV_EXCL="*"` |
 | Uji mutasi gagal menulis berkas (`OSError: Invalid argument`) di Windows | Berkas terkunci sesaat; coba ulang penulisan, lalu pastikan berkas sudah pulih sebelum melanjutkan |
+| Perbaikan CSS/JS portal sudah tayang tetapi pengunjung lama tetap melihat versi lama (juga setelah muat ulang) | Domain utama menyajikan `public/assets` dengan cache setahun `immutable`; CSS/JS diberi `?v=` isi berkas oleh middleware (D-093). Cek di peramban: `performance.getEntriesByType("resource")` dengan `transferSize` 0 berarti dari cache |
 
 ## TODO / pekerjaan terbuka
 

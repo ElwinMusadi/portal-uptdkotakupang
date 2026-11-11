@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Actions\ShowPublicArticle;
 use App\Enums\DashboardModule;
 use App\Enums\WorkflowStatus;
+use App\Http\Middleware\AddPortalAssetVersions;
 use App\Models\Article;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -20,6 +21,8 @@ class ArticlePreviewTest extends TestCase
         parent::setUp();
 
         $this->travelTo(Carbon::parse('2026-10-26 13:00', 'UTC'));
+        // The page as written; PortalAssetVersionTest covers the asset versions (D-093)
+        $this->withoutMiddleware(AddPortalAssetVersions::class);
     }
 
     public function test_gives_a_preview_link_only_to_berita_managers(): void
