@@ -28,7 +28,7 @@ Semuanya satu aplikasi Laravel di root repository, satu origin (D-002):
 
 | Perintah | Kegunaan |
 |---|---|
-| `composer test` | Semua tes PHPUnit di SQLite memori (±55–105 detik, 1942 tes) |
+| `composer test` | Semua tes PHPUnit di SQLite memori (±55–105 detik, 1946 tes) |
 | `php artisan test --compact <berkas> --filter=<tes>` | Tes tertentu |
 | `composer test:mysql` | **Mereset database `pintu`** (berisi data pemilik); hanya dengan izin pemilik dan cadangan |
 | `npm run typecheck` / `npm run lint` / `npm run build` | `tsc -b` / `oxlint resources/js` / `tsc -b && vite build` |
@@ -187,6 +187,7 @@ Daftar lengkapnya di `KONTEKS-PROYEK.md` §15 dan §18.
 - **Pekerjaan lain:**
   - pemilik mencoba rasa gulir Lenis dengan mouse, touchpad, dan ponsel di situs lokal Herd atau produksi (D-072);
   - Kebijakan Privasi perlu menyebut Google Maps di halaman Kontak (D-063);
+  - Tanya Jawab Beranda (D-094): mulai Januari 2027 hapus kalimat keringanan Pergub 64/2026 di jawaban denda dan bayar online lewat Dashboard › Tanya Jawab;
   - persyaratan balik nama dan mutasi masuk perlu dicocokkan petugas dengan papan loket (D-061, D-062);
   - Antrean Online: keputusan tersisa, perangkat, uji QR, kamera, dan suara, uji coba paralel, lalu Irisan 5–6.
 - **Integrasi:**
