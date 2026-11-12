@@ -747,7 +747,7 @@ class PortalPagesTest extends TestCase
         $this->assertSame(1, preg_match('#<aside class="svc-nav no-print"[^>]*>(.*?)</aside>#s', $html, $panel));
         $this->assertMatchesRegularExpression('#<button class="btn btn--ghost btn--sm" type="button" data-unduh-persyaratan="semua"><svg class="i" aria-hidden="true"><use href="\#i-image"/></svg>Unduh semua persyaratan</button>\s*<p class="unduh__status" role="status" data-unduh-status></p>#', $panel[1]);
         $this->assertStringContainsString('<script type="module" src="skrip/portal"></script>', $html);
-        $this->assertStringContainsString('data-unduh-persyaratan="${esc(l.slug)}"', (string) file_get_contents(public_path('assets/js/main.js')));
+        $this->assertStringContainsString('data-unduh-persyaratan="${esc(l.slug)}" aria-label="Unduh persyaratan ${esc(l.nama)} sebagai gambar"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Unduh persyaratan</button>', (string) file_get_contents(public_path('assets/js/main.js')));
     }
 
     public function test_walks_through_paying_online_with_pro_ntt_in_the_non_cash_section(): void

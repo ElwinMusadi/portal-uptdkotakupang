@@ -1209,7 +1209,7 @@
           <div class="svc__meta">${tagLayanan(l, false)}</div>
           ${tabelPersyaratan(l.persyaratan)}${catatanLayanan(l.catatan)}${i === layanan.length - 1 ? lipatan : ""}
           <div class="svc__unduh no-print">
-            <button class="btn btn--ghost btn--sm" type="button" data-unduh-persyaratan="${esc(l.slug)}" aria-label="Unduh persyaratan ${esc(l.nama)} sebagai gambar"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Unduh gambar</button>
+            <button class="btn btn--ghost btn--sm" type="button" data-unduh-persyaratan="${esc(l.slug)}" aria-label="Unduh persyaratan ${esc(l.nama)} sebagai gambar"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Unduh persyaratan</button>
             <p class="unduh__status" role="status" data-unduh-status></p>
           </div>
         </article>`).join("")
