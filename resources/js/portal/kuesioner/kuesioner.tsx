@@ -1,11 +1,13 @@
 /*
- * Kuesioner PINTU (D-095) di /kuesioner (pilihan kuesioner beserta kode QR-nya), /kuesioner/operator, dan
+ * Kuesioner PINTU (D-095, D-096) di /kuesioner (pilihan kuesioner beserta kode QR-nya), /kuesioner/operator, dan
  * /kuesioner/wajib-pajak. Pertanyaan dibaca dari pertanyaan.json, yang juga disalin ke Apps Script pembuat
- * Google Formulir (scripts/kuesioner-google-form.gs). Jawaban dikirim langsung ke formResponse Google Formulir
- * (alamat dan nomor entri di google-form.json), sehingga tercatat di Spreadsheet formulir itu. Google tidak
- * memberi jawaban yang bisa dibaca dari situs lain (no-cors), jadi kiriman dianggap berhasil bila permintaannya
- * sampai. Selama google-form.json belum diisi, kuesioner belum dibuka; ?pratinjau=1 mencoba tampilan tanpa
- * mengirim apa pun, dan ?loket=1 kembali ke awal sendiri setelah terima kasih (tablet di loket).
+ * Google Formulir (scripts/kuesioner-google-form.gs). Sebelum mulai, pengisi diminta membuka dan mencoba fitur
+ * PINTU yang didaftar di pembuka, agar penilaiannya berdasar pengalaman nyata (D-096). Jawaban dikirim langsung
+ * ke formResponse Google Formulir (alamat dan nomor entri di google-form.json), sehingga tercatat di Spreadsheet
+ * formulir itu. Google tidak memberi jawaban yang bisa dibaca dari situs lain (no-cors), jadi kiriman dianggap
+ * berhasil bila permintaannya sampai. Selama google-form.json belum diisi, kuesioner belum dibuka; ?pratinjau=1
+ * mencoba tampilan tanpa mengirim apa pun, dan ?loket=1 kembali ke awal sendiri setelah terima kasih (tablet di
+ * loket).
  */
 import { useCallback, useEffect, useRef, useState } from "react"
 import type { MouseEvent as ReactMouseEvent } from "react"
@@ -24,8 +26,18 @@ interface Pertanyaan {
   kunci: string
   jenis: JenisPertanyaan
   teks: string
+  /** Aspek penilaian sebuah pernyataan berskala, mis. "Kemudahan penggunaan" */
+  aspek?: string
+  /** Pertanyaan selain skala yang tetap harus dijawab (mis. fitur yang sudah dicoba) */
+  wajib?: boolean
   petunjuk?: string
   pilihan?: string[]
+}
+
+interface FiturDicoba {
+  nama: string
+  alamat: string
+  keterangan: string
 }
 
 interface Kuesioner {
@@ -33,6 +45,8 @@ interface Kuesioner {
   untuk: string
   ringkas: string
   pembuka: string
+  /** Fitur yang perlu dibuka dan dicoba lebih dulu, serta pernyataan yang dicentang sebelum mulai */
+  sebelum: { teks: string; fitur: FiturDicoba[]; konfirmasi: string }
   pertanyaan: Pertanyaan[]
 }
 
@@ -63,8 +77,8 @@ function tujuanKuesioner(jenis: JenisKuesioner): Tujuan | null {
   return lengkap ? tujuan : null
 }
 
-/** Pernyataan berskala wajib dijawab; profil singkat dan isian boleh dilewati. */
-const wajib = (p: Pertanyaan) => p.jenis === "skala"
+/** Pernyataan berskala dan pertanyaan bertanda wajib harus dijawab; profil lain dan isian boleh dilewati. */
+const wajib = (p: Pertanyaan) => p.jenis === "skala" || p.wajib === true
 
 function terjawab(nilai: Nilai | undefined): boolean {
   if (nilai === undefined) return false
@@ -72,7 +86,10 @@ function terjawab(nilai: Nilai | undefined): boolean {
   return String(nilai).trim() !== ""
 }
 
-const menit = (k: Kuesioner) => Math.max(1, Math.round((k.pertanyaan.length * 20) / 60))
+/** Perkiraan waktu mengisi: pernyataan berskala ±10 detik, pilihan ±20 detik, isian ±45 detik */
+const DETIK_PER_JENIS: Record<JenisPertanyaan, number> = { skala: 10, pilihan: 20, "pilihan-ganda": 20, isian: 45 }
+const menit = (k: Kuesioner) => Math.max(1, Math.round(k.pertanyaan.reduce((n, p) => n + DETIK_PER_JENIS[p.jenis], 0) / 60))
+const jumlahPernyataan = (k: Kuesioner) => k.pertanyaan.filter((p) => p.jenis === "skala").length
 
 function teksJawaban(p: Pertanyaan, nilai: Nilai | undefined): string {
   if (!terjawab(nilai)) return "Tidak diisi"
@@ -147,7 +164,7 @@ function KartuPilihan({ jenis }: { jenis: JenisKuesioner }) {
         <h2 className="h3">{k.judul}</h2>
         <p className="body">{k.ringkas}</p>
         <p className="kq-kartu__meta">
-          {k.pertanyaan.length} pertanyaan · ± {menit(k)} menit · tanpa nama
+          {jumlahPernyataan(k)} pernyataan penilaian · ± {menit(k)} menit · tanpa nama
           {!terbuka && <span className="kq-tanda">Belum dibuka</span>}
         </p>
         <div className="kq-kartu__aksi">
@@ -170,6 +187,17 @@ function KartuPilihan({ jenis }: { jenis: JenisKuesioner }) {
 function PilihKuesioner() {
   return (
     <div className="kq-pilih">
+      <aside className="kq-pengantar" aria-label="Sebelum mengisi">
+        <svg className="kq-pengantar__ikon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="9.5" />
+          <path d="M12 11v5.5M12 7.6v.1" />
+        </svg>
+        <p>
+          <strong>Sebelum mengisi, coba dulu PINTU.</strong> Wajib pajak membuka fitur portal, misalnya persyaratan
+          layanan dan Cek Biaya Pajak; petugas operator masuk ke dashboard dan mencoba menu tugasnya. Dengan begitu
+          penilaian Anda sesuai pengalaman nyata. Daftar fitur yang perlu dicoba ada di halaman pembuka setiap kuesioner.
+        </p>
+      </aside>
       {URUTAN.map((jenis) => (
         <KartuPilihan key={jenis} jenis={jenis} />
       ))}
@@ -194,6 +222,7 @@ function IsiKuesioner({ jenis }: { jenis: JenisKuesioner }) {
   const [jawaban, setJawaban] = useState<Jawaban>({})
   const [status, setStatus] = useState<Status>("isi")
   const [dariPeriksa, setDariPeriksa] = useState(false)
+  const [sudahMencoba, setSudahMencoba] = useState(false)
   const [hitungMundur, setHitungMundur] = useState(DETIK_LOKET)
   const wadah = useRef<HTMLDivElement>(null)
   const judul = useRef<HTMLHeadingElement>(null)
@@ -230,6 +259,7 @@ function IsiKuesioner({ jenis }: { jenis: JenisKuesioner }) {
     setJawaban({})
     setStatus("isi")
     setDariPeriksa(false)
+    setSudahMencoba(false)
     setMundur(true)
     setLangkah(0)
   }, [])
@@ -396,14 +426,53 @@ function IsiKuesioner({ jenis }: { jenis: JenisKuesioner }) {
           <p className="body">{k.pembuka}</p>
           <ul className="kq-info" role="list">
             <li>{jumlah} pertanyaan</li>
+            <li>{jumlahPernyataan(k)} pernyataan penilaian</li>
             <li>± {menit(k)} menit</li>
             <li>Tanpa nama</li>
           </ul>
+
+          <section className="kq-sebelum" aria-labelledby="kq-sebelum-judul">
+            <h3 className="kq-sebelum__judul" id="kq-sebelum-judul">
+              Sebelum mengisi, coba dulu PINTU
+            </h3>
+            <p className="kq-sebelum__teks">{k.sebelum.teks}</p>
+            <ol className="kq-fitur" role="list">
+              {k.sebelum.fitur.map((f, i) => (
+                <li key={f.nama}>
+                  <span className="kq-fitur__no" aria-hidden="true">
+                    {i + 1}
+                  </span>
+                  <div>
+                    <a className="kq-fitur__nama" href={f.alamat} target="_blank" rel="noopener">
+                      {f.nama}
+                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M14 5h5v5M19 5l-8 8M17 14v5H5V7h5" />
+                      </svg>
+                      <span className="sr-only"> (terbuka di tab baru)</span>
+                    </a>
+                    <p className="kq-fitur__ket">{f.keterangan}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            {terbuka && (
+              <label className="kq-konfirmasi">
+                <input type="checkbox" checked={sudahMencoba} onChange={(e) => setSudahMencoba(e.target.checked)} />
+                <span>{k.sebelum.konfirmasi}</span>
+              </label>
+            )}
+          </section>
+
           {terbuka ? (
-            <div className="kq-aksi">
-              <button type="button" className="btn btn--dark" onClick={() => pindah(1)}>
+            <div className="kq-aksi kq-aksi--mulai">
+              <button type="button" className="btn btn--dark" onClick={() => pindah(1)} disabled={!sudahMencoba} aria-describedby={sudahMencoba ? undefined : "kq-mulai-syarat"}>
                 Mulai mengisi
               </button>
+              {!sudahMencoba && (
+                <p className="micro muted" id="kq-mulai-syarat">
+                  Centang pernyataan di atas setelah Anda mencoba PINTU.
+                </p>
+              )}
             </div>
           ) : (
             <div className="kq-tutup" role="status">
@@ -424,6 +493,7 @@ function IsiKuesioner({ jenis }: { jenis: JenisKuesioner }) {
       {p && (
         <div className={kelasLangkah} key={p.kunci}>
           <div className="kq-soal" role="group" aria-labelledby={`kq-soal-${p.kunci}`}>
+            {p.aspek && <p className="kq-soal__aspek">Aspek {p.aspek}</p>}
             <h2 className="kq-soal__teks" id={`kq-soal-${p.kunci}`} ref={judul} tabIndex={-1}>
               {p.teks}
             </h2>
@@ -530,7 +600,9 @@ function IsiKuesioner({ jenis }: { jenis: JenisKuesioner }) {
               {dariPeriksa ? "Simpan" : !terjawab(jawaban[p.kunci]) && !wajib(p) ? "Lewati" : "Lanjut"}
             </button>
           </div>
-          {!bolehLanjut && <p className="micro muted kq-wajib">Pernyataan ini perlu dijawab sebelum lanjut.</p>}
+          {!bolehLanjut && (
+            <p className="micro muted kq-wajib">{p.jenis === "pilihan-ganda" ? "Pilih paling sedikit satu sebelum lanjut." : "Pernyataan ini perlu dijawab sebelum lanjut."}</p>
+          )}
         </div>
       )}
 

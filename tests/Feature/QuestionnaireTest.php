@@ -5,17 +5,17 @@ namespace Tests\Feature;
 use Tests\TestCase;
 
 /**
- * The questionnaires for taxpayers and operators (D-095). Their questions live
- * in one file that the portal component reads and that the Apps Script copies
- * to build the Google Forms; google-form.json holds each form's address and
- * entry numbers once the script has run.
+ * The questionnaires for taxpayers and operators (D-095, D-096). Their questions
+ * live in one file that the portal component reads and that the Apps Script
+ * copies to build the Google Forms; google-form.json holds each form's address
+ * and entry numbers once the script has run.
  */
 class QuestionnaireTest extends TestCase
 {
     private const KINDS = ['operator', 'wajib-pajak'];
 
     /**
-     * @return array{skala: list<string>, kuesioner: array<string, array{judul: string, untuk: string, ringkas: string, pembuka: string, pertanyaan: list<array{kunci: string, jenis: string, teks: string, petunjuk?: string, pilihan?: list<string>}>}>}
+     * @return array{skala: list<string>, kuesioner: array<string, array{judul: string, untuk: string, ringkas: string, pembuka: string, sebelum: array{teks: string, fitur: list<array{nama: string, alamat: string, keterangan: string}>, konfirmasi: string}, pertanyaan: list<array{kunci: string, jenis: string, teks: string, aspek?: string, wajib?: bool, petunjuk?: string, pilihan?: list<string>}>}>}
      */
     private function questions(): array
     {
@@ -27,34 +27,108 @@ class QuestionnaireTest extends TestCase
      */
     private function statements(string $kind): array
     {
-        $questions = array_filter($this->questions()['kuesioner'][$kind]['pertanyaan'], fn (array $question): bool => $question['jenis'] === 'skala');
-
-        return array_values(array_map(fn (array $question): string => $question['teks'], $questions));
+        return array_merge(...array_values($this->statementsByAspect($kind)));
     }
 
-    public function test_asks_the_operators_the_statements_of_the_trial_feedback_form(): void
+    /**
+     * @return array<string, list<string>>
+     */
+    private function statementsByAspect(string $kind): array
     {
-        // Output Kegiatan 5, Tabel 7: the same form the operators filled in after the trial
+        $aspects = [];
+        foreach ($this->questions()['kuesioner'][$kind]['pertanyaan'] as $question) {
+            if ($question['jenis'] === 'skala') {
+                $aspects[$question['aspek'] ?? ''][] = $question['teks'];
+            }
+        }
+
+        return $aspects;
+    }
+
+    public function test_asks_the_operators_fifteen_statements_in_five_aspects(): void
+    {
         $this->assertSame([
+            'Portal untuk warga' => [
+                'Menu website mudah dipahami.',
+                'Informasi layanan dan persyaratan lengkap.',
+                'Informasi mudah dibaca di telepon pintar.',
+            ],
+            'Kemudahan dashboard' => [
+                'Dashboard mudah digunakan untuk memperbarui konten.',
+                'Saya dapat menemukan menu dashboard yang saya perlukan tanpa bantuan.',
+                'Petunjuk dan pesan kesalahan di dashboard membantu saya mengisi data dengan benar.',
+            ],
+            'Fungsi dan kinerja' => [
+                'Fitur dashboard yang saya coba berjalan sesuai fungsinya.',
+                'Perubahan yang disimpan di dashboard tampil dengan benar di portal.',
+                'Dashboard terbuka dan menyimpan perubahan dengan cepat.',
+            ],
+            'Alur kerja dan keamanan' => [
+                'Alur pemeriksaan dan persetujuan konten jelas.',
+                'Hak akses akun saya sesuai dengan tugas saya.',
+                'Saya merasa akun dan data di dashboard terlindungi dengan baik.',
+            ],
+            'Dukungan dan kepuasan' => [
+                'Panduan Singkat Operator membantu saya.',
+                'PINTU membantu pekerjaan saya dalam menyampaikan informasi kepada wajib pajak.',
+                'Secara keseluruhan, saya puas menggunakan PINTU.',
+            ],
+        ], $this->statementsByAspect('operator'));
+    }
+
+    public function test_asks_the_taxpayers_fifteen_statements_in_five_aspects(): void
+    {
+        $this->assertSame([
+            'Kemudahan penggunaan' => [
+                'Menu dan susunan halaman PINTU mudah dipahami.',
+                'Saya mudah menemukan informasi persyaratan layanan di PINTU.',
+                'Saya dapat menggunakan PINTU tanpa bantuan orang lain.',
+            ],
+            'Kualitas informasi' => [
+                'Informasi di PINTU jelas dan mudah dipahami.',
+                'Informasi persyaratan, biaya, dan jadwal layanan di PINTU lengkap.',
+                'Informasi di PINTU sesuai dengan ketentuan yang berlaku di loket SAMSAT.',
+            ],
+            'Fungsi' => [
+                'Fitur PINTU yang saya coba berjalan sesuai fungsinya.',
+                'Hasil Cek Biaya Pajak membantu saya memperkirakan biaya yang perlu disiapkan.',
+                'Tautan, tombol, dan unduhan di PINTU berfungsi tanpa kesalahan.',
+            ],
+            'Tampilan dan kinerja' => [
+                'PINTU nyaman dibuka di telepon pintar.',
+                'Halaman PINTU terbuka dengan cepat.',
+                'Tampilan PINTU rapi dan tulisannya mudah dibaca.',
+            ],
+            'Manfaat dan kepuasan' => [
+                'Informasi PINTU membantu saya menyiapkan berkas sebelum datang.',
+                'Saya akan membuka PINTU lagi sebelum mengurus pajak kendaraan.',
+                'Secara keseluruhan, saya puas dengan PINTU.',
+            ],
+        ], $this->statementsByAspect('wajib-pajak'));
+    }
+
+    public function test_keeps_the_statements_of_the_report_instruments_word_for_word(): void
+    {
+        // Output Kegiatan 5, Tabel 7: the form the operators filled in after the trial
+        $trial = [
             'Menu website mudah dipahami.',
             'Informasi layanan dan persyaratan lengkap.',
             'Informasi mudah dibaca di telepon pintar.',
             'Dashboard mudah digunakan untuk memperbarui konten.',
             'Alur pemeriksaan dan persetujuan konten jelas.',
             'Panduan Singkat Operator membantu saya.',
-        ], $this->statements('operator'));
-    }
-
-    public function test_asks_the_taxpayers_the_statements_of_the_evaluation_questionnaire(): void
-    {
-        // Output Kegiatan 7, Tabel 3
-        $this->assertSame([
+        ];
+        // Output Kegiatan 7, Tabel 3: the taxpayers' evaluation questionnaire
+        $evaluation = [
             'Saya mudah menemukan informasi persyaratan layanan di PINTU.',
             'Informasi di PINTU jelas dan mudah dipahami.',
             'PINTU nyaman dibuka di telepon pintar.',
             'Informasi PINTU membantu saya menyiapkan berkas sebelum datang.',
             'Saya akan membuka PINTU lagi sebelum mengurus pajak kendaraan.',
-        ], $this->statements('wajib-pajak'));
+        ];
+
+        $this->assertSame($trial, array_values(array_intersect($this->statements('operator'), $trial)));
+        $this->assertSame($evaluation, array_values(array_intersect($this->statements('wajib-pajak'), $evaluation)));
     }
 
     public function test_rates_on_a_five_point_scale_from_strongly_disagree_to_strongly_agree(): void
@@ -76,16 +150,100 @@ class QuestionnaireTest extends TestCase
             $this->assertSame(array_values(array_unique($keys)), $keys, "{$kind}: kunci ganda");
 
             foreach ($questionnaire['pertanyaan'] as $question) {
+                $label = "{$kind}.{$question['kunci']}";
                 $this->assertMatchesRegularExpression('/^[a-z][a-z0-9]*$/', $question['kunci']);
-                $this->assertContains($question['jenis'], ['skala', 'pilihan', 'pilihan-ganda', 'isian'], $question['kunci']);
+                $this->assertContains($question['jenis'], ['skala', 'pilihan', 'pilihan-ganda', 'isian'], $label);
                 $this->assertNotSame('', trim($question['teks']));
+
+                if ($question['jenis'] === 'skala') {
+                    // Every statement belongs to an aspect, and is required anyway
+                    $this->assertNotSame('', trim($question['aspek'] ?? ''), $label);
+                    $this->assertArrayNotHasKey('wajib', $question, $label);
+                } else {
+                    $this->assertArrayNotHasKey('aspek', $question, $label);
+                    $this->assertContains($question['wajib'] ?? true, [true], $label);
+                }
 
                 if (in_array($question['jenis'], ['pilihan', 'pilihan-ganda'], true)) {
                     $choices = $question['pilihan'] ?? [];
-                    $this->assertGreaterThanOrEqual(2, count($choices), $question['kunci']);
-                    $this->assertSame(array_values(array_unique($choices)), $choices, "{$kind}.{$question['kunci']}: pilihan ganda");
+                    $this->assertGreaterThanOrEqual(2, count($choices), $label);
+                    $this->assertSame(array_values(array_unique($choices)), $choices, "{$label}: pilihan ganda");
+                    $this->assertChoicesCountable($question['jenis'], $choices, $label);
                 } else {
-                    $this->assertArrayNotHasKey('pilihan', $question, "{$kind}.{$question['kunci']}");
+                    $this->assertArrayNotHasKey('pilihan', $question, $label);
+                }
+            }
+        }
+    }
+
+    /**
+     * The summary sheet counts each choice with COUNTIF: exactly for a single
+     * choice, and with *wildcards* for several choices that Google writes as
+     * "A, B, C" in one cell.
+     *
+     * @param  list<string>  $choices
+     */
+    private function assertChoicesCountable(string $type, array $choices, string $label): void
+    {
+        foreach ($choices as $choice) {
+            $this->assertDoesNotMatchRegularExpression('/[*?~,"]|^[<>=]/', $choice, "{$label}: {$choice}");
+
+            if ($type === 'pilihan-ganda') {
+                foreach ($choices as $other) {
+                    if ($other !== $choice) {
+                        $this->assertStringNotContainsStringIgnoringCase($choice, $other, "{$label}: {$choice} di dalam {$other}");
+                    }
+                }
+            }
+        }
+    }
+
+    public function test_asks_to_try_the_features_before_filling_in_and_which_ones_were_tried(): void
+    {
+        foreach ($this->questions()['kuesioner'] as $kind => $questionnaire) {
+            $before = $questionnaire['sebelum'];
+            $this->assertNotSame('', trim($before['teks']), $kind);
+            $this->assertNotSame('', trim($before['konfirmasi']), $kind);
+            $this->assertGreaterThanOrEqual(5, count($before['fitur']), $kind);
+
+            foreach ($before['fitur'] as $feature) {
+                $this->assertSame(['nama', 'alamat', 'keterangan'], array_keys($feature), $kind);
+                $this->assertNotSame('', trim($feature['keterangan']), "{$kind}: {$feature['nama']}");
+            }
+
+            // The answer records which of the listed features were tried, and at least one must be
+            $tried = array_values(array_filter($questionnaire['pertanyaan'], fn (array $question): bool => $question['kunci'] === 'fitur'));
+            $this->assertCount(1, $tried, $kind);
+            $this->assertSame('pilihan-ganda', $tried[0]['jenis'], $kind);
+            $this->assertTrue($tried[0]['wajib'] ?? false, $kind);
+            $this->assertSame([...array_column($before['fitur'], 'nama'), 'Lainnya'], $tried[0]['pilihan'], $kind);
+        }
+    }
+
+    public function test_links_the_features_to_be_tried_to_pages_that_exist(): void
+    {
+        $router = (string) file_get_contents(resource_path('js/dashboard/app/router.tsx'));
+
+        foreach ($this->questions()['kuesioner'] as $kind => $questionnaire) {
+            foreach ($questionnaire['sebelum']['fitur'] as $feature) {
+                $label = "{$kind}: {$feature['nama']}";
+                $this->assertMatchesRegularExpression('#^/(?!/)#', $feature['alamat'], $label);
+                [$path, $fragment] = array_pad(explode('#', $feature['alamat'], 2), 2, null);
+
+                if ($path === '/dashboard') {
+                    // Guests sign in first and come back to the same screen of the dashboard
+                    $this->get($path)->assertRedirect('/login?lanjut=dashboard%2F');
+                    if ($fragment !== null) {
+                        $this->assertMatchesRegularExpression('#^/[a-z-]+$#', $fragment, $label);
+                        $this->assertStringContainsString('path: "'.substr($fragment, 1).'"', $router, $label);
+                    }
+
+                    continue;
+                }
+
+                $response = $this->get($path)->assertOk();
+                if ($fragment !== null) {
+                    $response->assertSee('id="'.$fragment.'"', false);
                 }
             }
         }

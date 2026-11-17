@@ -1,28 +1,51 @@
 {
   "operator": {
-    "aksi": "https://docs.google.com/forms/d/e/1FAIpQLSd6MkFUZrpVtKfHaUpyjyKSCGUViCAwHFrF6LpGyaYOHCe0eA/formResponse",
+    "aksi": "https://docs.google.com/forms/d/e/1FAIpQLSfgkO0afDzPdbxmqhPghgpGVC0GovXHBPGteTK6GUf77aS7yg/formResponse",
     "entri": {
-      "unit": "entry.810089925",
-      "p1": "entry.656132267",
-      "p2": "entry.1356969217",
-      "p3": "entry.158662020",
-      "p4": "entry.1509541469",
-      "p5": "entry.1671782929",
-      "p6": "entry.837559466",
-      "saran": "entry.1617673565"
+      "unit": "entry.879752417",
+      "fitur": "entry.517880707",
+      "p1": "entry.1708789699",
+      "p2": "entry.1309794297",
+      "p3": "entry.387719654",
+      "p4": "entry.1506991291",
+      "p5": "entry.102234920",
+      "p6": "entry.1915654776",
+      "p7": "entry.1465238210",
+      "p8": "entry.3609248",
+      "p9": "entry.626310180",
+      "p10": "entry.667889075",
+      "p11": "entry.212380954",
+      "p12": "entry.962869435",
+      "p13": "entry.870101466",
+      "p14": "entry.1098961223",
+      "p15": "entry.146680137",
+      "kendala": "entry.914683066",
+      "saran": "entry.1344600956"
     }
   },
   "wajib-pajak": {
-    "aksi": "https://docs.google.com/forms/d/e/1FAIpQLSc3MDw9qnLPd-xg98ypUPqXwBdXeHVNBjsnxW1yffBp0p92rw/formResponse",
+    "aksi": "https://docs.google.com/forms/d/e/1FAIpQLSc8Ljuwpqr0rHJppyhEBgvlUPvgfCb_w5h0SL45VIe5jAPk7Q/formResponse",
     "entri": {
-      "layanan": "entry.697950698",
-      "sumber": "entry.1687409477",
-      "p1": "entry.1533062397",
-      "p2": "entry.121121145",
-      "p3": "entry.1701175070",
-      "p4": "entry.1215920250",
-      "p5": "entry.506339068",
-      "kurang": "entry.1020661342"
+      "layanan": "entry.2135062772",
+      "sumber": "entry.1017897163",
+      "fitur": "entry.1644964438",
+      "p1": "entry.1414972586",
+      "p2": "entry.1565244143",
+      "p3": "entry.120934117",
+      "p4": "entry.212963473",
+      "p5": "entry.1379563567",
+      "p6": "entry.158007126",
+      "p7": "entry.1057469574",
+      "p8": "entry.1241953561",
+      "p9": "entry.2015523725",
+      "p10": "entry.1602168714",
+      "p11": "entry.608356219",
+      "p12": "entry.1377663548",
+      "p13": "entry.1576940087",
+      "p14": "entry.290020938",
+      "p15": "entry.1548829276",
+      "kendala": "entry.1696630435",
+      "kurang": "entry.337509301"
     }
   }
 }
