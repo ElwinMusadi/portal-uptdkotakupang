@@ -15,6 +15,7 @@ const KOMPONEN: Record<string, () => Promise<{ pasang: (el: HTMLElement) => void
   "layar-antrean": () => import("./antrean/layar-antrean"),
   "lacak-pesan": () => import("./pesan/lacak-pesan"),
   "panduan-layanan": () => import("./layanan/panduan-layanan"),
+  kuesioner: () => import("./kuesioner/kuesioner"),
 }
 
 for (const el of document.querySelectorAll<HTMLElement>("[data-react]")) {

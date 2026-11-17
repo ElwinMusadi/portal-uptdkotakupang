@@ -1,0 +1,28 @@
+{
+  "operator": {
+    "aksi": "https://docs.google.com/forms/d/e/1FAIpQLSd6MkFUZrpVtKfHaUpyjyKSCGUViCAwHFrF6LpGyaYOHCe0eA/formResponse",
+    "entri": {
+      "unit": "entry.810089925",
+      "p1": "entry.656132267",
+      "p2": "entry.1356969217",
+      "p3": "entry.158662020",
+      "p4": "entry.1509541469",
+      "p5": "entry.1671782929",
+      "p6": "entry.837559466",
+      "saran": "entry.1617673565"
+    }
+  },
+  "wajib-pajak": {
+    "aksi": "https://docs.google.com/forms/d/e/1FAIpQLSc3MDw9qnLPd-xg98ypUPqXwBdXeHVNBjsnxW1yffBp0p92rw/formResponse",
+    "entri": {
+      "layanan": "entry.697950698",
+      "sumber": "entry.1687409477",
+      "p1": "entry.1533062397",
+      "p2": "entry.121121145",
+      "p3": "entry.1701175070",
+      "p4": "entry.1215920250",
+      "p5": "entry.506339068",
+      "kurang": "entry.1020661342"
+    }
+  }
+}

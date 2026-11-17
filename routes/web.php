@@ -4,6 +4,7 @@ use App\Http\Controllers\ArticlePageController;
 use App\Http\Controllers\ArticlePreviewPageController;
 use App\Http\Controllers\Auth\AccountActivationController;
 use App\Http\Controllers\MessageTrackingPageController;
+use App\Http\Controllers\QuestionnairePageController;
 use App\Http\Controllers\QueueTrackingPageController;
 use App\Http\Controllers\ThemePreviewPageController;
 use App\Http\Controllers\ThemeStylesheetController;
@@ -79,6 +80,9 @@ Route::withoutMiddleware([
     Route::get('/pesan/{kode}', MessageTrackingPageController::class)->where('kode', Message::TRACKING_CODE_PATTERN)->name('portal.lacak-pesan');
     // The waiting-room TV display; it reads GET /api/layar with the token of its setup link (D-051)
     Route::view('/layar', 'layar')->name('layar');
+    // The questionnaires for taxpayers and operators, whose answers go to their Google Forms (D-095)
+    Route::get('/kuesioner', QuestionnairePageController::class)->name('portal.kuesioner');
+    Route::get('/kuesioner/{jenis}', QuestionnairePageController::class)->whereIn('jenis', ['operator', 'wajib-pajak'])->name('portal.kuesioner.isi');
 
     // Portal scripts that Vite builds, loaded by the pages as written from fixed addresses: the tax check on Beranda and
     // Layanan (D-041) and the React components that take over [data-react] elements (D-045).

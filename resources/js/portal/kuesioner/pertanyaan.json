@@ -1,0 +1,78 @@
+{
+  "skala": ["Sangat tidak setuju", "Tidak setuju", "Netral", "Setuju", "Sangat setuju"],
+  "kuesioner": {
+    "operator": {
+      "judul": "Kuesioner Petugas Operator PINTU",
+      "untuk": "Petugas operator",
+      "ringkas": "Untuk petugas yang mengelola dan memperbarui konten PINTU melalui dashboard.",
+      "pembuka": "Kuesioner ini menilai kemudahan website dan dashboard PINTU bagi petugas yang mengelolanya. Jawaban Anda tanpa nama dan hanya dipakai untuk memperbaiki PINTU.",
+      "pertanyaan": [
+        {
+          "kunci": "unit",
+          "jenis": "pilihan",
+          "teks": "Di bagian mana Anda bertugas?",
+          "pilihan": ["Subbagian Tata Usaha", "Seksi Penetapan dan Penagihan", "Seksi Verifikasi", "Loket pelayanan", "Lainnya"]
+        },
+        { "kunci": "p1", "jenis": "skala", "teks": "Menu website mudah dipahami." },
+        { "kunci": "p2", "jenis": "skala", "teks": "Informasi layanan dan persyaratan lengkap." },
+        { "kunci": "p3", "jenis": "skala", "teks": "Informasi mudah dibaca di telepon pintar." },
+        { "kunci": "p4", "jenis": "skala", "teks": "Dashboard mudah digunakan untuk memperbarui konten." },
+        { "kunci": "p5", "jenis": "skala", "teks": "Alur pemeriksaan dan persetujuan konten jelas." },
+        { "kunci": "p6", "jenis": "skala", "teks": "Panduan Singkat Operator membantu saya." },
+        {
+          "kunci": "saran",
+          "jenis": "isian",
+          "teks": "Saran perbaikan untuk PINTU",
+          "petunjuk": "Boleh dikosongkan. Jangan menulis nama, NIK, atau nomor polisi."
+        }
+      ]
+    },
+    "wajib-pajak": {
+      "judul": "Kuesioner Wajib Pajak PINTU",
+      "untuk": "Wajib pajak",
+      "ringkas": "Untuk masyarakat yang membuka PINTU sebelum atau saat mengurus pajak kendaraan.",
+      "pembuka": "Kuesioner singkat ini menilai manfaat PINTU bagi wajib pajak. Jawaban Anda tanpa nama dan hanya dipakai untuk memperbaiki pelayanan informasi SAMSAT Kota Kupang.",
+      "pertanyaan": [
+        {
+          "kunci": "layanan",
+          "jenis": "pilihan",
+          "teks": "Layanan apa yang Anda urus?",
+          "pilihan": [
+            "Pajak Tahunan / Pengesahan",
+            "Perpanjangan STNK 5 Tahun",
+            "Balik Nama di dalam Kota Kupang",
+            "Mutasi Keluar",
+            "Mutasi Masuk dari Luar Daerah",
+            "Duplikat STNK Hilang atau Rusak",
+            "Lainnya"
+          ]
+        },
+        {
+          "kunci": "sumber",
+          "jenis": "pilihan-ganda",
+          "teks": "Dari mana Anda mengetahui PINTU?",
+          "petunjuk": "Boleh memilih lebih dari satu.",
+          "pilihan": [
+            "Kode QR di loket",
+            "Petugas loket atau meja informasi",
+            "Instagram atau TikTok",
+            "WhatsApp",
+            "Mesin pencari (Google)",
+            "Lainnya"
+          ]
+        },
+        { "kunci": "p1", "jenis": "skala", "teks": "Saya mudah menemukan informasi persyaratan layanan di PINTU." },
+        { "kunci": "p2", "jenis": "skala", "teks": "Informasi di PINTU jelas dan mudah dipahami." },
+        { "kunci": "p3", "jenis": "skala", "teks": "PINTU nyaman dibuka di telepon pintar." },
+        { "kunci": "p4", "jenis": "skala", "teks": "Informasi PINTU membantu saya menyiapkan berkas sebelum datang." },
+        { "kunci": "p5", "jenis": "skala", "teks": "Saya akan membuka PINTU lagi sebelum mengurus pajak kendaraan." },
+        {
+          "kunci": "kurang",
+          "jenis": "isian",
+          "teks": "Informasi apa yang belum Anda temukan di PINTU?",
+          "petunjuk": "Boleh dikosongkan. Jangan menulis nama, NIK, atau nomor polisi."
+        }
+      ]
+    }
+  }
+}

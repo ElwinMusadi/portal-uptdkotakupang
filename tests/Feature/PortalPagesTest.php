@@ -51,19 +51,21 @@ class PortalPagesTest extends TestCase
             'syarat ketentuan' => ['/syarat-ketentuan', 'syarat-ketentuan'],
             'lacak antrean' => ['/lacak/AbCdEfGhIjKlMnOpQrStUv', 'lacak'],
             'lacak pesan' => ['/pesan/AbCdEfGhIjKlMnOpQrStUv', 'lacak-pesan'],
+            'kuesioner' => ['/kuesioner', 'kuesioner'],
+            'kuesioner wajib pajak' => ['/kuesioner/wajib-pajak', 'kuesioner'],
         ];
     }
 
     /**
      * The portal pages served exactly as their files are written: all but
-     * the article and the two tracking pages, whose addresses are made
-     * root-relative.
+     * the article, the two tracking pages, and the questionnaires, whose
+     * addresses are made root-relative.
      *
      * @return array<string, array{string, string}>
      */
     public static function pagesAsWritten(): array
     {
-        return array_filter(self::pages(), fn (array $page): bool => ! in_array($page[1], ['berita-detail', 'lacak', 'lacak-pesan'], true));
+        return array_filter(self::pages(), fn (array $page): bool => ! in_array($page[1], ['berita-detail', 'lacak', 'lacak-pesan', 'kuesioner'], true));
     }
 
     /**
@@ -636,6 +638,34 @@ class PortalPagesTest extends TestCase
             preg_replace('/(\s(?:href|src)=")\/(?!\/)/', '$1', $html),
         );
         $this->assertSame([], $response->headers->getCookies());
+    }
+
+    #[TestWith(['/kuesioner'])]
+    #[TestWith(['/kuesioner/operator'])]
+    #[TestWith(['/kuesioner/wajib-pajak'])]
+    public function test_serves_the_questionnaires_with_addresses_from_the_site_root_and_kept_out_of_search(string $uri): void
+    {
+        $response = $this->get($uri);
+        $html = $response->assertOk()->assertHeader('Content-Type', 'text/html; charset=UTF-8')->getContent();
+
+        $this->assertSame(0, preg_match('/\s(?:href|src)="(?![a-z][a-z0-9+.-]*:|\/|#)/i', $html));
+        $this->assertStringContainsString('<meta name="robots" content="noindex, nofollow">', $html);
+        $this->assertStringContainsString('<div class="kuesioner" data-react="kuesioner">', $html);
+        $this->assertStringContainsString('<script type="module" src="/skrip/portal"></script>', $html);
+        $this->assertSame(
+            file_get_contents(resource_path('views/portal/kuesioner.blade.php')),
+            preg_replace('/(\s(?:href|src)=")\/(?!\/)/', '$1', $html),
+        );
+        $this->assertSame([], $response->headers->getCookies());
+    }
+
+    #[TestWith(['/kuesioner/lainnya'])]
+    #[TestWith(['/kuesioner/Operator'])]
+    #[TestWith(['/kuesioner/operator/1'])]
+    #[TestWith(['/kuesioner/wajib_pajak'])]
+    public function test_answers_404_for_a_questionnaire_that_does_not_exist(string $uri): void
+    {
+        $this->get($uri)->assertNotFound();
     }
 
     public function test_offers_the_message_lookup_by_ticket_and_contact_on_the_contact_page(): void
