@@ -151,6 +151,13 @@
 .kq-pilihan__opsi:has(input:checked) { border-color: var(--ink); background: var(--paper-2); font-weight: 600; }
 .kq-pilihan__opsi:has(input:focus-visible) { box-shadow: 0 0 0 4px var(--accent-soft); }
 
+/* Isian singkat: nama dan umur wajib pajak (D-097) */
+.kq-masukan { display: flex; align-items: center; gap: 12px; max-width: 30rem; }
+.kq-masukan .input { flex: 1; min-width: 0; font-size: var(--fs-body); }
+.kq-masukan--angka { max-width: 12rem; }
+.kq-masukan--angka .input { font-variant-numeric: tabular-nums; }
+.kq-satuan { flex: none; font-size: var(--fs-small); font-weight: 600; color: var(--text-2); }
+
 .kq-hitung { text-align: right; }
 .kq-wajib { margin-top: -8px; text-align: right; }
 

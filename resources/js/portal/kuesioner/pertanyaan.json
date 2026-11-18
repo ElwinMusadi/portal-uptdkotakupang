@@ -76,7 +76,7 @@
       "judul": "Kuesioner Wajib Pajak PINTU",
       "untuk": "Wajib pajak",
       "ringkas": "Untuk masyarakat yang membuka PINTU sebelum atau saat mengurus pajak kendaraan.",
-      "pembuka": "Kuesioner ini menilai PINTU dari sisi wajib pajak: kemudahan penggunaan, kualitas informasi, fungsi, tampilan dan kinerja, serta manfaat dan kepuasan. Jawaban Anda tanpa nama dan hanya dipakai untuk mengevaluasi serta memperbaiki pelayanan informasi SAMSAT Kota Kupang.",
+      "pembuka": "Kuesioner ini menilai PINTU dari sisi wajib pajak: kemudahan penggunaan, kualitas informasi, fungsi, tampilan dan kinerja, serta manfaat dan kepuasan. Nama dan data diri Anda hanya dipakai untuk mengevaluasi serta memperbaiki pelayanan informasi SAMSAT Kota Kupang, dan tidak ditampilkan kepada publik.",
       "sebelum": {
         "teks": "Agar penilaian Anda sesuai pengalaman nyata, buka dan coba dulu fitur PINTU berikut. Tautan terbuka di tab baru, jadi halaman ini tetap terbuka.",
         "fitur": [
@@ -92,6 +92,46 @@
         "konfirmasi": "Saya sudah membuka dan mencoba fitur PINTU di atas."
       },
       "pertanyaan": [
+        {
+          "kunci": "nama",
+          "jenis": "teks",
+          "wajib": true,
+          "teks": "Nama Anda",
+          "petunjuk": "Nama hanya dipakai untuk evaluasi PINTU dan tidak ditampilkan kepada publik."
+        },
+        {
+          "kunci": "umur",
+          "jenis": "angka",
+          "wajib": true,
+          "teks": "Umur Anda",
+          "petunjuk": "Dalam tahun, misalnya 35.",
+          "min": 17,
+          "maks": 100,
+          "satuan": "tahun",
+          "kelompok": [20, 30, 40, 50, 60]
+        },
+        {
+          "kunci": "kelamin",
+          "jenis": "pilihan",
+          "wajib": true,
+          "teks": "Jenis kelamin",
+          "pilihan": ["Laki-laki", "Perempuan"]
+        },
+        {
+          "kunci": "pendidikan",
+          "jenis": "pilihan",
+          "wajib": true,
+          "teks": "Pendidikan terakhir",
+          "pilihan": [
+            "Tidak/belum tamat SD",
+            "SD/sederajat",
+            "SMP/sederajat",
+            "SMA/SMK/sederajat",
+            "Diploma (D1–D3)",
+            "Sarjana (D4/S1)",
+            "Pascasarjana (S2/S3)"
+          ]
+        },
         {
           "kunci": "layanan",
           "jenis": "pilihan",
@@ -163,7 +203,7 @@
           "kunci": "kurang",
           "jenis": "isian",
           "teks": "Informasi apa yang belum Anda temukan di PINTU?",
-          "petunjuk": "Boleh dikosongkan. Jangan menulis nama, NIK, atau nomor polisi."
+          "petunjuk": "Boleh dikosongkan. Jangan menulis NIK atau nomor polisi."
         }
       ]
     }

@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use Tests\TestCase;
 
 /**
- * The questionnaires for taxpayers and operators (D-095, D-096). Their questions
+ * The questionnaires for taxpayers and operators (D-095, D-096, D-097). Their questions
  * live in one file that the portal component reads and that the Apps Script
  * copies to build the Google Forms; google-form.json holds each form's address
  * and entry numbers once the script has run.
@@ -15,7 +15,7 @@ class QuestionnaireTest extends TestCase
     private const KINDS = ['operator', 'wajib-pajak'];
 
     /**
-     * @return array{skala: list<string>, kuesioner: array<string, array{judul: string, untuk: string, ringkas: string, pembuka: string, sebelum: array{teks: string, fitur: list<array{nama: string, alamat: string, keterangan: string}>, konfirmasi: string}, pertanyaan: list<array{kunci: string, jenis: string, teks: string, aspek?: string, wajib?: bool, petunjuk?: string, pilihan?: list<string>}>}>}
+     * @return array{skala: list<string>, kuesioner: array<string, array{judul: string, untuk: string, ringkas: string, pembuka: string, sebelum: array{teks: string, fitur: list<array{nama: string, alamat: string, keterangan: string}>, konfirmasi: string}, pertanyaan: list<array{kunci: string, jenis: string, teks: string, aspek?: string, wajib?: bool, petunjuk?: string, pilihan?: list<string>, min?: int, maks?: int, satuan?: string, kelompok?: list<int>}>}>}
      */
     private function questions(): array
     {
@@ -152,8 +152,30 @@ class QuestionnaireTest extends TestCase
             foreach ($questionnaire['pertanyaan'] as $question) {
                 $label = "{$kind}.{$question['kunci']}";
                 $this->assertMatchesRegularExpression('/^[a-z][a-z0-9]*$/', $question['kunci']);
-                $this->assertContains($question['jenis'], ['skala', 'pilihan', 'pilihan-ganda', 'isian'], $label);
+                $this->assertContains($question['jenis'], ['skala', 'pilihan', 'pilihan-ganda', 'isian', 'teks', 'angka'], $label);
+                $this->assertSame([], array_diff(array_keys($question), ['kunci', 'jenis', 'teks', 'aspek', 'wajib', 'petunjuk', 'pilihan', 'min', 'maks', 'satuan', 'kelompok']), $label);
                 $this->assertNotSame('', trim($question['teks']));
+
+                if ($question['jenis'] === 'angka') {
+                    // Whole numbers within bounds; the age groups of the summary sheet lie inside them
+                    $this->assertIsInt($question['min'] ?? null, $label);
+                    $this->assertIsInt($question['maks'] ?? null, $label);
+                    $this->assertLessThan($question['maks'], $question['min'], $label);
+                    $this->assertLessThanOrEqual(999, $question['maks'], $label);
+                    $groups = $question['kelompok'] ?? [];
+                    $sorted = $groups;
+                    sort($sorted);
+                    $this->assertSame(array_values(array_unique($sorted)), $groups, "{$label}: kelompok berurutan");
+                    foreach ($groups as $bound) {
+                        $this->assertIsInt($bound, $label);
+                        $this->assertGreaterThan($question['min'], $bound, $label);
+                        $this->assertLessThanOrEqual($question['maks'], $bound, $label);
+                    }
+                } else {
+                    foreach (['min', 'maks', 'satuan', 'kelompok'] as $field) {
+                        $this->assertArrayNotHasKey($field, $question, $label);
+                    }
+                }
 
                 if ($question['jenis'] === 'skala') {
                     // Every statement belongs to an aspect, and is required anyway
@@ -194,6 +216,46 @@ class QuestionnaireTest extends TestCase
                         $this->assertStringNotContainsStringIgnoringCase($choice, $other, "{$label}: {$choice} di dalam {$other}");
                     }
                 }
+            }
+        }
+    }
+
+    public function test_asks_only_the_taxpayers_their_name_age_gender_and_education_first(): void
+    {
+        $questionnaires = $this->questions()['kuesioner'];
+        $profile = array_slice($questionnaires['wajib-pajak']['pertanyaan'], 0, 4);
+
+        $this->assertSame(['nama', 'umur', 'kelamin', 'pendidikan'], array_column($profile, 'kunci'));
+        $this->assertSame(['teks', 'angka', 'pilihan', 'pilihan'], array_column($profile, 'jenis'));
+        $this->assertSame([true, true, true, true], array_map(fn (array $question): bool => $question['wajib'] ?? false, $profile));
+        $this->assertSame([17, 100, 'tahun'], [$profile[1]['min'], $profile[1]['maks'], $profile[1]['satuan']]);
+        $this->assertSame(['Laki-laki', 'Perempuan'], $profile[2]['pilihan']);
+        $this->assertSame([
+            'Tidak/belum tamat SD',
+            'SD/sederajat',
+            'SMP/sederajat',
+            'SMA/SMK/sederajat',
+            'Diploma (D1–D3)',
+            'Sarjana (D4/S1)',
+            'Pascasarjana (S2/S3)',
+        ], $profile[3]['pilihan']);
+
+        // The operators stay anonymous
+        $this->assertSame([], array_intersect(['nama', 'umur', 'kelamin', 'pendidikan'], array_column($questionnaires['operator']['pertanyaan'], 'kunci')));
+    }
+
+    public function test_promises_anonymity_only_where_no_name_is_asked(): void
+    {
+        foreach ($this->questions()['kuesioner'] as $kind => $questionnaire) {
+            $named = in_array('nama', array_column($questionnaire['pertanyaan'], 'kunci'), true);
+            $texts = implode(' ', [$questionnaire['pembuka'], ...array_column($questionnaire['pertanyaan'], 'petunjuk')]);
+
+            if ($named) {
+                $this->assertStringNotContainsStringIgnoringCase('tanpa nama', $texts, $kind);
+                $this->assertStringNotContainsStringIgnoringCase('menulis nama', $texts, $kind);
+                $this->assertStringContainsString('tidak ditampilkan kepada publik', $questionnaire['pembuka'], $kind);
+            } else {
+                $this->assertStringContainsString('tanpa nama', $questionnaire['pembuka'], $kind);
             }
         }
     }
@@ -262,7 +324,7 @@ class QuestionnaireTest extends TestCase
         // Google drops the whole answer when a required question arrives empty, and the portal cannot see that
         $script = (string) file_get_contents(base_path('scripts/kuesioner-google-form.gs'));
 
-        $this->assertSame(4, substr_count($script, '.setRequired(false)'));
+        $this->assertSame(5, substr_count($script, '.setRequired(false)'));
         $this->assertStringNotContainsString('.setRequired(true)', $script);
     }
 

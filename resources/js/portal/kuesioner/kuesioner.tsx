@@ -20,7 +20,7 @@ import FORM from "./google-form.json"
 import "./kuesioner.css"
 
 type JenisKuesioner = "operator" | "wajib-pajak"
-type JenisPertanyaan = "skala" | "pilihan" | "pilihan-ganda" | "isian"
+type JenisPertanyaan = "skala" | "pilihan" | "pilihan-ganda" | "isian" | "teks" | "angka"
 
 interface Pertanyaan {
   kunci: string
@@ -28,10 +28,14 @@ interface Pertanyaan {
   teks: string
   /** Aspek penilaian sebuah pernyataan berskala, mis. "Kemudahan penggunaan" */
   aspek?: string
-  /** Pertanyaan selain skala yang tetap harus dijawab (mis. fitur yang sudah dicoba) */
+  /** Pertanyaan selain skala yang tetap harus dijawab (mis. fitur yang sudah dicoba, data diri wajib pajak) */
   wajib?: boolean
   petunjuk?: string
   pilihan?: string[]
+  /** Batas dan satuan jawaban angka, mis. umur 17–100 tahun (D-097) */
+  min?: number
+  maks?: number
+  satuan?: string
 }
 
 interface FiturDicoba {
@@ -86,14 +90,50 @@ function terjawab(nilai: Nilai | undefined): boolean {
   return String(nilai).trim() !== ""
 }
 
+const BATAS_TEKS = 100
+const POLA_ANGKA = /^\d{1,3}$/
+
+/** Jawaban yang sudah diisi juga harus masuk akal: nama paling sedikit 2 huruf, angka bulat di dalam batasnya. */
+function sah(p: Pertanyaan, nilai: Nilai | undefined): boolean {
+  if (!terjawab(nilai)) return false
+  const teks = String(nilai).trim()
+  if (p.jenis === "teks") return teks.length >= 2 && teks.length <= BATAS_TEKS
+  if (p.jenis === "angka") return POLA_ANGKA.test(teks) && Number(teks) >= (p.min ?? 0) && Number(teks) <= (p.maks ?? 999)
+  return true
+}
+
+/** Boleh lanjut dari sebuah pertanyaan: jawabannya sah, atau kosong pada pertanyaan yang boleh dilewati. */
+const selesaiDijawab = (p: Pertanyaan, nilai: Nilai | undefined) => (terjawab(nilai) ? sah(p, nilai) : !wajib(p))
+
+function pesanWajib(p: Pertanyaan): string {
+  switch (p.jenis) {
+    case "skala":
+      return "Pernyataan ini perlu dijawab sebelum lanjut."
+    case "pilihan":
+      return "Pilih salah satu sebelum lanjut."
+    case "pilihan-ganda":
+      return "Pilih paling sedikit satu sebelum lanjut."
+    case "teks":
+      return "Isi paling sedikit 2 huruf sebelum lanjut."
+    case "angka":
+      return `Isi angka ${p.min ?? 0}–${p.maks ?? 999}${p.satuan ? ` ${p.satuan}` : ""} sebelum lanjut.`
+    default:
+      return "Pertanyaan ini perlu dijawab sebelum lanjut."
+  }
+}
+
+/** Kuesioner yang menanyakan nama tidak disebut "tanpa nama" (D-097) */
+const bernama = (k: Kuesioner) => k.pertanyaan.some((p) => p.kunci === "nama")
+
 /** Perkiraan waktu mengisi: pernyataan berskala ±10 detik, pilihan ±20 detik, isian ±45 detik */
-const DETIK_PER_JENIS: Record<JenisPertanyaan, number> = { skala: 10, pilihan: 20, "pilihan-ganda": 20, isian: 45 }
+const DETIK_PER_JENIS: Record<JenisPertanyaan, number> = { skala: 10, pilihan: 20, "pilihan-ganda": 20, isian: 45, teks: 20, angka: 10 }
 const menit = (k: Kuesioner) => Math.max(1, Math.round(k.pertanyaan.reduce((n, p) => n + DETIK_PER_JENIS[p.jenis], 0) / 60))
 const jumlahPernyataan = (k: Kuesioner) => k.pertanyaan.filter((p) => p.jenis === "skala").length
 
 function teksJawaban(p: Pertanyaan, nilai: Nilai | undefined): string {
   if (!terjawab(nilai)) return "Tidak diisi"
   if (p.jenis === "skala") return `${nilai} · ${SKALA[Number(nilai) - 1]}`
+  if (p.jenis === "angka") return `${Number(String(nilai).trim())}${p.satuan ? ` ${p.satuan}` : ""}`
   return Array.isArray(nilai) ? nilai.join(", ") : String(nilai).trim()
 }
 
@@ -105,6 +145,7 @@ export function badanKiriman(k: Kuesioner, tujuan: Tujuan, jawaban: Jawaban): UR
     if (!terjawab(nilai)) continue
     const entri = tujuan.entri[p.kunci]
     if (Array.isArray(nilai)) nilai.forEach((v) => badan.append(entri, v))
+    else if (p.jenis === "angka") badan.append(entri, String(Number(String(nilai).trim())))
     else badan.append(entri, String(nilai).trim())
   }
   return badan
@@ -164,7 +205,7 @@ function KartuPilihan({ jenis }: { jenis: JenisKuesioner }) {
         <h2 className="h3">{k.judul}</h2>
         <p className="body">{k.ringkas}</p>
         <p className="kq-kartu__meta">
-          {jumlahPernyataan(k)} pernyataan penilaian · ± {menit(k)} menit · tanpa nama
+          {jumlahPernyataan(k)} pernyataan penilaian · ± {menit(k)} menit{bernama(k) ? "" : " · tanpa nama"}
           {!terbuka && <span className="kq-tanda">Belum dibuka</span>}
         </p>
         <div className="kq-kartu__aksi">
@@ -226,12 +267,13 @@ function IsiKuesioner({ jenis }: { jenis: JenisKuesioner }) {
   const [hitungMundur, setHitungMundur] = useState(DETIK_LOKET)
   const wadah = useRef<HTMLDivElement>(null)
   const judul = useRef<HTMLHeadingElement>(null)
+  const masukan = useRef<HTMLInputElement>(null)
   const pewaktu = useRef<number | undefined>(undefined)
   const sudahMulai = useRef(false)
 
   const p = langkah >= 1 && langkah <= jumlah ? k.pertanyaan[langkah - 1] : null
-  const bolehLanjut = p === null || !wajib(p) || terjawab(jawaban[p.kunci])
-  const terisi = k.pertanyaan.filter((q) => terjawab(jawaban[q.kunci])).length
+  const bolehLanjut = p === null || selesaiDijawab(p, jawaban[p.kunci])
+  const terisi = k.pertanyaan.filter((q) => sah(q, jawaban[q.kunci])).length
 
   const pindah = useCallback(
     (ke: number) => {
@@ -294,7 +336,9 @@ function IsiKuesioner({ jenis }: { jenis: JenisKuesioner }) {
       sudahMulai.current = true
       return
     }
-    judul.current?.focus({ preventScroll: true })
+    // Pada pertanyaan isian singkat (nama, umur) kotak isiannya yang menerima fokus, agar bisa langsung diketik
+    const sasaran = masukan.current ?? judul.current
+    sasaran?.focus({ preventScroll: true })
     if (wadah.current && wadah.current.getBoundingClientRect().top < 72) gulirKe(wadah.current, "start")
   }, [langkah, status])
 
@@ -428,7 +472,7 @@ function IsiKuesioner({ jenis }: { jenis: JenisKuesioner }) {
             <li>{jumlah} pertanyaan</li>
             <li>{jumlahPernyataan(k)} pernyataan penilaian</li>
             <li>± {menit(k)} menit</li>
-            <li>Tanpa nama</li>
+            {!bernama(k) && <li>Tanpa nama</li>}
           </ul>
 
           <section className="kq-sebelum" aria-labelledby="kq-sebelum-judul">
@@ -486,6 +530,7 @@ function IsiKuesioner({ jenis }: { jenis: JenisKuesioner }) {
           )}
           <p className="micro muted kq-catatan">
             Jawaban disimpan di Google Formulir milik UPTD Pendapatan Daerah Wilayah Kota Kupang dan hanya dipakai untuk menilai serta memperbaiki PINTU.
+            {bernama(k) && " Nama dan data diri Anda tidak ditampilkan kepada publik."}
           </p>
         </div>
       )}
@@ -572,6 +617,28 @@ function IsiKuesioner({ jenis }: { jenis: JenisKuesioner }) {
               </div>
             )}
 
+            {(p.jenis === "teks" || p.jenis === "angka") && (
+              <div className={`kq-masukan${p.jenis === "angka" ? " kq-masukan--angka" : ""}`}>
+                <label className="sr-only" htmlFor={`kq-${p.kunci}`}>
+                  {p.teks}
+                </label>
+                <input
+                  ref={masukan}
+                  id={`kq-${p.kunci}`}
+                  className="input"
+                  type="text"
+                  inputMode={p.jenis === "angka" ? "numeric" : undefined}
+                  autoComplete={p.kunci === "nama" ? "name" : "off"}
+                  maxLength={p.jenis === "angka" ? 3 : BATAS_TEKS}
+                  value={typeof jawaban[p.kunci] === "string" ? (jawaban[p.kunci] as string) : ""}
+                  onChange={(e) => isi(p.kunci, p.jenis === "angka" ? e.target.value.replace(/\D/g, "").slice(0, 3) : e.target.value)}
+                  aria-invalid={terjawab(jawaban[p.kunci]) && !sah(p, jawaban[p.kunci]) ? true : undefined}
+                  aria-describedby={bolehLanjut ? undefined : `kq-wajib-${p.kunci}`}
+                />
+                {p.satuan && <span className="kq-satuan">{p.satuan}</span>}
+              </div>
+            )}
+
             {p.jenis === "isian" && (
               <div className="field">
                 <label className="sr-only" htmlFor={`kq-${p.kunci}`}>
@@ -601,7 +668,9 @@ function IsiKuesioner({ jenis }: { jenis: JenisKuesioner }) {
             </button>
           </div>
           {!bolehLanjut && (
-            <p className="micro muted kq-wajib">{p.jenis === "pilihan-ganda" ? "Pilih paling sedikit satu sebelum lanjut." : "Pernyataan ini perlu dijawab sebelum lanjut."}</p>
+            <p className="micro muted kq-wajib" id={`kq-wajib-${p.kunci}`}>
+              {pesanWajib(p)}
+            </p>
           )}
         </div>
       )}
@@ -637,7 +706,7 @@ function IsiKuesioner({ jenis }: { jenis: JenisKuesioner }) {
             <button type="button" className="btn btn--ghost" onClick={kembali}>
               Kembali
             </button>
-            <button type="button" className="btn btn--dark" onClick={() => void kirim()} disabled={!k.pertanyaan.every((q) => !wajib(q) || terjawab(jawaban[q.kunci]))}>
+            <button type="button" className="btn btn--dark" onClick={() => void kirim()} disabled={!k.pertanyaan.every((q) => selesaiDijawab(q, jawaban[q.kunci]))}>
               Kirim jawaban
             </button>
           </div>

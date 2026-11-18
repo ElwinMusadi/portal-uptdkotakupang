@@ -1,5 +1,5 @@
 /**
- * Kuesioner PINTU (D-095, D-096): pembuat Google Formulir dan Spreadsheet jawabannya.
+ * Kuesioner PINTU (D-095, D-096, D-097): pembuat Google Formulir dan Spreadsheet jawabannya.
  *
  * Cara memakai (dengan akun Google milik UPTD; setiap kali daftar pertanyaan berubah):
  * 1. Buka https://script.google.com lalu pilih "Proyek baru" (atau buka proyek yang lama).
@@ -12,8 +12,8 @@
  * Setiap kali dijalankan, skrip membuat dua formulir baru (wajib pajak dan petugas operator) dan satu Spreadsheet
  * baru "Kuesioner PINTU — Jawaban". Formulir dan Spreadsheet dari daftar pertanyaan sebelumnya tidak dipakai lagi
  * dan boleh dibuang dari Google Drive. Spreadsheet berisi lembar jawaban setiap formulir dan lembar Ringkasan:
- * jumlah responden, rata-rata setiap pernyataan, rata-rata setiap aspek, rata-rata semua pernyataan, dan jumlah
- * jawaban setiap pilihan pada pertanyaan profil.
+ * jumlah responden, rata-rata setiap pernyataan, rata-rata setiap aspek, rata-rata semua pernyataan, jumlah
+ * jawaban setiap pilihan pada pertanyaan profil, serta rata-rata dan kelompok umur. Nama tidak diringkas.
  * Semua pertanyaan di formulir sengaja tidak wajib: aplikasi web PINTU yang memeriksa jawaban, sedangkan Google
  * menolak seluruh kiriman bila ada pertanyaan wajib yang kosong. Jangan menambah, menghapus, atau mengubah teks
  * pilihan di formulir sesudah tersambung, karena kiriman yang pilihannya tidak dikenal ditolak Google.
@@ -216,7 +216,7 @@ const KUESIONER = {
       "judul": "Kuesioner Wajib Pajak PINTU",
       "untuk": "Wajib pajak",
       "ringkas": "Untuk masyarakat yang membuka PINTU sebelum atau saat mengurus pajak kendaraan.",
-      "pembuka": "Kuesioner ini menilai PINTU dari sisi wajib pajak: kemudahan penggunaan, kualitas informasi, fungsi, tampilan dan kinerja, serta manfaat dan kepuasan. Jawaban Anda tanpa nama dan hanya dipakai untuk mengevaluasi serta memperbaiki pelayanan informasi SAMSAT Kota Kupang.",
+      "pembuka": "Kuesioner ini menilai PINTU dari sisi wajib pajak: kemudahan penggunaan, kualitas informasi, fungsi, tampilan dan kinerja, serta manfaat dan kepuasan. Nama dan data diri Anda hanya dipakai untuk mengevaluasi serta memperbaiki pelayanan informasi SAMSAT Kota Kupang, dan tidak ditampilkan kepada publik.",
       "sebelum": {
         "teks": "Agar penilaian Anda sesuai pengalaman nyata, buka dan coba dulu fitur PINTU berikut. Tautan terbuka di tab baru, jadi halaman ini tetap terbuka.",
         "fitur": [
@@ -264,6 +264,55 @@ const KUESIONER = {
         "konfirmasi": "Saya sudah membuka dan mencoba fitur PINTU di atas."
       },
       "pertanyaan": [
+        {
+          "kunci": "nama",
+          "jenis": "teks",
+          "wajib": true,
+          "teks": "Nama Anda",
+          "petunjuk": "Nama hanya dipakai untuk evaluasi PINTU dan tidak ditampilkan kepada publik."
+        },
+        {
+          "kunci": "umur",
+          "jenis": "angka",
+          "wajib": true,
+          "teks": "Umur Anda",
+          "petunjuk": "Dalam tahun, misalnya 35.",
+          "min": 17,
+          "maks": 100,
+          "satuan": "tahun",
+          "kelompok": [
+            20,
+            30,
+            40,
+            50,
+            60
+          ]
+        },
+        {
+          "kunci": "kelamin",
+          "jenis": "pilihan",
+          "wajib": true,
+          "teks": "Jenis kelamin",
+          "pilihan": [
+            "Laki-laki",
+            "Perempuan"
+          ]
+        },
+        {
+          "kunci": "pendidikan",
+          "jenis": "pilihan",
+          "wajib": true,
+          "teks": "Pendidikan terakhir",
+          "pilihan": [
+            "Tidak/belum tamat SD",
+            "SD/sederajat",
+            "SMP/sederajat",
+            "SMA/SMK/sederajat",
+            "Diploma (D1–D3)",
+            "Sarjana (D4/S1)",
+            "Pascasarjana (S2/S3)"
+          ]
+        },
         {
           "kunci": "layanan",
           "jenis": "pilihan",
@@ -410,7 +459,7 @@ const KUESIONER = {
           "kunci": "kurang",
           "jenis": "isian",
           "teks": "Informasi apa yang belum Anda temukan di PINTU?",
-          "petunjuk": "Boleh dikosongkan. Jangan menulis nama, NIK, atau nomor polisi."
+          "petunjuk": "Boleh dikosongkan. Jangan menulis NIK atau nomor polisi."
         }
       ]
     }
@@ -481,6 +530,10 @@ function tambahButir(form, p) {
       return form.addCheckboxItem().setTitle(p.teks).setHelpText(p.petunjuk || '').setChoiceValues(p.pilihan).setRequired(false);
     case 'isian':
       return form.addParagraphTextItem().setTitle(p.teks).setHelpText(p.petunjuk || '').setRequired(false);
+    case 'teks':
+    case 'angka':
+      // Isian singkat (nama, umur); batas angka diperiksa PINTU, bukan formulir, agar Google tidak menolak kiriman
+      return form.addTextItem().setTitle(p.teks).setHelpText(p.petunjuk || '').setRequired(false);
     default:
       throw new Error('Jenis pertanyaan tidak dikenal: ' + p.jenis);
   }
@@ -492,6 +545,7 @@ function nomorEntri(form, butir, p) {
   if (p.jenis === 'skala') jawab = butir.createResponse(1);
   else if (p.jenis === 'pilihan') jawab = butir.createResponse(p.pilihan[0]);
   else if (p.jenis === 'pilihan-ganda') jawab = butir.createResponse([p.pilihan[0]]);
+  else if (p.jenis === 'angka') jawab = butir.createResponse(String(p.min));
   else jawab = butir.createResponse('x');
   const alamat = form.createResponse().withItemResponse(jawab).toPrefilledUrl();
   const cocok = alamat.match(/[?&](entry\.\d+)=/);
@@ -517,8 +571,8 @@ function teksRumus(teks) {
 
 /**
  * Ringkasan langsung dari lembar jawaban: jumlah responden, rata-rata setiap aspek dan pernyataan, rata-rata semua
- * pernyataan, lalu jumlah jawaban setiap pilihan pada pertanyaan profil. Kolom A lembar jawaban berisi waktu kiriman,
- * dan pertanyaan ke-n (mulai 0) ada di kolom ke-(n + 2).
+ * pernyataan, lalu jumlah jawaban setiap pilihan pada pertanyaan profil dan kelompok jawaban angka (umur). Kolom A
+ * lembar jawaban berisi waktu kiriman, dan pertanyaan ke-n (mulai 0) ada di kolom ke-(n + 2).
  */
 function isiRingkasan(lembar) {
   lembar.getRange('A1').setValue('Ringkasan Kuesioner PINTU').setFontWeight('bold').setFontSize(14);
@@ -565,6 +619,25 @@ function isiRingkasan(lembar) {
     baris++;
 
     k.pertanyaan.forEach(function (p) {
+      if (p.jenis === 'angka') {
+        // Angka dibaca dengan VALUE, karena Google bisa menulisnya sebagai teks; sel kosong atau bukan angka diabaikan
+        const angka = 'IFERROR(VALUE(' + rentang(p) + '),-1)';
+        const satuan = p.satuan ? ' ' + p.satuan : '';
+        tulis(p.teks + (p.satuan ? ' (' + p.satuan + ')' : ''), null, true);
+        tulis('    Rata-rata','=IFERROR(AVERAGE(ARRAYFORMULA(IFERROR(VALUE(' + rentang(p) + ')))),"-")', false, '0.0');
+        const batas = p.kelompok || [];
+        batas.forEach(function (b, i) {
+          const label = i === 0 ? 'di bawah ' + b + satuan : batas[i - 1] + '–' + (b - 1) + satuan;
+          const dari = i === 0 ? 0 : batas[i - 1];
+          tulis('    ' + label, '=SUMPRODUCT(ARRAYFORMULA((' + angka + '>=' + dari + ')*(' + angka + '<' + b + ')))', false, '0');
+        });
+        if (batas.length) {
+          const akhir = batas[batas.length - 1];
+          tulis('    ' + akhir + satuan + ' ke atas', '=SUMPRODUCT(ARRAYFORMULA(' + angka + '>=' + akhir + '))', false, '0');
+        }
+        baris++;
+        return;
+      }
       if (p.jenis !== 'pilihan' && p.jenis !== 'pilihan-ganda') return;
       tulis(p.teks + ' (jumlah jawaban)', null, true);
       p.pilihan.forEach(function (opsi) {
