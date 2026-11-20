@@ -44,6 +44,7 @@ use App\Http\Controllers\Dashboard\PotentialMapColumnsController;
 use App\Http\Controllers\Dashboard\PotentialSummaryController;
 use App\Http\Controllers\Dashboard\PotentialVehicleController;
 use App\Http\Controllers\Dashboard\ProfileController;
+use App\Http\Controllers\Dashboard\QuestionnaireController;
 use App\Http\Controllers\Dashboard\QueueArchiveController;
 use App\Http\Controllers\Dashboard\QueueCounterController;
 use App\Http\Controllers\Dashboard\QueueCounterDeskController;
@@ -101,6 +102,7 @@ use App\Http\Controllers\PublicOpeningHoursController;
 use App\Http\Controllers\PublicOrganizationController;
 use App\Http\Controllers\PublicPotentialMapController;
 use App\Http\Controllers\PublicProfileController;
+use App\Http\Controllers\PublicQuestionnaireController;
 use App\Http\Controllers\PublicQueueTicketController;
 use App\Http\Controllers\PublicRevenueReportController;
 use App\Http\Controllers\PublicRevenueSummaryController;
@@ -353,6 +355,15 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->can('update', [Setting::class, $aiIntegration])
         ->middleware('throttle:ai-tests')
         ->name('pengaturan.ai.uji');
+
+    // Kuesioner, whether each questionnaire at /kuesioner takes answers: every employee reads it, only administrators open and close them (SettingPolicy, D-098).
+    $questionnaire = "'".Setting::QUESTIONNAIRE."'";
+    Route::get('/pengaturan/kuesioner', [QuestionnaireController::class, 'show'])
+        ->can('view', [Setting::class, $questionnaire])
+        ->name('pengaturan.kuesioner.show');
+    Route::put('/pengaturan/kuesioner', [QuestionnaireController::class, 'update'])
+        ->can('update', [Setting::class, $questionnaire])
+        ->name('pengaturan.kuesioner.update');
 
     // The signed-in employee's own profile, the dashboard's "akun" settings (D-027).
     Route::get('/pengaturan/akun', [OwnAccountController::class, 'show'])->name('pengaturan.akun.show');
@@ -674,6 +685,8 @@ Route::prefix('public')
         Route::get('/jadwal', PublicSchedulePageController::class)->name('jadwal.show');
         Route::get('/pengumuman', PublicAnnouncementBarController::class)->name('pengumuman.show');
         Route::get('/situs', PublicSiteController::class)->name('situs.show');
+        // Which questionnaires at /kuesioner take answers (D-098)
+        Route::get('/kuesioner', PublicQuestionnaireController::class)->name('kuesioner.show');
         Route::get('/halaman/{slug}', PublicStaticPageController::class)
             ->whereIn('slug', array_keys(StaticPage::PAGES))
             ->name('halaman.show');

@@ -296,7 +296,8 @@ class DocumentControllerTest extends TestCase
     public function test_changes_a_draft_and_logs_only_real_changes(): void
     {
         $employee = $this->dokumenEmployee();
-        $document = Document::factory()->create();
+        // The factory picks a number from 1 to 99, which would sometimes already be the new one
+        $document = Document::factory()->create(['nomor' => '7']);
 
         $this->actingAs($employee)->patchJson("/api/koleksi/dokumen/{$document->id}", ['nomor' => '12'])
             ->assertOk()

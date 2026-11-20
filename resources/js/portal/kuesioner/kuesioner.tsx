@@ -7,7 +7,8 @@
  * formulir itu. Google tidak memberi jawaban yang bisa dibaca dari situs lain (no-cors), jadi kiriman dianggap
  * berhasil bila permintaannya sampai. Selama google-form.json belum diisi, kuesioner belum dibuka; ?pratinjau=1
  * mencoba tampilan tanpa mengirim apa pun, dan ?loket=1 kembali ke awal sendiri setelah terima kasih (tablet di
- * loket).
+ * loket). Administrator bisa menutup dan membuka lagi setiap kuesioner di Pengaturan › Kuesioner (D-098); halaman
+ * membaca GET /api/public/kuesioner saat dimuat, sebelum mengirim, dan saat tablet loket kembali ke awal.
  */
 import { useCallback, useEffect, useRef, useState } from "react"
 import type { MouseEvent as ReactMouseEvent } from "react"
@@ -61,7 +62,8 @@ interface Tujuan {
 
 type Nilai = number | string | string[]
 type Jawaban = Record<string, Nilai>
-type Status = "isi" | "mengirim" | "terkirim" | "gagal"
+type Status = "isi" | "mengirim" | "terkirim" | "gagal" | "ditutup"
+type StatusDibuka = Record<JenisKuesioner, boolean>
 
 const SKALA: string[] = DATA.skala
 const KUESIONER = DATA.kuesioner as unknown as Record<JenisKuesioner, Kuesioner>
@@ -79,6 +81,25 @@ function tujuanKuesioner(jenis: JenisKuesioner): Tujuan | null {
   if (!tujuan || typeof tujuan.aksi !== "string" || !POLA_AKSI.test(tujuan.aksi)) return null
   const lengkap = KUESIONER[jenis].pertanyaan.every((p) => POLA_ENTRI.test(tujuan.entri?.[p.kunci] ?? ""))
   return lengkap ? tujuan : null
+}
+
+/**
+ * Kuesioner yang dibuka Administrator di Pengaturan › Kuesioner (D-098). Hanya `dibuka: false` yang menutup: bila
+ * status tidak bisa dibaca, kuesioner dianggap dibuka, agar pengisi tidak tertahan karena API gagal.
+ */
+export async function muatDibuka(): Promise<StatusDibuka> {
+  const kendali = new AbortController()
+  const batas = window.setTimeout(() => kendali.abort(), 8000)
+  try {
+    const res = await fetch("/api/public/kuesioner", { headers: { Accept: "application/json" }, credentials: "omit", signal: kendali.signal })
+    if (!res.ok) return { "wajib-pajak": true, operator: true }
+    const data = (await res.json()) as { wajibPajak?: { dibuka?: unknown }; operator?: { dibuka?: unknown } } | null
+    return { "wajib-pajak": data?.wajibPajak?.dibuka !== false, operator: data?.operator?.dibuka !== false }
+  } catch {
+    return { "wajib-pajak": true, operator: true }
+  } finally {
+    window.clearTimeout(batas)
+  }
 }
 
 /** Pernyataan berskala dan pertanyaan bertanda wajib harus dijawab; profil lain dan isian boleh dilewati. */
@@ -182,10 +203,11 @@ function Wajah({ nilai }: { nilai: number }) {
 
 // ---------------------------------------------------------------- pilihan kuesioner (/kuesioner)
 
-function KartuPilihan({ jenis }: { jenis: JenisKuesioner }) {
+function KartuPilihan({ jenis, dibuka }: { jenis: JenisKuesioner; dibuka: boolean }) {
   const k = KUESIONER[jenis]
   const alamat = `${window.location.origin}/kuesioner/${jenis}`
   const terbuka = tujuanKuesioner(jenis) !== null
+  const ditutup = terbuka && !dibuka
   const [disalin, setDisalin] = useState(false)
 
   const salin = () => {
@@ -207,11 +229,14 @@ function KartuPilihan({ jenis }: { jenis: JenisKuesioner }) {
         <p className="kq-kartu__meta">
           {jumlahPernyataan(k)} pernyataan penilaian · ± {menit(k)} menit{bernama(k) ? "" : " · tanpa nama"}
           {!terbuka && <span className="kq-tanda">Belum dibuka</span>}
+          {ditutup && <span className="kq-tanda">Ditutup</span>}
         </p>
         <div className="kq-kartu__aksi">
-          <a className="btn btn--dark btn--sm" href={`/kuesioner/${jenis}`}>
-            Isi kuesioner
-          </a>
+          {!ditutup && (
+            <a className="btn btn--dark btn--sm" href={`/kuesioner/${jenis}`}>
+              Isi kuesioner
+            </a>
+          )}
           <button type="button" className="btn btn--ghost btn--sm" onClick={salin}>
             {disalin ? "Tautan disalin" : "Salin tautan"}
           </button>
@@ -225,7 +250,7 @@ function KartuPilihan({ jenis }: { jenis: JenisKuesioner }) {
   )
 }
 
-function PilihKuesioner() {
+function PilihKuesioner({ dibuka }: { dibuka: StatusDibuka }) {
   return (
     <div className="kq-pilih">
       <aside className="kq-pengantar" aria-label="Sebelum mengisi">
@@ -240,7 +265,7 @@ function PilihKuesioner() {
         </p>
       </aside>
       {URUTAN.map((jenis) => (
-        <KartuPilihan key={jenis} jenis={jenis} />
+        <KartuPilihan key={jenis} jenis={jenis} dibuka={dibuka[jenis]} />
       ))}
     </div>
   )
@@ -248,13 +273,16 @@ function PilihKuesioner() {
 
 // ---------------------------------------------------------------- mengisi kuesioner (/kuesioner/<jenis>)
 
-function IsiKuesioner({ jenis }: { jenis: JenisKuesioner }) {
+function IsiKuesioner({ jenis, dibukaAwal }: { jenis: JenisKuesioner; dibukaAwal: boolean }) {
   const k = KUESIONER[jenis]
   const params = new URLSearchParams(window.location.search)
   const pratinjau = params.get("pratinjau") === "1"
   const loket = params.get("loket") === "1"
   const tujuan = tujuanKuesioner(jenis)
-  const terbuka = tujuan !== null || pratinjau
+  const [dibuka, setDibuka] = useState(dibukaAwal)
+  // Tersambung ke Google Formulir tetapi ditutup Administrator (D-098); pratinjau tetap bisa dicoba
+  const ditutup = tujuan !== null && !dibuka && !pratinjau
+  const terbuka = pratinjau || (tujuan !== null && dibuka)
   const jumlah = k.pertanyaan.length
 
   // 0 = pembuka, 1..jumlah = pertanyaan, jumlah + 1 = periksa jawaban
@@ -304,7 +332,9 @@ function IsiKuesioner({ jenis }: { jenis: JenisKuesioner }) {
     setSudahMencoba(false)
     setMundur(true)
     setLangkah(0)
-  }, [])
+    // Tablet di loket bisa terbuka berhari-hari: pengisi berikutnya melihat kuesioner yang sudah ditutup
+    void muatDibuka().then((s) => setDibuka(s[jenis]))
+  }, [jenis])
 
   const isi = (kunci: string, nilai: Nilai) => setJawaban((j) => ({ ...j, [kunci]: nilai }))
 
@@ -322,8 +352,15 @@ function IsiKuesioner({ jenis }: { jenis: JenisKuesioner }) {
   const kirim = async () => {
     setStatus("mengirim")
     try {
-      if (tujuan && !pratinjau) await kirimKeGoogle(k, tujuan, jawaban)
-      else await new Promise((r) => window.setTimeout(r, 700))
+      if (tujuan && !pratinjau) {
+        // Kuesioner bisa ditutup selagi diisi; jawabannya tidak dikirim lagi (D-098)
+        if (!(await muatDibuka())[jenis]) {
+          setDibuka(false)
+          setStatus("ditutup")
+          return
+        }
+        await kirimKeGoogle(k, tujuan, jawaban)
+      } else await new Promise((r) => window.setTimeout(r, 700))
       setStatus("terkirim")
     } catch {
       setStatus("gagal")
@@ -382,7 +419,7 @@ function IsiKuesioner({ jenis }: { jenis: JenisKuesioner }) {
     </p>
   ) : null
 
-  if (status === "terkirim" || status === "mengirim" || status === "gagal") {
+  if (status !== "isi") {
     const nilaiSkala = k.pertanyaan.filter((q) => q.jenis === "skala").map((q) => Number(jawaban[q.kunci])).filter((n) => n >= 1)
     const rerata = nilaiSkala.length ? nilaiSkala.reduce((a, b) => a + b, 0) / nilaiSkala.length : 0
     return (
@@ -409,6 +446,19 @@ function IsiKuesioner({ jenis }: { jenis: JenisKuesioner }) {
               <button type="button" className="btn btn--dark" onClick={() => void kirim()}>
                 Coba kirim lagi
               </button>
+            </div>
+          </div>
+        )}
+        {status === "ditutup" && (
+          <div className="kq-langkah kq-selesai" role="alert">
+            <h2 className="h3" ref={judul} tabIndex={-1}>
+              Kuesioner ini sudah ditutup.
+            </h2>
+            <p className="body">Kuesioner ditutup selagi Anda mengisi, jadi jawaban Anda tidak dikirim. Terima kasih atas waktu Anda.</p>
+            <div className="kq-aksi kq-aksi--tengah">
+              <a className="btn btn--dark" href="/">
+                Ke Beranda PINTU
+              </a>
             </div>
           </div>
         )}
@@ -517,6 +567,15 @@ function IsiKuesioner({ jenis }: { jenis: JenisKuesioner }) {
                   Centang pernyataan di atas setelah Anda mencoba PINTU.
                 </p>
               )}
+            </div>
+          ) : ditutup ? (
+            <div className="kq-tutup" role="status">
+              <p>
+                <strong>Kuesioner ini sudah ditutup.</strong> Terima kasih atas perhatian Anda.
+              </p>
+              <a className="btn btn--ghost btn--sm" href="/">
+                Ke Beranda PINTU
+              </a>
             </div>
           ) : (
             <div className="kq-tutup" role="status">
@@ -725,8 +784,10 @@ function jenisDariAlamat(): JenisKuesioner | null {
   return jenis && jenis in KUESIONER ? jenis : null
 }
 
-export function pasang(el: HTMLElement) {
+/** Komponen dipasang setelah status buka-tutup terbaca; sementara itu teks "Memuat kuesioner…" di HTML tetap tampil. */
+export async function pasang(el: HTMLElement) {
   const jenis = jenisDariAlamat()
   if (jenis) document.title = `${KUESIONER[jenis].judul} — PINTU UPTD Pendapatan Daerah Wilayah Kota Kupang`
-  createRoot(el).render(jenis ? <IsiKuesioner jenis={jenis} /> : <PilihKuesioner />)
+  const dibuka = await muatDibuka()
+  createRoot(el).render(jenis ? <IsiKuesioner jenis={jenis} dibukaAwal={dibuka[jenis]} /> : <PilihKuesioner dibuka={dibuka} />)
 }

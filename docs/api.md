@@ -27,6 +27,7 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET` | `/api/public/halaman/{slug}` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/situs` | anonim, hanya baca | tersedia |
 | `GET` | `/api/public/pengumuman` | anonim, hanya baca | tersedia |
+| `GET` | `/api/public/kuesioner` | anonim, hanya baca | tersedia |
 | `POST` | `/api/public/pesan` | anonim, formulir Kontak | tersedia |
 | `GET` | `/api/public/pesan/{kode}` | anonim, halaman lacak pesan | tersedia |
 | `POST` | `/api/public/pesan/lacak` | anonim, lacak pesan di halaman Kontak | tersedia |
@@ -91,6 +92,8 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `GET` | `/api/pengaturan/tema` | pegawai login | tersedia |
 | `PUT`, `POST` | `/api/pengaturan/tema`, `/api/pengaturan/tema/pratinjau` | Administrator | tersedia |
 | `GET`, `POST` | `/api/pengaturan/tema/riwayat`, `/api/pengaturan/tema/tautan-pratinjau` | Administrator | tersedia |
+| `GET` | `/api/pengaturan/kuesioner` | pegawai login | tersedia |
+| `PUT` | `/api/pengaturan/kuesioner` | Administrator | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/akun` | pegawai login, untuk akunnya sendiri | tersedia |
 | `GET` | `/api/kendaraan/{nopol}` | pegawai login | tersedia |
 | `POST` | `/api/unggah` | pengelola modul tujuan; foto absensi: semua pegawai | tersedia |
@@ -235,7 +238,7 @@ Kunci modul untuk `modul` ([D-010](decisions.md#d-010--2026-10-13--penugasan-mod
 | | | `pemutakhiran` | Jadwal Pemutakhiran |
 | | | `aplikasi` | Aplikasi & Situs ([D-054](decisions.md#d-054--2026-10-17--halaman-aplikasi--situs)) |
 
-Endpoint konten dashboard (`/api/koleksi/…`, `/api/pengaturan/…`) wajib menolak pegawai yang tidak mengelola modul koleksi atau pengaturan itu. `/api/koleksi/faq`, `/api/koleksi/keliling`, `/api/koleksi/penyesuaian`, `/api/koleksi/pesan`, `/api/koleksi/layanan`, `/api/koleksi/halaman`, `/api/koleksi/pemutakhiran`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/statistik`, `/api/pengaturan/kontak`, `/api/pengaturan/visiMisi`, `/api/pengaturan/profil`, `/api/pengaturan/beranda`, `/api/pengaturan/keliling`, dan `/api/pengaturan/berita` sudah melakukannya; daftar Jadwal Pemutakhiran boleh dibaca semua pegawai, sebatas standar modul mereka, dan Pengaturan Situs, yang bukan milik modul mana pun, boleh dibaca semua pegawai tetapi hanya disimpan Administrator (`/api/pengaturan/situs`).
+Endpoint konten dashboard (`/api/koleksi/…`, `/api/pengaturan/…`) wajib menolak pegawai yang tidak mengelola modul koleksi atau pengaturan itu. `/api/koleksi/faq`, `/api/koleksi/keliling`, `/api/koleksi/penyesuaian`, `/api/koleksi/pesan`, `/api/koleksi/layanan`, `/api/koleksi/halaman`, `/api/koleksi/pemutakhiran`, `/api/pengaturan/jam`, `/api/pengaturan/papan`, `/api/pengaturan/statistik`, `/api/pengaturan/kontak`, `/api/pengaturan/visiMisi`, `/api/pengaturan/profil`, `/api/pengaturan/beranda`, `/api/pengaturan/keliling`, dan `/api/pengaturan/berita` sudah melakukannya; daftar Jadwal Pemutakhiran boleh dibaca semua pegawai, sebatas standar modul mereka, dan Pengaturan Situs, yang bukan milik modul mana pun, boleh dibaca semua pegawai tetapi hanya disimpan Administrator (`/api/pengaturan/situs`), begitu juga status buka-tutup kuesioner (`/api/pengaturan/kuesioner`, D-098).
 
 ## Tanya Jawab di dashboard
 
@@ -1013,6 +1016,23 @@ Kunci disimpan di dokumen `ai` sebagai `kunci` terenkripsi `APP_KEY`; kunci yang
 
 Kode: `app/Http/Controllers/Dashboard/AiIntegrationController.php`, `app/Http/Requests/Dashboard/AiIntegrationRules.php`, `UpdateAiIntegrationRequest.php`, `TestAiIntegrationRequest.php`, `app/Actions/TestAiConnection.php`, `app/Support/AiSettings.php`, `AiConnection.php`, `AiClient.php`, `app/Policies/SettingPolicy.php`. Tes: `tests/Feature/AiIntegrationControllerTest.php`.
 
+## Kuesioner di dashboard
+
+Dipakai tab *Kuesioner* di halaman Pengaturan ([D-098](decisions.md#d-098--2026-11-20--kuesioner-bisa-ditutup-dan-dibuka-lagi-dari-pengaturan--kuesioner)): apakah setiap kuesioner di `/kuesioner` menerima jawaban, dan sejak kapan. Semua pegawai yang login boleh membacanya; hanya Administrator yang menyimpan (pegawai lain `403` `{"message": "Hanya Administrator yang dapat membuka atau menutup kuesioner."}`, tamu `401`).
+
+```json
+{ "wajibPajak": { "dibuka": true, "sejak": null }, "operator": { "dibuka": false, "sejak": "2026-11-20T05:15:00+00:00" } }
+```
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `GET /api/pengaturan/kuesioner` | — | `200` dokumen di atas. Sebelum pertama disimpan, keduanya `dibuka: true` dan `sejak: null`. |
+| `PUT /api/pengaturan/kuesioner` | `{"wajibPajak": {"dibuka": true}, "operator": {"dibuka": false}}` | `200` seperti `GET`. `sejak` diisi server dengan waktu sekarang bila status kuesioner itu berubah, dan tetap bila tidak; `sejak` dari permintaan diabaikan. Menyimpan status yang sama tidak mengubah dokumen. `422`: kuesioner yang tidak dikirim ("Status Kuesioner Petugas Operator wajib diisi."), bukan objek ("… tidak valid."), atau `dibuka` selain `true`/`false` ("… harus dibuka atau ditutup."; `1` dan `"0"` ditolak). |
+
+Seperti Pengaturan Situs, dokumen `kuesioner` tidak milik modul mana pun dan tidak masuk log aktivitas.
+
+Kode: `app/Http/Controllers/Dashboard/QuestionnaireController.php`, `app/Http/Requests/Dashboard/UpdateQuestionnaireRequest.php`, `app/Actions/SaveQuestionnaireStatus.php`, `app/Models/Setting.php` (`QUESTIONNAIRE`, `INITIAL_QUESTIONNAIRE`, `questionnaires()`), `app/Policies/SettingPolicy.php`. Tes: `tests/Feature/QuestionnaireControllerTest.php`.
+
 ## Tampilan di dashboard
 
 Dipakai tab *Tampilan* di halaman Pengaturan ([D-057](decisions.md#d-057--2026-10-17--tema-portal-dan-dashboard-rencana-dan-keputusan-awal), [rencana](rencana-tema-situs.md)): tema portal dan dashboard masing-masing. Seperti Pengaturan Situs, tamu mendapat `401`, semua pegawai boleh membacanya, dan pegawai selain Administrator yang menyimpan atau meminta pratinjau mendapat `403` `{"message": "Hanya Administrator yang dapat mengubah Tampilan."}`. Penyimpanan tidak tercatat di log aktivitas.
@@ -1634,6 +1654,22 @@ Bilah pengumuman di atas daftar berita halaman Informasi ([D-082](decisions.md#d
 | Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
 
 Kode: `app/Http/Controllers/PublicAnnouncementBarController.php`, `app/Actions/ShowPublicAnnouncementBar.php`. Tes: `tests/Feature/PublicAnnouncementBarControllerTest.php`, `tests/Feature/PortalPagesTest.php` (bilah di HTML Informasi sama dengan isi awal; bilah Beranda tersembunyi di bawah pembuka).
+
+## `GET /api/public/kuesioner`
+
+Kuesioner mana yang menerima jawaban, untuk halaman `/kuesioner` dan `/kuesioner/{jenis}` ([D-098](decisions.md#d-098--2026-11-20--kuesioner-bisa-ditutup-dan-dibuka-lagi-dari-pengaturan--kuesioner), `muatDibuka()` di `resources/js/portal/kuesioner/kuesioner.tsx`).
+
+```json
+{ "wajibPajak": { "dibuka": true }, "operator": { "dibuka": false } }
+```
+
+| Hal | Perilaku |
+|---|---|
+| Berhasil | `200`, hanya `dibuka`; kapan kuesioner dibuka atau ditutup tidak dipublikasikan. Keduanya `true` sebelum Administrator pertama menyimpan. Portal membacanya sebelum menampilkan kuesioner, sebelum mengirim jawaban, dan saat tablet loket kembali ke awal. |
+| Galat | `422` untuk query parameter apa pun; `405` untuk metode tulis; `429` setelah batas laju yang sama dengan `GET /api/public/faq`; `503` bila data tidak bisa dibaca. Bila jawabannya gagal atau tidak dikenal, portal menganggap kuesioner dibuka. |
+| Cache | `Cache-Control: no-store`; tidak memulai sesi dan tidak memasang cookie. |
+
+Kode: `app/Http/Controllers/PublicQuestionnaireController.php`, `app/Actions/ShowPublicQuestionnaires.php`. Tes: `tests/Feature/PublicQuestionnaireControllerTest.php`.
 
 ## `POST /api/public/pesan`
 

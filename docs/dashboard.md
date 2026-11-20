@@ -467,6 +467,15 @@ Tab *Integrasi AI* di halaman *Pengaturan* (`#/pengaturan?tab=ai`, `components/p
 - Kunci hanya bisa ditulis: setelah disimpan yang tampil hanya 4 karakter terakhir dan asalnya (Pengaturan atau .env). Kosongkan untuk mempertahankannya; *Hapus kunci yang disimpan di Pengaturan* kembali ke `.env`. Mengganti host Base URL mewajibkan kunci baru.
 - *Uji koneksi* mengirim satu permintaan singkat dengan isian formulir, sudah disimpan atau belum, dan menampilkan *Terhubung* atau alasannya beserta pesan penyedia.
 
+## Kuesioner
+
+Tab *Kuesioner* di halaman *Pengaturan* (`#/pengaturan?tab=kuesioner`, `components/pengaturan/tab-kuesioner.tsx`, `lib/kuesioner.ts`, [D-098](decisions.md#d-098--2026-11-20--kuesioner-bisa-ditutup-dan-dibuka-lagi-dari-pengaturan--kuesioner)) hanya tampil bagi Administrator; alamat `?tab=kuesioner` membuka tab *Situs* bagi pegawai lain.
+
+- Satu baris untuk *Kuesioner Wajib Pajak* dan satu untuk *Kuesioner Petugas Operator*: label *Dibuka* atau *Ditutup*, sejak kapan (WITA; *Dibuka sejak kuesioner diterbitkan* bila belum pernah diubah), tautan *Lihat halaman*, dan sakelar *Menerima jawaban*.
+- Sakelar langsung menyimpan (`PUT /api/pengaturan/kuesioner`). Menutup diminta konfirmasi lebih dulu; membuka tidak. Bila gagal, sakelar kembali dan pesan server tampil.
+- Kuesioner yang ditutup tetap tampil di `/kuesioner` dengan tanda *Ditutup*, tetapi tidak bisa diisi. Sakelar tidak menghentikan Google Formulir-nya sendiri; catatan di tab meminta pemilik juga mematikan penerimaan jawaban di Google Formulir bila perlu.
+- Dengan enam tab, tab Pengaturan turun ke baris berikutnya di layar sempit, seperti di Statistik Layanan.
+
 ## Profil akun
 
 Tab *Akun* di halaman *Pengaturan* (`#/pengaturan?tab=akun`) tersimpan di server sejak [D-027](decisions.md#d-027--2026-10-14--profil-akun-tersimpan-di-server-nama-dan-surel-mengikuti-akun) sebagai pengaturan `akun`: profil akun yang sedang masuk.

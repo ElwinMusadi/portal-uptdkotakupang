@@ -421,6 +421,16 @@ export interface IntegrasiAi {
   kunci: { ada: boolean; akhir: string | null; sumber: "pengaturan" | "env" | null }
 }
 
+/** Kuesioner di Pengaturan › Kuesioner (D-098), dengan kunci yang sama seperti di server */
+export type JenisKuesioner = "wajibPajak" | "operator"
+
+/**
+ * Pengaturan › Kuesioner (D-098), khusus Administrator: apakah setiap
+ * kuesioner di /kuesioner menerima jawaban, dan sejak kapan (null = belum
+ * pernah dibuka atau ditutup dari dashboard).
+ */
+export type StatusKuesioner = Record<JenisKuesioner, { dibuka: boolean; sejak: IsoDateTime | null }>
+
 /** Hasil Uji koneksi Integrasi AI */
 export interface HasilUjiAi {
   terhubung: boolean

@@ -11,8 +11,8 @@ use Illuminate\Auth\Access\Response;
  * A settings document belongs to the dashboard module of the same name
  * (D-010), e.g. "jam" to Jam Pelayanan: administrators and the employees
  * assigned to that module may read and save it. The site settings (D-026),
- * the themes (D-057) and the AI integration (D-085), which belong to no
- * module, are the exception.
+ * the themes (D-057), the AI integration (D-085) and the questionnaires
+ * (D-098), which belong to no module, are the exception.
  */
 class SettingPolicy
 {
@@ -26,6 +26,7 @@ class SettingPolicy
         Setting::SITE => 'Hanya Administrator yang dapat mengubah Pengaturan Situs.',
         Setting::THEME => 'Hanya Administrator yang dapat mengubah Tampilan.',
         Setting::AI_INTEGRATION => 'Hanya Administrator yang dapat mengatur Integrasi AI.',
+        Setting::QUESTIONNAIRE => 'Hanya Administrator yang dapat membuka atau menutup kuesioner.',
     ];
 
     /**

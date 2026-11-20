@@ -389,6 +389,34 @@ class Setting extends Model
     public const string AI_INTEGRATION = 'ai';
 
     /**
+     * Whether each questionnaire at /kuesioner takes answers (Pengaturan ›
+     * Kuesioner, D-098), and since when it has been open or closed. It
+     * belongs to no module: every employee reads it, only administrators open
+     * and close the questionnaires.
+     */
+    public const string QUESTIONNAIRE = 'kuesioner';
+
+    /**
+     * The questionnaires in the document, in the dashboard's order: the
+     * taxpayers' at /kuesioner/wajib-pajak and the operators' at
+     * /kuesioner/operator.
+     *
+     * @var list<string>
+     */
+    public const array QUESTIONNAIRE_KINDS = ['wajibPajak', 'operator'];
+
+    /**
+     * Both questionnaires open, as they were before they could be closed;
+     * "sejak" is null until one is first opened or closed.
+     *
+     * @var array{wajibPajak: array{dibuka: bool, sejak: ?string}, operator: array{dibuka: bool, sejak: ?string}}
+     */
+    public const array INITIAL_QUESTIONNAIRE = [
+        'wajibPajak' => ['dibuka' => true, 'sejak' => null],
+        'operator' => ['dibuka' => true, 'sejak' => null],
+    ];
+
+    /**
      * One part of the theme as the built-in PINTU look: blue accent, warm
      * background, system fonts, medium corners, 100% scale, semibold
      * headings, near-black buttons and navigation.
@@ -575,6 +603,17 @@ class Setting extends Model
     public static function site(): array
     {
         return self::query()->find(self::SITE)?->value ?? self::INITIAL_SITE;
+    }
+
+    /**
+     * Whether each questionnaire takes answers (D-098); both open until an
+     * administrator first closes one.
+     *
+     * @return array{wajibPajak: array{dibuka: bool, sejak: ?string}, operator: array{dibuka: bool, sejak: ?string}}
+     */
+    public static function questionnaires(): array
+    {
+        return self::query()->find(self::QUESTIONNAIRE)?->value ?? self::INITIAL_QUESTIONNAIRE;
     }
 
     /**
