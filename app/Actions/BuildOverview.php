@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Enums\RealizationScope;
 use App\Http\Resources\RevenueTargetResource;
 use App\Models\PotentialImport;
 use App\Models\RevenueTarget;
@@ -11,9 +12,9 @@ use Illuminate\Support\Carbon;
 
 /**
  * The Ikhtisar page (D-099, D-100): the dashboard's revenue report of all
- * counters with its filters, Form I and the Pemetaan PKB summary, for anyone
- * while an administrator has the page open, with the dates their data runs
- * through. Only figures: no plate number, name, address or note of any
+ * counters with its filters, Form I and Form I.I (D-101) and the Pemetaan PKB
+ * summary, for anyone while an administrator has the page open, with the
+ * dates their data runs through. Only figures: no plate number, name, address or note of any
  * taxpayer, nor the name of any employee. The revenue counts every import,
  * shown on the portal or not, like the dashboard. Without a range the page
  * shows the month of the latest STS date through that date, so it moves on
@@ -61,7 +62,8 @@ class BuildOverview
             'sampai' => $until->toDateString(),
             'pembaruan' => $this->updates($dates, $latest, $import),
             'penerimaan' => $this->revenue($from, $until, $filters),
-            'realisasi' => $this->realization($until),
+            'realisasi' => $this->realization($until, RealizationScope::Combined),
+            'realisasiKotaKupang' => $this->realization($until, RealizationScope::KotaKupang),
             'pemetaan' => $import === null ? null : $this->potential($import, $summary),
             // Whatever the period: from the Data Potensi date through the latest STS date
             'pembayaran' => $import === null ? null : $this->payments->handle($import, $summary, $dates['akhir'] ?? null),
@@ -118,18 +120,18 @@ class BuildOverview
     }
 
     /**
-     * Form I of the month the period ends in, through its last day unless
-     * that is the end of the month, with the year's target without who saved
-     * it.
+     * Form I or Form I.I of the month the period ends in, through its last
+     * day unless that is the end of the month, with the year's target without
+     * who saved it.
      *
      * @return array<string, mixed>
      */
-    private function realization(Carbon $until): array
+    private function realization(Carbon $until, RealizationScope $scope): array
     {
         $target = RevenueTarget::query()->firstWhere('tahun', $until->year);
 
         return [
-            ...$this->realization->handle($until->year, $until->month, $target, $until->isLastOfMonth() ? null : $until),
+            ...$this->realization->handle($until->year, $until->month, $target, $until->isLastOfMonth() ? null : $until, $scope),
             'target' => $target === null ? null : Arr::except((new RevenueTargetResource($target))->resolve(), ['diperbarui', 'oleh']),
         ];
     }

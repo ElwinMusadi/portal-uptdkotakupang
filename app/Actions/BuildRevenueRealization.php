@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Enums\RealizationScope;
 use App\Models\RevenueTarget;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +16,9 @@ use stdClass;
  * stop at a given day, as the office's reports made mid-month do (D-070).
  * The months covered by the opening balance entered by hand count that
  * balance instead of their transactions, and have no report of their own.
+ * Form I.I counts only the vehicles registered at the city's UPT, against the
+ * same target, with its own opening balance over the same months (D-101);
+ * until that balance is entered it has no figures ("saldoKosong").
  */
 class BuildRevenueRealization
 {
@@ -57,25 +61,28 @@ class BuildRevenueRealization
 
     /**
      * The report of the month, through the given day of it or the whole
-     * month, or only whether it has one when the opening balance covers it.
+     * month, or only whether it has one when the opening balance covers it
+     * or, for Form I.I, is not entered yet.
      *
-     * @return array{tahun: int, bulan: int, sampai: ?string, tersedia: bool, sampaiTanggal: ?string, loket: list<array<string, mixed>>, baris: list<array<string, mixed>>}
+     * @return array{cakupan: string, tahun: int, bulan: int, sampai: ?string, tersedia: bool, saldoKosong: bool, sampaiTanggal: ?string, loket: list<array<string, mixed>>, baris: list<array<string, mixed>>}
      */
-    public function handle(int $year, int $month, ?RevenueTarget $target, ?Carbon $until = null): array
+    public function handle(int $year, int $month, ?RevenueTarget $target, ?Carbon $until = null, RealizationScope $scope = RealizationScope::Combined): array
     {
         $openingMonth = $target?->saldo_sampai_bulan ?? 0;
-        $report = ['tahun' => $year, 'bulan' => $month, 'sampai' => $until?->toDateString(), 'tersedia' => $month > $openingMonth,
+        $available = $month > $openingMonth;
+        $report = ['cakupan' => $scope->value, 'tahun' => $year, 'bulan' => $month, 'sampai' => $until?->toDateString(), 'tersedia' => $available,
+            'saldoKosong' => $available && $openingMonth > 0 && $target->{$scope->balanceColumn('pkb')} === null,
             'sampaiTanggal' => null, 'loket' => [], 'baris' => []];
 
-        if (! $report['tersedia']) {
+        if (! $report['tersedia'] || $report['saldoKosong']) {
             return $report;
         }
 
         $first = Carbon::create($year, $month);
         $last = $until ?? $first->copy()->endOfMonth()->startOfDay();
-        $before = $this->amounts($target, $year, $openingMonth, $month);
-        $current = $this->parts($this->report->totals($first, $last));
-        $counters = $this->counters($first, $last);
+        $before = $this->amounts($target, $year, $openingMonth, $month, $scope);
+        $current = $this->parts($this->report->totals($first, $last, $scope->filters()));
+        $counters = $this->counters($first, $last, $scope);
 
         return [
             ...$report,
@@ -86,22 +93,22 @@ class BuildRevenueRealization
     }
 
     /**
-     * The realisation before the month: the opening balance and the
+     * The realisation before the month: the form's opening balance and the
      * transactions of the months after it.
      *
      * @return array<string, int>
      */
-    private function amounts(?RevenueTarget $target, int $year, int $openingMonth, int $month): array
+    private function amounts(?RevenueTarget $target, int $year, int $openingMonth, int $month, RealizationScope $scope): array
     {
         $amounts = [];
         foreach (RevenueTarget::PARTS as $part) {
-            $amounts[$part] = $openingMonth > 0 ? $target->{"saldo_{$part}"} : 0;
+            $amounts[$part] = $openingMonth > 0 ? $target->{$scope->balanceColumn($part)} : 0;
         }
 
         if ($month - 1 > $openingMonth) {
             $from = Carbon::create($year, $openingMonth + 1);
             $until = Carbon::create($year, $month)->subDay();
-            foreach ($this->parts($this->report->totals($from, $until)) as $part => $amount) {
+            foreach ($this->parts($this->report->totals($from, $until, $scope->filters())) as $part => $amount) {
                 $amounts[$part] += $amount;
             }
         }
@@ -126,17 +133,17 @@ class BuildRevenueRealization
     }
 
     /**
-     * The counters with transactions in the month, largest first, with the
-     * last date each one has been imported through.
+     * The counters with transactions the form counts in the month, largest
+     * first, with the last date each one has them through.
      *
      * @return list<array{nilai: string, nama: string, transaksi: int, jumlah: int, sampaiTanggal: string}>
      */
-    private function counters(Carbon $first, Carbon $last): array
+    private function counters(Carbon $first, Carbon $last, RealizationScope $scope): array
     {
         $names = $this->report->counterNames();
         $sum = implode(' + ', array_map(fn (string $part): string => "COALESCE(SUM({$part}), 0)", RevenueTarget::PARTS));
 
-        return DB::table('revenue_transactions')
+        return BuildRevenueReport::narrow(DB::table('revenue_transactions'), $scope->filters())
             ->whereBetween('tanggal', [$first->toDateString(), $last->toDateString()])
             ->select('loket')
             ->selectRaw("COUNT(*) AS transaksi, MAX(tanggal) AS akhir, {$sum} AS jumlah")

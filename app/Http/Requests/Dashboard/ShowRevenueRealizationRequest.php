@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests\Dashboard;
 
+use App\Enums\RealizationScope;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 /**
- * The month of the realisation report (D-068), as "YYYY-MM", and the day of
- * that month it stops at, as "YYYY-MM-DD", when not the whole month (D-070).
+ * The month of the realisation report (D-068), as "YYYY-MM", the day of that
+ * month it stops at, as "YYYY-MM-DD", when not the whole month (D-070), and
+ * the form: "gabungan" (Form I, the default) or "kota-kupang" (Form I.I,
+ * D-101).
  */
 class ShowRevenueRealizationRequest extends FormRequest
 {
@@ -31,6 +35,7 @@ class ShowRevenueRealizationRequest extends FormRequest
         return [
             'bulan' => ['required', 'date_format:Y-m', 'after_or_equal:2000-01', 'before_or_equal:2099-12'],
             'sampai' => ['sometimes', 'nullable', 'date_format:Y-m-d'],
+            'cakupan' => ['sometimes', 'string', Rule::enum(RealizationScope::class)],
         ];
     }
 
@@ -60,6 +65,7 @@ class ShowRevenueRealizationRequest extends FormRequest
             'bulan.required' => 'Pilih bulan laporan.',
             'bulan.*' => 'Bulan laporan tidak valid.',
             'sampai.*' => 'Tanggal batas laporan tidak valid.',
+            'cakupan.*' => 'Pilih realisasi Gabungan atau Kota Kupang.',
         ];
     }
 
@@ -71,6 +77,14 @@ class ShowRevenueRealizationRequest extends FormRequest
     public function month(): int
     {
         return (int) substr($this->input('bulan'), 5, 2);
+    }
+
+    /**
+     * Which transactions the report counts.
+     */
+    public function scope(): RealizationScope
+    {
+        return RealizationScope::from($this->input('cakupan', RealizationScope::Combined->value));
     }
 
     /**

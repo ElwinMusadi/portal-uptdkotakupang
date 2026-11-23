@@ -44,4 +44,20 @@ class RevenueTargetFactory extends Factory
 
         return $this->state(['saldo_sampai_bulan' => $month, ...$balances]);
     }
+
+    /**
+     * The city's opening balance of Form I.I over the same months (D-101);
+     * the amounts not given are zero.
+     *
+     * @param  array<string, int>  $amounts  by STS amount, e.g. ['pkb' => 1000]
+     */
+    public function cityOpening(array $amounts): static
+    {
+        $balances = [];
+        foreach (RevenueTarget::PARTS as $part) {
+            $balances["saldo_kota_{$part}"] = $amounts[$part] ?? 0;
+        }
+
+        return $this->state($balances);
+    }
 }

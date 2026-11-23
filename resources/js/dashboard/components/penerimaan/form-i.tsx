@@ -1,7 +1,7 @@
 /*
- * Realisasi Target dalam susunan Form I (D-068, D-070): kartu capaian, tabel,
- * sumber angka, dan cetaknya. Dipakai halaman Realisasi Target di dashboard
- * dan halaman Ikhtisar (D-099).
+ * Realisasi Target dalam susunan Form I (D-068, D-070) dan Form I.I Kota Kupang
+ * (D-101): kartu capaian, tabel, sumber angka, dan cetaknya. Dipakai halaman
+ * Realisasi Target di dashboard dan halaman Ikhtisar (D-099).
  */
 import * as React from "react"
 import { IconTargetArrow } from "@tabler/icons-react"
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import { angka, rupiah } from "@/lib/format"
-import type { BarisRealisasi, RealisasiPenerimaan, TargetPenerimaan } from "@/lib/penerimaan"
+import { CAKUPAN_REALISASI, type BarisRealisasi, type RealisasiPenerimaan, type TargetPenerimaan } from "@/lib/penerimaan"
 import { cn } from "@/lib/utils"
 
 import { labelTanggal } from "../../../portal/penerimaan/periode"
@@ -102,11 +102,13 @@ export function KartuCapaian({ judul, baris }: { judul: string; baris: BarisReal
 
 export function TabelFormI({ laporan, ref }: { laporan: LaporanFormI; ref: React.Ref<HTMLTableElement> }) {
   const sel = "border border-border px-2 py-1.5"
+  const cakupan = CAKUPAN_REALISASI[laporan.cakupan]
   return (
     <div className="overflow-x-auto">
       <table ref={ref} className="w-full min-w-[50rem] border-collapse text-sm tabular-nums">
         <caption className="sr-only">
-          Realisasi penerimaan gabungan {rentangBulanIni(laporan.tahun, laporan.bulan, laporan.sampai)} terhadap target
+          {cakupan.form}: realisasi penerimaan {laporan.cakupan === "gabungan" ? "gabungan" : "Kota Kupang"}{" "}
+          {rentangBulanIni(laporan.tahun, laporan.bulan, laporan.sampai)} terhadap target
         </caption>
         <thead className="bg-muted/50 text-xs font-semibold">
           <tr>
@@ -120,7 +122,7 @@ export function TabelFormI({ laporan, ref }: { laporan: LaporanFormI; ref: React
               TARGET (Rp)
             </th>
             <th colSpan={3} scope="colgroup" className={sel}>
-              REALISASI PENERIMAAN GABUNGAN
+              {cakupan.kepala}
             </th>
             <th rowSpan={2} scope="col" className={cn(sel, "w-20")}>
               PCT
@@ -191,6 +193,7 @@ export function TabelFormI({ laporan, ref }: { laporan: LaporanFormI; ref: React
 /** Sumber angka: saldo awal, bulan-bulan STS sebelumnya, dan loket bulan ini */
 export function Sumber({ laporan }: { laporan: LaporanFormI }) {
   const saldo = laporan.target?.saldoAwal
+  const kota = laporan.cakupan === "kota-kupang"
   const bulanStsPertama = (saldo?.sampaiBulan ?? 0) + 1
   const adaStsSebelumnya = laporan.bulan > bulanStsPertama
   const stsSebelumnya =
@@ -204,11 +207,12 @@ export function Sumber({ laporan }: { laporan: LaporanFormI }) {
         <CardTitle className="text-base">Sumber angka</CardTitle>
         <CardDescription>
           {saldo
-            ? `S/D bulan lalu memuat saldo awal ${rentangSaldo(laporan.tahun, saldo.sampaiBulan)} yang diisi manual${adaStsSebelumnya ? `, ditambah transaksi STS ${stsSebelumnya}` : ""}.`
+            ? `S/D bulan lalu memuat saldo awal${kota ? " Kota Kupang" : ""} ${rentangSaldo(laporan.tahun, saldo.sampaiBulan)} yang diisi manual${adaStsSebelumnya ? `, ditambah transaksi STS ${stsSebelumnya}` : ""}.`
             : laporan.bulan > 1
               ? `S/D bulan lalu dihitung dari transaksi STS ${stsSebelumnya}.`
               : "Januari tidak memiliki bulan lalu."}{" "}
-          Bulan ini dihitung dari transaksi STS semua loket{laporan.sampai ? ` tanggal ${rentangBulanIni(laporan.tahun, laporan.bulan, laporan.sampai)}` : ""}.
+          Bulan ini dihitung dari transaksi STS semua loket{laporan.sampai ? ` tanggal ${rentangBulanIni(laporan.tahun, laporan.bulan, laporan.sampai)}` : ""}
+          {kota ? ", hanya kendaraan yang kolom UPT ASAL-nya Kota Kupang." : "."}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -262,6 +266,39 @@ export function TertutupSaldo({ laporan, ubah }: { laporan: LaporanFormI; ubah?:
   )
 }
 
+/** Form I.I tanpa angka sampai saldo awal Kota Kupang untuk bulan-bulan saldo awal diisi (D-101) */
+export function SaldoKotaKosong({ laporan, isi }: { laporan: LaporanFormI; isi?: () => void }) {
+  const sampai = laporan.target?.saldoAwal?.sampaiBulan ?? 0
+  return (
+    <Card>
+      <CardContent>
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <IconTargetArrow />
+            </EmptyMedia>
+            <EmptyTitle>Saldo awal Kota Kupang belum diisi</EmptyTitle>
+            <EmptyDescription>
+              Kolom S/D bulan lalu Form I.I memerlukan realisasi Kota Kupang {rentangSaldo(laporan.tahun, sampai)}, karena
+              transaksi STS bulan-bulan itu tidak dihitung.{" "}
+              {isi
+                ? `Isi dari Form I.I yang sudah ada, misalnya kolom S/D bulan lalu Form I.I ${sampai < 12 ? labelBulan(laporan.tahun, sampai + 1) : `Desember ${laporan.tahun}`}.`
+                : "Saldo ini diisi pegawai Laporan Penerimaan di dashboard, halaman Realisasi Target."}
+            </EmptyDescription>
+          </EmptyHeader>
+          {isi && (
+            <EmptyContent>
+              <Button variant="outline" onClick={isi}>
+                Isi saldo awal Kota Kupang
+              </Button>
+            </EmptyContent>
+          )}
+        </Empty>
+      </CardContent>
+    </Card>
+  )
+}
+
 /* ---------- Cetak ---------- */
 
 const JUDUL_FORM = [
@@ -289,8 +326,9 @@ tr[data-jenis="jumlah"] td, tr[data-jenis="total"] td { font-weight: 700; }
 tr[data-jenis="total"] th { letter-spacing: 0.3em; }
 `
 
-/** Cetak Form I lewat bingkai tersembunyi: judul resmi di atas tabel yang sama dengan di layar, A4 mendatar */
+/** Cetak Form I atau Form I.I lewat bingkai tersembunyi: judul resmi di atas tabel yang sama dengan di layar, A4 mendatar */
 export function cetakFormI(tabel: HTMLTableElement, laporan: LaporanFormI) {
+  const cakupan = CAKUPAN_REALISASI[laporan.cakupan]
   const judul = [
     ...JUDUL_FORM,
     `BULAN ${NAMA_BULAN[laporan.bulan - 1].toUpperCase()}`,
@@ -301,7 +339,7 @@ export function cetakFormI(tabel: HTMLTableElement, laporan: LaporanFormI) {
   bingkai.setAttribute("aria-hidden", "true")
   bingkai.tabIndex = -1
   bingkai.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0"
-  bingkai.srcdoc = `<!doctype html><html lang="id"><head><meta charset="utf-8"><title>Realisasi Penerimaan ${kodeBulan(laporan.tahun, laporan.bulan)}</title><style>${GAYA_CETAK}</style></head><body><div class="judul">${judul.join("<br>")}</div><div class="atas"><span>GABUNGAN</span><span>Form. I</span></div>${tabel.outerHTML}</body></html>`
+  bingkai.srcdoc = `<!doctype html><html lang="id"><head><meta charset="utf-8"><title>Realisasi Penerimaan ${laporan.cakupan === "gabungan" ? "" : `${cakupan.label} `}${kodeBulan(laporan.tahun, laporan.bulan)}</title><style>${GAYA_CETAK}</style></head><body><div class="judul">${judul.join("<br>")}</div><div class="atas"><span>${cakupan.kiri ?? ""}</span><span>${cakupan.nomor}</span></div>${tabel.outerHTML}</body></html>`
   bingkai.onload = () => {
     const jendela = bingkai.contentWindow
     if (!jendela) return

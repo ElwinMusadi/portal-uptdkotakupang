@@ -37,7 +37,10 @@ export interface Ikhtisar {
   }
   /** Penerimaan periode itu dengan saringan, dan nilai setiap saringan dalam periode itu */
   penerimaan: Omit<IntiLaporan, "dari" | "sampai"> & Pick<LaporanPenerimaan, "pilihan">
+  /** Form I gabungan bulan tanggal akhir periode */
   realisasi: LaporanFormI
+  /** Form I.I: kendaraan ber-UPT asal Kota Kupang, bulan yang sama (D-101) */
+  realisasiKotaKupang: LaporanFormI
   pemetaan: (IsiPemetaan & Pick<RingkasanPemetaan, "bulan"> & { tanggal: string | null; selesai: string | null; kolom: KolomWilayah[] }) | null
   /** Kepatuhan Data Potensi berdampingan dengan transaksi bayar PKB di loket sejak tanggalnya; null tanpa Data Potensi */
   pembayaran: {

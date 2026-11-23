@@ -13,8 +13,9 @@ use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
- * The realisation report of a month against the year's target, Form I
- * (D-068): every counter's STS transactions, in full.
+ * The realisation report of a month against the year's target: Form I of
+ * every counter's STS transactions (D-068), or Form I.I of the vehicles
+ * registered at the city's UPT (D-101).
  */
 class RevenueRealizationController extends Controller
 {
@@ -28,17 +29,18 @@ class RevenueRealizationController extends Controller
         $target = $this->target($request->year());
 
         return response()->json([
-            ...$buildRealization->handle($request->year(), $request->month(), $target, $request->until()),
+            ...$buildRealization->handle($request->year(), $request->month(), $target, $request->until(), $request->scope()),
             'target' => $target === null ? null : new RevenueTargetResource($target),
         ]);
     }
 
     /**
-     * The month's report as an Excel workbook laid out as Form I, named after
-     * the day it stops at when there is one, e.g.
-     * "realisasi-penerimaan-2026-10-sd-07.xlsx".
+     * The month's report as an Excel workbook laid out as Form I or Form I.I,
+     * named after the form and the day it stops at when there is one, e.g.
+     * "realisasi-penerimaan-2026-10-sd-07.xlsx" or
+     * "realisasi-penerimaan-kota-kupang-2026-10.xlsx".
      *
-     * @throws ValidationException when the opening balance covers the month
+     * @throws ValidationException when the opening balance covers the month or, for Form I.I, is not entered yet
      */
     public function download(
         ShowRevenueRealizationRequest $request,
@@ -46,13 +48,18 @@ class RevenueRealizationController extends Controller
         WriteRevenueRealizationWorkbook $writeWorkbook,
     ): BinaryFileResponse {
         $until = $request->until();
-        $report = $buildRealization->handle($request->year(), $request->month(), $this->target($request->year()), $until);
+        $scope = $request->scope();
+        $report = $buildRealization->handle($request->year(), $request->month(), $this->target($request->year()), $until, $scope);
 
         if (! $report['tersedia']) {
             throw ValidationException::withMessages(['bulan' => 'Realisasi bulan ini tercatat dalam saldo awal, jadi tidak ada laporan per bulannya.']);
         }
 
-        $name = sprintf('realisasi-penerimaan-%04d-%02d%s.xlsx', $report['tahun'], $report['bulan'], $until === null ? '' : '-sd-'.$until->format('d'));
+        if ($report['saldoKosong']) {
+            throw ValidationException::withMessages(['cakupan' => 'Isi saldo awal Kota Kupang di Target lebih dulu.']);
+        }
+
+        $name = sprintf('%s-%04d-%02d%s.xlsx', $scope->fileName(), $report['tahun'], $report['bulan'], $until === null ? '' : '-sd-'.$until->format('d'));
 
         return response()->download($writeWorkbook->handle($report), $name, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

@@ -377,8 +377,40 @@ export const LABEL_BAGIAN: Record<BagianRealisasi, string> = {
 /** Target tahunan; target PKB dan denda PKB masing-masing termasuk tunggakannya */
 export type KunciTarget = "pkb" | "bbn" | "dendaPkb" | "dendaBbn"
 
+/**
+ * Form realisasi (D-101): Form I gabungan semua transaksi di loket UPTD, atau Form I.I
+ * kendaraan ber-UPT asal Kota Kupang. Keduanya memakai target yang sama.
+ */
+export type CakupanRealisasi = "gabungan" | "kota-kupang"
+
+export const CAKUPAN_REALISASI: Record<
+  CakupanRealisasi,
+  { label: string; form: string; kiri: string | null; nomor: string; kepala: string; isi: string }
+> = {
+  gabungan: {
+    label: "Gabungan",
+    form: "Form I",
+    kiri: "GABUNGAN",
+    nomor: "Form. I",
+    kepala: "REALISASI PENERIMAAN GABUNGAN",
+    isi: "semua transaksi di loket UPTD, termasuk kendaraan kabupaten lain",
+  },
+  "kota-kupang": {
+    label: "Kota Kupang",
+    form: "Form I.I",
+    kiri: null,
+    nomor: "Form I.I",
+    kepala: "REALISASI PENERIMAAN KOTA KUPANG",
+    isi: "transaksi kendaraan ber-UPT asal Kota Kupang",
+  },
+}
+
 /** Realisasi bulan-bulan sebelum data STS lengkap, diisi manual sampai bulan tertentu */
-export type SaldoAwal = Record<BagianRealisasi, number> & { sampaiBulan: number }
+export type SaldoAwal = Record<BagianRealisasi, number> & {
+  sampaiBulan: number
+  /** Saldo awal Form I.I untuk bulan yang sama (D-101); null bila belum diisi */
+  kotaKupang: Record<BagianRealisasi, number> | null
+}
 
 export interface TargetPenerimaan extends Record<KunciTarget, number> {
   tahun: number
@@ -404,12 +436,15 @@ export interface BarisRealisasi {
 }
 
 export interface RealisasiPenerimaan {
+  cakupan: CakupanRealisasi
   tahun: number
   bulan: number
   /** Tanggal batas bulan ini ("YYYY-MM-DD", D-070); null bila sebulan penuh */
   sampai: string | null
   /** false bila saldo awal mencakup bulan ini, sehingga tidak ada laporan per bulannya */
   tersedia: boolean
+  /** Form I.I tanpa angka karena saldo awal Kota Kupang belum diisi (D-101) */
+  saldoKosong: boolean
   /** Tanggal transaksi terakhir bulan ini dari semua loket */
   sampaiTanggal: string | null
   loket: { nilai: string; nama: string; transaksi: number; jumlah: number; sampaiTanggal: string }[]
@@ -420,21 +455,23 @@ export interface RealisasiPenerimaan {
 
 export interface IsianTarget {
   target: Record<KunciTarget, number>
-  saldoAwal: SaldoAwal | null
+  /** Saldo awal Kota Kupang wajib diisi bersama saldo awal gabungan (D-101) */
+  saldoAwal: (Omit<SaldoAwal, "kotaKupang"> & { kotaKupang: Record<BagianRealisasi, number> }) | null
 }
 
-/** Bulan dan tanggal batas sebagai parameter alamat; tanpa tanggal batas berarti sebulan penuh */
-function kueriRealisasi(bulan: string, sampai: string): string {
+/** Bulan, tanggal batas, dan form sebagai parameter alamat; tanpa tanggal batas berarti sebulan penuh */
+function kueriRealisasi(bulan: string, sampai: string, cakupan: CakupanRealisasi): string {
   const p = new URLSearchParams({ bulan })
   if (sampai) p.set("sampai", sampai)
+  if (cakupan !== "gabungan") p.set("cakupan", cakupan)
   return p.toString()
 }
 
-/** Form I sebulan ("YYYY-MM") dari semua loket, sampai tanggal tertentu bila diisi (D-070) */
-export function useRealisasi(bulan: string, sampai = "") {
+/** Form I (atau Form I.I, D-101) sebulan ("YYYY-MM"), sampai tanggal tertentu bila diisi (D-070) */
+export function useRealisasi(bulan: string, sampai = "", cakupan: CakupanRealisasi = "gabungan") {
   return useQuery({
-    queryKey: [...KUNCI, "realisasi", bulan, sampai],
-    queryFn: () => mintaServer<RealisasiPenerimaan>(`/api/penerimaan/realisasi?${kueriRealisasi(bulan, sampai)}`, "GET"),
+    queryKey: [...KUNCI, "realisasi", bulan, sampai, cakupan],
+    queryFn: () => mintaServer<RealisasiPenerimaan>(`/api/penerimaan/realisasi?${kueriRealisasi(bulan, sampai, cakupan)}`, "GET"),
     placeholderData: keepPreviousData,
   })
 }
@@ -449,11 +486,11 @@ export function useSimpanTarget() {
   })
 }
 
-/** Unduh Form I sebulan, atau sampai tanggal batasnya, sebagai berkas Excel buatan server */
-export async function unduhRealisasi(bulan: string, sampai = ""): Promise<void> {
+/** Unduh Form I atau Form I.I sebulan, atau sampai tanggal batasnya, sebagai berkas Excel buatan server */
+export async function unduhRealisasi(bulan: string, sampai = "", cakupan: CakupanRealisasi = "gabungan"): Promise<void> {
   let res: Response
   try {
-    res = await fetch(`/api/penerimaan/realisasi/unduh?${kueriRealisasi(bulan, sampai)}`, {
+    res = await fetch(`/api/penerimaan/realisasi/unduh?${kueriRealisasi(bulan, sampai, cakupan)}`, {
       ...SAMA_ORIGIN,
       headers: { Accept: "application/json" },
     })
@@ -474,7 +511,7 @@ export async function unduhRealisasi(bulan: string, sampai = ""): Promise<void> 
   const url = URL.createObjectURL(await res.blob())
   const a = document.createElement("a")
   a.href = url
-  a.download = `realisasi-penerimaan-${bulan}${sampai ? `-sd-${sampai.slice(8, 10)}` : ""}.xlsx`
+  a.download = `realisasi-penerimaan${cakupan === "gabungan" ? "" : `-${cakupan}`}-${bulan}${sampai ? `-sd-${sampai.slice(8, 10)}` : ""}.xlsx`
   document.body.append(a)
   a.click()
   a.remove()

@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Enums\RealizationScope;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -9,9 +10,10 @@ use ZipArchive;
 
 /**
  * Writes the realisation report of a month as an Excel workbook laid out as
- * Form I (D-068, D-070): the title, the merged header and target cells, thin
- * borders and rupiah and percent formats, on A4 landscape. The workbook is
- * put together by hand with ZipArchive, so no spreadsheet package is needed.
+ * Form I (D-068, D-070) or Form I.I (D-101): the title, the merged header and
+ * target cells, thin borders and rupiah and percent formats, on A4
+ * landscape. The workbook is put together by hand with ZipArchive, so no
+ * spreadsheet package is needed.
  */
 class WriteRevenueRealizationWorkbook
 {
@@ -40,7 +42,7 @@ class WriteRevenueRealizationWorkbook
      * Write the report to a temporary file and give its path; the caller
      * deletes it once sent.
      *
-     * @param  array{tahun: int, bulan: int, sampai?: ?string, baris: list<array<string, mixed>>}  $report
+     * @param  array{cakupan?: string, tahun: int, bulan: int, sampai?: ?string, baris: list<array<string, mixed>>}  $report
      */
     public function handle(array $report): string
     {
@@ -53,7 +55,7 @@ class WriteRevenueRealizationWorkbook
 
         $zip->addFromString('[Content_Types].xml', $this->contentTypes());
         $zip->addFromString('_rels/.rels', $this->packageRelationships());
-        $zip->addFromString('xl/workbook.xml', $this->workbook());
+        $zip->addFromString('xl/workbook.xml', $this->workbook(RealizationScope::from($report['cakupan'] ?? RealizationScope::Combined->value)));
         $zip->addFromString('xl/_rels/workbook.xml.rels', $this->workbookRelationships());
         $zip->addFromString('xl/styles.xml', $this->styles());
         $zip->addFromString('xl/worksheets/sheet1.xml', $this->sheet($report));
@@ -67,10 +69,11 @@ class WriteRevenueRealizationWorkbook
      * the report. A report that stops before the month ends says so under
      * the year (D-070), which moves every row below it down by one.
      *
-     * @param  array{tahun: int, bulan: int, sampai?: ?string, baris: list<array<string, mixed>>}  $report
+     * @param  array{cakupan?: string, tahun: int, bulan: int, sampai?: ?string, baris: list<array<string, mixed>>}  $report
      */
     private function sheet(array $report): string
     {
+        $scope = RealizationScope::from($report['cakupan'] ?? RealizationScope::Combined->value);
         $month = Str::upper(Carbon::create($report['tahun'], $report['bulan'])->locale('id')->translatedFormat('F'));
         $title = [...self::TITLE, "BULAN {$month}", "TAHUN {$report['tahun']}"];
         if (($report['sampai'] ?? null) !== null) {
@@ -85,16 +88,19 @@ class WriteRevenueRealizationWorkbook
             $merges[] = 'A'.($index + 1).':G'.($index + 1);
         }
 
-        // A blank row, then GABUNGAN and Form. I, the two header rows, the column numbers and the figures
+        // A blank row, then GABUNGAN (Form I only) and the form's number, the two header rows, the column numbers and the figures
         $label = count($title) + 2;
         $top = $label + 1;
         $bottom = $top + 1;
         $numbers = $bottom + 1;
 
-        $rows[$label] = [$this->text('A', $label, 'GABUNGAN', 'label'), $this->text('G', $label, 'Form. I', 'form')];
+        $rows[$label] = [
+            ...($scope->label() === null ? [] : [$this->text('A', $label, $scope->label(), 'label')]),
+            $this->text('G', $label, $scope->form(), 'form'),
+        ];
 
         $rows[$top] = [$this->text('A', $top, 'NO.', 'header'), $this->text('B', $top, 'JENIS PENERIMAAN', 'header'),
-            $this->text('C', $top, 'TARGET (Rp)', 'header'), $this->text('D', $top, 'REALISASI PENERIMAAN GABUNGAN', 'header'),
+            $this->text('C', $top, 'TARGET (Rp)', 'header'), $this->text('D', $top, $scope->heading(), 'header'),
             $this->blank('E', $top, 'header'), $this->blank('F', $top, 'header'), $this->text('G', $top, 'PCT', 'header')];
         $rows[$bottom] = [$this->blank('A', $bottom, 'header'), $this->blank('B', $bottom, 'header'), $this->blank('C', $bottom, 'header'),
             $this->text('D', $bottom, 'S/D BULAN LALU (Rp)', 'header'), $this->text('E', $bottom, 'BULAN INI (Rp)', 'header'),
@@ -229,11 +235,16 @@ class WriteRevenueRealizationWorkbook
             .'</styleSheet>';
     }
 
-    private function workbook(): string
+    /**
+     * The workbook with one sheet named after the form, "Form I" or "Form I.I".
+     */
+    private function workbook(RealizationScope $scope): string
     {
+        $sheet = $scope === RealizationScope::KotaKupang ? 'Form I.I' : 'Form I';
+
         return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
             .'<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
-            .'<sheets><sheet name="Form I" sheetId="1" r:id="rId1"/></sheets>'
+            .'<sheets><sheet name="'.$sheet.'" sheetId="1" r:id="rId1"/></sheets>'
             .'</workbook>';
     }
 

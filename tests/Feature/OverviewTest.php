@@ -199,6 +199,27 @@ class OverviewTest extends TestCase
             ->assertJsonPath('realisasi.baris.0.ini', 100000);
     }
 
+    public function test_reports_form_i_i_of_the_vehicles_registered_in_the_city_beside_form_i(): void
+    {
+        $this->transaction('2026-11-20', pkb: 400000);
+        $this->transaction('2026-11-20', attributes: ['upt_asal' => 'Kab. Kupang'], pkb: 50000);
+        $this->transaction('2026-10-14', attributes: ['upt_asal' => 'Kab. Kupang'], pkb: 100000);
+        RevenueTarget::factory()->create(['tahun' => 2026, 'target_pkb' => 10000000]);
+
+        $response = $this->overview()->assertOk()
+            ->assertJsonPath('realisasi.cakupan', 'gabungan')
+            ->assertJsonPath('realisasi.baris.0.ini', 450000)
+            ->assertJsonPath('realisasi.baris.0.lalu', 100000)
+            ->assertJsonPath('realisasiKotaKupang.cakupan', 'kota-kupang')
+            ->assertJsonPath('realisasiKotaKupang.sampai', '2026-11-20')
+            ->assertJsonPath('realisasiKotaKupang.saldoKosong', false)
+            ->assertJsonPath('realisasiKotaKupang.baris.0.ini', 400000)
+            ->assertJsonPath('realisasiKotaKupang.baris.0.lalu', 0)
+            ->assertJsonPath('realisasiKotaKupang.loket.0.jumlah', 400000)
+            ->assertJsonPath('realisasiKotaKupang.target.pkb', 10000000);
+        $this->assertSame(['tahun', 'pkb', 'bbn', 'dendaPkb', 'dendaBbn', 'saldoAwal'], array_keys($response->json('realisasiKotaKupang.target')));
+    }
+
     public function test_shows_how_fresh_the_figures_are(): void
     {
         $this->transaction('2026-11-20');

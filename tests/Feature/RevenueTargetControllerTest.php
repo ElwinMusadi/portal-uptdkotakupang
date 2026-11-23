@@ -19,7 +19,10 @@ class RevenueTargetControllerTest extends TestCase
         $payload = [
             'target' => ['pkb' => 240000209667, 'bbn' => 73264603499, 'dendaPkb' => 8225972907, 'dendaBbn' => 69224567],
             'saldoAwal' => ['sampaiBulan' => 9, 'pkb' => 45307522105, 'tunggakan' => 10838597309, 'bbn' => 36378155302, 'dendaPkb' => 353005312,
-                'dendaTunggakan' => 1267078709, 'dendaBbn' => 40718108],
+                'dendaTunggakan' => 1267078709, 'dendaBbn' => 40718108,
+                // Form I.I of October 2026, "s/d bulan lalu" (D-101)
+                'kotaKupang' => ['pkb' => 37900679717, 'tunggakan' => 8850743108, 'bbn' => 27448188682, 'dendaPkb' => 280221748,
+                    'dendaTunggakan' => 1028873223, 'dendaBbn' => 34696094]],
         ];
 
         $this->actingAs($employee)->putJson('/api/penerimaan/target/2026', $payload)
@@ -33,6 +36,8 @@ class RevenueTargetControllerTest extends TestCase
             'tahun' => 2026, 'target_pkb' => 240000209667, 'target_bbn' => 73264603499, 'target_denda_pkb' => 8225972907,
             'target_denda_bbn' => 69224567, 'saldo_sampai_bulan' => 9, 'saldo_pkb' => 45307522105, 'saldo_tunggakan' => 10838597309,
             'saldo_bbn' => 36378155302, 'saldo_denda_pkb' => 353005312, 'saldo_denda_tunggakan' => 1267078709, 'saldo_denda_bbn' => 40718108,
+            'saldo_kota_pkb' => 37900679717, 'saldo_kota_tunggakan' => 8850743108, 'saldo_kota_bbn' => 27448188682,
+            'saldo_kota_denda_pkb' => 280221748, 'saldo_kota_denda_tunggakan' => 1028873223, 'saldo_kota_denda_bbn' => 34696094,
             'user_id' => $employee->id,
         ]);
         $this->assertDatabaseHas('activities', [
@@ -46,7 +51,7 @@ class RevenueTargetControllerTest extends TestCase
 
     public function test_drops_the_opening_balance_when_every_month_comes_from_the_sts_imports(): void
     {
-        RevenueTarget::factory()->openingThrough(9, ['pkb' => 50000000])->create();
+        RevenueTarget::factory()->openingThrough(9, ['pkb' => 50000000])->cityOpening(['pkb' => 40000000])->create();
 
         $this->actingAs(User::factory()->administrator()->create())
             ->putJson('/api/penerimaan/target/2026', [
@@ -55,7 +60,9 @@ class RevenueTargetControllerTest extends TestCase
             ])
             ->assertOk()
             ->assertJsonPath('saldoAwal', null);
-        $this->assertDatabaseHas('revenue_targets', ['tahun' => 2026, 'target_pkb' => 1000, 'saldo_sampai_bulan' => null, 'saldo_pkb' => 0]);
+        $this->assertDatabaseHas('revenue_targets', [
+            'tahun' => 2026, 'target_pkb' => 1000, 'saldo_sampai_bulan' => null, 'saldo_pkb' => 0, 'saldo_kota_pkb' => null, 'saldo_kota_denda_bbn' => null,
+        ]);
     }
 
     public function test_keeps_each_year_apart(): void
@@ -114,7 +121,30 @@ class RevenueTargetControllerTest extends TestCase
                 'saldoAwal.sampaiBulan' => 'Bulan saldo awal tidak valid.',
                 'saldoAwal.tunggakan' => 'Isi saldo awal PKB tunggakan.',
                 'saldoAwal.dendaTunggakan' => 'Saldo awal denda PKB tunggakan tidak boleh negatif.',
+                'saldoAwal.kotaKupang' => 'Isi saldo awal Kota Kupang.',
             ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $city
+     */
+    #[TestWith([['tunggakan' => null], 'saldoAwal.kotaKupang.tunggakan', 'Isi saldo awal PKB tunggakan Kota Kupang.'])]
+    #[TestWith([['dendaPkb' => -1], 'saldoAwal.kotaKupang.dendaPkb', 'Saldo awal denda PKB Kota Kupang tidak boleh negatif.'])]
+    #[TestWith([['bbn' => 2.5], 'saldoAwal.kotaKupang.bbn', 'Saldo awal BBNKB Kota Kupang harus berupa angka rupiah tanpa desimal.'])]
+    #[TestWith([['dendaBbn' => 1_000_000_000_000_000], 'saldoAwal.kotaKupang.dendaBbn', 'Saldo awal denda BBNKB Kota Kupang terlalu besar.'])]
+    #[TestWith([['opsen' => 5], 'saldoAwal.kotaKupang', 'Saldo awal Kota Kupang tidak valid.'])]
+    public function test_asks_for_every_amount_of_the_citys_opening_balance(array $city, string $field, string $message): void
+    {
+        $amounts = ['pkb' => 0, 'tunggakan' => 0, 'bbn' => 0, 'dendaPkb' => 0, 'dendaTunggakan' => 0, 'dendaBbn' => 0];
+
+        $this->actingAs(User::factory()->administrator()->create())
+            ->putJson('/api/penerimaan/target/2026', [
+                'target' => ['pkb' => 0, 'bbn' => 0, 'dendaPkb' => 0, 'dendaBbn' => 0],
+                'saldoAwal' => ['sampaiBulan' => 9, ...$amounts, 'kotaKupang' => array_filter([...$amounts, ...$city], fn (mixed $amount): bool => $amount !== null)],
+            ])
+            ->assertUnprocessable()
+            ->assertOnlyJsonValidationErrors([$field => $message]);
+        $this->assertDatabaseCount('revenue_targets', 0);
     }
 
     public function test_answers_404_for_a_year_outside_this_century(): void

@@ -115,6 +115,7 @@ class RevenueRealizationControllerTest extends TestCase
         $this->assertSame(['lalu' => 70000, 'ini' => 0], $this->amounts($november, 8));
         $november->assertJsonPath('target.saldoAwal', [
             'sampaiBulan' => 9, 'pkb' => 50000000, 'tunggakan' => 0, 'bbn' => 0, 'dendaPkb' => 0, 'dendaTunggakan' => 0, 'dendaBbn' => 70000,
+            'kotaKupang' => null,
         ]);
     }
 
@@ -172,11 +173,15 @@ class RevenueRealizationControllerTest extends TestCase
         $zip = new ZipArchive;
         $this->assertTrue($zip->open($path));
         $sheet = $zip->getFromName('xl/worksheets/sheet1.xml');
+        $this->assertStringContainsString('<sheet name="Form I" sheetId="1" r:id="rId1"/>', $zip->getFromName('xl/workbook.xml'));
         $this->assertNotFalse($zip->getFromName('xl/styles.xml'));
         $zip->close();
         unlink($path);
 
         $this->assertStringContainsString('<t xml:space="preserve">BULAN OKTOBER</t>', $sheet);
+        $this->assertStringContainsString('<t xml:space="preserve">GABUNGAN</t>', $sheet);
+        $this->assertStringContainsString('<t xml:space="preserve">Form. I</t>', $sheet);
+        $this->assertStringContainsString('<t xml:space="preserve">REALISASI PENERIMAAN GABUNGAN</t>', $sheet);
         $this->assertStringContainsString('<t xml:space="preserve">TAHUN 2026</t>', $sheet);
         $this->assertStringContainsString('<c r="B11" s="6" t="inlineStr"><is><t xml:space="preserve">PKB</t></is></c><c r="C11" s="8"><v>10000000</v></c>'
             .'<c r="D11" s="8"><v>1000000</v></c><c r="E11" s="8"><v>300000</v></c><c r="F11" s="8"><v>1300000</v></c><c r="G11" s="9"/>', $sheet);
@@ -221,6 +226,130 @@ class RevenueRealizationControllerTest extends TestCase
             ->assertOnlyJsonValidationErrors(['bulan' => 'Realisasi bulan ini tercatat dalam saldo awal, jadi tidak ada laporan per bulannya.']);
     }
 
+    public function test_counts_only_the_vehicles_registered_in_the_city_for_form_i_i(): void
+    {
+        $this->smallTarget()->create();
+        $this->cityAndRegency();
+        $employee = $this->revenueEmployee();
+
+        $combined = $this->actingAs($employee)->getJson('/api/penerimaan/realisasi?bulan=2026-10')->assertOk()
+            ->assertJsonPath('cakupan', 'gabungan')
+            ->assertJsonPath('saldoKosong', false);
+        $city = $this->actingAs($employee)->getJson('/api/penerimaan/realisasi?bulan=2026-10&cakupan=kota-kupang')->assertOk()
+            ->assertJsonPath('cakupan', 'kota-kupang')
+            ->assertJsonPath('tersedia', true)
+            ->assertJsonPath('saldoKosong', false)
+            ->assertJsonPath('sampaiTanggal', '2026-10-21')
+            ->assertJsonPath('target.pkb', 10000000)
+            ->assertJsonPath('loket', [
+                ['nilai' => 'kantor', 'nama' => 'Loket SAMSAT', 'transaksi' => 1, 'jumlah' => 300000, 'sampaiTanggal' => '2026-10-01'],
+                ['nilai' => 'keliling-01', 'nama' => 'Samsat Keliling 01', 'transaksi' => 1, 'jumlah' => 50000, 'sampaiTanggal' => '2026-10-21'],
+            ]);
+
+        $this->assertSame(['lalu' => 1700000, 'ini' => 350000], $this->amounts($combined, 0));
+        $this->assertSame(['lalu' => 0, 'ini' => 9000000], $this->amounts($combined, 3));
+        $this->assertSame(['lalu' => 1000000, 'ini' => 350000], $this->amounts($city, 0));
+        $this->assertSame(['lalu' => 0, 'ini' => 0], $this->amounts($city, 3));
+        $this->assertSame(
+            $this->row('total', null, 'TOTAL', 1, 30500000, 1000000, 350000, 1350000, 4.4262),
+            $city->json('baris.10'),
+        );
+    }
+
+    public function test_counts_the_citys_own_opening_balance_over_the_same_months(): void
+    {
+        $this->smallTarget()->openingThrough(9, ['pkb' => 50000000])->cityOpening(['pkb' => 40000000, 'denda_bbn' => 30000])->create();
+        $this->cityAndRegency();
+        $employee = $this->revenueEmployee();
+
+        $october = $this->actingAs($employee)->getJson('/api/penerimaan/realisasi?bulan=2026-10&cakupan=kota-kupang')->assertOk();
+        $november = $this->actingAs($employee)->getJson('/api/penerimaan/realisasi?bulan=2026-11&cakupan=kota-kupang')->assertOk();
+        $combined = $this->actingAs($employee)->getJson('/api/penerimaan/realisasi?bulan=2026-11')->assertOk();
+
+        // September is in the opening balance, so its transactions do not count
+        $this->assertSame(['lalu' => 40000000, 'ini' => 350000], $this->amounts($october, 0));
+        $this->assertSame(['lalu' => 40350000, 'ini' => 0], $this->amounts($november, 0));
+        // The regency's BBNKB of October stays out of the city's months before November
+        $this->assertSame(['lalu' => 0, 'ini' => 0], $this->amounts($november, 3));
+        $this->assertSame(['lalu' => 30000, 'ini' => 0], $this->amounts($november, 8));
+        $this->assertSame(['lalu' => 50350000, 'ini' => 0], $this->amounts($combined, 0));
+        $this->assertSame(['lalu' => 0, 'ini' => 0], $this->amounts($combined, 8));
+        $november->assertJsonPath('target.saldoAwal.kotaKupang', [
+            'pkb' => 40000000, 'tunggakan' => 0, 'bbn' => 0, 'dendaPkb' => 0, 'dendaTunggakan' => 0, 'dendaBbn' => 30000,
+        ]);
+    }
+
+    public function test_has_no_figures_for_form_i_i_until_the_citys_opening_balance_is_entered(): void
+    {
+        $this->smallTarget()->openingThrough(9, ['pkb' => 50000000])->create();
+        $this->cityAndRegency();
+        $employee = $this->revenueEmployee();
+
+        $this->actingAs($employee)->getJson('/api/penerimaan/realisasi?bulan=2026-10&cakupan=kota-kupang')->assertOk()
+            ->assertJsonPath('tersedia', true)
+            ->assertJsonPath('saldoKosong', true)
+            ->assertJsonPath('sampaiTanggal', null)
+            ->assertJsonPath('loket', [])
+            ->assertJsonPath('baris', [])
+            ->assertJsonPath('target.saldoAwal.sampaiBulan', 9)
+            ->assertJsonPath('target.saldoAwal.kotaKupang', null);
+        // A month the opening balance covers has no report either way, and Form I needs no city balance
+        $this->actingAs($employee)->getJson('/api/penerimaan/realisasi?bulan=2026-09&cakupan=kota-kupang')->assertOk()
+            ->assertJsonPath('tersedia', false)
+            ->assertJsonPath('saldoKosong', false);
+        $this->actingAs($employee)->getJson('/api/penerimaan/realisasi?bulan=2026-10')->assertOk()
+            ->assertJsonPath('saldoKosong', false)
+            ->assertJsonPath('baris.0.lalu', 50000000);
+        $this->actingAs($employee)
+            ->getJson('/api/penerimaan/realisasi/unduh?bulan=2026-10&cakupan=kota-kupang')
+            ->assertUnprocessable()
+            ->assertOnlyJsonValidationErrors(['cakupan' => 'Isi saldo awal Kota Kupang di Target lebih dulu.']);
+    }
+
+    public function test_needs_no_city_opening_balance_in_a_year_without_one(): void
+    {
+        $this->smallTarget()->create();
+        $this->cityAndRegency();
+
+        $this->actingAs($this->revenueEmployee())->getJson('/api/penerimaan/realisasi?bulan=2026-10&cakupan=kota-kupang')->assertOk()
+            ->assertJsonPath('saldoKosong', false)
+            ->assertJsonPath('target.saldoAwal', null);
+    }
+
+    #[TestWith(['kota'])]
+    #[TestWith(['Gabungan'])]
+    #[TestWith([''])]
+    public function test_asks_for_a_known_form(string $scope): void
+    {
+        $this->actingAs($this->revenueEmployee())
+            ->getJson("/api/penerimaan/realisasi?bulan=2026-10&cakupan={$scope}")
+            ->assertUnprocessable()
+            ->assertOnlyJsonValidationErrors(['cakupan' => 'Pilih realisasi Gabungan atau Kota Kupang.']);
+    }
+
+    public function test_downloads_form_i_i_as_its_own_workbook(): void
+    {
+        $this->smallTarget()->create();
+        $this->cityAndRegency();
+
+        $response = $this->actingAs($this->revenueEmployee())->get('/api/penerimaan/realisasi/unduh?bulan=2026-10&sampai=2026-10-07&cakupan=kota-kupang');
+
+        $response->assertOk()->assertDownload('realisasi-penerimaan-kota-kupang-2026-10-sd-07.xlsx');
+        $path = $response->baseResponse->getFile()->getPathname();
+        $zip = new ZipArchive;
+        $this->assertTrue($zip->open($path));
+        $sheet = $zip->getFromName('xl/worksheets/sheet1.xml');
+        $workbook = $zip->getFromName('xl/workbook.xml');
+        $zip->close();
+        unlink($path);
+
+        $this->assertStringContainsString('<sheet name="Form I.I" sheetId="1" r:id="rId1"/>', $workbook);
+        $this->assertStringContainsString('<row r="8"><c r="G8" s="4" t="inlineStr"><is><t xml:space="preserve">Form I.I</t></is></c></row>', $sheet);
+        $this->assertStringContainsString('<t xml:space="preserve">REALISASI PENERIMAAN KOTA KUPANG</t>', $sheet);
+        $this->assertStringNotContainsString('GABUNGAN', $sheet);
+        $this->assertStringContainsString('<c r="D12" s="8"><v>1000000</v></c><c r="E12" s="8"><v>300000</v></c>', $sheet);
+    }
+
     /**
      * Targets small enough to read the shares at a glance.
      */
@@ -247,6 +376,22 @@ class RevenueRealizationControllerTest extends TestCase
         RevenueTransaction::factory()->for($office)->paying(['pkb' => 300000, 'denda_pkb' => 5000, 'denda_tunggakan' => 1000])->create(['tanggal' => '2026-10-01']);
         RevenueTransaction::factory()->for($unit)->paying(['bbn' => 9000000, 'denda_bbn' => 90000])->create(['loket' => 'keliling-01', 'tanggal' => '2026-10-20']);
         RevenueTransaction::factory()->for($office)->paying(['pkb' => 777])->create(['tanggal' => '2026-11-01']);
+    }
+
+    /**
+     * Vehicles of the city and of a regency paying at the city's counters:
+     * in September (before the month) and in October, at the office and at
+     * Samsat Keliling 01.
+     */
+    private function cityAndRegency(): void
+    {
+        $office = RevenueImport::factory()->create();
+        $unit = RevenueImport::factory()->counter('keliling-01', 'Samsat Keliling 01')->create();
+        RevenueTransaction::factory()->for($office)->paying(['pkb' => 1000000])->create(['tanggal' => '2026-09-30']);
+        RevenueTransaction::factory()->for($office)->paying(['pkb' => 700000])->create(['tanggal' => '2026-09-30', 'upt_asal' => 'Kab. Kupang']);
+        RevenueTransaction::factory()->for($office)->paying(['pkb' => 300000])->create(['tanggal' => '2026-10-01']);
+        RevenueTransaction::factory()->for($unit)->paying(['bbn' => 9000000])->create(['loket' => 'keliling-01', 'tanggal' => '2026-10-20', 'upt_asal' => 'Kab. Kupang']);
+        RevenueTransaction::factory()->for($unit)->paying(['pkb' => 50000])->create(['loket' => 'keliling-01', 'tanggal' => '2026-10-21']);
     }
 
     /**

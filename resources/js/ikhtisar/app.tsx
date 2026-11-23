@@ -1,7 +1,8 @@
 /*
  * Halaman Ikhtisar (D-099, D-100) di /laporan-penerimaan: penerimaan semua
  * loket dengan saringan seperti Laporan Penerimaan di dashboard, Realisasi
- * Target (Form I), dan Pemetaan PKB untuk rapat, selama Administrator
+ * Target (Form I gabungan dan Form I.I Kota Kupang, D-101), dan Pemetaan PKB
+ * untuk rapat, selama Administrator
  * mengaktifkannya di Pengaturan › Halaman Ikhtisar. Angkanya sama dengan
  * dashboard, tanpa identitas wajib pajak, dan selalu menyebut sumber serta
  * tanggal datanya.
@@ -10,7 +11,7 @@ import * as React from "react"
 import { IconAdjustmentsHorizontal, IconAlertTriangle, IconInfoCircle, IconLock, IconPrinter, IconRefresh, IconWifiOff } from "@tabler/icons-react"
 
 import { IsiRingkasanPemetaan, belumBayar, DaftarBatang, persen as persenPotensi } from "@/components/pemetaan/ringkasan-wilayah"
-import { cetakFormI, RingkasanRealisasi, Sumber, TabelFormI, tanggalPanjang, TertutupSaldo } from "@/components/penerimaan/form-i"
+import { cetakFormI, RingkasanRealisasi, SaldoKotaKosong, Sumber, TabelFormI, tanggalPanjang, TertutupSaldo } from "@/components/penerimaan/form-i"
 import { BadgePerubahan, GrafikHarian, GrafikRincian, PerLoket, Ringkasan, type IntiLaporan } from "@/components/penerimaan/ringkasan-laporan"
 import { PanelSaringan, type PilihanSaringan } from "@/components/penerimaan/saringan-laporan"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -18,9 +19,20 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { angka, hariIniIso, rupiah } from "@/lib/format"
 import { NAMA_BULAN } from "@/lib/pemetaan"
-import { bagianProvinsi, DIMENSI, LABEL_DIMENSI, labelNilai, perubahan, type Dimensi, type Saringan } from "@/lib/penerimaan"
+import {
+  bagianProvinsi,
+  CAKUPAN_REALISASI,
+  DIMENSI,
+  LABEL_DIMENSI,
+  labelNilai,
+  perubahan,
+  type CakupanRealisasi,
+  type Dimensi,
+  type Saringan,
+} from "@/lib/penerimaan"
 import { cn } from "@/lib/utils"
 
 import { galatPeriode, jumlahHari, labelPeriode, labelTanggal, type Periode } from "../portal/penerimaan/periode"
@@ -456,7 +468,7 @@ function BagianRingkasan({ data, saringan }: { data: Ikhtisar; saringan: Saringa
               "Target tahun ini belum diisi."
             )
           }
-          sumber={`Form I tanpa opsen, s.d. ${tanggalPanjang(sampaiRealisasi)}.`}
+          sumber={`Form I gabungan tanpa opsen, s.d. ${tanggalPanjang(sampaiRealisasi)}.`}
         />
         <KartuRingkasan
           judul="Kepatuhan PKB"
@@ -573,14 +585,31 @@ function BagianPenerimaan({ data, saringan }: { data: Ikhtisar; saringan: Saring
 }
 
 function BagianRealisasi({ data, saringan }: { data: Ikhtisar; saringan: Saringannya }) {
-  const laporan = data.realisasi
+  // Form I gabungan atau Form I.I Kota Kupang (D-101), bulan yang sama
+  const [cakupan, setCakupan] = React.useState<CakupanRealisasi>("gabungan")
+  const laporan = cakupan === "gabungan" ? data.realisasi : data.realisasiKotaKupang
+  const form = CAKUPAN_REALISASI[cakupan]
   const tabel = React.useRef<HTMLTableElement>(null)
   return (
     <Bagian
       id="realisasi"
       judul={`Realisasi Target · ${laporan.sampai ? `s.d. ${tanggalPanjang(laporan.sampai)}` : `${NAMA_BULAN[laporan.bulan - 1]} ${laporan.tahun}`}`}
-      sumber={`Form I: PKB, BBNKB, dan dendanya dari STS semua loket terhadap target tahunan, bulan tanggal akhir periode. Opsen kabupaten/kota tidak termasuk.${adaSaringan(saringan) ? " Saringan penerimaan tidak berlaku di sini." : ""}`}
+      sumber={`PKB, BBNKB, dan dendanya dari STS semua loket terhadap target tahunan, bulan tanggal akhir periode: Form I gabungan, termasuk kendaraan kabupaten lain, dan Form I.I khusus kendaraan ber-UPT asal Kota Kupang. Opsen kabupaten/kota tidak termasuk.${adaSaringan(saringan) ? " Saringan penerimaan tidak berlaku di sini." : ""}`}
     >
+      <ToggleGroup
+        type="single"
+        variant="outline"
+        value={cakupan}
+        onValueChange={(c) => c && setCakupan(c as CakupanRealisasi)}
+        aria-label="Realisasi"
+        className="justify-self-start print:hidden"
+      >
+        {(Object.keys(CAKUPAN_REALISASI) as CakupanRealisasi[]).map((c) => (
+          <ToggleGroupItem key={c} value={c} className="px-3">
+            {CAKUPAN_REALISASI[c].label} ({CAKUPAN_REALISASI[c].form})
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
       {!laporan.target && (
         <Alert>
           <IconInfoCircle />
@@ -588,18 +617,20 @@ function BagianRealisasi({ data, saringan }: { data: Ikhtisar; saringan: Saringa
           <AlertDescription>Realisasi tetap dihitung; kolom target dan persentase kosong sampai target diisi di dashboard.</AlertDescription>
         </Alert>
       )}
-      {laporan.tersedia ? (
+      {laporan.tersedia && laporan.saldoKosong ? (
+        <SaldoKotaKosong laporan={laporan} />
+      ) : laporan.tersedia ? (
         <>
           <RingkasanRealisasi laporan={laporan} />
           <Card className="gap-4">
             <CardHeader className="flex flex-wrap items-start justify-between gap-3">
               <div className="grid gap-1.5">
-                <CardTitle className="text-base">Form I</CardTitle>
-                <CardDescription>Realisasi penerimaan gabungan semua loket, sama seperti berkas Excel di dashboard.</CardDescription>
+                <CardTitle className="text-base">{form.form}</CardTitle>
+                <CardDescription>Realisasi penerimaan {form.isi}, dari semua loket. Sama seperti berkas Excel di dashboard.</CardDescription>
               </div>
               <Button variant="outline" size="sm" className="print:hidden" onClick={() => tabel.current && cetakFormI(tabel.current, laporan)}>
                 <IconPrinter />
-                Cetak Form I
+                Cetak {form.form}
               </Button>
             </CardHeader>
             <CardContent className="px-0 sm:px-6">

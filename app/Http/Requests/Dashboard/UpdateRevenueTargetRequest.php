@@ -9,7 +9,9 @@ use Illuminate\Validation\Rule;
 
 /**
  * A year's revenue target and, when the STS imports start after January, the
- * realisation of the months before them (D-068). Amounts are whole rupiah.
+ * realisation of the months before them (D-068): combined, and of the
+ * vehicles registered at the city's UPT for Form I.I ("kotaKupang", D-101)
+ * over the same months. Amounts are whole rupiah.
  */
 class UpdateRevenueTargetRequest extends FormRequest
 {
@@ -43,11 +45,14 @@ class UpdateRevenueTargetRequest extends FormRequest
     {
         $amount = ['integer', 'min:0', 'max:'.self::MAX_AMOUNT];
         $opening = is_array($this->input('saldoAwal'));
+        // Each city amount is asked for once the city's balance is sent at all, so a missing one is a single message
+        $city = $opening && is_array($this->input('saldoAwal.kotaKupang'));
 
         $rules = [
             'target' => ['required', 'array:'.implode(',', array_keys(self::TARGETS))],
-            'saldoAwal' => ['present', 'nullable', 'array:sampaiBulan,'.implode(',', $this->balanceNames())],
+            'saldoAwal' => ['present', 'nullable', 'array:sampaiBulan,kotaKupang,'.implode(',', $this->balanceNames())],
             'saldoAwal.sampaiBulan' => [Rule::requiredIf($opening), 'integer', 'between:1,12'],
+            'saldoAwal.kotaKupang' => [Rule::requiredIf($opening), 'array:'.implode(',', $this->balanceNames())],
         ];
 
         foreach (array_keys(self::TARGETS) as $name) {
@@ -56,6 +61,7 @@ class UpdateRevenueTargetRequest extends FormRequest
 
         foreach ($this->balanceNames() as $name) {
             $rules["saldoAwal.{$name}"] = [Rule::requiredIf($opening), ...$amount];
+            $rules["saldoAwal.kotaKupang.{$name}"] = [Rule::requiredIf($city), ...$amount];
         }
 
         return $rules;
@@ -77,6 +83,12 @@ class UpdateRevenueTargetRequest extends FormRequest
             'saldoAwal.array' => 'Saldo awal tidak valid.',
             'saldoAwal.sampaiBulan.required' => 'Pilih bulan terakhir yang tercakup saldo awal.',
             'saldoAwal.sampaiBulan.*' => 'Bulan saldo awal tidak valid.',
+            'saldoAwal.kotaKupang.required' => 'Isi saldo awal Kota Kupang.',
+            'saldoAwal.kotaKupang.array' => 'Saldo awal Kota Kupang tidak valid.',
+            'saldoAwal.kotaKupang.*.required' => 'Isi saldo awal :attribute.',
+            'saldoAwal.kotaKupang.*.integer' => 'Saldo awal :attribute harus berupa angka rupiah tanpa desimal.',
+            'saldoAwal.kotaKupang.*.min' => 'Saldo awal :attribute tidak boleh negatif.',
+            'saldoAwal.kotaKupang.*.max' => 'Saldo awal :attribute terlalu besar.',
             'saldoAwal.*.required' => 'Isi saldo awal :attribute.',
             'saldoAwal.*.integer' => 'Saldo awal :attribute harus berupa angka rupiah tanpa desimal.',
             'saldoAwal.*.min' => 'Saldo awal :attribute tidak boleh negatif.',
@@ -97,13 +109,14 @@ class UpdateRevenueTargetRequest extends FormRequest
 
         foreach ($labels as $part => $label) {
             $attributes['saldoAwal.'.Str::camel($part)] = $label;
+            $attributes['saldoAwal.kotaKupang.'.Str::camel($part)] = "{$label} Kota Kupang";
         }
 
         return $attributes;
     }
 
     /**
-     * The columns to save: the targets, and the opening balance or none.
+     * The columns to save: the targets, and the opening balances or none.
      *
      * @return array<string, ?int>
      */
@@ -118,6 +131,7 @@ class UpdateRevenueTargetRequest extends FormRequest
         $columns['saldo_sampai_bulan'] = is_array($opening) ? (int) $opening['sampaiBulan'] : null;
         foreach (RevenueTarget::PARTS as $part) {
             $columns["saldo_{$part}"] = is_array($opening) ? (int) $opening[Str::camel($part)] : 0;
+            $columns["saldo_kota_{$part}"] = is_array($opening) ? (int) $opening['kotaKupang'][Str::camel($part)] : null;
         }
 
         return $columns;
