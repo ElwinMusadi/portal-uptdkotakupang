@@ -63,4 +63,43 @@ enum Kecamatan: string
 
         return null;
     }
+
+    /**
+     * The kelurahan on the list that a name written anyhow means (D-099):
+     * whatever its case, spaces, hyphens and dots, a "Kel." or "Kelurahan"
+     * in front, or 1 and 2 for I and II, so "Bakunase 2" means
+     * "BAKUNASE II"; null for a name outside Kota Kupang's list. The dev
+     * STS data of September–October 2026 wrote every city kelurahan as the
+     * list does, so there is no list of misspellings; one found later is
+     * matched here.
+     */
+    public static function officialKelurahan(string $name): ?string
+    {
+        $simplified = self::simplified($name);
+
+        foreach (self::cases() as $kecamatan) {
+            foreach ($kecamatan->kelurahan() as $kelurahan) {
+                if (self::simplified($kelurahan) === $simplified) {
+                    return $kelurahan;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * A name in capitals without "Kel." or "Kelurahan" in front, with a
+     * last 1 or 2 written I or II, and only its letters and other digits
+     * left, so "BAKUNASE 3" stays apart from "BAKUNASE".
+     */
+    private static function simplified(string $name): string
+    {
+        $name = mb_strtoupper(trim($name));
+        // "KEL." or "KEL " in front, never the start of "KELAPA LIMA"
+        $name = (string) preg_replace('/^(KELURAHAN\s+|KEL\.\s*|KEL\s+)/u', '', $name);
+        $name = (string) preg_replace(['/\s*2$|\s+DUA$/u', '/\s*1$|\s+SATU$/u'], [' II', ' I'], $name);
+
+        return (string) preg_replace('/[^A-Z0-9]/u', '', $name);
+    }
 }

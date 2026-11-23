@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Actions\BuildOverview;
 use App\Actions\BuildPotentialSummary;
 use App\Models\MobileServiceStop;
-use App\Models\OverviewLink;
 use App\Models\PotentialImport;
 use App\Models\PotentialVehicle;
 use App\Models\RevenueImport;
@@ -19,22 +18,26 @@ use PHPUnit\Framework\Attributes\TestWith;
 use Tests\TestCase;
 
 /**
- * GET /api/ikhtisar (D-099): the Ikhtisar page's figures for the holder of a
- * link, of a period counted back from the latest STS date.
+ * GET /api/ikhtisar (D-099, D-100): the figures of the page at
+ * /laporan-penerimaan for anyone while an administrator has it open, of a
+ * range or of the month of the latest STS date, with the dashboard report's
+ * filters.
  */
 class OverviewTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
-    private const string TOKEN = 'TokenUjiIkhtisar0123456789abcdefghijklmnopqrstuv';
-
-    private OverviewLink $link;
-
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->link = OverviewLink::factory()->withToken(self::TOKEN)->create();
+        $this->open(true);
+    }
+
+    private function open(bool $open): void
+    {
+        Setting::query()->whereKey(Setting::OVERVIEW)->delete();
+        Setting::query()->forceCreate(['name' => Setting::OVERVIEW, 'value' => ['aktif' => $open, 'sejak' => null]]);
     }
 
     /**
@@ -42,7 +45,7 @@ class OverviewTest extends TestCase
      */
     private function overview(array $query = []): TestResponse
     {
-        return $this->withToken(self::TOKEN)->getJson('/api/ikhtisar'.($query === [] ? '' : '?'.http_build_query($query)));
+        return $this->getJson('/api/ikhtisar'.($query === [] ? '' : '?'.http_build_query($query)));
     }
 
     /**
@@ -60,23 +63,24 @@ class OverviewTest extends TestCase
         return RevenueTransaction::factory()->for($import, 'revenueImport')->paying(['pkb' => $pkb])->create(['loket' => $counter, 'tanggal' => $date, ...$attributes]);
     }
 
-    public function test_refuses_without_the_token_of_a_link(): void
+    public function test_answers_only_while_an_administrator_has_the_page_open(): void
     {
-        $this->getJson('/api/ikhtisar')
-            ->assertUnauthorized()
-            ->assertExactJson(['message' => 'Tautan ini tidak berlaku atau sudah dicabut.']);
-        $this->withToken(str_repeat('x', 48))->getJson('/api/ikhtisar')->assertUnauthorized();
-        // The token is never read from the address, and nothing is validated before the token
-        $this->getJson('/api/ikhtisar?k='.self::TOKEN)->assertUnauthorized();
-        $this->getJson('/api/ikhtisar?periode=minggu&loket[]=kantor')->assertUnauthorized();
+        $this->overview()->assertOk();
 
-        $this->link->delete();
-        $this->overview()->assertUnauthorized();
+        $this->open(false);
+        $this->overview()
+            ->assertForbidden()
+            ->assertExactJson(['message' => 'Halaman ini sedang dinonaktifkan oleh Administrator PINTU.']);
+        // Nothing is validated while the page is closed
+        $this->overview(['periode' => 'minggu', 'loket' => 'kantor'])->assertForbidden();
+
+        Setting::query()->whereKey(Setting::OVERVIEW)->delete();
+        $this->overview()->assertForbidden();
     }
 
     public function test_starts_no_session_and_forbids_caching(): void
     {
-        $this->withHeader('Referer', config('app.url').'/ikhtisar')
+        $this->withHeader('Referer', config('app.url').'/laporan-penerimaan')
             ->withCookie(config('session.cookie'), 'sesi-lama')
             ->overview()
             ->assertOk()
@@ -85,84 +89,73 @@ class OverviewTest extends TestCase
             ->assertCookieMissing('XSRF-TOKEN');
     }
 
-    public function test_keeps_when_the_link_was_last_opened_to_the_minute(): void
-    {
-        $this->travelTo('2026-11-20 01:00:00');
-        $this->overview()->assertOk();
-        $this->assertSame('2026-11-20 01:00:00', $this->link->fresh()->terakhir_dibuka->toDateTimeString());
-
-        $this->travelTo('2026-11-20 01:00:59');
-        $this->overview()->assertOk();
-        $this->assertSame('2026-11-20 01:00:00', $this->link->fresh()->terakhir_dibuka->toDateTimeString());
-
-        $this->travelTo('2026-11-20 01:01:01');
-        $this->overview()->assertOk();
-        $this->assertSame('2026-11-20 01:01:01', $this->link->fresh()->terakhir_dibuka->toDateTimeString());
-    }
-
     /**
      * @param  array<string, mixed>  $query
      */
-    #[TestWith([['loket' => ['kantor']], 'query', 'Parameter kueri tidak didukung.'])]
+    #[TestWith([['periode' => 'bulan-ini'], 'query', 'Parameter kueri tidak didukung.'])]
     #[TestWith([['k' => 'abc'], 'query', 'Parameter kueri tidak didukung.'])]
-    #[TestWith([['periode' => 'minggu-ini'], 'periode', 'Pilihan periode tidak dikenal.'])]
-    #[TestWith([['periode' => 'bulan-ini', 'dari' => '2026-11-01', 'sampai' => '2026-11-02'], 'periode', 'Pilih periode atau rentang tanggal, tidak keduanya.'])]
+    #[TestWith([['loket' => 'kantor'], 'loket', 'Saringan loket tidak valid.'])]
+    #[TestWith([['merk' => [['YAMAHA']]], 'merk.0', 'Saringan merek tidak valid.'])]
+    #[TestWith([['tunggakan' => 'kadang'], 'tunggakan', 'Saringan tunggakan tidak dikenal.'])]
     #[TestWith([['dari' => '2026-11-01'], 'sampai', 'Pilih tanggal akhir laporan.'])]
     #[TestWith([['sampai' => '2026-11-01'], 'dari', 'Pilih tanggal awal laporan.'])]
     #[TestWith([['dari' => '2026-11-31', 'sampai' => '2026-12-01'], 'dari', 'Tanggal awal laporan tidak valid.'])]
     #[TestWith([['dari' => '2026-11-05', 'sampai' => '2026-11-01'], 'sampai', 'Tanggal akhir tidak boleh sebelum tanggal awal.'])]
     #[TestWith([['dari' => '2025-01-01', 'sampai' => '2026-01-02'], 'sampai', 'Rentang laporan paling lama satu tahun.'])]
-    public function test_validates_the_period(array $query, string $field, string $message): void
+    public function test_validates_the_period_and_filters(array $query, string $field, string $message): void
     {
         $this->overview($query)->assertUnprocessable()->assertJsonValidationErrors([$field => $message]);
     }
 
-    public function test_counts_the_periods_back_from_the_latest_sts_date(): void
+    public function test_shows_the_month_of_the_latest_sts_date_or_the_range_chosen(): void
     {
         $this->travelTo('2026-12-15 01:00:00');
         $this->transaction('2026-11-20');
         $this->transaction('2026-11-03');
         $this->transaction('2026-10-14');
-        $this->transaction('2026-01-02');
 
         $this->overview()->assertOk()
-            ->assertJsonPath('periode', 'bulan-ini')
             ->assertJsonPath('dari', '2026-11-01')
             ->assertJsonPath('sampai', '2026-11-20')
             ->assertJsonPath('penerimaan.ringkasan.transaksi', 2)
             ->assertJsonPath('penerimaan.pembanding.dari', '2026-10-12')
             ->assertJsonPath('penerimaan.pembanding.sampai', '2026-10-31');
-        $this->overview(['periode' => 'hari-terakhir'])->assertOk()
-            ->assertJsonPath('dari', '2026-11-20')
-            ->assertJsonPath('sampai', '2026-11-20')
-            ->assertJsonPath('penerimaan.ringkasan.transaksi', 1)
-            ->assertJsonPath('penerimaan.pembanding.dari', '2026-11-03');
-        $this->overview(['periode' => 'bulan-lalu'])->assertOk()
-            ->assertJsonPath('dari', '2026-10-01')
-            ->assertJsonPath('sampai', '2026-10-31')
-            ->assertJsonPath('penerimaan.ringkasan.transaksi', 1);
-        $this->overview(['periode' => 'tahun-ini'])->assertOk()
-            ->assertJsonPath('dari', '2026-01-01')
-            ->assertJsonPath('sampai', '2026-11-20')
-            ->assertJsonPath('penerimaan.ringkasan.transaksi', 4);
         $this->overview(['dari' => '2026-11-03', 'sampai' => '2026-11-19'])->assertOk()
-            ->assertJsonPath('periode', 'rentang')
             ->assertJsonPath('dari', '2026-11-03')
             ->assertJsonPath('sampai', '2026-11-19')
             ->assertJsonPath('penerimaan.ringkasan.transaksi', 1);
+        $this->overview(['dari' => '2026-11-20', 'sampai' => '2026-11-20'])->assertOk()
+            ->assertJsonPath('penerimaan.ringkasan.transaksi', 1)
+            ->assertJsonPath('penerimaan.pembanding.dari', '2026-11-03');
         // A whole year of days is still one report
-        $this->overview(['dari' => '2025-11-21', 'sampai' => '2026-11-20'])->assertOk();
+        $this->overview(['dari' => '2025-11-21', 'sampai' => '2026-11-20'])->assertOk()->assertJsonPath('penerimaan.ringkasan.transaksi', 3);
     }
 
-    public function test_takes_the_month_before_across_the_new_year(): void
+    public function test_narrows_the_revenue_alone_by_the_dashboard_filters(): void
     {
-        $this->transaction('2027-01-10');
-        $this->transaction('2026-12-31');
+        $this->transaction('2026-11-20', attributes: ['jenis_daftar' => 'BARU', 'merk' => 'YAMAHA', 'tahun_tunggakan' => 0], pkb: 500000);
+        $this->transaction('2026-11-20', 'keliling-01', ['merk' => 'HONDA', 'tahun_tunggakan' => 2]);
+        $this->transaction('2026-11-15', attributes: ['merk' => 'YAMAHA', 'tahun_tunggakan' => 0]);
+        $this->transaction('2026-11-12', 'keliling-01', ['merk' => 'HONDA', 'tahun_tunggakan' => 1]);
 
-        $this->overview(['periode' => 'bulan-lalu'])->assertOk()
-            ->assertJsonPath('dari', '2026-12-01')
-            ->assertJsonPath('sampai', '2026-12-31')
-            ->assertJsonPath('penerimaan.ringkasan.transaksi', 1);
+        $response = $this->getJson('/api/ikhtisar?dari=2026-11-01&sampai=2026-11-20&loket[]=keliling-01&merk[]=HONDA&merk[]=SUZUKI&tunggakan=ada')->assertOk()
+            ->assertJsonPath('penerimaan.ringkasan.transaksi', 2)
+            ->assertJsonPath('penerimaan.rincian.loket.*.nilai', ['keliling-01'])
+            ->assertJsonPath('penerimaan.rincian.tanggal.*.nilai', ['2026-11-12', '2026-11-20'])
+            ->assertJsonPath('penerimaan.rincian.tanggal.1.transaksi', 1)
+            // The filter lists hold every value of the period, whatever is chosen
+            ->assertJsonPath('penerimaan.pilihan.loket', [['nilai' => 'kantor', 'nama' => 'Loket SAMSAT'], ['nilai' => 'keliling-01', 'nama' => 'Samsat Keliling 01']])
+            ->assertJsonPath('penerimaan.pilihan.merk', ['HONDA', 'YAMAHA'])
+            // Form I counts every counter whatever the filters
+            ->assertJsonPath('realisasi.baris.0.ini', 1400000);
+        $this->assertSame(['ringkasan', 'pembanding', 'rincian', 'pilihan', 'loketBuka'], array_keys($response->json('penerimaan')));
+
+        $this->getJson('/api/ikhtisar?dari=2026-11-20&sampai=2026-11-20&tunggakan=tidak&jenisDaftar[]=BARU')->assertOk()
+            ->assertJsonPath('penerimaan.ringkasan.transaksi', 1)
+            ->assertJsonPath('penerimaan.ringkasan.pkb', 500000);
+        $this->getJson('/api/ikhtisar?dari=2026-11-20&sampai=2026-11-20&tunggakan=ada')->assertOk()
+            ->assertJsonPath('penerimaan.pembanding.dari', '2026-11-12')
+            ->assertJsonPath('penerimaan.pembanding.ringkasan.transaksi', 1);
     }
 
     public function test_reports_every_counters_revenue_like_the_dashboard(): void
@@ -171,7 +164,7 @@ class OverviewTest extends TestCase
         $this->transaction('2026-11-20', 'keliling-01');
         RevenueImport::query()->update(['tampil' => false]);
 
-        $response = $this->overview(['periode' => 'hari-terakhir'])->assertOk()
+        $response = $this->overview(['dari' => '2026-11-20', 'sampai' => '2026-11-20'])->assertOk()
             ->assertJsonPath('penerimaan.ringkasan.transaksi', 2)
             ->assertJsonPath('penerimaan.ringkasan.pkb', 800000)
             ->assertJsonPath('penerimaan.rincian.loket.*.nama', ['Loket SAMSAT', 'Samsat Keliling 01'])
@@ -180,8 +173,7 @@ class OverviewTest extends TestCase
             ->assertJsonPath('penerimaan.loketBuka.0.kunci', 'kantor');
 
         $this->assertSame([...BuildOverview::BREAKDOWNS, 'tanggal'], array_keys($response->json('penerimaan.rincian')));
-        $this->assertSame(['ringkasan', 'pembanding', 'rincian', 'loketBuka'], array_keys($response->json('penerimaan')));
-        $this->overview()->assertOk()->assertJsonPath('penerimaan.loketBuka', []);
+        $this->overview(['dari' => '2026-11-19', 'sampai' => '2026-11-20'])->assertOk()->assertJsonPath('penerimaan.loketBuka', []);
     }
 
     public function test_reports_form_i_through_the_end_of_the_period(): void
@@ -201,7 +193,7 @@ class OverviewTest extends TestCase
         $this->assertSame(['tahun', 'pkb', 'bbn', 'dendaPkb', 'dendaBbn', 'saldoAwal'], array_keys($response->json('realisasi.target')));
 
         // A whole month is Form I of that month, without a day it stops at
-        $this->overview(['periode' => 'bulan-lalu'])->assertOk()
+        $this->overview(['dari' => '2026-10-01', 'sampai' => '2026-10-31'])->assertOk()
             ->assertJsonPath('realisasi.bulan', 10)
             ->assertJsonPath('realisasi.sampai', null)
             ->assertJsonPath('realisasi.baris.0.ini', 100000);
@@ -271,11 +263,11 @@ class OverviewTest extends TestCase
         ]);
         app(BuildPotentialSummary::class)->store($potential);
 
-        $body = $this->overview(['periode' => 'hari-terakhir'])->assertOk()->getContent();
+        $body = $this->overview(['dari' => '2026-11-20', 'sampai' => '2026-11-20'])->assertOk()->getContent();
 
         foreach (['DH7777QQ', 'WAJIB PAJAK RAHASIA', 'Pegawai Pengimpor Unik', 'STS_RAHASIA', 'Penyunting Target Unik', 'POTENSI_RAHASIA',
             'DH8888WW', 'PEMILIK POTENSI RAHASIA', 'ALAMAT RAHASIA', '081299990000', '5371999999999999', 'Tetangga Rahasia', 'TIDAK DITEMUKAN',
-            'PETUGAS RAHASIA', $this->link->nama] as $secret) {
+            'PETUGAS RAHASIA'] as $secret) {
             $this->assertStringNotContainsString($secret, $body);
         }
     }

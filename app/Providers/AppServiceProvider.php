@@ -53,8 +53,9 @@ class AppServiceProvider extends ServiceProvider
                 ], 429, $headers));
         });
 
-        // The Ikhtisar page (D-099) sums the revenue and Form I for every request. Everyone in a meeting shares one
-        // link and often one office address, so the limit is per address and leaves room for a roomful of devices.
+        // The Ikhtisar page (D-099, D-100) sums the revenue and Form I for every request, open to anyone while an administrator
+        // allows it. Everyone in a meeting often shares one office address, so the limit is per address and leaves room for a
+        // roomful of devices.
         RateLimiter::for('ikhtisar', function (Request $request): Limit {
             return Limit::perMinute(config()->integer('pintu.ikhtisar.requests_per_minute'))
                 ->by($request->ip())

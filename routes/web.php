@@ -81,8 +81,10 @@ Route::withoutMiddleware([
     Route::get('/pesan/{kode}', MessageTrackingPageController::class)->where('kode', Message::TRACKING_CODE_PATTERN)->name('portal.lacak-pesan');
     // The waiting-room TV display; it reads GET /api/layar with the token of its setup link (D-051)
     Route::view('/layar', 'layar')->name('layar');
-    // The Ikhtisar page for meetings: the figures come from GET /api/ikhtisar with the token of a link (D-099)
-    Route::get('/ikhtisar', OverviewPageController::class)->name('ikhtisar');
+    // The Ikhtisar page for meetings: the figures come from GET /api/ikhtisar while an administrator has it open (D-099, D-100);
+    // its first address, of the links with a token, leads there
+    Route::get('/laporan-penerimaan', OverviewPageController::class)->name('ikhtisar');
+    Route::permanentRedirect('/ikhtisar', '/laporan-penerimaan');
     // The questionnaires for taxpayers and operators, whose answers go to their Google Forms (D-095)
     Route::get('/kuesioner', QuestionnairePageController::class)->name('portal.kuesioner');
     Route::get('/kuesioner/{jenis}', QuestionnairePageController::class)->whereIn('jenis', ['operator', 'wajib-pajak'])->name('portal.kuesioner.isi');

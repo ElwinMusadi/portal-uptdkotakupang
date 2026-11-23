@@ -9,11 +9,11 @@ use Illuminate\Http\JsonResponse;
 class OverviewController extends Controller
 {
     /**
-     * The figures of the Ikhtisar page (D-099), for the holder of a link
-     * (AuthenticateOverviewLink), of the chosen period.
+     * The figures of the Ikhtisar page (D-099, D-100), while it is open
+     * (EnsureOverviewIsOpen), of the chosen period and filters.
      */
     public function __invoke(ShowOverviewRequest $request, BuildOverview $overview): JsonResponse
     {
-        return response()->json($overview->handle($request->period(), $request->from(), $request->until()));
+        return response()->json($overview->handle($request->from(), $request->until(), $request->filters()));
     }
 }

@@ -17,7 +17,7 @@ Semuanya satu aplikasi Laravel di root repository, satu origin (D-002):
 
 - Produksi: https://uptdpenda-kupang.web.id di Laravel Cloud, region Singapura, MySQL 8.4, bucket privat dan publik. Push ke `main` langsung di-deploy (Push to deploy, deploy menjalankan `php artisan migrate --force`). Cloudflare hanya untuk DNS dan pengalihan `pintu.` → domain utama.
 - Database produksi terpisah dari lokal: data yang diisi di lokal tidak sampai ke produksi.
-- Modul utama: konten portal (Beranda, Layanan, Berita, Regulasi, dll.), Layanan Luar Kantor, Antrean Online (D-051), Pemetaan PKB (D-052, D-064), Laporan Penerimaan dari berkas STS (D-047–D-049), Realisasi Target Form I (D-068, D-070), Nomoratur SKPD (D-071), tema (D-057), Kalkulator PKB + API data kendaraan (D-041, Pergub 64/2026 D-088, SWDKLLJ per golongan D-089, kunci API Data Potensi D-076, D-077), pemilih pegawai SIKAP di Tambah akun (D-075), dan Kuesioner wajib pajak dan operator di `/kuesioner` (15 pernyataan dalam lima aspek, pengisi mencoba PINTU lebih dulu, data diri wajib pajak) yang mengirim jawaban ke Google Formulir (D-095–D-097) dan bisa ditutup atau dibuka lagi per kuesioner oleh Administrator di Pengaturan › Kuesioner (D-098), dan halaman Ikhtisar `/ikhtisar` untuk rapat (penerimaan semua loket, Realisasi Target, Pemetaan PKB sampai STS terakhir, tanpa identitas) yang dibuka lewat tautan rahasia dari Pengaturan › Tautan Ikhtisar, berlaku sampai dicabut (D-099).
+- Modul utama: konten portal (Beranda, Layanan, Berita, Regulasi, dll.), Layanan Luar Kantor, Antrean Online (D-051), Pemetaan PKB (D-052, D-064), Laporan Penerimaan dari berkas STS (D-047–D-049), Realisasi Target Form I (D-068, D-070), Nomoratur SKPD (D-071), tema (D-057), Kalkulator PKB + API data kendaraan (D-041, Pergub 64/2026 D-088, SWDKLLJ per golongan D-089, kunci API Data Potensi D-076, D-077), pemilih pegawai SIKAP di Tambah akun (D-075), dan Kuesioner wajib pajak dan operator di `/kuesioner` (15 pernyataan dalam lima aspek, pengisi mencoba PINTU lebih dulu, data diri wajib pajak) yang mengirim jawaban ke Google Formulir (D-095–D-097) dan bisa ditutup atau dibuka lagi per kuesioner oleh Administrator di Pengaturan › Kuesioner (D-098), dan halaman Ikhtisar `/laporan-penerimaan` untuk rapat (penerimaan semua loket dengan saringan seperti dashboard, Realisasi Target, Pemetaan PKB, dan transaksi bayar PKB di loket sejak tanggal Data Potensi per kelurahan, sampai STS terakhir, tanpa identitas) yang bisa dibuka siapa saja selama Administrator mengaktifkannya di Pengaturan › Halaman Ikhtisar (D-099, D-100).
 
 ## Stack, versi, dan perintah
 
@@ -28,7 +28,7 @@ Semuanya satu aplikasi Laravel di root repository, satu origin (D-002):
 
 | Perintah | Kegunaan |
 |---|---|
-| `composer test` | Semua tes PHPUnit di SQLite memori (±55–105 detik, 2016 tes) |
+| `composer test` | Semua tes PHPUnit di SQLite memori (±55–105 detik, 2043 tes) |
 | `php artisan test --compact <berkas> --filter=<tes>` | Tes tertentu |
 | `composer test:mysql` | **Mereset database `pintu`** (berisi data pemilik); hanya dengan izin pemilik dan cadangan |
 | `npm run typecheck` / `npm run lint` / `npm run build` | `tsc -b` / `oxlint resources/js` / `tsc -b && vite build` |
@@ -188,7 +188,7 @@ Daftar lengkapnya di `KONTEKS-PROYEK.md` §15 dan §18.
   - pemilik mencoba rasa gulir Lenis dengan mouse, touchpad, dan ponsel di situs lokal Herd atau produksi (D-072);
   - Kebijakan Privasi perlu menyebut Google Maps di halaman Kontak (D-063) dan Google Formulir untuk jawaban kuesioner, termasuk nama, umur, jenis kelamin, dan pendidikan wajib pajak (D-095, D-097);
   - Kuesioner (D-095–D-098): sudah tersambung ke Google Formulir baru yang dibuat pemilik (2026-11-18); setelah tayang pemilik membuang formulir lama, mengisi satu jawaban uji per kuesioner lalu menghapus barisnya, dan mencetak kode QR dari `/kuesioner`. Teks pertanyaan dan pilihan di Google Formulir jangan diubah. Saat pengumpulan selesai, tutup di Pengaturan › Kuesioner **dan** matikan penerimaan jawaban di Google Formulir (sakelar PINTU tidak menghentikan formulirnya sendiri, D-098);
-  - Ikhtisar (D-099): pemilik membuat tautan pertama di Pengaturan › Tautan Ikhtisar produksi; Irisan 2 (transaksi bayar PKB di loket sejak tanggal Data Potensi, berdampingan dengan kepatuhan Data Potensi per kecamatan dan kelurahan) menunggu izin agregat baca-saja atas database `pintu`;
+  - Halaman Ikhtisar (D-099, D-100): pemilik mengaktifkan `/laporan-penerimaan` di Pengaturan › Halaman Ikhtisar produksi saat rapat dan menonaktifkannya lagi, lalu memeriksa bagian *Pembayaran PKB*; database `pintu` lokal perlu `php artisan migrate`;
   - Tanya Jawab Beranda (D-094): mulai Januari 2027 hapus kalimat keringanan Pergub 64/2026 di jawaban denda dan bayar online lewat Dashboard › Tanya Jawab;
   - persyaratan balik nama dan mutasi masuk perlu dicocokkan petugas dengan papan loket (D-061, D-062);
   - Antrean Online: keputusan tersisa, perangkat, uji QR, kamera, dan suara, uji coba paralel, lalu Irisan 5–6.

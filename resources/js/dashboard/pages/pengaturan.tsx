@@ -18,8 +18,8 @@ import { Bagian, Baris, Halaman, PengantarHalaman } from "@/components/data/page
 import { FieldArea, FieldPilih, FieldTeks } from "@/components/form/fields"
 import { FormPengaturan } from "@/components/form/settings-form"
 import { TabIntegrasiAi } from "@/components/pengaturan/tab-integrasi-ai"
+import { TabIkhtisar } from "@/components/pengaturan/tab-ikhtisar"
 import { TabKuesioner } from "@/components/pengaturan/tab-kuesioner"
-import { TabTautanIkhtisar } from "@/components/pengaturan/tab-tautan-ikhtisar"
 import { TabTampilan } from "@/components/tema/tab-tampilan"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -409,11 +409,11 @@ export default function HalamanPengaturan() {
   // Integrasi AI hanya dibaca dan diubah Administrator (D-085); kuesioner hanya dibuka dan ditutup Administrator (D-098)
   const admin = sesi().peran === "administrator"
   const diminta = params.get("tab") ?? "situs"
-  // Tautan Ikhtisar hanya dibuat dan dicabut Administrator (D-099)
+  // Halaman Ikhtisar hanya diaktifkan dan dinonaktifkan Administrator (D-100)
   const tab = ["ai", "kuesioner", "ikhtisar"].includes(diminta) && !admin ? "situs" : diminta
   return (
     <Halaman>
-      <PengantarHalaman deskripsi="Identitas portal, tampilan portal dan dashboard, profil pengelola, cadangan dan pemulihan data dashboard, integrasi AI untuk draf berita, buka-tutup kuesioner, serta tautan Ikhtisar untuk rapat." />
+      <PengantarHalaman deskripsi="Identitas portal, tampilan portal dan dashboard, profil pengelola, cadangan dan pemulihan data dashboard, integrasi AI untuk draf berita, buka-tutup kuesioner, serta halaman Ikhtisar untuk rapat." />
       <Tabs
         value={tab}
         onValueChange={(t) => setParams({ tab: t }, { replace: true })}
@@ -427,7 +427,7 @@ export default function HalamanPengaturan() {
           <TabsTrigger value="data">Data</TabsTrigger>
           {admin && <TabsTrigger value="ai">Integrasi AI</TabsTrigger>}
           {admin && <TabsTrigger value="kuesioner">Kuesioner</TabsTrigger>}
-          {admin && <TabsTrigger value="ikhtisar">Tautan Ikhtisar</TabsTrigger>}
+          {admin && <TabsTrigger value="ikhtisar">Halaman Ikhtisar</TabsTrigger>}
         </TabsList>
         <TabsContent value="situs">
           <TabSitus />
@@ -453,7 +453,7 @@ export default function HalamanPengaturan() {
         )}
         {admin && (
           <TabsContent value="ikhtisar">
-            <TabTautanIkhtisar />
+            <TabIkhtisar />
           </TabsContent>
         )}
       </Tabs>

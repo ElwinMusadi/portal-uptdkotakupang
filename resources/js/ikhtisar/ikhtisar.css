@@ -1,5 +1,5 @@
 /*
- * Halaman Ikhtisar (D-099) memakai gaya dashboard; kelas Tailwind di folder
+ * Halaman Ikhtisar (D-099, D-100) memakai gaya dashboard; kelas Tailwind di folder
  * ini ikut dipindai. Selalu bertema terang agar terbaca di proyektor.
  */
 @import "../dashboard/index.css";
@@ -14,8 +14,9 @@ html.ikhtisar:root {
   font-size: clamp(16px, calc(16px + (100vw - 1440px) / 240), 20px);
 }
 
+/* Bilah lengket satu baris; bagian yang dituju tidak tertutup olehnya */
 html.ikhtisar {
-  scroll-padding-top: 7.5rem;
+  scroll-padding-top: 4.5rem;
 }
 
 @media print {

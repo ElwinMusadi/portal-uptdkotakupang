@@ -252,12 +252,13 @@ class BuildRevenueReport
 
     /**
      * The values each filter can take in the period, whatever the other
-     * filters, so the filter lists show what the period holds.
+     * filters, so the filter lists show what the period holds; the dashboard's
+     * report and the Ikhtisar page (D-100).
      *
-     * @param  array<string, string>  $names
+     * @param  array<string, string>  $names  the counters' names (counterNames())
      * @return array<string, list<mixed>>
      */
-    private function options(Carbon $from, Carbon $until, array $names): array
+    public function options(Carbon $from, Carbon $until, array $names): array
     {
         $options = [];
         foreach (self::DIMENSIONS as $dimension => $column) {

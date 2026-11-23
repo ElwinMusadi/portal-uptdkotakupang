@@ -2,36 +2,27 @@
 
 namespace App\Http\Requests;
 
+use App\Actions\BuildRevenueReport;
+use App\Http\Requests\Dashboard\Concerns\FiltersRevenueTransactions;
 use App\Http\Requests\Dashboard\ShowRevenueReportRequest;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Validator;
 
 /**
- * The period of the Ikhtisar page (D-099): one of the periods counted back
- * from the latest STS date, or a range of dates of at most a year. Nothing
- * else is accepted, not the dashboard report's filters nor a token in the
- * address.
+ * The period and filters of the Ikhtisar page (D-099, D-100): a range of
+ * dates of at most a year, or none for the month of the latest STS date
+ * through that date, narrowed by the dashboard report's filters. Nothing
+ * else is accepted.
  */
 class ShowOverviewRequest extends FormRequest
 {
-    /**
-     * The periods counted back from the latest STS date.
-     *
-     * @var list<string>
-     */
-    public const array PERIODS = ['hari-terakhir', 'bulan-ini', 'bulan-lalu', 'tahun-ini'];
-
-    /**
-     * The parameters the page may send.
-     *
-     * @var list<string>
-     */
-    private const array PARAMETERS = ['periode', 'dari', 'sampai'];
+    use FiltersRevenueTransactions;
 
     /**
      * Determine if the user is authorized to make this request; the route
-     * lets through only the holder of a link (AuthenticateOverviewLink).
+     * answers only while an administrator has the page open
+     * (EnsureOverviewIsOpen).
      */
     public function authorize(): bool
     {
@@ -46,9 +37,9 @@ class ShowOverviewRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'periode' => ['sometimes', 'string', 'in:'.implode(',', self::PERIODS), 'prohibits:dari,sampai'],
             'dari' => ['required_with:sampai', 'date_format:Y-m-d'],
             'sampai' => ['required_with:dari', 'date_format:Y-m-d', 'after_or_equal:dari'],
+            ...$this->filterRules(),
         ];
     }
 
@@ -62,8 +53,8 @@ class ShowOverviewRequest extends FormRequest
     {
         return [
             function (Validator $validator): void {
-                $unknown = array_diff(array_keys($this->query()), self::PARAMETERS);
-                if ($unknown !== []) {
+                $known = ['dari', 'sampai', 'tunggakan', ...array_keys(BuildRevenueReport::DIMENSIONS)];
+                if (array_diff(array_keys($this->query()), $known) !== []) {
                     $validator->errors()->add('query', 'Parameter kueri tidak didukung.');
                 }
             },
@@ -82,27 +73,18 @@ class ShowOverviewRequest extends FormRequest
     public function messages(): array
     {
         return [
-            // The first key matching a rule wins, so the specific one comes first
-            'periode.prohibits' => 'Pilih periode atau rentang tanggal, tidak keduanya.',
-            'periode.*' => 'Pilihan periode tidak dikenal.',
             'dari.required_with' => 'Pilih tanggal awal laporan.',
             'dari.date_format' => 'Tanggal awal laporan tidak valid.',
             'sampai.required_with' => 'Pilih tanggal akhir laporan.',
             'sampai.date_format' => 'Tanggal akhir laporan tidak valid.',
             'sampai.after_or_equal' => 'Tanggal akhir tidak boleh sebelum tanggal awal.',
+            ...$this->filterMessages(),
         ];
     }
 
     /**
-     * The period counted back from the latest STS date, or null for a range.
-     */
-    public function period(): ?string
-    {
-        return $this->from() === null ? $this->input('periode', 'bulan-ini') : null;
-    }
-
-    /**
-     * The first day of the range, or null when a period is chosen instead.
+     * The first day of the range, or null for the month of the latest STS
+     * date.
      */
     public function from(): ?Carbon
     {
@@ -110,7 +92,8 @@ class ShowOverviewRequest extends FormRequest
     }
 
     /**
-     * The last day of the range, or null when a period is chosen instead.
+     * The last day of the range, or null for the month of the latest STS
+     * date.
      */
     public function until(): ?Carbon
     {

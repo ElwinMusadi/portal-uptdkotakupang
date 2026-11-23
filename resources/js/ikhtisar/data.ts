@@ -1,29 +1,28 @@
 /*
- * Angka halaman Ikhtisar (D-099) dari GET /api/ikhtisar, dengan token tautan
- * sebagai Bearer. Tanpa cookie dan tanpa sesi. Periode dihitung server dari
- * tanggal STS terakhir; pilihan periode ikut tercatat di alamat halaman.
+ * Angka halaman Ikhtisar (D-099, D-100) dari GET /api/ikhtisar, tanpa cookie
+ * dan tanpa sesi; server menjawab selama Administrator mengaktifkan halaman.
+ * Tanpa periode, server memberi bulan tanggal STS terakhir sampai tanggal
+ * itu. Periode yang dipilih ikut tercatat di alamat halaman; saringan tidak.
  */
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
 
 import type { IsiPemetaan } from "@/components/pemetaan/ringkasan-wilayah"
 import type { LaporanFormI } from "@/components/penerimaan/form-i"
 import type { IntiLaporan } from "@/components/penerimaan/ringkasan-laporan"
+import type { PilihanSaringan } from "@/components/penerimaan/saringan-laporan"
 import type { KolomWilayah, RingkasanPemetaan } from "@/lib/pemetaan"
-import type { LoketPenerimaan } from "@/lib/penerimaan"
+import { DIMENSI, type LaporanPenerimaan, type LoketPenerimaan, type Saringan } from "@/lib/penerimaan"
 
-export const PERIODE = {
-  "hari-terakhir": "Hari terakhir",
-  "bulan-ini": "Bulan ini",
-  "bulan-lalu": "Bulan lalu",
-  "tahun-ini": "Tahun ini",
-} as const
+import { galatPeriode, type Mode, type Periode } from "../portal/penerimaan/periode"
 
-export type Periode = keyof typeof PERIODE
-
-export type Pilihan = { periode: Periode } | { dari: string; sampai: string }
+/** Periode dan saringan yang diminta; tanpa periode, bulan tanggal STS terakhir */
+export interface Permintaan {
+  periode: Periode | null
+  pilih: PilihanSaringan
+  tunggakan: Saringan["tunggakan"]
+}
 
 export interface Ikhtisar {
-  periode: Periode | "rentang"
   dari: string
   sampai: string
   pembaruan: {
@@ -36,9 +35,34 @@ export interface Ikhtisar {
     belumDiimpor: LoketPenerimaan[]
     dataPotensi: { tanggal: string | null; selesai: string | null } | null
   }
-  penerimaan: Omit<IntiLaporan, "dari" | "sampai">
+  /** Penerimaan periode itu dengan saringan, dan nilai setiap saringan dalam periode itu */
+  penerimaan: Omit<IntiLaporan, "dari" | "sampai"> & Pick<LaporanPenerimaan, "pilihan">
   realisasi: LaporanFormI
   pemetaan: (IsiPemetaan & Pick<RingkasanPemetaan, "bulan"> & { tanggal: string | null; selesai: string | null; kolom: KolomWilayah[] }) | null
+  /** Kepatuhan Data Potensi berdampingan dengan transaksi bayar PKB di loket sejak tanggalnya; null tanpa Data Potensi */
+  pembayaran: {
+    dataPotensi: { tanggal: string | null }
+    /** Jendela transaksi STS: tanggal Data Potensi sampai STS terakhir; null bila belum ada STS sejak tanggal itu */
+    sts: { dari: string; sampai: string } | null
+    jumlah: AngkaPembayaran
+    kecamatan: (AngkaPembayaran & { kunci: string; nama: string; kelurahan: (AngkaPembayaran & { nama: string })[] })[]
+    /** Kendaraan Data Potensi dan transaksi STS yang kelurahannya di luar daftar resmi */
+    lainnya: AngkaPembayaran
+    /** Transaksi kendaraan baru (jenis daftar BARU), tidak dihitung per kelurahan */
+    baru: number
+    jenisDaftar: { nilai: string; transaksi: number }[]
+  } | null
+}
+
+/** Angka satu wilayah di bagian Pembayaran PKB */
+export interface AngkaPembayaran {
+  kendaraan: number
+  taat: number
+  /** Jatuh tempo dan terlambat kurang dari setahun */
+  belumBayar: number
+  menunggak: number
+  /** Transaksi STS yang membayar PKB atau tunggakan */
+  bayar: number
 }
 
 /** Galat dengan status HTTP-nya; 0 bila server tidak dapat dihubungi */
@@ -51,28 +75,35 @@ export class GalatIkhtisar extends Error {
   }
 }
 
-/** Pilihan dari alamat halaman (?periode=… atau ?dari=…&sampai=…); bawaannya bulan ini */
-export function pilihanDariAlamat(): Pilihan {
+const MODE: Mode[] = ["harian", "bulanan", "rentang"]
+
+/** Periode dari alamat halaman (?mode=…&dari=…&sampai=…); null bila tidak ada atau tidak sah */
+export function periodeDariAlamat(): Periode | null {
   const p = new URLSearchParams(window.location.search)
-  const dari = p.get("dari")
-  const sampai = p.get("sampai")
-  if (dari && sampai && /^\d{4}-\d{2}-\d{2}$/.test(dari) && /^\d{4}-\d{2}-\d{2}$/.test(sampai)) return { dari, sampai }
-  const periode = p.get("periode")
-  return { periode: periode && periode in PERIODE ? (periode as Periode) : "bulan-ini" }
+  const mode = p.get("mode") as Mode | null
+  const periode = { mode: mode ?? "rentang", dari: p.get("dari") ?? "", sampai: p.get("sampai") ?? "" }
+  return mode && MODE.includes(mode) && !galatPeriode(periode) ? periode : null
 }
 
-/** Catat pilihan di alamat tanpa menambah riwayat */
-export function catatPilihan(pilihan: Pilihan): void {
-  const p = new URLSearchParams("periode" in pilihan ? { periode: pilihan.periode } : { dari: pilihan.dari, sampai: pilihan.sampai })
+/** Catat periode di alamat tanpa menambah riwayat */
+export function catatPeriode(periode: Periode): void {
+  const p = new URLSearchParams({ mode: periode.mode, dari: periode.dari, sampai: periode.sampai })
   history.replaceState(history.state, "", `${window.location.pathname}?${p}`)
 }
 
-async function muat(token: string, pilihan: Pilihan, signal: AbortSignal): Promise<Ikhtisar> {
-  const kueri = new URLSearchParams("periode" in pilihan ? { periode: pilihan.periode } : { dari: pilihan.dari, sampai: pilihan.sampai })
+function kueri({ periode, pilih, tunggakan }: Permintaan): string {
+  const p = new URLSearchParams(periode ? { dari: periode.dari, sampai: periode.sampai } : {})
+  for (const d of DIMENSI) for (const nilai of pilih[d] ?? []) p.append(`${d}[]`, nilai)
+  if (tunggakan) p.set("tunggakan", tunggakan)
+  const teks = p.toString()
+  return teks ? `?${teks}` : ""
+}
+
+async function muat(permintaan: Permintaan, signal: AbortSignal): Promise<Ikhtisar> {
   let res: Response
   try {
-    res = await fetch(`/api/ikhtisar?${kueri}`, {
-      headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+    res = await fetch(`/api/ikhtisar${kueri(permintaan)}`, {
+      headers: { Accept: "application/json" },
       credentials: "omit",
       cache: "no-store",
       referrerPolicy: "no-referrer",
@@ -96,14 +127,13 @@ async function muat(token: string, pilihan: Pilihan, signal: AbortSignal): Promi
 }
 
 /** Angka ikhtisar; dimuat ulang setiap 5 menit dan saat halaman kembali dibuka, angka lama tetap tampil selama memuat */
-export function useIkhtisar(token: string | null, pilihan: Pilihan) {
+export function useIkhtisar(permintaan: Permintaan) {
   return useQuery({
-    queryKey: ["ikhtisar", pilihan],
-    queryFn: ({ signal }) => muat(token!, pilihan, signal),
-    enabled: token !== null,
+    queryKey: ["ikhtisar", permintaan],
+    queryFn: ({ signal }) => muat(permintaan, signal),
     placeholderData: keepPreviousData,
     refetchInterval: 5 * 60_000,
     refetchOnWindowFocus: true,
-    retry: (n, e) => !(e instanceof GalatIkhtisar && [401, 422, 429].includes(e.status)) && n < 2,
+    retry: (n, e) => !(e instanceof GalatIkhtisar && [403, 422, 429].includes(e.status)) && n < 2,
   })
 }

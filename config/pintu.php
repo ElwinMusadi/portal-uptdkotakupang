@@ -26,9 +26,9 @@ return [
     | Ikhtisar page
     |--------------------------------------------------------------------------
     |
-    | GET /api/ikhtisar, the figures of the page opened through a link an
-    | administrator made (D-099), throttled per client IP address. Everyone in
-    | a meeting shares one link and often one office address.
+    | GET /api/ikhtisar, the figures of the page at /laporan-penerimaan while an
+    | administrator has it open (D-099, D-100), throttled per client IP
+    | address. Everyone in a meeting often shares one office address.
     |
     */
 

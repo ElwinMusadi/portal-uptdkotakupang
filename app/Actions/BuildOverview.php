@@ -10,19 +10,22 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 
 /**
- * The Ikhtisar page (D-099): the dashboard's revenue report of all counters,
- * Form I and the Pemetaan PKB summary, for whoever holds a link, with the
- * dates their data runs through. Only figures: no plate number, name,
- * address or note of any taxpayer, nor the name of any employee. The
- * revenue counts every import, shown on the portal or not, like the
- * dashboard. The periods are counted back from the latest STS date, so the
- * page moves on by itself after each import.
+ * The Ikhtisar page (D-099, D-100): the dashboard's revenue report of all
+ * counters with its filters, Form I and the Pemetaan PKB summary, for anyone
+ * while an administrator has the page open, with the dates their data runs
+ * through. Only figures: no plate number, name, address or note of any
+ * taxpayer, nor the name of any employee. The revenue counts every import,
+ * shown on the portal or not, like the dashboard. Without a range the page
+ * shows the month of the latest STS date through that date, so it moves on
+ * by itself after each import. Beside the Data Potensi compliance, the PKB
+ * payments at the counters since its date (CountPaymentsSincePotential).
+ * The filters narrow the revenue only.
  */
 class BuildOverview
 {
     /**
      * The revenue breakdowns the page shows; the make and plate colour are
-     * left to the dashboard.
+     * only filters there.
      *
      * @var list<string>
      */
@@ -34,46 +37,35 @@ class BuildOverview
         private BuildPotentialSummary $potentialSummary,
         private ListLatestRevenueDates $latestDates,
         private ListRevenueCounters $counters,
+        private CountPaymentsSincePotential $payments,
     ) {}
 
     /**
-     * The page for a period counted back from the latest STS date, or for the
-     * given range when the period is null.
+     * The page for the given range, or for the month of the latest STS date
+     * (today's, WITA, before any STS) through that date, with the revenue
+     * narrowed by the filters.
      *
+     * @param  array<string, list<string>|string>  $filters
      * @return array<string, mixed>
      */
-    public function handle(?string $period, ?Carbon $from = null, ?Carbon $until = null): array
+    public function handle(?Carbon $from = null, ?Carbon $until = null, array $filters = []): array
     {
         $dates = $this->report->dates();
         $latest = $dates === null ? Carbon::parse(now('Asia/Makassar')->toDateString()) : Carbon::parse($dates['akhir']);
-        [$from, $until] = $period === null ? [$from, $until] : $this->period($period, $latest);
+        [$from, $until] = $from === null || $until === null ? [$latest->copy()->startOfMonth(), $latest->copy()] : [$from, $until];
+        $import = PotentialImport::current();
+        $summary = $import === null ? null : $this->potentialSummary->handle($import, null);
 
         return [
-            'periode' => $period ?? 'rentang',
             'dari' => $from->toDateString(),
             'sampai' => $until->toDateString(),
-            'pembaruan' => $this->updates($dates, $latest),
-            'penerimaan' => $this->revenue($from, $until),
+            'pembaruan' => $this->updates($dates, $latest, $import),
+            'penerimaan' => $this->revenue($from, $until, $filters),
             'realisasi' => $this->realization($until),
-            'pemetaan' => $this->potential(),
+            'pemetaan' => $import === null ? null : $this->potential($import, $summary),
+            // Whatever the period: from the Data Potensi date through the latest STS date
+            'pembayaran' => $import === null ? null : $this->payments->handle($import, $summary, $dates['akhir'] ?? null),
         ];
-    }
-
-    /**
-     * The first and last day of a period counted back from the latest STS
-     * date: that day, its month through it, the whole month before, or its
-     * year through it.
-     *
-     * @return array{Carbon, Carbon}
-     */
-    private function period(string $period, Carbon $latest): array
-    {
-        return match ($period) {
-            'hari-terakhir' => [$latest->copy(), $latest->copy()],
-            'bulan-lalu' => [$latest->copy()->startOfMonth()->subMonthNoOverflow(), $latest->copy()->startOfMonth()->subDay()],
-            'tahun-ini' => [$latest->copy()->startOfYear(), $latest->copy()],
-            default => [$latest->copy()->startOfMonth(), $latest->copy()],
-        };
     }
 
     /**
@@ -84,11 +76,10 @@ class BuildOverview
      * @param  ?array{awal: string, akhir: string}  $dates
      * @return array<string, mixed>
      */
-    private function updates(?array $dates, Carbon $latest): array
+    private function updates(?array $dates, Carbon $latest, ?PotentialImport $import): array
     {
         $counters = $this->latestDates->handle();
         $current = array_column(array_filter($counters, fn (array $counter): bool => $counter['sampaiTanggal'] >= $latest->toDateString()), 'nilai');
-        $import = PotentialImport::current();
 
         return [
             'stsTerakhir' => $dates['akhir'] ?? null,
@@ -106,19 +97,22 @@ class BuildOverview
     }
 
     /**
-     * The revenue report of the period, as the dashboard sums it.
+     * The revenue report of the period with the filters, as the dashboard
+     * sums it, and the values each filter can take in the period.
      *
+     * @param  array<string, list<string>|string>  $filters
      * @return array<string, mixed>
      */
-    private function revenue(Carbon $from, Carbon $until): array
+    private function revenue(Carbon $from, Carbon $until, array $filters): array
     {
         return [
-            'ringkasan' => $this->report->totals($from, $until),
-            'pembanding' => $this->report->comparison($from, $until),
+            'ringkasan' => $this->report->totals($from, $until, $filters),
+            'pembanding' => $this->report->comparison($from, $until, $filters),
             'rincian' => [
-                ...$this->report->breakdown($from, $until, [], self::BREAKDOWNS),
-                'tanggal' => $this->report->days($from, $until),
+                ...$this->report->breakdown($from, $until, $filters, self::BREAKDOWNS),
+                'tanggal' => $this->report->days($from, $until, $filters),
             ],
+            'pilihan' => $this->report->options($from, $until, $this->report->counterNames()),
             'loketBuka' => $from->equalTo($until) ? $this->counters->openOn($from) : [],
         ];
     }
@@ -146,20 +140,15 @@ class BuildOverview
      * outcomes of the door-to-door visits are left out, as they can hold an
      * officer's note.
      *
-     * @return ?array<string, mixed>
+     * @param  array<string, mixed>  $summary
+     * @return array<string, mixed>
      */
-    private function potential(): ?array
+    private function potential(PotentialImport $import, array $summary): array
     {
-        $import = PotentialImport::current();
-
-        if ($import === null) {
-            return null;
-        }
-
         return [
             'tanggal' => $import->tanggal_penetapan?->toDateString(),
             'selesai' => $import->selesai_pada?->toIso8601String(),
-            ...Arr::except($this->potentialSummary->handle($import, null), ['kunjungan']),
+            ...Arr::except($summary, ['kunjungan']),
             'kolom' => Setting::potentialMapColumns()['wilayah'],
         ];
     }

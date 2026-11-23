@@ -476,14 +476,14 @@ Tab *Kuesioner* di halaman *Pengaturan* (`#/pengaturan?tab=kuesioner`, `componen
 - Kuesioner yang ditutup tetap tampil di `/kuesioner` dengan tanda *Ditutup*, tetapi tidak bisa diisi. Sakelar tidak menghentikan Google Formulir-nya sendiri; catatan di tab meminta pemilik juga mematikan penerimaan jawaban di Google Formulir bila perlu.
 - Dengan enam tab, tab Pengaturan turun ke baris berikutnya di layar sempit, seperti di Statistik Layanan.
 
-## Tautan Ikhtisar
+## Halaman Ikhtisar
 
-Tab *Tautan Ikhtisar* di halaman *Pengaturan* (`#/pengaturan?tab=ikhtisar`, `components/pengaturan/tab-tautan-ikhtisar.tsx`, `lib/ikhtisar.ts`, [D-099](decisions.md#d-099--2026-11-23--halaman-ikhtisar-untuk-rapat-dibuka-lewat-tautan-rahasia)) hanya tampil bagi Administrator; alamat `?tab=ikhtisar` membuka tab *Situs* bagi pegawai lain.
+Tab *Halaman Ikhtisar* di halaman *Pengaturan* (`#/pengaturan?tab=ikhtisar`, `components/pengaturan/tab-ikhtisar.tsx`, `lib/ikhtisar.ts`, [D-100](decisions.md#d-100--2026-11-23--halaman-ikhtisar-di-laporan-penerimaan-dengan-sakelar-dan-saringan-dashboard)) hanya tampil bagi Administrator; alamat `?tab=ikhtisar` membuka tab *Situs* bagi pegawai lain.
 
-- Tautan ke halaman Ikhtisar (`/ikhtisar`): penerimaan semua loket, Realisasi Target (Form I), dan Pemetaan PKB sampai STS terakhir untuk rapat, tanpa identitas wajib pajak. Siapa pun yang memegang tautannya bisa membukanya tanpa login sampai dicabut.
-- *Buat tautan* meminta nama (mis. Rapat staf, Grup WA pimpinan), lalu menampilkan alamatnya **sekali** dengan *Salin* dan *Buka*. Bila hilang, cabut lalu buat yang baru.
-- Daftar tautan: nama, dibuat kapan dan oleh siapa, dan kapan terakhir dibuka. *Cabut* meminta konfirmasi; layar yang sedang membuka tautan itu berhenti diperbarui.
-- Halaman Ikhtisar memakai komponen yang sama dengan dashboard: `components/penerimaan/ringkasan-laporan.tsx` (ringkasan, per loket, grafik Laporan Penerimaan), `components/penerimaan/form-i.tsx` (Form I), dan `components/pemetaan/ringkasan-wilayah.tsx` (peta dan ringkasan Pemetaan PKB).
+- Halaman Ikhtisar di `/laporan-penerimaan`: penerimaan semua loket dengan periode dan saringan seperti Laporan Penerimaan, Realisasi Target (Form I), Pemetaan PKB, dan pembayaran PKB sejak Data Potensi, sampai STS terakhir, untuk rapat, tanpa identitas wajib pajak. Selama aktif, siapa saja yang tahu alamatnya bisa membukanya tanpa login.
+- Tab menampilkan status (*Aktif*/*Nonaktif* dan sejak kapan), sakelar *Bisa dibuka* yang langsung menyimpan (`PUT /api/pengaturan/ikhtisar`), dan alamat lengkap dengan *Salin* dan *Buka*. Mengaktifkan diminta konfirmasi; menonaktifkan tidak. Peringatan di bawahnya meminta halaman dinonaktifkan setelah rapat.
+- Halaman yang dinonaktifkan menulis *Halaman sedang dinonaktifkan*; layar yang masih terbuka beralih ke pesan itu saat memuat ulang angkanya (paling lama 5 menit).
+- Halaman Ikhtisar memakai komponen yang sama dengan dashboard: `components/penerimaan/saringan-laporan.tsx` (periode dan saringan Laporan Penerimaan), `components/penerimaan/ringkasan-laporan.tsx` (ringkasan, per loket, grafik), `components/penerimaan/form-i.tsx` (Form I), dan `components/pemetaan/ringkasan-wilayah.tsx` (peta dan ringkasan Pemetaan PKB).
 
 ## Profil akun
 

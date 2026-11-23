@@ -8,7 +8,7 @@ import { defineConfig } from "vite"
  * Builds the React dashboard (resources/js/dashboard) into public/build.
  * Laravel serves it at /dashboard through resources/views/dashboard.blade.php,
  * the officers' attendance app (resources/js/absen) at /absen, and the
- * Ikhtisar page opened through a link (resources/js/ikhtisar) at /ikhtisar.
+ * Ikhtisar page (resources/js/ikhtisar) at /laporan-penerimaan.
  * The public portal (resources/views/portal, public/assets) is server-rendered
  * HTML that moves to React one part at a time (D-045). Its pages are served as
  * written and load the scripts built here from fixed addresses (routes/web.php):

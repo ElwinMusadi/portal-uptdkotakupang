@@ -1036,53 +1036,66 @@ Seperti Pengaturan Situs, dokumen `kuesioner` tidak milik modul mana pun dan tid
 
 Kode: `app/Http/Controllers/Dashboard/QuestionnaireController.php`, `app/Http/Requests/Dashboard/UpdateQuestionnaireRequest.php`, `app/Actions/SaveQuestionnaireStatus.php`, `app/Models/Setting.php` (`QUESTIONNAIRE`, `INITIAL_QUESTIONNAIRE`, `questionnaires()`), `app/Policies/SettingPolicy.php`. Tes: `tests/Feature/QuestionnaireControllerTest.php`.
 
-## Tautan Ikhtisar di dashboard
+## Halaman Ikhtisar di dashboard
 
-Dipakai tab *Tautan Ikhtisar* di halaman Pengaturan ([D-099](decisions.md#d-099--2026-11-23--halaman-ikhtisar-untuk-rapat-dibuka-lewat-tautan-rahasia)): tautan ke halaman `/ikhtisar` yang bisa dibuka tanpa login sampai dicabut. Hanya Administrator; pegawai lain `403` `{"message": "Hanya Administrator yang dapat mengatur tautan ikhtisar."}`, tamu `401`.
+Dipakai tab *Halaman Ikhtisar* di halaman Pengaturan ([D-100](decisions.md#d-100--2026-11-23--halaman-ikhtisar-di-laporan-penerimaan-dengan-sakelar-dan-saringan-dashboard)): sakelar yang membuka halaman `/laporan-penerimaan` untuk siapa saja tanpa login sampai dinonaktifkan. Pengaturan `ikhtisar` tanpa modul; semua pegawai bisa membacanya, hanya Administrator yang mengubahnya (pegawai lain `403` `{"message": "Hanya Administrator yang dapat mengaktifkan atau menonaktifkan halaman Ikhtisar."}`), tamu `401`.
 
 | Alamat | Permintaan | Respons |
 |---|---|---|
-| `GET /api/pengaturan/ikhtisar` | — | `200` daftar tautan, terbaru dulu: `[{"id", "nama", "terakhirDibuka", "dibuat", "dibuatOleh"}]`; token dan hash-nya tidak pernah dikirim. |
-| `POST /api/pengaturan/ikhtisar` | `{"nama": "Rapat staf"}` | `201` `{"tautan": {…}, "alamat": "https://…/ikhtisar#k=<48 karakter>"}`; alamat hanya dikembalikan sekali, server hanya menyimpan sha256 token. `422`: "Tulis nama tautan, mis. Rapat staf." (wajib), "Nama tautan paling banyak 60 karakter.", atau karakter kontrol. Tercatat di log aktivitas modul `penerimaan` ("menambahkan", "Tautan ikhtisar {nama}"). |
-| `DELETE /api/pengaturan/ikhtisar/{id}` | — | `204`; barisnya dihapus sehingga token itu langsung `401` di `GET /api/ikhtisar`; tercatat "mencabut". `404` untuk id yang tidak dikenal. |
+| `GET /api/pengaturan/ikhtisar` | — | `200` `{"aktif": false, "sejak": null, "alamat": "https://…/laporan-penerimaan"}`; nonaktif dan `sejak` `null` sebelum pertama diaktifkan. |
+| `PUT /api/pengaturan/ikhtisar` | `{"aktif": true}` | `200` dengan bentuk yang sama. `sejak` diisi server saat status berubah; kiriman `sejak` diabaikan, dan menyimpan status yang sama tidak mengubah apa pun. Setiap perubahan tercatat di log aktivitas modul `penerimaan` ("mengaktifkan"/"menonaktifkan", "Halaman Ikhtisar /laporan-penerimaan"). `422`: "Pilih aktif atau nonaktif." atau "Status halaman harus aktif atau nonaktif." (boolean ketat). |
 
-Kode: `app/Http/Controllers/Dashboard/OverviewLinkController.php`, `app/Http/Requests/Dashboard/StoreOverviewLinkRequest.php`, `app/Http/Resources/OverviewLinkResource.php`, `app/Models/OverviewLink.php`, `app/Policies/OverviewLinkPolicy.php`. Tes: `tests/Feature/OverviewLinkTest.php`.
+Kode: `app/Http/Controllers/Dashboard/OverviewStatusController.php`, `app/Http/Requests/Dashboard/UpdateOverviewStatusRequest.php`, `app/Actions/SaveOverviewStatus.php`, `app/Models/Setting.php` (`OVERVIEW`, `INITIAL_OVERVIEW`, `overview()`), `app/Policies/SettingPolicy.php`. Tes: `tests/Feature/OverviewStatusTest.php`.
 
 ## `GET /api/ikhtisar`
 
-Angka halaman Ikhtisar ([D-099](decisions.md#d-099--2026-11-23--halaman-ikhtisar-untuk-rapat-dibuka-lewat-tautan-rahasia)) untuk pemegang tautan, dengan token tautan sebagai `Authorization: Bearer`. Tanpa sesi dan cookie, `Cache-Control: no-store`.
+Angka halaman Ikhtisar di `/laporan-penerimaan` ([D-099](decisions.md#d-099--2026-11-23--halaman-ikhtisar-untuk-rapat-dibuka-lewat-tautan-rahasia), [D-100](decisions.md#d-100--2026-11-23--halaman-ikhtisar-di-laporan-penerimaan-dengan-sakelar-dan-saringan-dashboard)) untuk siapa saja selama Administrator mengaktifkan halaman. Tanpa sesi dan cookie, `Cache-Control: no-store`.
 
 | Hal | Perilaku |
 |---|---|
-| Token | Diperiksa `AuthenticateOverviewLink` sebelum permintaan dibaca: tanpa token, token salah, atau token yang dicabut selalu `401` `{"message": "Tautan ini tidak berlaku atau sudah dicabut."}`, apa pun parameternya. Token tidak pernah dibaca dari alamat. `terakhirDibuka` tautan diperbarui paling sering sekali per menit. |
-| Parameter | Hanya `periode` (`hari-terakhir`, `bulan-ini` bawaan, `bulan-lalu`, `tahun-ini`) atau `dari` dan `sampai` (`Y-m-d`, paling lama 366 hari). `422` untuk parameter lain (termasuk saringan dashboard dan `k`), periode tak dikenal, periode bersama rentang, rentang yang tidak lengkap, terbalik, atau lebih dari setahun. |
-| Periode | Dihitung dari tanggal STS terakhir L (bukan hari ini; hari ini WITA bila belum ada STS): hari L; tanggal 1 bulan L sampai L; sebulan penuh sebelum bulan L; 1 Januari sampai L. |
+| Sakelar | Diperiksa `EnsureOverviewIsOpen` sebelum permintaan dibaca: selama halaman nonaktif (juga sebelum pertama diaktifkan) selalu `403` `{"message": "Halaman ini sedang dinonaktifkan oleh Administrator PINTU."}`, apa pun parameternya. |
+| Parameter | `dari` dan `sampai` (`Y-m-d`, berdua, paling lama 366 hari) dan saringan Laporan Penerimaan: `loket[]`, `jenisDaftar[]`, `jenisKendaraan[]`, `kepemilikan[]`, `warnaPlat[]`, `merk[]`, `uptAsal[]`, `kecamatan[]`, `kelurahan[]` (daftar nilai, maks. 500, tiap nilai maks. 80 karakter) dan `tunggakan` (`ada`, `tidak`), dengan pesan galat yang sama seperti `GET /api/penerimaan/laporan`. `422` untuk parameter lain (termasuk `periode` D-099 dan `k`), rentang yang tidak lengkap, terbalik, atau lebih dari setahun. |
+| Periode | Tanpa `dari` dan `sampai`: tanggal 1 bulan tanggal STS terakhir L sampai L (bukan hari ini; hari ini WITA bila belum ada STS). |
 | Batas laju | 120 permintaan per menit per alamat (`PINTU_IKHTISAR_REQUESTS_PER_MINUTE`), terpisah dari API publik; `429` "Terlalu banyak permintaan. Silakan coba lagi sebentar lagi." |
 
 ```json
 {
-  "periode": "bulan-ini", "dari": "2026-11-01", "sampai": "2026-11-20",
+  "dari": "2026-11-01", "sampai": "2026-11-20",
   "pembaruan": {
     "stsTerakhir": "2026-11-20", "tersedia": {"awal": "2026-09-01", "akhir": "2026-11-20"},
     "loket": [{"nilai": "kantor", "nama": "Loket SAMSAT", "sampaiTanggal": "2026-11-20"}],
     "belumDiimpor": [{"kunci": "keliling-02", "nama": "Samsat Keliling 02", "jenis": "keliling"}],
     "dataPotensi": {"tanggal": "2026-10-16", "selesai": "2026-10-18T02:00:00+00:00"}
   },
-  "penerimaan": {"ringkasan": {…}, "pembanding": {…}, "rincian": {"loket", "jenisDaftar", "jenisKendaraan", "kepemilikan", "uptAsal", "kecamatan", "kelurahan", "tanggal"}, "loketBuka": []},
+  "penerimaan": {"ringkasan": {…}, "pembanding": {…}, "rincian": {"loket", "jenisDaftar", "jenisKendaraan", "kepemilikan", "uptAsal", "kecamatan", "kelurahan", "tanggal"}, "pilihan": {…}, "loketBuka": []},
   "realisasi": {"tahun", "bulan", "sampai", "tersedia", "sampaiTanggal", "loket", "baris", "target": {"tahun", "pkb", "bbn", "dendaPkb", "dendaBbn", "saldoAwal"}},
-  "pemetaan": {"tanggal", "selesai", "jumlah", "kecamatan", "tunggakan", "jenis", "bulan", "kolom"}
+  "pemetaan": {"tanggal", "selesai", "jumlah", "kecamatan", "tunggakan", "jenis", "bulan", "kolom"},
+  "pembayaran": {"dataPotensi", "sts", "jumlah", "kecamatan", "lainnya", "baru", "jenisDaftar"}
 }
 ```
 
 - `pembaruan.loket`: tanggal terakhir berkas STS setiap loket (`MAX(tanggal_akhir)` impornya), terbaru dulu. `belumDiimpor`: loket yang menurut jadwal melayani pada tanggal L tetapi belum diimpor sampai tanggal itu.
-- `penerimaan`: sama dengan `GET /api/penerimaan/laporan` tanpa saringan untuk periode itu, dari semua impor (juga yang belum tampil di portal), tanpa `pilihan` dan tanpa rincian merek dan warna plat. `loketBuka` hanya untuk periode satu hari.
+- `penerimaan`: sama dengan `GET /api/penerimaan/laporan` untuk periode dan saringan itu, dari semua impor (juga yang belum tampil di portal), tanpa rincian merek dan warna plat (keduanya hanya saringan). `pilihan` berisi nilai setiap saringan dalam periode itu, tanpa memperhitungkan saringan lain. `loketBuka` hanya untuk periode satu hari. Saringan hanya berlaku untuk `penerimaan`; `realisasi`, `pemetaan`, dan `pembayaran` tidak berubah olehnya.
 - `realisasi`: Form I bulan tanggal `sampai`, sampai tanggal itu kecuali bila tanggal itu akhir bulan (lihat `GET /api/penerimaan/realisasi`); target tanpa `diperbarui` dan `oleh`, atau `null`.
 - `pemetaan`: ringkasan Data Potensi terakhir untuk semua bulan jatuh tempo (lihat `GET /api/pemetaan/ringkasan`) tanpa hasil kunjungan lapangan dan tanpa data impor (nama berkas, pengimpor), ditambah `kolom` tabel wilayah pilihan Administrator; `null` sebelum Data Potensi pertama diimpor.
+- `pembayaran` (Irisan 2): kepatuhan Data Potensi berdampingan dengan transaksi bayar PKB di loket sejak tanggalnya, **tidak bergantung pada periode**; `null` sebelum Data Potensi pertama diimpor.
+  ```json
+  { "dataPotensi": {"tanggal": "2026-10-16"}, "sts": {"dari": "2026-10-16", "sampai": "2026-11-20"},
+    "jumlah": {"kendaraan": 600, "taat": 331, "belumBayar": 125, "menunggak": 144, "bayar": 1037},
+    "kecamatan": [{"kunci": "ALAK", "nama": "Alak", "kendaraan": 83, "taat": 49, "belumBayar": 15, "menunggak": 19, "bayar": 166, "kelurahan": [{"nama": "ALAK", "kendaraan": 7, "…": 0}]}],
+    "lainnya": {"kendaraan": 0, "taat": 0, "belumBayar": 0, "menunggak": 0, "bayar": 3}, "baru": 79,
+    "jenisDaftar": [{"nilai": "Teliti Ulang / Pengesahan", "transaksi": 812}] }
+  ```
+  - `kendaraan`, `taat`, `belumBayar` (jatuh tempo dan terlambat < 1 tahun), `menunggak`: Data Potensi per tanggal penetapannya (bila kosong, tanggal WITA selesai diimpor).
+  - `bayar`: transaksi STS semua loket dengan `pkb + tunggakan > 0` dari tanggal itu (inklusif) sampai tanggal STS terakhir, tanpa jenis daftar `BARU` (huruf besar/kecil sama); kendaraan baru dihitung di `baru`. Transaksi, bukan kendaraan unik (NOPOL hanya disimpan 7 hari, D-079).
+  - Kelurahan dicocokkan dengan `Kecamatan::officialKelurahan()` (huruf besar/kecil, spasi, tanda hubung, titik, awalan "Kel."/"Kelurahan", dan 1/2 sebagai I/II diabaikan); kecamatan dari daftar resmi, bukan kolom kecamatan STS. Transaksi yang kolom kecamatannya terisi di luar enam kecamatan Kota Kupang (mis. MERDEKA, KUPANG TIMUR) dihitung di luar kota; kecamatan kosong atau `-` mengikuti kelurahannya. Semua 6 kecamatan dan 51 kelurahan dikirim, juga yang nol. Kendaraan Data Potensi dan transaksi STS di luar kota atau yang kelurahannya di luar daftar masuk `lainnya`, sehingga `jumlah` = semua kecamatan + `lainnya`.
+  - `sts` `null` bila belum ada STS atau tanggal Data Potensi sesudah STS terakhir; semua `bayar` lalu 0.
+  - `jenisDaftar`: transaksi yang membayar PKB atau tunggakan dalam jendela itu per jenis daftar (termasuk `BARU`), terbanyak dulu.
 - Jawaban tidak pernah memuat NOPOL, nama, alamat, telepon, atau rincian STS wajib pajak, maupun nama pegawai.
 
-Halaman `/ikhtisar` (`resources/views/ikhtisar.blade.php`, aplikasi `resources/js/ikhtisar`) dilayani `OverviewPageController` tanpa angka, dengan header `Cache-Control: no-store, private`, `X-Robots-Tag: noindex, nofollow`, dan `Referrer-Policy: no-referrer`, tanpa cookie. Halaman membaca token dari `#k=`, menyimpannya di perangkat, dan membersihkan alamatnya.
+Halaman `/laporan-penerimaan` (`resources/views/ikhtisar.blade.php`, aplikasi `resources/js/ikhtisar`) dilayani `OverviewPageController` tanpa angka, dengan header `Cache-Control: no-store, private`, `X-Robots-Tag: noindex, nofollow`, dan `Referrer-Policy: no-referrer`, tanpa cookie. `/ikhtisar` (alamat D-099) dialihkan permanen ke sana. Periode yang dipilih tercatat di alamat halaman (`?mode=&dari=&sampai=`).
 
-Kode: `app/Http/Controllers/OverviewController.php`, `app/Http/Controllers/OverviewPageController.php`, `app/Http/Middleware/AuthenticateOverviewLink.php`, `app/Http/Requests/ShowOverviewRequest.php`, `app/Actions/BuildOverview.php`, `app/Actions/ListLatestRevenueDates.php`. Tes: `tests/Feature/OverviewTest.php`, `tests/Feature/OverviewPageTest.php`.
+Kode: `app/Http/Controllers/OverviewController.php`, `app/Http/Controllers/OverviewPageController.php`, `app/Http/Middleware/EnsureOverviewIsOpen.php`, `app/Http/Requests/ShowOverviewRequest.php`, `app/Actions/BuildOverview.php`, `app/Actions/ListLatestRevenueDates.php`, `app/Actions/CountPaymentsSincePotential.php`, `app/Enums/Kecamatan.php` (`officialKelurahan()`). Tes: `tests/Feature/OverviewTest.php`, `tests/Feature/OverviewPageTest.php`, `tests/Feature/OverviewPaymentsTest.php`, `tests/Unit/Enums/KecamatanTest.php`.
 
 ## Tampilan di dashboard
 

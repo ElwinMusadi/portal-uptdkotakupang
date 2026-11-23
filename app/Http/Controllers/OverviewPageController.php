@@ -7,10 +7,10 @@ use Illuminate\Http\Response;
 class OverviewPageController extends Controller
 {
     /**
-     * The Ikhtisar page (D-099). It holds no figures: they come from
-     * GET /api/ikhtisar with the token of the link, which stays in the
-     * address's fragment and so never reaches the server here. The page is
-     * kept out of caches, search engines and the Referer header.
+     * The Ikhtisar page at /laporan-penerimaan (D-099, D-100). It holds no
+     * figures: they come from GET /api/ikhtisar, which answers only while an
+     * administrator has the page open. The page is kept out of caches,
+     * search engines and the Referer header.
      */
     public function __invoke(): Response
     {

@@ -8,10 +8,18 @@ import { AplikasiIkhtisar } from "./app"
 import "./ikhtisar.css"
 
 /*
- * Halaman Ikhtisar (D-099) di /ikhtisar: penerimaan, Realisasi Target, dan
- * Pemetaan PKB untuk pemegang tautan dari Administrator, tanpa login.
+ * Halaman Ikhtisar (D-099, D-100) di /laporan-penerimaan: penerimaan,
+ * Realisasi Target, dan Pemetaan PKB tanpa login, selama Administrator
+ * mengaktifkannya.
  */
 const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 60_000 } } })
+
+// Token tautan D-099 yang mungkin masih tersimpan di perangkat ini tidak dipakai lagi
+try {
+  localStorage.removeItem("pintu-ikhtisar")
+} catch {
+  // penyimpanan tidak tersedia
+}
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

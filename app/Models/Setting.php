@@ -417,6 +417,22 @@ class Setting extends Model
     ];
 
     /**
+     * Whether the Ikhtisar page at /laporan-penerimaan is open to anyone
+     * (Pengaturan › Halaman Ikhtisar, D-100), and since when. It belongs to
+     * no module: every employee reads it, only administrators open and close
+     * the page.
+     */
+    public const string OVERVIEW = 'ikhtisar';
+
+    /**
+     * The page closed until an administrator first opens it; "sejak" is null
+     * until then.
+     *
+     * @var array{aktif: bool, sejak: ?string}
+     */
+    public const array INITIAL_OVERVIEW = ['aktif' => false, 'sejak' => null];
+
+    /**
      * One part of the theme as the built-in PINTU look: blue accent, warm
      * background, system fonts, medium corners, 100% scale, semibold
      * headings, near-black buttons and navigation.
@@ -614,6 +630,17 @@ class Setting extends Model
     public static function questionnaires(): array
     {
         return self::query()->find(self::QUESTIONNAIRE)?->value ?? self::INITIAL_QUESTIONNAIRE;
+    }
+
+    /**
+     * Whether the Ikhtisar page is open to anyone (D-100); closed until an
+     * administrator first opens it.
+     *
+     * @return array{aktif: bool, sejak: ?string}
+     */
+    public static function overview(): array
+    {
+        return self::query()->find(self::OVERVIEW)?->value ?? self::INITIAL_OVERVIEW;
     }
 
     /**
