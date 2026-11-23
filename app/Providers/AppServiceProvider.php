@@ -53,6 +53,16 @@ class AppServiceProvider extends ServiceProvider
                 ], 429, $headers));
         });
 
+        // The Ikhtisar page (D-099) sums the revenue and Form I for every request. Everyone in a meeting shares one
+        // link and often one office address, so the limit is per address and leaves room for a roomful of devices.
+        RateLimiter::for('ikhtisar', function (Request $request): Limit {
+            return Limit::perMinute(config()->integer('pintu.ikhtisar.requests_per_minute'))
+                ->by($request->ip())
+                ->response(fn (Request $request, array $headers): JsonResponse => response()->json([
+                    'message' => 'Terlalu banyak permintaan. Silakan coba lagi sebentar lagi.',
+                ], 429, $headers));
+        });
+
         // The portal's revenue report (D-048) sums the transactions for every request: 60 per minute from one address.
         RateLimiter::for('public-penerimaan', function (Request $request): Limit {
             return Limit::perMinute(60)

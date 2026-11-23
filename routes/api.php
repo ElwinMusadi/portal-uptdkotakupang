@@ -38,6 +38,7 @@ use App\Http\Controllers\Dashboard\OpeningHoursController;
 use App\Http\Controllers\Dashboard\OrganizationUnitController;
 use App\Http\Controllers\Dashboard\OrganizationUnitDeletionController;
 use App\Http\Controllers\Dashboard\OrganizationUnitOrderController;
+use App\Http\Controllers\Dashboard\OverviewLinkController;
 use App\Http\Controllers\Dashboard\OwnAccountController;
 use App\Http\Controllers\Dashboard\PotentialImportController;
 use App\Http\Controllers\Dashboard\PotentialMapColumnsController;
@@ -86,6 +87,7 @@ use App\Http\Controllers\Dashboard\UpdateStandardOrderController;
 use App\Http\Controllers\Dashboard\UploadController;
 use App\Http\Controllers\Dashboard\VehicleController;
 use App\Http\Controllers\Dashboard\VisionMissionController;
+use App\Http\Controllers\OverviewController;
 use App\Http\Controllers\PublicAgencyAppController;
 use App\Http\Controllers\PublicAnnouncementBarController;
 use App\Http\Controllers\PublicArticleController;
@@ -115,6 +117,7 @@ use App\Http\Controllers\PublicStatisticsController;
 use App\Http\Controllers\PublicVehicleController;
 use App\Http\Controllers\PublicVisionMissionController;
 use App\Http\Controllers\QueueDisplayDataController;
+use App\Http\Middleware\AuthenticateOverviewLink;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Models\AgencyApp;
 use App\Models\Article;
@@ -125,6 +128,7 @@ use App\Models\FieldActivity;
 use App\Models\Message;
 use App\Models\MobileServiceStop;
 use App\Models\OrganizationUnit;
+use App\Models\OverviewLink;
 use App\Models\PotentialImport;
 use App\Models\QueueCounter;
 use App\Models\QueueDisplay;
@@ -364,6 +368,18 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::put('/pengaturan/kuesioner', [QuestionnaireController::class, 'update'])
         ->can('update', [Setting::class, $questionnaire])
         ->name('pengaturan.kuesioner.update');
+
+    // Tautan Ikhtisar, the links to the Ikhtisar page: only administrators list, make and revoke them (D-099).
+    Route::get('/pengaturan/ikhtisar', [OverviewLinkController::class, 'index'])
+        ->can('manage', OverviewLink::class)
+        ->name('pengaturan.ikhtisar.index');
+    Route::post('/pengaturan/ikhtisar', [OverviewLinkController::class, 'store'])
+        ->can('manage', OverviewLink::class)
+        ->name('pengaturan.ikhtisar.store');
+    Route::delete('/pengaturan/ikhtisar/{overviewLink}', [OverviewLinkController::class, 'destroy'])
+        ->whereUlid('overviewLink')
+        ->can('manage', OverviewLink::class)
+        ->name('pengaturan.ikhtisar.destroy');
 
     // The signed-in employee's own profile, the dashboard's "akun" settings (D-027).
     Route::get('/pengaturan/akun', [OwnAccountController::class, 'show'])->name('pengaturan.akun.show');
@@ -717,3 +733,13 @@ Route::get('/layar', QueueDisplayDataController::class)
     ->middleware('throttle:public-api')
     ->withoutMiddleware([EnsureFrontendRequestsAreStateful::class, EnsureAccountIsActive::class])
     ->name('layar.data');
+
+/*
+ * The Ikhtisar page (D-099): the revenue, Form I and Pemetaan PKB figures,
+ * for whoever holds a link an administrator made. Its token is the bearer
+ * token, checked before the request is read; there is no session or cookie.
+ */
+Route::get('/ikhtisar', OverviewController::class)
+    ->middleware(['throttle:ikhtisar', AuthenticateOverviewLink::class])
+    ->withoutMiddleware([EnsureFrontendRequestsAreStateful::class, EnsureAccountIsActive::class])
+    ->name('ikhtisar.data');

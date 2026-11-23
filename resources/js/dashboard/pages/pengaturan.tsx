@@ -19,6 +19,7 @@ import { FieldArea, FieldPilih, FieldTeks } from "@/components/form/fields"
 import { FormPengaturan } from "@/components/form/settings-form"
 import { TabIntegrasiAi } from "@/components/pengaturan/tab-integrasi-ai"
 import { TabKuesioner } from "@/components/pengaturan/tab-kuesioner"
+import { TabTautanIkhtisar } from "@/components/pengaturan/tab-tautan-ikhtisar"
 import { TabTampilan } from "@/components/tema/tab-tampilan"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -408,16 +409,17 @@ export default function HalamanPengaturan() {
   // Integrasi AI hanya dibaca dan diubah Administrator (D-085); kuesioner hanya dibuka dan ditutup Administrator (D-098)
   const admin = sesi().peran === "administrator"
   const diminta = params.get("tab") ?? "situs"
-  const tab = (diminta === "ai" || diminta === "kuesioner") && !admin ? "situs" : diminta
+  // Tautan Ikhtisar hanya dibuat dan dicabut Administrator (D-099)
+  const tab = ["ai", "kuesioner", "ikhtisar"].includes(diminta) && !admin ? "situs" : diminta
   return (
     <Halaman>
-      <PengantarHalaman deskripsi="Identitas portal, tampilan portal dan dashboard, profil pengelola, cadangan dan pemulihan data dashboard, integrasi AI untuk draf berita, serta buka-tutup kuesioner." />
+      <PengantarHalaman deskripsi="Identitas portal, tampilan portal dan dashboard, profil pengelola, cadangan dan pemulihan data dashboard, integrasi AI untuk draf berita, buka-tutup kuesioner, serta tautan Ikhtisar untuk rapat." />
       <Tabs
         value={tab}
         onValueChange={(t) => setParams({ tab: t }, { replace: true })}
         className="gap-4"
       >
-        {/* Enam tab untuk Administrator: di layar sempit tab turun ke baris berikutnya, seperti di Statistik Layanan */}
+        {/* Tujuh tab untuk Administrator: di layar sempit tab turun ke baris berikutnya, seperti di Statistik Layanan */}
         <TabsList className="flex flex-wrap justify-start group-data-[orientation=horizontal]/tabs:h-auto *:data-[slot=tabs-trigger]:h-auto">
           <TabsTrigger value="situs">Situs</TabsTrigger>
           <TabsTrigger value="tampilan">Tampilan</TabsTrigger>
@@ -425,6 +427,7 @@ export default function HalamanPengaturan() {
           <TabsTrigger value="data">Data</TabsTrigger>
           {admin && <TabsTrigger value="ai">Integrasi AI</TabsTrigger>}
           {admin && <TabsTrigger value="kuesioner">Kuesioner</TabsTrigger>}
+          {admin && <TabsTrigger value="ikhtisar">Tautan Ikhtisar</TabsTrigger>}
         </TabsList>
         <TabsContent value="situs">
           <TabSitus />
@@ -446,6 +449,11 @@ export default function HalamanPengaturan() {
         {admin && (
           <TabsContent value="kuesioner">
             <TabKuesioner />
+          </TabsContent>
+        )}
+        {admin && (
+          <TabsContent value="ikhtisar">
+            <TabTautanIkhtisar />
           </TabsContent>
         )}
       </Tabs>

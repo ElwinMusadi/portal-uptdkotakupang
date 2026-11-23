@@ -7,7 +7,8 @@ import { defineConfig } from "vite"
 /**
  * Builds the React dashboard (resources/js/dashboard) into public/build.
  * Laravel serves it at /dashboard through resources/views/dashboard.blade.php,
- * and the officers' attendance app (resources/js/absen) at /absen.
+ * the officers' attendance app (resources/js/absen) at /absen, and the
+ * Ikhtisar page opened through a link (resources/js/ikhtisar) at /ikhtisar.
  * The public portal (resources/views/portal, public/assets) is server-rendered
  * HTML that moves to React one part at a time (D-045). Its pages are served as
  * written and load the scripts built here from fixed addresses (routes/web.php):
@@ -19,7 +20,13 @@ import { defineConfig } from "vite"
 export default defineConfig({
   plugins: [
     laravel({
-      input: ["resources/js/dashboard/main.tsx", "resources/js/absen/main.tsx", "resources/js/portal/main.tsx", "resources/js/portal/cek-pajak.ts"],
+      input: [
+        "resources/js/dashboard/main.tsx",
+        "resources/js/absen/main.tsx",
+        "resources/js/ikhtisar/main.tsx",
+        "resources/js/portal/main.tsx",
+        "resources/js/portal/cek-pajak.ts",
+      ],
       refresh: true,
     }),
     react({ exclude: [/\/node_modules\//, /\/resources\/js\/portal\//] }),

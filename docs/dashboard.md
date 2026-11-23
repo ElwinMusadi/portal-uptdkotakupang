@@ -476,6 +476,15 @@ Tab *Kuesioner* di halaman *Pengaturan* (`#/pengaturan?tab=kuesioner`, `componen
 - Kuesioner yang ditutup tetap tampil di `/kuesioner` dengan tanda *Ditutup*, tetapi tidak bisa diisi. Sakelar tidak menghentikan Google Formulir-nya sendiri; catatan di tab meminta pemilik juga mematikan penerimaan jawaban di Google Formulir bila perlu.
 - Dengan enam tab, tab Pengaturan turun ke baris berikutnya di layar sempit, seperti di Statistik Layanan.
 
+## Tautan Ikhtisar
+
+Tab *Tautan Ikhtisar* di halaman *Pengaturan* (`#/pengaturan?tab=ikhtisar`, `components/pengaturan/tab-tautan-ikhtisar.tsx`, `lib/ikhtisar.ts`, [D-099](decisions.md#d-099--2026-11-23--halaman-ikhtisar-untuk-rapat-dibuka-lewat-tautan-rahasia)) hanya tampil bagi Administrator; alamat `?tab=ikhtisar` membuka tab *Situs* bagi pegawai lain.
+
+- Tautan ke halaman Ikhtisar (`/ikhtisar`): penerimaan semua loket, Realisasi Target (Form I), dan Pemetaan PKB sampai STS terakhir untuk rapat, tanpa identitas wajib pajak. Siapa pun yang memegang tautannya bisa membukanya tanpa login sampai dicabut.
+- *Buat tautan* meminta nama (mis. Rapat staf, Grup WA pimpinan), lalu menampilkan alamatnya **sekali** dengan *Salin* dan *Buka*. Bila hilang, cabut lalu buat yang baru.
+- Daftar tautan: nama, dibuat kapan dan oleh siapa, dan kapan terakhir dibuka. *Cabut* meminta konfirmasi; layar yang sedang membuka tautan itu berhenti diperbarui.
+- Halaman Ikhtisar memakai komponen yang sama dengan dashboard: `components/penerimaan/ringkasan-laporan.tsx` (ringkasan, per loket, grafik Laporan Penerimaan), `components/penerimaan/form-i.tsx` (Form I), dan `components/pemetaan/ringkasan-wilayah.tsx` (peta dan ringkasan Pemetaan PKB).
+
 ## Profil akun
 
 Tab *Akun* di halaman *Pengaturan* (`#/pengaturan?tab=akun`) tersimpan di server sejak [D-027](decisions.md#d-027--2026-10-14--profil-akun-tersimpan-di-server-nama-dan-surel-mengikuti-akun) sebagai pengaturan `akun`: profil akun yang sedang masuk.

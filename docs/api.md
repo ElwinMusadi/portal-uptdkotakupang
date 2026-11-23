@@ -81,6 +81,9 @@ Semua endpoint ada di `routes/api.php` dan mengembalikan JSON polos (tanpa amplo
 | `DELETE` | `/api/antrean/tiket/{id}` | Administrator | tersedia |
 | `GET`, `POST`, `DELETE` | `/api/antrean/layar`, `/api/antrean/layar/{id}` | Administrator | tersedia |
 | `GET` | `/api/layar` | layar TV yang dipasang (bearer token) | tersedia |
+| `GET` | `/api/ikhtisar` | pemegang tautan Ikhtisar (bearer token) | tersedia |
+| `GET`, `POST` | `/api/pengaturan/ikhtisar` | Administrator | tersedia |
+| `DELETE` | `/api/pengaturan/ikhtisar/{id}` | Administrator | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/kontak` | Administrator, pengelola Kontak & Kanal | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/visiMisi` | Administrator, pengelola Visi & Misi | tersedia |
 | `GET`, `PUT` | `/api/pengaturan/profil` | Administrator, pengelola Tentang UPTD | tersedia |
@@ -1032,6 +1035,54 @@ Dipakai tab *Kuesioner* di halaman Pengaturan ([D-098](decisions.md#d-098--2026-
 Seperti Pengaturan Situs, dokumen `kuesioner` tidak milik modul mana pun dan tidak masuk log aktivitas.
 
 Kode: `app/Http/Controllers/Dashboard/QuestionnaireController.php`, `app/Http/Requests/Dashboard/UpdateQuestionnaireRequest.php`, `app/Actions/SaveQuestionnaireStatus.php`, `app/Models/Setting.php` (`QUESTIONNAIRE`, `INITIAL_QUESTIONNAIRE`, `questionnaires()`), `app/Policies/SettingPolicy.php`. Tes: `tests/Feature/QuestionnaireControllerTest.php`.
+
+## Tautan Ikhtisar di dashboard
+
+Dipakai tab *Tautan Ikhtisar* di halaman Pengaturan ([D-099](decisions.md#d-099--2026-11-23--halaman-ikhtisar-untuk-rapat-dibuka-lewat-tautan-rahasia)): tautan ke halaman `/ikhtisar` yang bisa dibuka tanpa login sampai dicabut. Hanya Administrator; pegawai lain `403` `{"message": "Hanya Administrator yang dapat mengatur tautan ikhtisar."}`, tamu `401`.
+
+| Alamat | Permintaan | Respons |
+|---|---|---|
+| `GET /api/pengaturan/ikhtisar` | — | `200` daftar tautan, terbaru dulu: `[{"id", "nama", "terakhirDibuka", "dibuat", "dibuatOleh"}]`; token dan hash-nya tidak pernah dikirim. |
+| `POST /api/pengaturan/ikhtisar` | `{"nama": "Rapat staf"}` | `201` `{"tautan": {…}, "alamat": "https://…/ikhtisar#k=<48 karakter>"}`; alamat hanya dikembalikan sekali, server hanya menyimpan sha256 token. `422`: "Tulis nama tautan, mis. Rapat staf." (wajib), "Nama tautan paling banyak 60 karakter.", atau karakter kontrol. Tercatat di log aktivitas modul `penerimaan` ("menambahkan", "Tautan ikhtisar {nama}"). |
+| `DELETE /api/pengaturan/ikhtisar/{id}` | — | `204`; barisnya dihapus sehingga token itu langsung `401` di `GET /api/ikhtisar`; tercatat "mencabut". `404` untuk id yang tidak dikenal. |
+
+Kode: `app/Http/Controllers/Dashboard/OverviewLinkController.php`, `app/Http/Requests/Dashboard/StoreOverviewLinkRequest.php`, `app/Http/Resources/OverviewLinkResource.php`, `app/Models/OverviewLink.php`, `app/Policies/OverviewLinkPolicy.php`. Tes: `tests/Feature/OverviewLinkTest.php`.
+
+## `GET /api/ikhtisar`
+
+Angka halaman Ikhtisar ([D-099](decisions.md#d-099--2026-11-23--halaman-ikhtisar-untuk-rapat-dibuka-lewat-tautan-rahasia)) untuk pemegang tautan, dengan token tautan sebagai `Authorization: Bearer`. Tanpa sesi dan cookie, `Cache-Control: no-store`.
+
+| Hal | Perilaku |
+|---|---|
+| Token | Diperiksa `AuthenticateOverviewLink` sebelum permintaan dibaca: tanpa token, token salah, atau token yang dicabut selalu `401` `{"message": "Tautan ini tidak berlaku atau sudah dicabut."}`, apa pun parameternya. Token tidak pernah dibaca dari alamat. `terakhirDibuka` tautan diperbarui paling sering sekali per menit. |
+| Parameter | Hanya `periode` (`hari-terakhir`, `bulan-ini` bawaan, `bulan-lalu`, `tahun-ini`) atau `dari` dan `sampai` (`Y-m-d`, paling lama 366 hari). `422` untuk parameter lain (termasuk saringan dashboard dan `k`), periode tak dikenal, periode bersama rentang, rentang yang tidak lengkap, terbalik, atau lebih dari setahun. |
+| Periode | Dihitung dari tanggal STS terakhir L (bukan hari ini; hari ini WITA bila belum ada STS): hari L; tanggal 1 bulan L sampai L; sebulan penuh sebelum bulan L; 1 Januari sampai L. |
+| Batas laju | 120 permintaan per menit per alamat (`PINTU_IKHTISAR_REQUESTS_PER_MINUTE`), terpisah dari API publik; `429` "Terlalu banyak permintaan. Silakan coba lagi sebentar lagi." |
+
+```json
+{
+  "periode": "bulan-ini", "dari": "2026-11-01", "sampai": "2026-11-20",
+  "pembaruan": {
+    "stsTerakhir": "2026-11-20", "tersedia": {"awal": "2026-09-01", "akhir": "2026-11-20"},
+    "loket": [{"nilai": "kantor", "nama": "Loket SAMSAT", "sampaiTanggal": "2026-11-20"}],
+    "belumDiimpor": [{"kunci": "keliling-02", "nama": "Samsat Keliling 02", "jenis": "keliling"}],
+    "dataPotensi": {"tanggal": "2026-10-16", "selesai": "2026-10-18T02:00:00+00:00"}
+  },
+  "penerimaan": {"ringkasan": {…}, "pembanding": {…}, "rincian": {"loket", "jenisDaftar", "jenisKendaraan", "kepemilikan", "uptAsal", "kecamatan", "kelurahan", "tanggal"}, "loketBuka": []},
+  "realisasi": {"tahun", "bulan", "sampai", "tersedia", "sampaiTanggal", "loket", "baris", "target": {"tahun", "pkb", "bbn", "dendaPkb", "dendaBbn", "saldoAwal"}},
+  "pemetaan": {"tanggal", "selesai", "jumlah", "kecamatan", "tunggakan", "jenis", "bulan", "kolom"}
+}
+```
+
+- `pembaruan.loket`: tanggal terakhir berkas STS setiap loket (`MAX(tanggal_akhir)` impornya), terbaru dulu. `belumDiimpor`: loket yang menurut jadwal melayani pada tanggal L tetapi belum diimpor sampai tanggal itu.
+- `penerimaan`: sama dengan `GET /api/penerimaan/laporan` tanpa saringan untuk periode itu, dari semua impor (juga yang belum tampil di portal), tanpa `pilihan` dan tanpa rincian merek dan warna plat. `loketBuka` hanya untuk periode satu hari.
+- `realisasi`: Form I bulan tanggal `sampai`, sampai tanggal itu kecuali bila tanggal itu akhir bulan (lihat `GET /api/penerimaan/realisasi`); target tanpa `diperbarui` dan `oleh`, atau `null`.
+- `pemetaan`: ringkasan Data Potensi terakhir untuk semua bulan jatuh tempo (lihat `GET /api/pemetaan/ringkasan`) tanpa hasil kunjungan lapangan dan tanpa data impor (nama berkas, pengimpor), ditambah `kolom` tabel wilayah pilihan Administrator; `null` sebelum Data Potensi pertama diimpor.
+- Jawaban tidak pernah memuat NOPOL, nama, alamat, telepon, atau rincian STS wajib pajak, maupun nama pegawai.
+
+Halaman `/ikhtisar` (`resources/views/ikhtisar.blade.php`, aplikasi `resources/js/ikhtisar`) dilayani `OverviewPageController` tanpa angka, dengan header `Cache-Control: no-store, private`, `X-Robots-Tag: noindex, nofollow`, dan `Referrer-Policy: no-referrer`, tanpa cookie. Halaman membaca token dari `#k=`, menyimpannya di perangkat, dan membersihkan alamatnya.
+
+Kode: `app/Http/Controllers/OverviewController.php`, `app/Http/Controllers/OverviewPageController.php`, `app/Http/Middleware/AuthenticateOverviewLink.php`, `app/Http/Requests/ShowOverviewRequest.php`, `app/Actions/BuildOverview.php`, `app/Actions/ListLatestRevenueDates.php`. Tes: `tests/Feature/OverviewTest.php`, `tests/Feature/OverviewPageTest.php`.
 
 ## Tampilan di dashboard
 

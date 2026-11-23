@@ -23,6 +23,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Ikhtisar page
+    |--------------------------------------------------------------------------
+    |
+    | GET /api/ikhtisar, the figures of the page opened through a link an
+    | administrator made (D-099), throttled per client IP address. Everyone in
+    | a meeting shares one link and often one office address.
+    |
+    */
+
+    'ikhtisar' => [
+        'requests_per_minute' => filter_var(env('PINTU_IKHTISAR_REQUESTS_PER_MINUTE'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 120,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Public FAQ
     |--------------------------------------------------------------------------
     |
